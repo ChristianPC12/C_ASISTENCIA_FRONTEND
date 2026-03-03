@@ -58,14 +58,14 @@ export default function AsistenciaTable({
 
             {/* Filtro por anio */}
             <div className="col-md-4">
-              <label htmlFor="filtro-anio" className="form-label fw-semibold">Anio</label>
+              <label htmlFor="filtro-anio" className="form-label fw-semibold">Año</label>
               <select
                 id="filtro-anio"
                 className="form-select"
                 value={filtros.anio}
                 onChange={(e) => onCambiarFiltro('anio', e.target.value)}
               >
-                <option value="">Todos los anios</option>
+                <option value="">Todos los años</option>
                 {ANIO_OPCIONES.map((anio) => (
                   <option key={anio} value={anio}>{anio}</option>
                 ))}
@@ -115,10 +115,10 @@ export default function AsistenciaTable({
                   <th>Fecha</th>
                   <th>Culto</th>
                   <th className="text-center">Total</th>
-                  <th className="text-center">Ninos</th>
-                  <th className="text-center">Jovenes</th>
+                  <th className="text-center">Niños</th>
+                  <th className="text-center">Jóvenes</th>
                   <th className="text-center">Antes</th>
-                  <th className="text-center">Despues</th>
+                  <th className="text-center">Después</th>
                   <th className="text-center">Barrio</th>
                   <th className="text-center">Guayabo</th>
                   <th className="text-center">Visitas B.</th>

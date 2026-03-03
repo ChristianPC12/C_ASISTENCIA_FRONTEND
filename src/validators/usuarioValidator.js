@@ -33,14 +33,14 @@ export function validarUsuario(datos, esEdicion = false) {
   // Password
   const password = datos.password || '';
   if (!esEdicion && !password) {
-    errores.password = 'La contrasena es obligatoria.';
+    errores.password = 'La contraseña es obligatoria.';
   } else if (password && password.length < LIMITES.PASSWORD_MIN) {
-    errores.password = `La contrasena debe tener al menos ${LIMITES.PASSWORD_MIN} caracteres.`;
+    errores.password = `La contraseña debe tener al menos ${LIMITES.PASSWORD_MIN} caracteres.`;
   }
 
   // Rol
   if (!datos.rol_id || ![1, 2].includes(Number(datos.rol_id))) {
-    errores.rol_id = 'Debe seleccionar un rol valido.';
+    errores.rol_id = 'Debe seleccionar un rol válido.';
   }
 
   return {

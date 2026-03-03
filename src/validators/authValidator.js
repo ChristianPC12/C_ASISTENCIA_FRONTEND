@@ -17,7 +17,7 @@ export function validarLogin(datos) {
 
   const password = datos.password || '';
   if (!password) {
-    errores.password = 'La contrasena es obligatoria.';
+    errores.password = 'La contraseña es obligatoria.';
   }
 
   return {

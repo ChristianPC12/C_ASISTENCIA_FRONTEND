@@ -21,9 +21,9 @@ export function validarAsistencia(datos) {
   // Campos numericos obligatorios (>= 0)
   const camposNumericos = [
     { campo: 'llegaron_antes_hora', etiqueta: 'Llegaron antes de la hora' },
-    { campo: 'llegaron_despues_hora', etiqueta: 'Llegaron despues de la hora' },
-    { campo: 'ninos', etiqueta: 'Ninos' },
-    { campo: 'jovenes', etiqueta: 'Jovenes' },
+    { campo: 'llegaron_despues_hora', etiqueta: 'Llegaron después de la hora' },
+    { campo: 'ninos', etiqueta: 'Niños' },
+    { campo: 'jovenes', etiqueta: 'Jóvenes' },
     { campo: 'total_asistentes', etiqueta: 'Total de asistentes' },
     { campo: 'proc_barrio', etiqueta: 'Procedentes del barrio' },
     { campo: 'proc_guayabo', etiqueta: 'Procedentes de Guayabo' },
@@ -39,7 +39,7 @@ export function validarAsistencia(datos) {
     if (valorRaw !== '' && valorRaw !== null && valorRaw !== undefined) {
       const num = parseInt(valorRaw, 10);
       if (isNaN(num) || num < 0) {
-        errores[campo] = `${etiqueta} debe ser un numero valido (>= 0).`;
+        errores[campo] = `${etiqueta} debe ser un número válido (>= 0).`;
       }
     }
   }
@@ -49,7 +49,7 @@ export function validarAsistencia(datos) {
   const ninos = aEnteroPositivo(datos.ninos);
   const jovenes = aEnteroPositivo(datos.jovenes);
   if (total < ninos + jovenes) {
-    errores.total_asistentes = 'El total de asistentes debe ser mayor o igual a ninos + jovenes.';
+    errores.total_asistentes = 'El total de asistentes debe ser mayor o igual a niños + jóvenes.';
   }
 
   // Validacion: retiros + se_quedaron <= total_asistentes

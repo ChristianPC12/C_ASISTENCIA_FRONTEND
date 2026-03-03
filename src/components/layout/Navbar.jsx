@@ -31,7 +31,7 @@ export default function Navbar({ usuario, onCerrarSesion }) {
           data-bs-target="#navbarMain"
           aria-controls="navbarMain"
           aria-expanded="false"
-          aria-label="Abrir menu"
+          aria-label="Abrir menú"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
@@ -74,7 +74,7 @@ export default function Navbar({ usuario, onCerrarSesion }) {
               className="btn btn-outline-light btn-sm"
               onClick={onCerrarSesion}
             >
-              Cerrar sesion
+              Cerrar sesión
             </button>
           </div>
         </div>

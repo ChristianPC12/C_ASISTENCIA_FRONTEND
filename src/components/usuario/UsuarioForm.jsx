@@ -82,7 +82,7 @@ export default function UsuarioForm({
             {/* Contrasena */}
             <div className="col-md-6">
               <label htmlFor="password_campo" className="form-label">
-                Contrasena {editandoId && <small className="text-muted">(dejar vacio para no cambiar)</small>}
+                Contraseña {editandoId && <small className="text-muted">(dejar vacío para no cambiar)</small>}
               </label>
               <input
                 type="password"
@@ -91,7 +91,7 @@ export default function UsuarioForm({
                 className={`form-control ${errores.password ? 'is-invalid' : ''}`}
                 value={formulario.password}
                 onChange={manejarCambio}
-                placeholder={editandoId ? 'Nueva contrasena (opcional)' : 'Contrasena'}
+                placeholder={editandoId ? 'Nueva contraseña (opcional)' : 'Contraseña'}
                 autoComplete="new-password"
                 disabled={cargando}
               />

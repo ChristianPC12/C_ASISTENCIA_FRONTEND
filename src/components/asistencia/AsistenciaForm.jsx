@@ -42,7 +42,7 @@ export default function AsistenciaForm({
   const diaPermitido = cultoSeleccionado ? CULTO_DIA_SEMANA[cultoSeleccionado.codigo] : null;
 
   // Nombres de dias para el mensaje de error
-  const NOMBRES_DIA = { 0: 'domingo', 3: 'miercoles', 6: 'sabado' };
+  const NOMBRES_DIA = { 0: 'domingo', 3: 'miércoles', 6: 'sábado' };
 
   // Al cambiar culto, limpiar la fecha si ya no corresponde al dia
   const manejarCambioCulto = (e) => {
@@ -62,7 +62,7 @@ export default function AsistenciaForm({
     }
   };
 
-  // Renderizar un campo numerico
+  // Renderizar un campo numérico
   const campoNumerico = (nombre, etiqueta, colClase = 'col-md-6 col-lg-4') => (
     <div className={colClase}>
       <label htmlFor={nombre} className="form-label">{etiqueta}</label>
@@ -74,7 +74,7 @@ export default function AsistenciaForm({
         value={formulario[nombre]}
         onChange={manejarCambio}
         min="0"
-        placeholder="0"
+        placeholder="Cantidad"
         disabled={cargando}
       />
       {errores[nombre] && (
@@ -93,9 +93,9 @@ export default function AsistenciaForm({
       <div className="card-body">
         <form onSubmit={manejarEnvio}>
 
-          {/* Seccion: Informacion del culto */}
+          {/* Sección: Información del culto */}
           <div className="seccion-form">
-            <h6>Informacion del Culto</h6>
+            <h6>Información del Culto</h6>
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="culto_id" className="form-label">Culto</label>
@@ -138,25 +138,25 @@ export default function AsistenciaForm({
             </div>
           </div>
 
-          {/* Seccion: Puntualidad */}
+          {/* Sección: Puntualidad */}
           <div className="seccion-form">
             <h6>Puntualidad</h6>
             <div className="row g-3">
               {campoNumerico('llegaron_antes_hora', 'Llegaron antes de la hora', 'col-md-6')}
-              {campoNumerico('llegaron_despues_hora', 'Llegaron despues de la hora', 'col-md-6')}
+              {campoNumerico('llegaron_despues_hora', 'Llegaron después de la hora', 'col-md-6')}
             </div>
           </div>
 
-          {/* Seccion: Composicion */}
+          {/* Sección: Composición */}
           <div className="seccion-form">
-            <h6>Composicion de Asistentes</h6>
+            <h6>Composición de Asistentes</h6>
             <div className="row g-3">
-              {campoNumerico('ninos', 'Ninos', 'col-md-6')}
-              {campoNumerico('jovenes', 'Jovenes', 'col-md-6')}
+              {campoNumerico('ninos', 'Niños', 'col-md-6')}
+              {campoNumerico('jovenes', 'Jóvenes', 'col-md-6')}
             </div>
           </div>
 
-          {/* Seccion: Procedencia */}
+          {/* Sección: Procedencia */}
           <div className="seccion-form">
             <h6>Procedencia</h6>
             <div className="row g-3">
@@ -165,7 +165,7 @@ export default function AsistenciaForm({
             </div>
           </div>
 
-          {/* Seccion: Visitas */}
+          {/* Sección: Visitas */}
           <div className="seccion-form">
             <h6>Visitas</h6>
             <div className="row g-3">
@@ -205,7 +205,7 @@ export default function AsistenciaForm({
             </div>
           </div>
 
-          {/* Seccion: Permanencia */}
+          {/* Sección: Permanencia */}
           <div className="seccion-form">
             <h6>Permanencia</h6>
             <div className="row g-3">
@@ -220,7 +220,7 @@ export default function AsistenciaForm({
                   value={formulario.se_quedaron_todo}
                   onChange={manejarCambio}
                   min="0"
-                  placeholder="0"
+                  placeholder="Cantidad"
                   disabled={cargando}
                 />
                 {errores.se_quedaron_todo && (
@@ -230,12 +230,12 @@ export default function AsistenciaForm({
             </div>
           </div>
 
-          {/* Seccion: Total de asistentes (auto-calculado) */}
+          {/* Sección: Total de asistentes (auto-calculado) */}
           <div className="seccion-form">
             <h6>Total de Asistentes</h6>
             <div className="row g-3">
               <div className="col-md-6">
-                <label htmlFor="total_asistentes" className="form-label">Total (calculado automaticamente)</label>
+                <label htmlFor="total_asistentes" className="form-label">Total (calculado automáticamente)</label>
                 <input
                   type="number"
                   id="total_asistentes"
@@ -245,7 +245,7 @@ export default function AsistenciaForm({
                   readOnly
                   disabled
                 />
-                <small className="text-muted">Llegaron antes + Llegaron despues</small>
+                <small className="text-muted">Llegaron antes + Llegaron después</small>
                 {errores.total_asistentes && (
                   <div className="invalid-feedback">{errores.total_asistentes}</div>
                 )}
@@ -253,7 +253,7 @@ export default function AsistenciaForm({
             </div>
           </div>
 
-          {/* Seccion: Observaciones */}
+          {/* Sección: Observaciones */}
           <div className="seccion-form">
             <h6>Observaciones</h6>
             <textarea

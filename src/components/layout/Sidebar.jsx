@@ -44,7 +44,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <span className="sidebar-marca-subtitulo">Control de Asistencia</span>
           </div>
           {/* Boton cerrar en mobile */}
-          <button className="sidebar-cerrar d-lg-none" onClick={cerrarMenu} aria-label="Cerrar menu">
+          <button className="sidebar-cerrar d-lg-none" onClick={cerrarMenu} aria-label="Cerrar menú">
             &times;
           </button>
         </div>
@@ -74,7 +74,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             className="btn btn-outline-light btn-sm w-100 mt-2"
             onClick={onCerrarSesion}
           >
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -83,7 +83,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       <div className="sidebar-contenido">
         {/* Barra superior con hamburguesa */}
         <header className="sidebar-topbar">
-          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menu">
+          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
             <span></span>
             <span></span>
             <span></span>
