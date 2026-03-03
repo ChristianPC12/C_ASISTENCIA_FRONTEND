@@ -1,27 +1,17 @@
 import LoginForm from '../components/auth/LoginForm';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 
 /**
  * Pagina de inicio de sesion
+ * La redireccion post-login la maneja AppContent al detectar estaAutenticado=true
  */
 export default function LoginPage() {
-  const { iniciarSesion, cargando, errores, estaAutenticado } = useAuth();
-  const navigate = useNavigate();
-
-  // Si ya esta autenticado, redirigir a registro
-  useEffect(() => {
-    if (estaAutenticado) {
-      navigate('/registro', { replace: true });
-    }
-  }, [estaAutenticado, navigate]);
+  const { iniciarSesion, cargando, errores } = useAuth();
 
   const manejarLogin = async (datos) => {
-    const exito = await iniciarSesion(datos);
-    if (exito) {
-      navigate('/registro', { replace: true });
-    }
+    await iniciarSesion(datos);
+    // No se necesita navigate: AppContent re-renderiza automaticamente
+    // al cambiar estaAutenticado y muestra las rutas autenticadas
   };
 
   return (

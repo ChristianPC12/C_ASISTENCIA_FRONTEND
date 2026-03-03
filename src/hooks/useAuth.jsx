@@ -1,31 +1,31 @@
-import { useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import authApi from '../api/authApi';
 import { validarLogin } from '../validators/authValidator';
 import { sanitizarObjeto } from '../utils/sanitizer';
 import { notificarExito, notificarError } from '../utils/notify';
 import { ROLES } from '../config/constants';
 
+const AuthContext = createContext(null);
+
 /**
- * Hook de autenticacion
- * Maneja login, logout, verificacion de token y datos del usuario
+ * Provider de autenticacion — envuelve toda la app para compartir un solo estado
  */
-export function useAuth() {
+export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(() => {
     const guardado = localStorage.getItem('usuario');
     return guardado ? JSON.parse(guardado) : null;
   });
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [cargando, setCargando] = useState(false);
   const [errores, setErrores] = useState({});
 
   // Verificar si el token sigue valido al montar
   useEffect(() => {
-    const token = localStorage.getItem('token');
     if (token && !usuario) {
       verificarSesion();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Verificar sesion con el backend
   const verificarSesion = useCallback(async () => {
     try {
       const res = await authApi.me();
@@ -34,12 +34,10 @@ export function useAuth() {
         localStorage.setItem('usuario', JSON.stringify(res.datos));
       }
     } catch {
-      // Token invalido, limpiar sesion
       cerrarSesionLocal();
     }
   }, []);
 
-  // Login
   const iniciarSesion = useCallback(async (datos) => {
     const datosSanitizados = sanitizarObjeto(datos);
     const validacion = validarLogin(datosSanitizados);
@@ -57,6 +55,7 @@ export function useAuth() {
       if (res.exito) {
         localStorage.setItem('token', res.datos.token);
         localStorage.setItem('usuario', JSON.stringify(res.datos.usuario));
+        setToken(res.datos.token);
         setUsuario(res.datos.usuario);
         notificarExito(res.mensaje);
         return true;
@@ -72,7 +71,6 @@ export function useAuth() {
     }
   }, []);
 
-  // Logout
   const cerrarSesion = useCallback(async () => {
     try {
       await authApi.logout();
@@ -83,18 +81,17 @@ export function useAuth() {
     }
   }, []);
 
-  // Limpiar sesion en localStorage y estado
   const cerrarSesionLocal = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
+    setToken(null);
     setUsuario(null);
   }, []);
 
-  // Helpers
-  const estaAutenticado = !!usuario && !!localStorage.getItem('token');
+  const estaAutenticado = !!usuario && !!token;
   const esAdmin = usuario?.rol === ROLES.ADMIN;
 
-  return {
+  const valor = {
     usuario,
     cargando,
     errores,
@@ -104,4 +101,21 @@ export function useAuth() {
     iniciarSesion,
     cerrarSesion
   };
+
+  return (
+    <AuthContext.Provider value={valor}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+/**
+ * Hook para acceder al contexto de auth (usa el mismo estado en toda la app)
+ */
+export function useAuth() {
+  const contexto = useContext(AuthContext);
+  if (!contexto) {
+    throw new Error('useAuth debe usarse dentro de un AuthProvider');
+  }
+  return contexto;
 }
