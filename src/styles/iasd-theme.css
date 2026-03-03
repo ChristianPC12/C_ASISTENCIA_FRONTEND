@@ -1,172 +1,46 @@
 /* ==============================================
    Tema personalizado IASD
-   Iglesia Adventista del Septimo Dia
+   Iglesia Adventista del Séptimo Día
    ============================================== */
 
 /* --- Variables de Bootstrap sobrescritas --- */
 :root {
-  --bs-primary: #003366;
-  --bs-primary-rgb: 0, 51, 102;
-  --bs-secondary: #C5A028;
-  --bs-secondary-rgb: 197, 160, 40;
-  --bs-success: #27AE60;
-  --bs-success-rgb: 39, 174, 96;
-  --bs-danger: #E74C3C;
-  --bs-danger-rgb: 231, 76, 60;
-  --bs-warning: #F39C12;
-  --bs-warning-rgb: 243, 156, 18;
-  --bs-body-bg: #F4F6F9;
-  --bs-body-color: #2D3436;
-  --bs-border-color: #DEE2E6;
+  --bs-primary:           #003366;
+  --bs-primary-rgb:       0, 51, 102;
+  --bs-secondary:         #C5A028;
+  --bs-secondary-rgb:     197, 160, 40;
+  --bs-success:           #27AE60;
+  --bs-success-rgb:       39, 174, 96;
+  --bs-danger:            #E74C3C;
+  --bs-danger-rgb:        231, 76, 60;
+  --bs-warning:           #F39C12;
+  --bs-warning-rgb:       243, 156, 18;
+  --bs-body-bg:           #F4F6F9;
+  --bs-body-color:        #2D3436;
+  --bs-border-color:      #DEE2E6;
 
   /* Variables personalizadas IASD */
-  --iasd-azul: #003366;
-  --iasd-azul-hover: #002244;
-  --iasd-dorado: #C5A028;
-  --iasd-dorado-hover: #A88620;
-  --iasd-fondo: #F4F6F9;
-  --iasd-texto: #2D3436;
-  --iasd-texto-sec: #636E72;
-  --iasd-exito: #27AE60;
-  --iasd-peligro: #E74C3C;
-  --iasd-advertencia: #F39C12;
-  --iasd-borde: #DEE2E6;
+  --iasd-azul:            #003366;
+  --iasd-azul-hover:      #002244;
+  --iasd-dorado:          #C5A028;
+  --iasd-dorado-hover:    #A88620;
+  --iasd-fondo:           #F4F6F9;
+  --iasd-texto:           #2D3436;
+  --iasd-texto-sec:       #636E72;
+  --iasd-exito:           #27AE60;
+  --iasd-peligro:         #E74C3C;
+  --iasd-advertencia:     #F39C12;
+  --iasd-borde:           #DEE2E6;
 }
 
-/* --- Botones primarios --- */
-.btn-primary {
-  background-color: var(--iasd-azul);
-  border-color: var(--iasd-azul);
-  color: #FFFFFF;
-}
-.btn-primary:hover,
-.btn-primary:focus,
-.btn-primary:active {
-  background-color: var(--iasd-azul-hover);
-  border-color: var(--iasd-azul-hover);
-  color: #FFFFFF;
-}
-
-/* --- Botones outline primario --- */
-.btn-outline-primary {
-  color: var(--iasd-azul);
-  border-color: var(--iasd-azul);
-}
-.btn-outline-primary:hover,
-.btn-outline-primary:focus,
-.btn-outline-primary:active {
-  background-color: var(--iasd-azul);
-  border-color: var(--iasd-azul);
-  color: #FFFFFF;
-}
-
-/* --- Botones secundarios (dorado) --- */
-.btn-secondary {
-  background-color: var(--iasd-dorado);
-  border-color: var(--iasd-dorado);
-  color: #FFFFFF;
-}
-.btn-secondary:hover,
-.btn-secondary:focus,
-.btn-secondary:active {
-  background-color: var(--iasd-dorado-hover);
-  border-color: var(--iasd-dorado-hover);
-  color: #FFFFFF;
-}
-
-/* --- Botones de peligro --- */
-.btn-danger {
-  background-color: var(--iasd-peligro);
-  border-color: var(--iasd-peligro);
-}
-.btn-danger:hover {
-  background-color: #C0392B;
-  border-color: #C0392B;
-}
-
-/* --- Botones de exito --- */
-.btn-success {
-  background-color: var(--iasd-exito);
-  border-color: var(--iasd-exito);
-}
-.btn-success:hover {
-  background-color: #219A52;
-  border-color: #219A52;
-}
-
-/* --- Navbar --- */
-.navbar {
-  background-color: var(--iasd-azul) !important;
-}
-.navbar .navbar-brand,
-.navbar .nav-link,
-.navbar .navbar-text {
-  color: #FFFFFF !important;
-}
-.navbar .nav-link:hover {
-  color: var(--iasd-dorado) !important;
-}
-.navbar .nav-link.active {
-  color: var(--iasd-dorado) !important;
-  font-weight: 600;
-}
-
-/* --- Cards --- */
-.card {
-  border: 1px solid var(--iasd-borde);
-  border-radius: 0.5rem;
-  background-color: #FFFFFF;
-}
-.card-header {
-  background-color: var(--iasd-azul);
-  color: #FFFFFF;
-  border-radius: 0.5rem 0.5rem 0 0 !important;
-  font-weight: 600;
-}
-
-/* --- Formularios --- */
-.form-control:focus,
-.form-select:focus {
-  border-color: var(--iasd-azul);
-  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
-}
-.form-label {
+/* --- Fondo de la app --- */
+body {
+  background-color: var(--iasd-fondo);
   color: var(--iasd-texto);
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
 }
 
-/* --- Tablas --- */
-.table thead th {
-  background-color: var(--iasd-azul);
-  color: #FFFFFF;
-  border-color: var(--iasd-azul-hover);
-  font-weight: 600;
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-.table-striped > tbody > tr:nth-of-type(odd) {
-  background-color: rgba(0, 51, 102, 0.03);
-}
-.table-hover > tbody > tr:hover {
-  background-color: rgba(0, 51, 102, 0.07);
-}
-
-/* --- Badges --- */
-.badge.bg-primary {
-  background-color: var(--iasd-azul) !important;
-}
-.badge.bg-secondary {
-  background-color: var(--iasd-dorado) !important;
-}
-.badge.bg-success {
-  background-color: var(--iasd-exito) !important;
-}
-.badge.bg-danger {
-  background-color: var(--iasd-peligro) !important;
-}
-
-/* --- Titulos --- */
+/* --- Títulos --- */
 h1, h2, h3, h4, h5, h6 {
   color: var(--iasd-azul);
 }
@@ -185,218 +59,149 @@ a:hover {
   color: var(--iasd-azul-hover);
 }
 
-/* --- Fondo de la app --- */
-body {
-  background-color: var(--iasd-fondo);
-  color: var(--iasd-texto);
+/* ==============================================
+   Botones
+   ============================================== */
+
+.btn-primary {
+  background-color: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+  color: #FFFFFF;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--iasd-azul-hover);
+  border-color: var(--iasd-azul-hover);
+  color: #FFFFFF;
 }
 
-/* --- Login page (Vanta.js waves) --- */
-.login-vanta-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
+.btn-outline-primary {
+  color: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+  color: #FFFFFF;
 }
 
-.login-container {
-  position: relative;
-  z-index: 10;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
+.btn-secondary {
+  background-color: var(--iasd-dorado);
+  border-color: var(--iasd-dorado);
+  color: #FFFFFF;
+}
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: var(--iasd-dorado-hover);
+  border-color: var(--iasd-dorado-hover);
+  color: #FFFFFF;
 }
 
-.login-card {
-  width: 100%;
-  max-width: 420px;
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: 1rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  overflow: hidden;
-  animation: loginCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes loginCardIn {
-  from { opacity: 0; transform: translateY(28px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)   scale(1); }
-}
-
-.login-header {
-  background: #003366;
-  padding: 2rem 2.2rem 1.8rem;
-  text-align: center;
-  position: relative;
-}
-
-.login-logo {
-  width: 72px;
-  height: 72px;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  margin-bottom: 0.8rem;
-  margin-top: -2.5rem;
-}
-
-.login-brand {
-  font-size: 2.6rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.08em;
-  line-height: 1;
-}
-
-.login-brand-sub {
-  margin-top: 0.4rem;
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-}
-
-.login-body {
-  padding: 2rem 2.2rem 2.2rem;
-  background: #ffffff;
-}
-
-.login-form-title {
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #2D3436;
-  margin-bottom: 1.6rem;
-  letter-spacing: 0.01em;
-}
-
-.login-field {
-  margin-bottom: 1.2rem;
-}
-
-.login-field label {
-  display: block;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 0.45rem;
-}
-
-.login-field input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  font-family: inherit;
-  font-size: 0.95rem;
-  color: #2D3436;
-  background: #f8f9fa;
-  border: 1.5px solid #dde1e7;
-  border-radius: 0.55rem;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-}
-
-.login-field input::placeholder {
-  color: #adb5bd;
-}
-
-.login-field input:focus {
-  border-color: #003366;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12);
-}
-
-.login-field input.login-input-error {
+.btn-danger {
+  background-color: var(--iasd-peligro);
   border-color: var(--iasd-peligro);
 }
-
-.login-field input.login-input-error:focus {
-  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+.btn-danger:hover {
+  background-color: #C0392B;
+  border-color: #C0392B;
 }
 
-.login-error-text {
-  display: block;
-  font-size: 0.8rem;
-  color: var(--iasd-peligro);
-  margin-top: 0.35rem;
+.btn-success {
+  background-color: var(--iasd-exito);
+  border-color: var(--iasd-exito);
+}
+.btn-success:hover {
+  background-color: #219A52;
+  border-color: #219A52;
 }
 
-.login-btn-submit {
-  width: 100%;
-  padding: 0.85rem;
-  background: #003366;
-  color: #ffffff;
-  font-family: inherit;
-  font-size: 0.95rem;
+/* ==============================================
+   Navbar
+   ============================================== */
+
+.navbar {
+  background-color: var(--iasd-azul) !important;
+}
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar .navbar-text {
+  color: #FFFFFF !important;
+}
+.navbar .nav-link:hover  { color: var(--iasd-dorado) !important; }
+.navbar .nav-link.active { color: var(--iasd-dorado) !important; font-weight: 600; }
+
+/* ==============================================
+   Cards
+   ============================================== */
+
+.card {
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.5rem;
+  background-color: #FFFFFF;
+}
+.card-header {
+  background-color: var(--iasd-azul);
+  color: #FFFFFF;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  border: none;
-  border-radius: 0.55rem;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  box-shadow: 0 4px 14px rgba(0, 51, 102, 0.35);
-  margin-top: 0.5rem;
 }
 
-.login-btn-submit:hover {
-  background: #002244;
-  box-shadow: 0 6px 20px rgba(0, 51, 102, 0.45);
+/* ==============================================
+   Formularios
+   ============================================== */
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--iasd-azul);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+}
+.form-label {
+  color: var(--iasd-texto);
+  font-weight: 500;
+  font-size: 0.9rem;
 }
 
-.login-btn-submit:active {
-  transform: scale(0.98);
+/* ==============================================
+   Tablas
+   ============================================== */
+
+.table thead th {
+  background-color: var(--iasd-azul);
+  color: #FFFFFF;
+  border-color: var(--iasd-azul-hover);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(0, 51, 102, 0.03);
+}
+.table-hover > tbody > tr:hover {
+  background-color: rgba(0, 51, 102, 0.07);
+}
+.table-responsive {
+  border-radius: 0.5rem;
+  overflow: hidden;
 }
 
-.login-btn-submit.loading {
-  pointer-events: none;
-  opacity: 0.75;
-}
+/* ==============================================
+   Badges
+   ============================================== */
 
-.login-footer {
-  border-top: 1px solid #eee;
-  padding: 0.9rem 2.2rem;
-  text-align: center;
-  font-size: 0.72rem;
-  color: #adb5bd;
-  letter-spacing: 0.04em;
-  background: #ffffff;
-}
+.badge.bg-primary   { background-color: var(--iasd-azul) !important; }
+.badge.bg-secondary { background-color: var(--iasd-dorado) !important; }
+.badge.bg-success   { background-color: var(--iasd-exito) !important; }
+.badge.bg-danger    { background-color: var(--iasd-peligro) !important; }
 
-@media (max-width: 480px) {
-  .login-container {
-    padding: 1rem;
-    align-items: flex-start;
-    padding-top: 3rem;
-  }
+/* ==============================================
+   Componentes de UI
+   ============================================== */
 
-  .login-header {
-    padding: 1.6rem 1.4rem 1.4rem;
-  }
-
-  .login-brand {
-    font-size: 2.1rem;
-  }
-
-  .login-logo {
-    width: 60px;
-    height: 60px;
-  }
-
-  .login-body {
-    padding: 1.5rem 1.4rem 1.6rem;
-  }
-
-  .login-footer {
-    padding: 0.75rem 1.4rem;
-  }
-}
-
-/* --- Seccion del formulario de asistencia --- */
+/* Sección de formulario */
 .seccion-form {
   background-color: #FFFFFF;
   border: 1px solid var(--iasd-borde);
@@ -412,13 +217,7 @@ body {
   border-bottom: 2px solid var(--iasd-dorado);
 }
 
-/* --- Tabla responsive en mobile --- */
-.table-responsive {
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-/* --- Filtros --- */
+/* Filtros */
 .filtros-container {
   background-color: #FFFFFF;
   border: 1px solid var(--iasd-borde);
@@ -427,45 +226,264 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* --- Spinner de carga --- */
-.spinner-iasd {
-  color: var(--iasd-azul);
-}
+/* Spinner */
+.spinner-iasd { color: var(--iasd-azul); }
 
-/* --- Alerta personalizada --- */
+/* Alerta institucional */
 .alert-iasd {
   background-color: rgba(0, 51, 102, 0.1);
   border-color: var(--iasd-azul);
   color: var(--iasd-azul);
 }
 
-/* --- Mobile optimizations --- */
-@media (max-width: 768px) {
-  .seccion-form {
-    padding: 1rem;
-  }
-  .btn {
-    padding: 0.6rem 1rem;
-    font-size: 1rem;
-  }
-  .form-control,
-  .form-select {
-    font-size: 1rem;
-    padding: 0.6rem 0.75rem;
-  }
+/* ==============================================
+   Login — Vanta.js WAVES + Split Background
+   ============================================== */
+
+/* Canvas Vanta: cubre toda la pantalla */
+.login-vanta-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* Blanco sólido en la mitad inferior — corte limpio y recto */
+.login-split-bg {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52%;
+  background: #ffffff;
+  z-index: 1;
+}
+
+/* Contenedor centrador — siempre encima de ambos fondos */
+.login-container {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+/* Tarjeta */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Encabezado — diseño llamativo y reverente */
+.login-header {
+  background: var(--iasd-azul);
+  padding: 2.6rem 2.2rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 3px solid var(--iasd-dorado);
+}
+
+/* Patrón sutil de cruces repetidas */
+.login-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='56' height='56' viewBox='0 0 56 56' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='rgba(255,255,255,0.035)' stroke-width='0.7'%3E%3Cpath d='M28 10v36M10 28h36'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 56px 56px;
+  pointer-events: none;
+}
+
+/* Franja dorada superior */
+.login-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--iasd-dorado);
+}
+
+.login-logo-wrapper {
+  margin-bottom: 0.6rem;
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 3px solid var(--iasd-dorado);
+  padding: 3px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 6px rgba(197, 160, 40, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Ornamento decorativo  ── ◆ ──  */
+.login-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.9rem auto 1rem;
+  max-width: 160px;
+  color: var(--iasd-dorado);
+  font-size: 0.5rem;
+  position: relative;
+  z-index: 1;
+  opacity: 0.7;
+}
+.login-ornament::before,
+.login-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--iasd-dorado);
+}
+
+.login-brand {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #ffffff;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  line-height: 1.3;
+  position: relative;
+  z-index: 1;
+}
+
+.login-brand-sub {
+  margin-top: 0.2rem;
+  font-size: 1.05rem;
+  color: var(--iasd-dorado);
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  position: relative;
+  z-index: 1;
+}
+
+/* Cuerpo del formulario */
+.login-body {
+  padding: 1.8rem 2.2rem 2.2rem;
+  background: #ffffff;
+}
+
+.login-form-title {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--iasd-texto-sec);
+  margin-bottom: 1.4rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Campos */
+.login-field { margin-bottom: 1.2rem; }
+
+.login-field label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.4rem;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--iasd-texto);
+  background: #f8f9fa;
+  border: 1.5px solid var(--iasd-borde);
+  border-radius: 0.55rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.login-field input::placeholder { color: #adb5bd; }
+.login-field input:focus {
+  border-color: var(--iasd-azul);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12);
+}
+.login-field input.login-input-error { border-color: var(--iasd-peligro); }
+.login-field input.login-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+
+.login-error-text {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--iasd-peligro);
+  margin-top: 0.35rem;
+}
+
+/* Botón de envío */
+.login-btn-submit {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--iasd-azul);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border: none;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(0, 51, 102, 0.35);
+  margin-top: 0.4rem;
+}
+.login-btn-submit:hover   { background: var(--iasd-azul-hover); box-shadow: 0 6px 20px rgba(0, 51, 102, 0.45); }
+.login-btn-submit:active  { transform: scale(0.98); }
+.login-btn-submit.loading { pointer-events: none; opacity: 0.75; }
+
+/* Footer */
+.login-footer {
+  border-top: 1px solid #eee;
+  padding: 0.85rem 2.2rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #adb5bd;
+  letter-spacing: 0.04em;
+  background: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-container { padding: 1rem; }
+  .login-header    { padding: 1.8rem 1.2rem 1.4rem; }
+  .login-brand     { font-size: 1.15rem; letter-spacing: 0.14em; }
+  .login-brand-sub { font-size: 0.85rem; letter-spacing: 0.16em; }
+  .login-logo      { width: 68px; height: 68px; }
+  .login-ornament  { max-width: 120px; margin: 0.7rem auto 0.8rem; }
+  .login-body      { padding: 1.2rem 1.2rem 1.4rem; }
+  .login-footer    { padding: 0.65rem 1.2rem; font-size: 0.65rem; }
 }
 
 /* ==============================================
    Sidebar Layout
    ============================================== */
 
-/* --- Layout principal --- */
 .sidebar-layout {
   display: flex;
   min-height: 100vh;
 }
 
-/* --- Sidebar --- */
 .sidebar {
   width: 260px;
   background: linear-gradient(180deg, var(--iasd-azul) 0%, #001a33 100%);
@@ -480,7 +498,6 @@ body {
   transition: transform 0.3s ease;
 }
 
-/* --- Sidebar header --- */
 .sidebar-header {
   display: flex;
   align-items: center;
@@ -489,23 +506,9 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.sidebar-marca {
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-marca-titulo {
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #FFFFFF;
-}
-
-.sidebar-marca-subtitulo {
-  font-size: 0.7rem;
-  opacity: 0.7;
-  margin-top: 2px;
-}
+.sidebar-marca         { display: flex; flex-direction: column; }
+.sidebar-marca-titulo  { font-size: 1.4rem; font-weight: 800; letter-spacing: 1px; color: #FFFFFF; }
+.sidebar-marca-subtitulo { font-size: 0.7rem; opacity: 0.7; margin-top: 2px; }
 
 .sidebar-cerrar {
   background: none;
@@ -517,7 +520,6 @@ body {
   line-height: 1;
 }
 
-/* --- Sidebar nav --- */
 .sidebar-nav {
   flex: 1;
   padding: 1rem 0;
@@ -534,53 +536,19 @@ body {
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
 }
+.sidebar-link:hover { background-color: rgba(255, 255, 255, 0.1); color: #FFFFFF; text-decoration: none; }
+.sidebar-link-activo { background-color: rgba(255, 255, 255, 0.15); color: #FFFFFF; border-left-color: var(--iasd-dorado); font-weight: 600; }
+.sidebar-link-icono  { font-size: 1.1rem; margin-right: 0.75rem; width: 20px; text-align: center; }
 
-.sidebar-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-  text-decoration: none;
-}
-
-.sidebar-link-activo {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
-  border-left-color: var(--iasd-dorado);
-  font-weight: 600;
-}
-
-.sidebar-link-icono {
-  font-size: 1.1rem;
-  margin-right: 0.75rem;
-  width: 20px;
-  text-align: center;
-}
-
-/* --- Sidebar footer --- */
 .sidebar-footer {
   padding: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.sidebar-usuario-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.sidebar-usuario-info  { display: flex; flex-direction: column; gap: 4px; }
+.sidebar-usuario-nombre { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-usuario-rol   { align-self: flex-start; font-size: 0.65rem; }
 
-.sidebar-usuario-nombre {
-  font-size: 0.85rem;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-usuario-rol {
-  align-self: flex-start;
-  font-size: 0.65rem;
-}
-
-/* --- Contenido principal --- */
 .sidebar-contenido {
   flex: 1;
   margin-left: 260px;
@@ -589,7 +557,6 @@ body {
   min-height: 100vh;
 }
 
-/* --- Topbar --- */
 .sidebar-topbar {
   display: flex;
   align-items: center;
@@ -601,23 +568,9 @@ body {
   top: 0;
   z-index: 1000;
 }
+.sidebar-topbar-titulo  { font-size: 1.1rem; font-weight: 600; color: var(--iasd-azul); margin-left: 0.5rem; }
+.sidebar-topbar-usuario { margin-left: auto; display: flex; align-items: center; font-size: 0.85rem; color: var(--iasd-texto-sec); }
 
-.sidebar-topbar-titulo {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--iasd-azul);
-  margin-left: 0.5rem;
-}
-
-.sidebar-topbar-usuario {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  font-size: 0.85rem;
-  color: var(--iasd-texto-sec);
-}
-
-/* --- Hamburguesa --- */
 .sidebar-hamburguesa {
   display: none;
   flex-direction: column;
@@ -632,47 +585,32 @@ body {
   padding: 6px;
   gap: 4px;
 }
+.sidebar-hamburguesa span { display: block; width: 20px; height: 2px; background-color: var(--iasd-azul); border-radius: 1px; }
 
-.sidebar-hamburguesa span {
-  display: block;
-  width: 20px;
-  height: 2px;
-  background-color: var(--iasd-azul);
-  border-radius: 1px;
-}
+.sidebar-main { flex: 1; background-color: var(--iasd-fondo); }
 
-/* --- Main content area --- */
-.sidebar-main {
-  flex: 1;
-  background-color: var(--iasd-fondo);
-}
-
-/* --- Overlay para mobile --- */
 .sidebar-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1040;
 }
 
-/* --- Responsive: Mobile/Tablet --- */
 @media (max-width: 991.98px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
+  .sidebar            { transform: translateX(-100%); }
+  .sidebar-abierto    { transform: translateX(0); }
+  .sidebar-contenido  { margin-left: 0; }
+  .sidebar-hamburguesa { display: flex; }
+}
 
-  .sidebar-abierto {
-    transform: translateX(0);
-  }
+/* ==============================================
+   Mobile optimizations
+   ============================================== */
 
-  .sidebar-contenido {
-    margin-left: 0;
-  }
-
-  .sidebar-hamburguesa {
-    display: flex;
-  }
+@media (max-width: 768px) {
+  .seccion-form { padding: 1rem; }
+  .btn          { padding: 0.6rem 1rem; font-size: 1rem; }
+  .form-control,
+  .form-select  { font-size: 1rem; padding: 0.6rem 0.75rem; }
 }

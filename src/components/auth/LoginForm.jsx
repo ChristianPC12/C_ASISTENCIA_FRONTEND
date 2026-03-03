@@ -3,19 +3,20 @@ import WAVES from 'vanta/dist/vanta.waves.min';
 import * as THREE from 'three';
 
 /**
- * Formulario de inicio de sesión con fondo animado Vanta.js
+ * LoginForm
  * Props:
- *  - onSubmit: función que recibe { usuario, password }
- *  - cargando: boolean para deshabilitar el botón
- *  - errores: objeto con errores por campo
+ *  - onSubmit  : ({ usuario, password }) => void
+ *  - cargando  : boolean
+ *  - errores   : { usuario?: string, password?: string }
  */
-export default function LoginForm({ onSubmit, cargando, errores }) {
-  const [usuario, setUsuario] = useState('');
+export default function LoginForm({ onSubmit, cargando, errores = {} }) {
+  const [usuario, setUsuario]   = useState('');
   const [password, setPassword] = useState('');
-  const vantaRef = useRef(null);
+
+  const vantaRef    = useRef(null);
   const vantaEffect = useRef(null);
 
-  // Inicializar y destruir Vanta.js
+  /* ── Inicializar / destruir Vanta ── */
   useEffect(() => {
     if (!vantaEffect.current) {
       vantaEffect.current = WAVES({
@@ -23,12 +24,12 @@ export default function LoginForm({ onSubmit, cargando, errores }) {
         THREE,
         mouseControls: true,
         touchControls: true,
-        gyroControls: false,
-        color: 0x003366,
-        shininess: 35,
-        waveHeight: 15,
-        waveSpeed: 0.7,
-        zoom: 0.85
+        gyroControls:  false,
+        color:      0x0a4d7a,
+        shininess:  45,
+        waveHeight: 12,
+        waveSpeed:  0.6,
+        zoom:       0.80,
       });
     }
     return () => {
@@ -46,29 +47,37 @@ export default function LoginForm({ onSubmit, cargando, errores }) {
 
   return (
     <>
-      {/* Fondo animado Vanta */}
+      {/* z-index: 0 — canvas Vanta, cubre toda la pantalla */}
       <div ref={vantaRef} className="login-vanta-bg" />
 
+      {/* z-index: 1 — blanco sólido en la mitad inferior, corte recto */}
+      <div className="login-split-bg" />
+
+      {/* z-index: 10 — tarjeta centrada sobre el corte */}
       <div className="login-container">
         <div className="login-card">
 
-          {/* Encabezado con logo */}
+          {/* Encabezado */}
           <div className="login-header">
-            <img
-              src="/imgs/logo_IASD.jpg"
-              alt="Logo IASD"
-              className="login-logo"
-            />
-            <div className="login-brand">IASD</div>
-            <div className="login-brand-sub">Control de Asistencia</div>
+            <div className="login-logo-wrapper">
+              <img
+                src="/imgs/logo_IASD.jpg"
+                alt="Logo IASD"
+                className="login-logo"
+              />
+            </div>
+            <div className="login-ornament">◆</div>
+            <div className="login-brand">Iglesia Adventista</div>
+            <div className="login-brand-sub">del Séptimo Día</div>
           </div>
 
-          {/* Cuerpo del formulario */}
+          {/* Cuerpo — fondo semitransparente, el blur viene de .login-card en el CSS */}
           <div className="login-body">
-            <p className="login-form-title">Iniciar Sesión</p>
+            <p className="login-form-title">Control de Asistencia</p>
 
             <form onSubmit={manejarEnvio} noValidate>
-              {/* Usuario */}
+
+              {/* Campo usuario */}
               <div className="login-field">
                 <label htmlFor="usuario">Usuario</label>
                 <input
@@ -87,7 +96,7 @@ export default function LoginForm({ onSubmit, cargando, errores }) {
                 )}
               </div>
 
-              {/* Contraseña */}
+              {/* Campo contraseña */}
               <div className="login-field">
                 <label htmlFor="password">Contraseña</label>
                 <input
@@ -108,18 +117,23 @@ export default function LoginForm({ onSubmit, cargando, errores }) {
               {/* Botón */}
               <button
                 type="submit"
-                className={`login-btn-submit ${cargando ? 'loading' : ''}`}
+                className={`login-btn-submit${cargando ? ' loading' : ''}`}
                 disabled={cargando}
               >
                 {cargando ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                      aria-hidden="true"
+                    />
                     Ingresando...
                   </>
                 ) : (
                   'Ingresar'
                 )}
               </button>
+
             </form>
           </div>
 

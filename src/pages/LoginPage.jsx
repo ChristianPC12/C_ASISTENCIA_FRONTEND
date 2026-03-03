@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import LoginForm from '../components/auth/LoginForm';
 import { useAuth } from '../hooks/useAuth';
 
@@ -8,10 +9,16 @@ import { useAuth } from '../hooks/useAuth';
 export default function LoginPage() {
   const { iniciarSesion, cargando, errores } = useAuth();
 
+  /* Bloquea el scroll del body mientras el login está montado */
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   const manejarLogin = async (datos) => {
     await iniciarSesion(datos);
-    // No se necesita navigate: AppContent re-renderiza automaticamente
-    // al cambiar estaAutenticado y muestra las rutas autenticadas
   };
 
   return (
