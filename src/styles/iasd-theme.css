@@ -482,6 +482,8 @@ a:hover {
 .sidebar-layout {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 .sidebar {
@@ -494,6 +496,7 @@ a:hover {
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100dvh;
   z-index: 1050;
   transition: transform 0.3s ease;
 }
@@ -521,6 +524,7 @@ a:hover {
 .sidebar-marca-subtitulo { font-size: 0.7rem; color: var(--iasd-dorado); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
 
 .sidebar-cerrar {
+  display: none;
   background: none;
   border: none;
   color: #FFFFFF;
@@ -528,6 +532,7 @@ a:hover {
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .sidebar-nav {
@@ -565,6 +570,8 @@ a:hover {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
+  width: calc(100% - 260px);
 }
 
 .sidebar-topbar {
@@ -597,7 +604,11 @@ a:hover {
 }
 .sidebar-hamburguesa span { display: block; width: 20px; height: 2px; background-color: var(--iasd-azul); border-radius: 1px; }
 
-.sidebar-main { flex: 1; background-color: var(--iasd-fondo); }
+.sidebar-main {
+  flex: 1;
+  background-color: var(--iasd-fondo);
+  overflow-x: hidden;
+}
 
 .sidebar-overlay {
   position: fixed;
@@ -610,8 +621,17 @@ a:hover {
 @media (max-width: 991.98px) {
   .sidebar            { transform: translateX(-100%); }
   .sidebar-abierto    { transform: translateX(0); }
-  .sidebar-contenido  { margin-left: 0; }
+  .sidebar-contenido  { margin-left: 0; width: 100%; }
   .sidebar-hamburguesa { display: flex; }
+  .sidebar-cerrar     { display: block; }
+}
+
+@media (max-width: 480px) {
+  .sidebar { width: 85vw; max-width: 300px; }
+  .sidebar-topbar {
+    padding: 0.6rem 0.75rem;
+  }
+  .sidebar-topbar-titulo { font-size: 0.95rem; margin-left: 0.35rem; }
 }
 
 /* ==============================================
@@ -623,6 +643,10 @@ a:hover {
   .btn          { padding: 0.6rem 1rem; font-size: 1rem; }
   .form-control,
   .form-select  { font-size: 1rem; padding: 0.6rem 0.75rem; }
+
+  /* Reducir padding del contenido en mobile */
+  .container-fluid { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .sidebar-main .container-fluid { padding-top: 0.5rem !important; }
 }
 
 /* ==============================================

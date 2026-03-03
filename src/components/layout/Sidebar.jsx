@@ -49,7 +49,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <span className="sidebar-marca-subtitulo">del Séptimo Día</span>
           </div>
           {/* Boton cerrar en mobile */}
-          <button className="sidebar-cerrar d-lg-none" onClick={cerrarMenu} aria-label="Cerrar menú">
+          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menú">
             &times;
           </button>
         </div>
