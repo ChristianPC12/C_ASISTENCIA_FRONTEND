@@ -110,7 +110,7 @@ export function useUsuario() {
 
   // Desactivar usuario (soft delete)
   const eliminar = useCallback(async (id) => {
-    if (!confirmar('¿Esta seguro de que desea desactivar este usuario?')) {
+    if (!confirmar('¿Está seguro de que desea desactivar este usuario?')) {
       return false;
     }
 

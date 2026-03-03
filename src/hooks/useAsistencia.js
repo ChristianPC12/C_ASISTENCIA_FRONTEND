@@ -197,22 +197,25 @@ export function useAsistencia() {
 
   // Funcion interna para cargar datos de edicion
   const cargarParaEdicion = (registro) => {
+    // Convertir 0 a '' en campos numéricos para que se muestre el placeholder
+    const aVacio = (val) => (val === 0 || val === '0') ? '' : val;
+
     setFormulario({
       culto_id: registro.culto_id,
       fecha: registro.fecha,
-      llegaron_antes_hora: registro.llegaron_antes_hora,
-      llegaron_despues_hora: registro.llegaron_despues_hora,
-      ninos: registro.ninos,
-      jovenes: registro.jovenes,
-      total_asistentes: registro.total_asistentes,
-      proc_barrio: registro.proc_barrio,
-      proc_guayabo: registro.proc_guayabo,
-      visitas_barrio: registro.visitas_barrio,
+      llegaron_antes_hora: aVacio(registro.llegaron_antes_hora),
+      llegaron_despues_hora: aVacio(registro.llegaron_despues_hora),
+      ninos: aVacio(registro.ninos),
+      jovenes: aVacio(registro.jovenes),
+      total_asistentes: aVacio(registro.total_asistentes),
+      proc_barrio: aVacio(registro.proc_barrio),
+      proc_guayabo: aVacio(registro.proc_guayabo),
+      visitas_barrio: aVacio(registro.visitas_barrio),
       nombres_visitas_barrio: registro.nombres_visitas_barrio || '',
-      visitas_guayabo: registro.visitas_guayabo,
+      visitas_guayabo: aVacio(registro.visitas_guayabo),
       nombres_visitas_guayabo: registro.nombres_visitas_guayabo || '',
-      retiros_antes_terminar: registro.retiros_antes_terminar,
-      se_quedaron_todo: registro.se_quedaron_todo,
+      retiros_antes_terminar: aVacio(registro.retiros_antes_terminar),
+      se_quedaron_todo: aVacio(registro.se_quedaron_todo),
       observaciones: registro.observaciones || ''
     });
     setEditandoId(registro.id);
@@ -227,7 +230,7 @@ export function useAsistencia() {
 
   // Eliminar registro
   const eliminar = useCallback(async (id) => {
-    if (!confirmar('¿Esta seguro de que desea eliminar este registro de asistencia?')) {
+    if (!confirmar('¿Está seguro de que desea eliminar este registro de asistencia?')) {
       return false;
     }
 
