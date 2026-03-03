@@ -83,7 +83,11 @@ export function useAsistencia() {
       if (filtros.culto) params.culto = filtros.culto;
       if (filtros.anio) params.anio = filtros.anio;
       if (filtros.trimestre) params.trimestre = filtros.trimestre;
-      if (filtros.mes) params.mes = filtros.mes;
+      if (filtros.mes) {
+        // Enviar mes como string de dos dígitos ("01", "02", ...)
+        const mesStr = String(filtros.mes).padStart(2, '0');
+        params.mes = mesStr;
+      }
 
       const res = await asistenciaApi.listar(params);
       if (res.exito) {
