@@ -39,9 +39,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       <aside className={`sidebar ${abierto ? 'sidebar-abierto' : ''}`}>
         {/* Cabecera del sidebar */}
         <div className="sidebar-header">
+          <img
+            src="/imgs/logo_IASD.jpg"
+            alt="Logo IASD"
+            className="sidebar-logo"
+          />
           <div className="sidebar-marca">
-            <span className="sidebar-marca-titulo">IASD</span>
-            <span className="sidebar-marca-subtitulo">Control de Asistencia</span>
+            <span className="sidebar-marca-titulo">Iglesia Adventista</span>
+            <span className="sidebar-marca-subtitulo">del Séptimo Día</span>
           </div>
           {/* Boton cerrar en mobile */}
           <button className="sidebar-cerrar d-lg-none" onClick={cerrarMenu} aria-label="Cerrar menú">
@@ -89,7 +94,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <span></span>
           </button>
           <span className="sidebar-topbar-titulo">
-            {enlaces.find(e => esRutaActiva(e.ruta))?.etiqueta || 'IASD'}
+            {enlaces.find(e => esRutaActiva(e.ruta))?.etiqueta || 'Iglesia Adventista'}
           </span>
           <div className="sidebar-topbar-usuario d-none d-md-flex">
             <span>{usuario?.nombre_completo}</span>
