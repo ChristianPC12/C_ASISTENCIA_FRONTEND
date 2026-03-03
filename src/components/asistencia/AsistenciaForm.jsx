@@ -11,6 +11,7 @@
  *  - onLimpiar: funcion para limpiar el formulario
  */
 import { CULTO_DIA_SEMANA } from '../../config/constants';
+import SelectorFecha from './SelectorFecha';
 
 export default function AsistenciaForm({
   formulario,
@@ -38,24 +39,6 @@ export default function AsistenciaForm({
 
   // Nombres de dias para el mensaje de error
   const NOMBRES_DIA = { 0: 'domingo', 3: 'miercoles', 6: 'sabado' };
-
-  // Manejar cambio de fecha validando que sea el dia correcto
-  const manejarCambioFecha = (e) => {
-    const valor = e.target.value;
-    if (!valor || diaPermitido === null || diaPermitido === undefined) {
-      onCambiarCampo('fecha', valor);
-      return;
-    }
-    // Parsear como fecha local (YYYY-MM-DD) para evitar desfase de zona horaria
-    const [anio, mes, dia] = valor.split('-').map(Number);
-    const fecha = new Date(anio, mes - 1, dia);
-    if (fecha.getDay() !== diaPermitido) {
-      alert(`Para el culto "${cultoSeleccionado.nombre}" solo se permiten dias ${NOMBRES_DIA[diaPermitido] || diaPermitido}.`);
-      onCambiarCampo('fecha', '');
-      return;
-    }
-    onCambiarCampo('fecha', valor);
-  };
 
   // Al cambiar culto, limpiar la fecha si ya no corresponde al dia
   const manejarCambioCulto = (e) => {
@@ -134,23 +117,17 @@ export default function AsistenciaForm({
 
               <div className="col-md-6">
                 <label htmlFor="fecha" className="form-label">Fecha</label>
-                <input
-                  type="date"
-                  id="fecha"
-                  name="fecha"
-                  className={`form-control ${errores.fecha ? 'is-invalid' : ''}`}
+                <SelectorFecha
                   value={formulario.fecha}
-                  onChange={manejarCambioFecha}
+                  onChange={(valor) => onCambiarCampo('fecha', valor)}
+                  diaPermitido={diaPermitido}
                   disabled={cargando || !formulario.culto_id}
+                  className={errores.fecha ? 'is-invalid' : ''}
+                  placeholder={!formulario.culto_id ? 'Seleccione un culto primero' : 'Seleccionar fecha'}
+                  nombreDia={NOMBRES_DIA[diaPermitido] || ''}
                 />
-                {!formulario.culto_id && (
-                  <small className="text-muted">Seleccione un culto primero</small>
-                )}
-                {formulario.culto_id && cultoSeleccionado && (
-                  <small className="text-muted">Solo dias {NOMBRES_DIA[diaPermitido] || ''}</small>
-                )}
                 {errores.fecha && (
-                  <div className="invalid-feedback">{errores.fecha}</div>
+                  <div className="invalid-feedback d-block">{errores.fecha}</div>
                 )}
               </div>
             </div>
