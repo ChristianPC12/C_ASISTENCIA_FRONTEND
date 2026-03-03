@@ -39,7 +39,7 @@ function alPresionarTecla(callback) {
 }
 
 /* ─── Sub-componente: Encabezado de navegacion de mes ─────── */
-function EncabezadoCalendario({ mesVista, anioVista, onAnterior, onSiguiente }) {
+function EncabezadoCalendario({ mesVista, anioVista, onAnterior, onSiguiente, deshabilitarSiguiente }) {
   return (
     <div className="d-flex justify-content-between align-items-center mb-2">
       <button type="button" className="btn btn-sm btn-outline-secondary border-0" onClick={onAnterior}>
@@ -48,7 +48,7 @@ function EncabezadoCalendario({ mesVista, anioVista, onAnterior, onSiguiente }) 
       <strong className="text-capitalize" style={{ color: 'var(--iasd-azul, #003366)' }}>
         {MESES[mesVista]} {anioVista}
       </strong>
-      <button type="button" className="btn btn-sm btn-outline-secondary border-0" onClick={onSiguiente}>
+      <button type="button" className="btn btn-sm btn-outline-secondary border-0" onClick={onSiguiente} disabled={deshabilitarSiguiente}>
         <i className="bi bi-chevron-right"></i>
       </button>
     </div>
@@ -146,7 +146,8 @@ export default function SelectorFecha({
   disabled = false,
   className = '',
   placeholder = 'Seleccionar fecha',
-  nombreDia = ''
+  nombreDia = '',
+  id = 'fecha'
 }) {
   const fechasOcupadas = new Set(fechasDeshabilitadas);
   const hoy = new Date();
@@ -188,8 +189,20 @@ export default function SelectorFecha({
   };
 
   const mesSiguiente = () => {
-    if (mesVista === 11) { setMesVista(0); setAnioVista(a => a + 1); }
-    else { setMesVista(m => m + 1); }
+    // No permitir avanzar mas alla del mes actual
+    const ahora = new Date();
+    const mesActual = ahora.getMonth();
+    const anioActual = ahora.getFullYear();
+    let nuevoMes = mesVista;
+    let nuevoAnio = anioVista;
+    if (mesVista === 11) { nuevoMes = 0; nuevoAnio = anioVista + 1; }
+    else { nuevoMes = mesVista + 1; }
+    // Bloquear si el nuevo mes/anio supera el actual
+    if (nuevoAnio > anioActual || (nuevoAnio === anioActual && nuevoMes > mesActual)) {
+      return;
+    }
+    setMesVista(nuevoMes);
+    setAnioVista(nuevoAnio);
   };
 
   // Generar las celdas del calendario
@@ -253,7 +266,7 @@ export default function SelectorFecha({
   const celdas = generarDias();
 
   return (
-    <div ref={refContenedor} style={{ position: 'relative' }}>
+    <div ref={refContenedor} id={id} style={{ position: 'relative' }}>
       {/* Input que muestra la fecha y abre el calendario */}
       <div
         role="button"
@@ -306,6 +319,10 @@ export default function SelectorFecha({
               anioVista={anioVista}
               onAnterior={mesAnterior}
               onSiguiente={mesSiguiente}
+              deshabilitarSiguiente={
+                anioVista > hoy.getFullYear() ||
+                (anioVista === hoy.getFullYear() && mesVista >= hoy.getMonth())
+              }
             />
 
             {nombreDia && (

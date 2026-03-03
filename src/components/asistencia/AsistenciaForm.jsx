@@ -11,6 +11,7 @@
  *  - onLimpiar: funcion para limpiar el formulario
  */
 import { CULTO_DIA_SEMANA } from '../../config/constants';
+import { OBSERVACIONES_MAX } from '../../validators/asistenciaValidator';
 import SelectorFecha from './SelectorFecha';
 
 /** Valor por defecto estable para evitar nueva referencia en cada render */
@@ -62,10 +63,20 @@ export default function AsistenciaForm({
     }
   };
 
+  // Campos obligatorios (se muestran con asterisco)
+  const camposObligatorios = new Set([
+    'culto_id', 'fecha',
+    'llegaron_antes_hora', 'llegaron_despues_hora',
+    'proc_barrio', 'proc_guayabo'
+  ]);
+
   // Renderizar un campo numérico
   const campoNumerico = (nombre, etiqueta, colClase = 'col-md-6 col-lg-4') => (
     <div className={colClase}>
-      <label htmlFor={nombre} className="form-label">{etiqueta}</label>
+      <label htmlFor={nombre} className="form-label">
+        {etiqueta}
+        {camposObligatorios.has(nombre) && <span className="text-danger ms-1">*</span>}
+      </label>
       <input
         type="number"
         id={nombre}
@@ -98,7 +109,7 @@ export default function AsistenciaForm({
             <h6>Información del Culto</h6>
             <div className="row g-3">
               <div className="col-md-6">
-                <label htmlFor="culto_id" className="form-label">Culto</label>
+                <label htmlFor="culto_id" className="form-label">Culto <span className="text-danger">*</span></label>
                 <select
                   id="culto_id"
                   name="culto_id"
@@ -120,7 +131,7 @@ export default function AsistenciaForm({
               </div>
 
               <div className="col-md-6">
-                <label htmlFor="fecha" className="form-label">Fecha</label>
+                <label htmlFor="fecha" className="form-label">Fecha <span className="text-danger">*</span></label>
                 <SelectorFecha
                   value={formulario.fecha}
                   onChange={(valor) => onCambiarCampo('fecha', valor)}
@@ -259,13 +270,22 @@ export default function AsistenciaForm({
             <textarea
               id="observaciones"
               name="observaciones"
-              className="form-control"
+              className={`form-control ${errores.observaciones ? 'is-invalid' : ''}`}
               rows="3"
               value={formulario.observaciones}
               onChange={manejarCambio}
               placeholder="Observaciones adicionales (opcional)"
               disabled={cargando}
+              maxLength={OBSERVACIONES_MAX}
             ></textarea>
+            <div className="d-flex justify-content-between mt-1">
+              {errores.observaciones
+                ? <small className="text-danger">{errores.observaciones}</small>
+                : <span></span>}
+              <small className={`${(formulario.observaciones?.length || 0) >= OBSERVACIONES_MAX ? 'text-danger fw-bold' : 'text-muted'}`}>
+                {formulario.observaciones?.length || 0}/{OBSERVACIONES_MAX}
+              </small>
+            </div>
           </div>
 
           {/* Botones */}

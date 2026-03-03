@@ -158,6 +158,21 @@ export function useAsistencia() {
     const validacion = validarAsistencia(formulario);
     if (!validacion.valido) {
       setErrores(validacion.errores);
+      // Enfocar el primer campo con error para que el usuario sepa donde corregir
+      if (validacion.primerCampoError) {
+        setTimeout(() => {
+          const el = document.getElementById(validacion.primerCampoError);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Para el selector de fecha usamos un click, para el resto focus
+            if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+              el.focus({ preventScroll: true });
+            } else {
+              el.click();
+            }
+          }
+        }, 100);
+      }
       return false;
     }
 
