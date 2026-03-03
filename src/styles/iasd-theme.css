@@ -191,28 +191,209 @@ body {
   color: var(--iasd-texto);
 }
 
-/* --- Login page --- */
+/* --- Login page (Vanta.js waves) --- */
+.login-vanta-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
 .login-container {
+  position: relative;
+  z-index: 10;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--iasd-azul) 0%, #001a33 100%);
+  padding: 1.5rem;
 }
+
 .login-card {
   width: 100%;
   max-width: 420px;
-  border: none;
+  background: rgba(255, 255, 255, 0.97);
   border-radius: 1rem;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+  animation: loginCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.login-card .card-header {
+
+@keyframes loginCardIn {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.login-header {
+  background: #003366;
+  padding: 2rem 2.2rem 1.8rem;
   text-align: center;
-  padding: 1.5rem;
-  border-radius: 1rem 1rem 0 0 !important;
+  position: relative;
 }
-.login-card .card-body {
-  padding: 2rem;
+
+.login-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.8rem;
+  margin-top: -2.5rem;
+}
+
+.login-brand {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.login-brand-sub {
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.login-body {
+  padding: 2rem 2.2rem 2.2rem;
+  background: #ffffff;
+}
+
+.login-form-title {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2D3436;
+  margin-bottom: 1.6rem;
+  letter-spacing: 0.01em;
+}
+
+.login-field {
+  margin-bottom: 1.2rem;
+}
+
+.login-field label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.45rem;
+}
+
+.login-field input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #2D3436;
+  background: #f8f9fa;
+  border: 1.5px solid #dde1e7;
+  border-radius: 0.55rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.login-field input::placeholder {
+  color: #adb5bd;
+}
+
+.login-field input:focus {
+  border-color: #003366;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12);
+}
+
+.login-field input.login-input-error {
+  border-color: var(--iasd-peligro);
+}
+
+.login-field input.login-input-error:focus {
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+}
+
+.login-error-text {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--iasd-peligro);
+  margin-top: 0.35rem;
+}
+
+.login-btn-submit {
+  width: 100%;
+  padding: 0.85rem;
+  background: #003366;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border: none;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(0, 51, 102, 0.35);
+  margin-top: 0.5rem;
+}
+
+.login-btn-submit:hover {
+  background: #002244;
+  box-shadow: 0 6px 20px rgba(0, 51, 102, 0.45);
+}
+
+.login-btn-submit:active {
+  transform: scale(0.98);
+}
+
+.login-btn-submit.loading {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+.login-footer {
+  border-top: 1px solid #eee;
+  padding: 0.9rem 2.2rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #adb5bd;
+  letter-spacing: 0.04em;
+  background: #ffffff;
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 3rem;
+  }
+
+  .login-header {
+    padding: 1.6rem 1.4rem 1.4rem;
+  }
+
+  .login-brand {
+    font-size: 2.1rem;
+  }
+
+  .login-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .login-body {
+    padding: 1.5rem 1.4rem 1.6rem;
+  }
+
+  .login-footer {
+    padding: 0.75rem 1.4rem;
+  }
 }
 
 /* --- Seccion del formulario de asistencia --- */
