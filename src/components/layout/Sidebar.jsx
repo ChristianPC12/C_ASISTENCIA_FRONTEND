@@ -95,7 +95,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       </aside>
 
       {/* Contenido principal */}
-      <div className="sidebar-contenido">
+      <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
         <header className="sidebar-topbar">
           <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">

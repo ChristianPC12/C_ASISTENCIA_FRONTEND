@@ -629,6 +629,13 @@ a:hover {
   box-sizing: border-box;
 }
 
+.sidebar-contenido-bloqueado {
+  overflow: hidden !important;
+  height: 100vh;
+  height: 100dvh;
+  touch-action: none;
+}
+
 .sidebar-overlay {
   position: fixed;
   top: 0; left: 0;
