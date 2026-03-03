@@ -24,6 +24,22 @@ export const TRIMESTRE_OPCIONES = [
   { valor: 4, etiqueta: '4to Trimestre (Oct-Dic)' }
 ];
 
+// Meses
+export const MES_OPCIONES = [
+  { valor: 1, etiqueta: 'Enero' },
+  { valor: 2, etiqueta: 'Febrero' },
+  { valor: 3, etiqueta: 'Marzo' },
+  { valor: 4, etiqueta: 'Abril' },
+  { valor: 5, etiqueta: 'Mayo' },
+  { valor: 6, etiqueta: 'Junio' },
+  { valor: 7, etiqueta: 'Julio' },
+  { valor: 8, etiqueta: 'Agosto' },
+  { valor: 9, etiqueta: 'Septiembre' },
+  { valor: 10, etiqueta: 'Octubre' },
+  { valor: 11, etiqueta: 'Noviembre' },
+  { valor: 12, etiqueta: 'Diciembre' }
+];
+
 // Formulario inicial de asistencia
 export const ASISTENCIA_FORM_INICIAL = {
   culto_id: '',

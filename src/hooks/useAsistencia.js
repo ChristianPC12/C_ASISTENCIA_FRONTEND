@@ -22,7 +22,8 @@ export function useAsistencia() {
   const [filtros, setFiltros] = useState({
     culto: '',
     anio: ANIO_ACTUAL,
-    trimestre: ''
+    trimestre: '',
+    mes: ''
   });
 
   // Auto-calcular total_asistentes cuando cambian antes/despues
@@ -82,6 +83,7 @@ export function useAsistencia() {
       if (filtros.culto) params.culto = filtros.culto;
       if (filtros.anio) params.anio = filtros.anio;
       if (filtros.trimestre) params.trimestre = filtros.trimestre;
+      if (filtros.mes) params.mes = filtros.mes;
 
       const res = await asistenciaApi.listar(params);
       if (res.exito) {
