@@ -16,6 +16,7 @@ export function useAsistencia() {
   const [editandoId, setEditandoId] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [errores, setErrores] = useState({});
+  const [fechasRegistradas, setFechasRegistradas] = useState([]);
 
   // Filtros
   const [filtros, setFiltros] = useState({
@@ -94,6 +95,30 @@ export function useAsistencia() {
     }
   }, [filtros]);
 
+  // Cargar fechas ya registradas para el culto seleccionado
+  const cargarFechasRegistradas = useCallback(async (cultoId) => {
+    if (!cultoId) {
+      setFechasRegistradas([]);
+      return;
+    }
+    try {
+      const cultoObj = cultos.find(c => String(c.id) === String(cultoId));
+      const params = {};
+      if (cultoObj) params.culto = cultoObj.codigo;
+      const res = await asistenciaApi.listar(params);
+      if (res.exito) {
+        setFechasRegistradas((res.datos || []).map(r => r.fecha));
+      }
+    } catch {
+      setFechasRegistradas([]);
+    }
+  }, [cultos]);
+
+  // Recargar fechas registradas cuando cambia el culto seleccionado
+  useEffect(() => {
+    cargarFechasRegistradas(formulario.culto_id);
+  }, [formulario.culto_id, cultos]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Cambiar un campo del formulario
   const cambiarCampo = useCallback((campo, valor) => {
     setFormulario(prev => ({ ...prev, [campo]: valor }));
@@ -151,8 +176,11 @@ export function useAsistencia() {
 
       if (res.exito) {
         notificarExito(res.mensaje);
+        const cultoIdGuardado = formulario.culto_id;
         limpiarFormulario();
         await cargarRegistros();
+        // Refrescar fechas registradas para que el calendario se actualice
+        await cargarFechasRegistradas(cultoIdGuardado);
         return true;
       }
 
@@ -241,6 +269,7 @@ export function useAsistencia() {
     editandoId,
     cargando,
     errores,
+    fechasRegistradas,
     filtros,
     cambiarCampo,
     guardar,

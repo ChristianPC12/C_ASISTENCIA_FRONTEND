@@ -11,6 +11,7 @@ export default function RegistroPage() {
     editandoId,
     cargando,
     errores,
+    fechasRegistradas,
     cambiarCampo,
     guardar,
     limpiarFormulario
@@ -24,6 +25,7 @@ export default function RegistroPage() {
         editandoId={editandoId}
         errores={errores}
         cargando={cargando}
+        fechasRegistradas={fechasRegistradas}
         onCambiarCampo={cambiarCampo}
         onGuardar={guardar}
         onLimpiar={limpiarFormulario}
