@@ -17,9 +17,12 @@ import { ROLES } from './config/constants';
 function AppContent() {
   const { usuario, estaAutenticado, esAdmin, cerrarSesion } = useAuth();
 
-  /* Scroll a la parte superior al cambiar el estado de autenticacion */
+  /* Resetear scroll al cambiar el estado de autenticacion */
   useEffect(() => {
     window.scrollTo(0, 0);
+    // Segundo reset tras render del nuevo layout
+    const t = setTimeout(() => window.scrollTo(0, 0), 50);
+    return () => clearTimeout(t);
   }, [estaAutenticado]);
 
   // Si no esta autenticado, mostrar solo login
