@@ -1,26 +1,28 @@
-// Capa de notificaciones usando alert/confirm nativos del navegador
+// Capa de notificaciones — toasts y modal de confirmacion
+import { lanzarToast } from '../components/ui/ToastContainer';
+import { lanzarConfirm } from '../components/ui/ConfirmModal';
 
 /**
- * Muestra un mensaje de exito al usuario
+ * Muestra un toast de exito
  * @param {string} mensaje
  */
 export function notificarExito(mensaje) {
-  window.alert(mensaje);
+  lanzarToast(mensaje, 'exito');
 }
 
 /**
- * Muestra un mensaje de error al usuario
+ * Muestra un toast de error
  * @param {string} mensaje
  */
 export function notificarError(mensaje) {
-  window.alert(mensaje);
+  lanzarToast(mensaje, 'error');
 }
 
 /**
- * Muestra un dialogo de confirmacion
+ * Muestra un modal de confirmacion
  * @param {string} mensaje
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
 export function confirmar(mensaje) {
-  return window.confirm(mensaje);
+  return lanzarConfirm(mensaje);
 }

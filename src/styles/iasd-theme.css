@@ -624,3 +624,185 @@ a:hover {
   .form-control,
   .form-select  { font-size: 1rem; padding: 0.6rem 0.75rem; }
 }
+
+/* ==============================================
+   Toasts IASD
+   ============================================== */
+
+.toast-container-iasd {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.toast-iasd {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.6rem;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  pointer-events: auto;
+  animation: toastEntrar 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.toast-iasd-saliendo {
+  animation: toastSalir 0.3s ease-in both;
+}
+
+.toast-iasd-exito { background: var(--iasd-exito); }
+.toast-iasd-error { background: var(--iasd-peligro); }
+.toast-iasd-info  { background: var(--iasd-azul); }
+
+.toast-iasd-icono {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.toast-iasd-mensaje {
+  flex: 1;
+  line-height: 1.35;
+}
+
+.toast-iasd-cerrar {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.toast-iasd-cerrar:hover { color: #ffffff; }
+
+@keyframes toastEntrar {
+  from { opacity: 0; transform: translateX(40px) scale(0.95); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes toastSalir {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(40px) scale(0.95); }
+}
+
+@media (max-width: 480px) {
+  .toast-container-iasd {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+  }
+  .toast-iasd {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* ==============================================
+   Modal de confirmacion IASD
+   ============================================== */
+
+.confirm-overlay-iasd {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: confirmFadeIn 0.2s ease both;
+}
+
+.confirm-overlay-iasd.confirm-saliendo {
+  animation: confirmFadeOut 0.2s ease both;
+}
+
+.confirm-modal-iasd {
+  background: #ffffff;
+  border-radius: 0.85rem;
+  width: 100%;
+  max-width: 380px;
+  padding: 2rem 1.8rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  animation: confirmSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.confirm-saliendo .confirm-modal-iasd {
+  animation: confirmSlideOut 0.2s ease both;
+}
+
+.confirm-icono-wrapper {
+  margin-bottom: 1rem;
+}
+
+.confirm-icono {
+  font-size: 2.8rem;
+  color: var(--iasd-azul);
+}
+
+.confirm-mensaje {
+  font-size: 0.95rem;
+  color: var(--iasd-texto);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.confirm-acciones {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 0.6rem 1.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s, transform 0.1s;
+}
+.confirm-btn:active { transform: scale(0.97); }
+
+.confirm-btn-cancelar {
+  background: #f0f0f0;
+  color: var(--iasd-texto-sec);
+}
+.confirm-btn-cancelar:hover { background: #e4e4e4; }
+
+.confirm-btn-aceptar {
+  background: var(--iasd-azul);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 51, 102, 0.3);
+}
+.confirm-btn-aceptar:hover { background: var(--iasd-azul-hover); }
+
+@keyframes confirmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes confirmFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes confirmSlideIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes confirmSlideOut {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.9) translateY(10px); }
+}

@@ -230,7 +230,7 @@ export function useAsistencia() {
 
   // Eliminar registro
   const eliminar = useCallback(async (id) => {
-    if (!confirmar('¿Está seguro de que desea eliminar este registro de asistencia?')) {
+    if (!await confirmar('¿Está seguro de que desea eliminar este registro de asistencia?')) {
       return false;
     }
 

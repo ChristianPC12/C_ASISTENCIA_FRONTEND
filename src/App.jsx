@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import ToastContainer from './components/ui/ToastContainer';
+import ConfirmModal from './components/ui/ConfirmModal';
 import LoginPage from './pages/LoginPage';
 import RegistroPage from './pages/RegistroPage';
 import RegistrosPage from './pages/RegistrosPage';
@@ -80,6 +82,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppContent />
+        <ToastContainer />
+        <ConfirmModal />
       </AuthProvider>
     </BrowserRouter>
   );
