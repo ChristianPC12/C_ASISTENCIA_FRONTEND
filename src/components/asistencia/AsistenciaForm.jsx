@@ -13,12 +13,16 @@
 import { CULTO_DIA_SEMANA } from '../../config/constants';
 import SelectorFecha from './SelectorFecha';
 
+/** Valor por defecto estable para evitar nueva referencia en cada render */
+const FECHAS_REGISTRADAS_VACIAS = [];
+
 export default function AsistenciaForm({
   formulario,
   cultos,
   editandoId,
   errores,
   cargando,
+  fechasRegistradas = FECHAS_REGISTRADAS_VACIAS,
   onCambiarCampo,
   onGuardar,
   onLimpiar
@@ -121,6 +125,7 @@ export default function AsistenciaForm({
                   value={formulario.fecha}
                   onChange={(valor) => onCambiarCampo('fecha', valor)}
                   diaPermitido={diaPermitido}
+                  fechasDeshabilitadas={editandoId ? [] : fechasRegistradas}
                   disabled={cargando || !formulario.culto_id}
                   className={errores.fecha ? 'is-invalid' : ''}
                   placeholder={!formulario.culto_id ? 'Seleccione un culto primero' : 'Seleccionar fecha'}
