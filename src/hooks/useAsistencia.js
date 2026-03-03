@@ -26,6 +26,13 @@ export function useAsistencia() {
 
   // Auto-calcular total_asistentes cuando cambian antes/despues
   useEffect(() => {
+    const antesVacio = formulario.llegaron_antes_hora === '' || formulario.llegaron_antes_hora === null;
+    const despuesVacio = formulario.llegaron_despues_hora === '' || formulario.llegaron_despues_hora === null;
+    // Si ambos estan vacios, dejar total vacio tambien
+    if (antesVacio && despuesVacio) {
+      setFormulario(prev => prev.total_asistentes === '' ? prev : { ...prev, total_asistentes: '' });
+      return;
+    }
     const antes = aEnteroPositivo(formulario.llegaron_antes_hora);
     const despues = aEnteroPositivo(formulario.llegaron_despues_hora);
     const nuevoTotal = antes + despues;

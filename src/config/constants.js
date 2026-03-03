@@ -28,20 +28,28 @@ export const TRIMESTRE_OPCIONES = [
 export const ASISTENCIA_FORM_INICIAL = {
   culto_id: '',
   fecha: '',
-  llegaron_antes_hora: 0,
-  llegaron_despues_hora: 0,
-  ninos: 0,
-  jovenes: 0,
-  total_asistentes: 0,
-  proc_barrio: 0,
-  proc_guayabo: 0,
-  visitas_barrio: 0,
+  llegaron_antes_hora: '',
+  llegaron_despues_hora: '',
+  ninos: '',
+  jovenes: '',
+  total_asistentes: '',
+  proc_barrio: '',
+  proc_guayabo: '',
+  visitas_barrio: '',
   nombres_visitas_barrio: '',
-  visitas_guayabo: 0,
+  visitas_guayabo: '',
   nombres_visitas_guayabo: '',
-  retiros_antes_terminar: 0,
-  se_quedaron_todo: 0,
+  retiros_antes_terminar: '',
+  se_quedaron_todo: '',
   observaciones: ''
+};
+
+// Mapa de codigo de culto a dia de la semana en JavaScript (Date.getDay())
+// 0=Domingo, 1=Lunes, ..., 6=Sabado
+export const CULTO_DIA_SEMANA = {
+  SABADO: 6,
+  DOMINGO: 0,
+  MIERCOLES: 3
 };
 
 // Formulario inicial de usuario

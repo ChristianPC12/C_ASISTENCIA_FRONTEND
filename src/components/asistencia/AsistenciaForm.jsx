@@ -10,6 +10,8 @@
  *  - onGuardar: funcion para guardar
  *  - onLimpiar: funcion para limpiar el formulario
  */
+import { CULTO_DIA_SEMANA } from '../../config/constants';
+
 export default function AsistenciaForm({
   formulario,
   cultos,
@@ -30,6 +32,49 @@ export default function AsistenciaForm({
     onCambiarCampo(name, value);
   };
 
+  // Obtener el culto seleccionado y su dia de la semana permitido
+  const cultoSeleccionado = cultos.find(c => String(c.id) === String(formulario.culto_id));
+  const diaPermitido = cultoSeleccionado ? CULTO_DIA_SEMANA[cultoSeleccionado.codigo] : null;
+
+  // Nombres de dias para el mensaje de error
+  const NOMBRES_DIA = { 0: 'domingo', 3: 'miercoles', 6: 'sabado' };
+
+  // Manejar cambio de fecha validando que sea el dia correcto
+  const manejarCambioFecha = (e) => {
+    const valor = e.target.value;
+    if (!valor || diaPermitido === null || diaPermitido === undefined) {
+      onCambiarCampo('fecha', valor);
+      return;
+    }
+    // Parsear como fecha local (YYYY-MM-DD) para evitar desfase de zona horaria
+    const [anio, mes, dia] = valor.split('-').map(Number);
+    const fecha = new Date(anio, mes - 1, dia);
+    if (fecha.getDay() !== diaPermitido) {
+      alert(`Para el culto "${cultoSeleccionado.nombre}" solo se permiten dias ${NOMBRES_DIA[diaPermitido] || diaPermitido}.`);
+      onCambiarCampo('fecha', '');
+      return;
+    }
+    onCambiarCampo('fecha', valor);
+  };
+
+  // Al cambiar culto, limpiar la fecha si ya no corresponde al dia
+  const manejarCambioCulto = (e) => {
+    const nuevoCultoId = e.target.value;
+    onCambiarCampo('culto_id', nuevoCultoId);
+    // Si hay fecha seleccionada, validar que siga siendo correcta
+    if (formulario.fecha && nuevoCultoId) {
+      const nuevoCulto = cultos.find(c => String(c.id) === String(nuevoCultoId));
+      if (nuevoCulto) {
+        const diaReq = CULTO_DIA_SEMANA[nuevoCulto.codigo];
+        const [anio, mes, dia] = formulario.fecha.split('-').map(Number);
+        const fecha = new Date(anio, mes - 1, dia);
+        if (diaReq !== null && diaReq !== undefined && fecha.getDay() !== diaReq) {
+          onCambiarCampo('fecha', '');
+        }
+      }
+    }
+  };
+
   // Renderizar un campo numerico
   const campoNumerico = (nombre, etiqueta, colClase = 'col-md-6 col-lg-4') => (
     <div className={colClase}>
@@ -42,6 +87,7 @@ export default function AsistenciaForm({
         value={formulario[nombre]}
         onChange={manejarCambio}
         min="0"
+        placeholder="0"
         disabled={cargando}
       />
       {errores[nombre] && (
@@ -71,7 +117,7 @@ export default function AsistenciaForm({
                   name="culto_id"
                   className={`form-select ${errores.culto_id ? 'is-invalid' : ''}`}
                   value={formulario.culto_id}
-                  onChange={manejarCambio}
+                  onChange={manejarCambioCulto}
                   disabled={cargando}
                 >
                   <option value="">-- Seleccionar culto --</option>
@@ -94,9 +140,15 @@ export default function AsistenciaForm({
                   name="fecha"
                   className={`form-control ${errores.fecha ? 'is-invalid' : ''}`}
                   value={formulario.fecha}
-                  onChange={manejarCambio}
-                  disabled={cargando}
+                  onChange={manejarCambioFecha}
+                  disabled={cargando || !formulario.culto_id}
                 />
+                {!formulario.culto_id && (
+                  <small className="text-muted">Seleccione un culto primero</small>
+                )}
+                {formulario.culto_id && cultoSeleccionado && (
+                  <small className="text-muted">Solo dias {NOMBRES_DIA[diaPermitido] || ''}</small>
+                )}
                 {errores.fecha && (
                   <div className="invalid-feedback">{errores.fecha}</div>
                 )}
@@ -186,6 +238,7 @@ export default function AsistenciaForm({
                   value={formulario.se_quedaron_todo}
                   onChange={manejarCambio}
                   min="0"
+                  placeholder="0"
                   disabled={cargando}
                 />
                 {errores.se_quedaron_todo && (

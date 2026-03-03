@@ -34,9 +34,13 @@ export function validarAsistencia(datos) {
   ];
 
   for (const { campo, etiqueta } of camposNumericos) {
-    const valor = aEnteroPositivo(datos[campo]);
-    if (valor < 0 || isNaN(parseInt(datos[campo], 10))) {
-      errores[campo] = `${etiqueta} debe ser un numero valido (>= 0).`;
+    const valorRaw = datos[campo];
+    // Permitir vacios (se tratan como 0) pero rechazar negativos o texto no numerico
+    if (valorRaw !== '' && valorRaw !== null && valorRaw !== undefined) {
+      const num = parseInt(valorRaw, 10);
+      if (isNaN(num) || num < 0) {
+        errores[campo] = `${etiqueta} debe ser un numero valido (>= 0).`;
+      }
     }
   }
 
