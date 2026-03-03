@@ -21,7 +21,8 @@ ApiCliente.interceptors.response.use(
   (error) => {
     if (error.response) {
       // Si el backend responde con 401, limpiar sesion y redirigir al login
-      if (error.response.status === 401) {
+      // (excepto si es la propia peticion de login, para mostrar el mensaje de error)
+      if (error.response.status === 401 && !error.config.url?.includes('/auth/login')) {
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
         window.location.href = '/';
