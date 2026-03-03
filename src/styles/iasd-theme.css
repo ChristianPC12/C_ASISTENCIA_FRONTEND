@@ -539,6 +539,7 @@ a:hover {
   flex: 1;
   padding: 1rem 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-link {
@@ -557,7 +558,9 @@ a:hover {
 
 .sidebar-footer {
   padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .sidebar-usuario-info  { display: flex; flex-direction: column; gap: 4px; }

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -15,6 +16,11 @@ import { ROLES } from './config/constants';
  */
 function AppContent() {
   const { usuario, estaAutenticado, esAdmin, cerrarSesion } = useAuth();
+
+  /* Scroll a la parte superior al cambiar el estado de autenticacion */
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [estaAutenticado]);
 
   // Si no esta autenticado, mostrar solo login
   if (!estaAutenticado) {
