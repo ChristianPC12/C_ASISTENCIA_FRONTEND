@@ -34,6 +34,11 @@
 }
 
 /* --- Fondo de la app --- */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   background-color: var(--iasd-fondo);
   color: var(--iasd-texto);
@@ -142,6 +147,9 @@ a:hover {
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
   background-color: #FFFFFF;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 .card-header {
   background-color: var(--iasd-azul);
@@ -484,6 +492,8 @@ a:hover {
   min-height: 100vh;
   min-height: 100dvh;
   overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 .sidebar {
@@ -558,9 +568,10 @@ a:hover {
 
 .sidebar-footer {
   padding: 1rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
+  margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .sidebar-usuario-info  { display: flex; flex-direction: column; gap: 4px; }
@@ -575,6 +586,9 @@ a:hover {
   min-height: 100vh;
   min-height: 100dvh;
   width: calc(100% - 260px);
+  max-width: calc(100vw - 260px);
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .sidebar-topbar {
@@ -611,6 +625,8 @@ a:hover {
   flex: 1;
   background-color: var(--iasd-fondo);
   overflow-x: hidden;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar-overlay {
@@ -624,13 +640,17 @@ a:hover {
 @media (max-width: 991.98px) {
   .sidebar            { transform: translateX(-100%); }
   .sidebar-abierto    { transform: translateX(0); }
-  .sidebar-contenido  { margin-left: 0; width: 100%; }
+  .sidebar-contenido  { margin-left: 0; width: 100%; max-width: 100vw; }
   .sidebar-hamburguesa { display: flex; }
   .sidebar-cerrar     { display: block; }
 }
 
 @media (max-width: 480px) {
-  .sidebar { width: 85vw; max-width: 300px; }
+  .sidebar {
+    width: 85vw;
+    max-width: 300px;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
   .sidebar-topbar {
     padding: 0.6rem 0.75rem;
   }
@@ -648,7 +668,7 @@ a:hover {
   .form-select  { font-size: 1rem; padding: 0.6rem 0.75rem; }
 
   /* Reducir padding del contenido en mobile */
-  .container-fluid { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .container-fluid { padding-left: 0.75rem; padding-right: 0.75rem; max-width: 100%; box-sizing: border-box; }
   .sidebar-main .container-fluid { padding-top: 0.5rem !important; }
 }
 
