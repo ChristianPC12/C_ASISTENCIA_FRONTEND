@@ -1,0 +1,497 @@
+/* ==============================================
+   Tema personalizado IASD
+   Iglesia Adventista del Septimo Dia
+   ============================================== */
+
+/* --- Variables de Bootstrap sobrescritas --- */
+:root {
+  --bs-primary: #003366;
+  --bs-primary-rgb: 0, 51, 102;
+  --bs-secondary: #C5A028;
+  --bs-secondary-rgb: 197, 160, 40;
+  --bs-success: #27AE60;
+  --bs-success-rgb: 39, 174, 96;
+  --bs-danger: #E74C3C;
+  --bs-danger-rgb: 231, 76, 60;
+  --bs-warning: #F39C12;
+  --bs-warning-rgb: 243, 156, 18;
+  --bs-body-bg: #F4F6F9;
+  --bs-body-color: #2D3436;
+  --bs-border-color: #DEE2E6;
+
+  /* Variables personalizadas IASD */
+  --iasd-azul: #003366;
+  --iasd-azul-hover: #002244;
+  --iasd-dorado: #C5A028;
+  --iasd-dorado-hover: #A88620;
+  --iasd-fondo: #F4F6F9;
+  --iasd-texto: #2D3436;
+  --iasd-texto-sec: #636E72;
+  --iasd-exito: #27AE60;
+  --iasd-peligro: #E74C3C;
+  --iasd-advertencia: #F39C12;
+  --iasd-borde: #DEE2E6;
+}
+
+/* --- Botones primarios --- */
+.btn-primary {
+  background-color: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+  color: #FFFFFF;
+}
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background-color: var(--iasd-azul-hover);
+  border-color: var(--iasd-azul-hover);
+  color: #FFFFFF;
+}
+
+/* --- Botones outline primario --- */
+.btn-outline-primary {
+  color: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+  background-color: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+  color: #FFFFFF;
+}
+
+/* --- Botones secundarios (dorado) --- */
+.btn-secondary {
+  background-color: var(--iasd-dorado);
+  border-color: var(--iasd-dorado);
+  color: #FFFFFF;
+}
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+  background-color: var(--iasd-dorado-hover);
+  border-color: var(--iasd-dorado-hover);
+  color: #FFFFFF;
+}
+
+/* --- Botones de peligro --- */
+.btn-danger {
+  background-color: var(--iasd-peligro);
+  border-color: var(--iasd-peligro);
+}
+.btn-danger:hover {
+  background-color: #C0392B;
+  border-color: #C0392B;
+}
+
+/* --- Botones de exito --- */
+.btn-success {
+  background-color: var(--iasd-exito);
+  border-color: var(--iasd-exito);
+}
+.btn-success:hover {
+  background-color: #219A52;
+  border-color: #219A52;
+}
+
+/* --- Navbar --- */
+.navbar {
+  background-color: var(--iasd-azul) !important;
+}
+.navbar .navbar-brand,
+.navbar .nav-link,
+.navbar .navbar-text {
+  color: #FFFFFF !important;
+}
+.navbar .nav-link:hover {
+  color: var(--iasd-dorado) !important;
+}
+.navbar .nav-link.active {
+  color: var(--iasd-dorado) !important;
+  font-weight: 600;
+}
+
+/* --- Cards --- */
+.card {
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.5rem;
+  background-color: #FFFFFF;
+}
+.card-header {
+  background-color: var(--iasd-azul);
+  color: #FFFFFF;
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  font-weight: 600;
+}
+
+/* --- Formularios --- */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--iasd-azul);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.25);
+}
+.form-label {
+  color: var(--iasd-texto);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* --- Tablas --- */
+.table thead th {
+  background-color: var(--iasd-azul);
+  color: #FFFFFF;
+  border-color: var(--iasd-azul-hover);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(0, 51, 102, 0.03);
+}
+.table-hover > tbody > tr:hover {
+  background-color: rgba(0, 51, 102, 0.07);
+}
+
+/* --- Badges --- */
+.badge.bg-primary {
+  background-color: var(--iasd-azul) !important;
+}
+.badge.bg-secondary {
+  background-color: var(--iasd-dorado) !important;
+}
+.badge.bg-success {
+  background-color: var(--iasd-exito) !important;
+}
+.badge.bg-danger {
+  background-color: var(--iasd-peligro) !important;
+}
+
+/* --- Titulos --- */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--iasd-azul);
+}
+
+/* --- Texto secundario --- */
+.text-muted,
+.text-secondary {
+  color: var(--iasd-texto-sec) !important;
+}
+
+/* --- Links --- */
+a {
+  color: var(--iasd-azul);
+}
+a:hover {
+  color: var(--iasd-azul-hover);
+}
+
+/* --- Fondo de la app --- */
+body {
+  background-color: var(--iasd-fondo);
+  color: var(--iasd-texto);
+}
+
+/* --- Login page --- */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--iasd-azul) 0%, #001a33 100%);
+}
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  border: none;
+  border-radius: 1rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+.login-card .card-header {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 1rem 1rem 0 0 !important;
+}
+.login-card .card-body {
+  padding: 2rem;
+}
+
+/* --- Seccion del formulario de asistencia --- */
+.seccion-form {
+  background-color: #FFFFFF;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.seccion-form h6 {
+  color: var(--iasd-azul);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--iasd-dorado);
+}
+
+/* --- Tabla responsive en mobile --- */
+.table-responsive {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* --- Filtros --- */
+.filtros-container {
+  background-color: #FFFFFF;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* --- Spinner de carga --- */
+.spinner-iasd {
+  color: var(--iasd-azul);
+}
+
+/* --- Alerta personalizada --- */
+.alert-iasd {
+  background-color: rgba(0, 51, 102, 0.1);
+  border-color: var(--iasd-azul);
+  color: var(--iasd-azul);
+}
+
+/* --- Mobile optimizations --- */
+@media (max-width: 768px) {
+  .seccion-form {
+    padding: 1rem;
+  }
+  .btn {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+  }
+  .form-control,
+  .form-select {
+    font-size: 1rem;
+    padding: 0.6rem 0.75rem;
+  }
+}
+
+/* ==============================================
+   Sidebar Layout
+   ============================================== */
+
+/* --- Layout principal --- */
+.sidebar-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 260px;
+  background: linear-gradient(180deg, var(--iasd-azul) 0%, #001a33 100%);
+  color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1050;
+  transition: transform 0.3s ease;
+}
+
+/* --- Sidebar header --- */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-marca {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-marca-titulo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #FFFFFF;
+}
+
+.sidebar-marca-subtitulo {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.sidebar-cerrar {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+/* --- Sidebar nav --- */
+.sidebar-nav {
+  flex: 1;
+  padding: 1rem 0;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+
+.sidebar-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+.sidebar-link-activo {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  border-left-color: var(--iasd-dorado);
+  font-weight: 600;
+}
+
+.sidebar-link-icono {
+  font-size: 1.1rem;
+  margin-right: 0.75rem;
+  width: 20px;
+  text-align: center;
+}
+
+/* --- Sidebar footer --- */
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar-usuario-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-usuario-nombre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-usuario-rol {
+  align-self: flex-start;
+  font-size: 0.65rem;
+}
+
+/* --- Contenido principal --- */
+.sidebar-contenido {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* --- Topbar --- */
+.sidebar-topbar {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid var(--iasd-borde);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.sidebar-topbar-titulo {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--iasd-azul);
+  margin-left: 0.5rem;
+}
+
+.sidebar-topbar-usuario {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--iasd-texto-sec);
+}
+
+/* --- Hamburguesa --- */
+.sidebar-hamburguesa {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  padding: 6px;
+  gap: 4px;
+}
+
+.sidebar-hamburguesa span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background-color: var(--iasd-azul);
+  border-radius: 1px;
+}
+
+/* --- Main content area --- */
+.sidebar-main {
+  flex: 1;
+  background-color: var(--iasd-fondo);
+}
+
+/* --- Overlay para mobile --- */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+/* --- Responsive: Mobile/Tablet --- */
+@media (max-width: 991.98px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar-abierto {
+    transform: translateX(0);
+  }
+
+  .sidebar-contenido {
+    margin-left: 0;
+  }
+
+  .sidebar-hamburguesa {
+    display: flex;
+  }
+}
