@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ROLES } from '../../config/constants';
 
@@ -12,6 +12,16 @@ import { ROLES } from '../../config/constants';
 export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [abierto, setAbierto] = useState(false);
   const location = useLocation();
+
+  /* Bloquear scroll del body cuando el sidebar está abierto (mobile) */
+  useEffect(() => {
+    if (abierto) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [abierto]);
 
   const esRutaActiva = (ruta) => location.pathname === ruta;
 
