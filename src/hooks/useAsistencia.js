@@ -285,7 +285,7 @@ export function useAsistencia() {
 
       const extension = tipo === 'excel' ? 'xls' : 'pdf';
       const fecha = (registro.fecha || 'sin-fecha').replace(/[^\d-]/g, '');
-      const nombre = `asistencia_${registro.id}_${fecha}.${extension}`;
+      const nombre = `asistencia_${fecha}.${extension}`;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

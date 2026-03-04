@@ -33,7 +33,7 @@ export default function AsistenciaTable({
   };
 
   const toggleFila = (id) => {
-    setFilaExpandida(prev => prev === id ? null : id);
+    setFilaExpandida((prev) => (prev === id ? null : id));
   };
 
   // Al cambiar trimestre, limpiar mes y viceversa
@@ -78,7 +78,7 @@ export default function AsistenciaTable({
               </select>
             </div>
 
-            {/* Filtro por anio */}
+            {/* Filtro por año */}
             <div className="col-6 col-md-2">
               <label htmlFor="filtro-anio" className="form-label fw-semibold">Año</label>
               <select
@@ -190,34 +190,42 @@ export default function AsistenciaTable({
                       <td className="text-center">{reg.retiros_antes_terminar}</td>
                       <td className="text-center">{reg.se_quedaron_todo}</td>
                       <td className="text-center">
-                        <div className="d-flex gap-1 justify-content-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="d-flex flex-wrap gap-1 justify-content-center" onClick={(e) => e.stopPropagation()}>
                           <button
-                            className="btn btn-outline-primary btn-sm"
+                            className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
                             onClick={() => onEditar(reg)}
                             title="Editar"
+                            aria-label="Editar registro"
+                            style={{ width: '34px', height: '34px' }}
                           >
-                            Editar
+                            <i className="bi bi-pencil-square" aria-hidden="true"></i>
                           </button>
                           <button
-                            className="btn btn-outline-danger btn-sm"
+                            className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
                             onClick={() => onEliminar(reg.id)}
                             title="Eliminar"
+                            aria-label="Eliminar registro"
+                            style={{ width: '34px', height: '34px' }}
                           >
-                            Eliminar
+                            <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
                           <button
-                            className="btn btn-outline-success btn-sm"
+                            className="btn btn-outline-success btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
                             onClick={() => onExportar(reg, 'excel')}
                             title="Exportar a Excel"
+                            aria-label="Exportar registro a Excel"
+                            style={{ width: '34px', height: '34px' }}
                           >
-                            Excel
+                            <i className="bi bi-file-earmark-excel" aria-hidden="true"></i>
                           </button>
                           <button
-                            className="btn btn-outline-secondary btn-sm"
+                            className="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
                             onClick={() => onExportar(reg, 'pdf')}
                             title="Exportar a PDF"
+                            aria-label="Exportar registro a PDF"
+                            style={{ width: '34px', height: '34px' }}
                           >
-                            PDF
+                            <i className="bi bi-file-earmark-pdf" aria-hidden="true"></i>
                           </button>
                         </div>
                       </td>
