@@ -11,6 +11,7 @@ import { TRIMESTRE_OPCIONES, ANIO_OPCIONES, MES_OPCIONES } from '../../config/co
  *  - onCambiarFiltro: funcion (campo, valor)
  *  - onEditar: funcion (registro)
  *  - onEliminar: funcion (id)
+ *  - onExportar: funcion (registro, tipo: 'excel' | 'pdf')
  */
 export default function AsistenciaTable({
   registros,
@@ -19,7 +20,8 @@ export default function AsistenciaTable({
   cargando,
   onCambiarFiltro,
   onEditar,
-  onEliminar
+  onEliminar,
+  onExportar
 }) {
   const [filaExpandida, setFilaExpandida] = useState(null);
 
@@ -202,6 +204,20 @@ export default function AsistenciaTable({
                             title="Eliminar"
                           >
                             Eliminar
+                          </button>
+                          <button
+                            className="btn btn-outline-success btn-sm"
+                            onClick={() => onExportar(reg, 'excel')}
+                            title="Exportar a Excel"
+                          >
+                            Excel
+                          </button>
+                          <button
+                            className="btn btn-outline-secondary btn-sm"
+                            onClick={() => onExportar(reg, 'pdf')}
+                            title="Exportar a PDF"
+                          >
+                            PDF
                           </button>
                         </div>
                       </td>

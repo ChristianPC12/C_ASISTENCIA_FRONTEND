@@ -14,7 +14,7 @@ export default function RegistrosPage() {
     filtros,
     eliminar,
     cambiarFiltro,
-    editarYNavegar
+    exportarRegistro
   } = useAsistencia();
 
   // Al editar, navegar a la pagina de registro
@@ -34,6 +34,7 @@ export default function RegistrosPage() {
         onCambiarFiltro={cambiarFiltro}
         onEditar={manejarEditar}
         onEliminar={eliminar}
+        onExportar={exportarRegistro}
       />
     </div>
   );

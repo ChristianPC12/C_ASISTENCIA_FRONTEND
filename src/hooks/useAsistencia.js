@@ -274,6 +274,35 @@ export function useAsistencia() {
     }
   }, [cargarRegistros]);
 
+  // Exportar un registro puntual a Excel o PDF
+  const exportarRegistro = useCallback(async (registro, tipo) => {
+    if (!registro?.id) return false;
+
+    try {
+      const blob = tipo === 'excel'
+        ? await asistenciaApi.exportarExcel(registro.id)
+        : await asistenciaApi.exportarPdf(registro.id);
+
+      const extension = tipo === 'excel' ? 'xls' : 'pdf';
+      const fecha = (registro.fecha || 'sin-fecha').replace(/[^\d-]/g, '');
+      const nombre = `asistencia_${registro.id}_${fecha}.${extension}`;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      notificarExito(`Exportacion ${tipo === 'excel' ? 'Excel' : 'PDF'} generada.`);
+      return true;
+    } catch (error) {
+      notificarError(`No se pudo exportar el registro a ${tipo === 'excel' ? 'Excel' : 'PDF'}.`);
+      return false;
+    }
+  }, []);
+
   // Limpiar formulario
   const limpiarFormulario = useCallback(() => {
     setFormulario({ ...ASISTENCIA_FORM_INICIAL });
@@ -299,6 +328,7 @@ export function useAsistencia() {
     guardar,
     editar,
     eliminar,
+    exportarRegistro,
     limpiarFormulario,
     cambiarFiltro
   };
