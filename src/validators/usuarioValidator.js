@@ -1,6 +1,34 @@
 import { recortar } from '../utils/sanitizer';
 import { LIMITES } from '../config/constants';
 
+function validarPasswordFuerte(password) {
+  if (password.length < LIMITES.PASSWORD_MIN || password.length > LIMITES.PASSWORD_MAX) {
+    return `La contraseña debe tener entre ${LIMITES.PASSWORD_MIN} y ${LIMITES.PASSWORD_MAX} caracteres.`;
+  }
+
+  if (!/[a-z]/.test(password)) {
+    return 'La contraseña debe incluir al menos una letra minúscula.';
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    return 'La contraseña debe incluir al menos una letra mayúscula.';
+  }
+
+  if (!/\d/.test(password)) {
+    return 'La contraseña debe incluir al menos un número.';
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return 'La contraseña debe incluir al menos un carácter especial.';
+  }
+
+  if (/\s/.test(password)) {
+    return 'La contraseña no puede contener espacios.';
+  }
+
+  return '';
+}
+
 /**
  * Valida el formulario de usuario
  * @param {Object} datos - Datos del formulario
@@ -34,8 +62,11 @@ export function validarUsuario(datos, esEdicion = false) {
   const password = datos.password || '';
   if (!esEdicion && !password) {
     errores.password = 'La contraseña es obligatoria.';
-  } else if (password && password.length < LIMITES.PASSWORD_MIN) {
-    errores.password = `La contraseña debe tener al menos ${LIMITES.PASSWORD_MIN} caracteres.`;
+  } else if (password) {
+    const errorPassword = validarPasswordFuerte(password);
+    if (errorPassword) {
+      errores.password = errorPassword;
+    }
   }
 
   // Rol

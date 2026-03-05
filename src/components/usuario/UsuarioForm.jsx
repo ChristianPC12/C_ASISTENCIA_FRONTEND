@@ -93,10 +93,17 @@ export default function UsuarioForm({
                 onChange={manejarCambio}
                 placeholder={editandoId ? 'Nueva contraseña (opcional)' : 'Contraseña'}
                 autoComplete="new-password"
+                minLength={12}
+                maxLength={64}
                 disabled={cargando}
               />
               {errores.password && (
                 <div className="invalid-feedback">{errores.password}</div>
+              )}
+              {!errores.password && (
+                <div className="form-text">
+                  Debe contener 12-64 caracteres, mayúscula, minúscula, número y carácter especial.
+                </div>
               )}
             </div>
 

@@ -8,7 +8,7 @@ import { ROLES } from '../config/constants';
 const AuthContext = createContext(null);
 
 /**
- * Provider de autenticacion — envuelve toda la app para compartir un solo estado
+ * Provider de autenticacion: envuelve toda la app para compartir un solo estado
  */
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(() => {
@@ -19,12 +19,12 @@ export function AuthProvider({ children }) {
   const [cargando, setCargando] = useState(false);
   const [errores, setErrores] = useState({});
 
-  // Verificar si el token sigue valido al montar
-  useEffect(() => {
-    if (token && !usuario) {
-      verificarSesion();
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const cerrarSesionLocal = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    setToken(null);
+    setUsuario(null);
+  }, []);
 
   const verificarSesion = useCallback(async () => {
     try {
@@ -36,7 +36,14 @@ export function AuthProvider({ children }) {
     } catch {
       cerrarSesionLocal();
     }
-  }, []);
+  }, [cerrarSesionLocal]);
+
+  // Verificar si el token sigue valido al montar
+  useEffect(() => {
+    if (token && !usuario) {
+      verificarSesion();
+    }
+  }, [token, usuario, verificarSesion]);
 
   const iniciarSesion = useCallback(async (datos) => {
     const datosSanitizados = sanitizarObjeto(datos);
@@ -79,14 +86,7 @@ export function AuthProvider({ children }) {
     } finally {
       cerrarSesionLocal();
     }
-  }, []);
-
-  const cerrarSesionLocal = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    setToken(null);
-    setUsuario(null);
-  }, []);
+  }, [cerrarSesionLocal]);
 
   const estaAutenticado = !!usuario && !!token;
   const esAdmin = usuario?.rol === ROLES.ADMIN;

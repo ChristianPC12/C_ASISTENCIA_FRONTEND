@@ -84,7 +84,8 @@ export const LIMITES = {
   NOMBRE_COMPLETO_MAX: 120,
   USUARIO_MIN: 3,
   USUARIO_MAX: 50,
-  PASSWORD_MIN: 6
+  PASSWORD_MIN: 12,
+  PASSWORD_MAX: 64
 };
 
 // Anio actual para filtros
