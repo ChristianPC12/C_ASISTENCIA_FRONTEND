@@ -396,6 +396,12 @@ a:hover {
   min-height: 220px;
   display: flex;
   align-items: flex-end;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.estad-serie-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 .estad-serie {
