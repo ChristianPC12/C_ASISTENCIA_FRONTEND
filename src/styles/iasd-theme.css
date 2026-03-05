@@ -393,6 +393,9 @@ a:hover {
 .estad-serie-scroll {
   overflow-x: auto;
   padding-bottom: 0.35rem;
+  min-height: 220px;
+  display: flex;
+  align-items: flex-end;
 }
 
 .estad-serie {
@@ -402,6 +405,7 @@ a:hover {
   align-items: flex-end;
   gap: 0.6rem;
   padding: 0.5rem 0.25rem 0;
+  margin-top: auto;
 }
 
 .estad-serie-item {
@@ -810,7 +814,8 @@ a:hover {
   min-width: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  width: auto;
+  width: calc(100% - 260px);
+  max-width: calc(100% - 260px);
   overflow-x: hidden;
   box-sizing: border-box;
 }

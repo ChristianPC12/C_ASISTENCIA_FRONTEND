@@ -300,7 +300,7 @@ export default function EstadisticasPage() {
           <div className="row g-3 mb-4">
             <div className="col-12 col-md-6 col-xl-3">
               <div className="card shadow-sm h-100 estad-kpi-card">
-                <div className="card-body">
+                <div className="card-body d-flex flex-column">
                   <span className="estad-kpi-label">Total de cultos registrados</span>
                   <div className="estad-kpi-valor">{estadisticas.resumen_general.total_cultos_registrados}</div>
                 </div>
@@ -308,7 +308,7 @@ export default function EstadisticasPage() {
             </div>
             <div className="col-12 col-md-6 col-xl-3">
               <div className="card shadow-sm h-100 estad-kpi-card">
-                <div className="card-body">
+                <div className="card-body d-flex flex-column">
                   <span className="estad-kpi-label">Total de asistentes</span>
                   <div className="estad-kpi-valor">{estadisticas.resumen_general.total_asistentes}</div>
                 </div>
@@ -392,13 +392,13 @@ export default function EstadisticasPage() {
           <div className="row g-3 mb-4">
             <div className="col-12 col-xl-7">
               <div className="card shadow-sm h-100">
-                <div className="card-body">
+                <div className="card-body d-flex flex-column">
                   <h6 className="estad-card-titulo">Tendencia por fecha (asistentes)</h6>
                   {serieAsistencia.length === 0 && (
                     <p className="text-muted mb-0">Sin datos para el período seleccionado.</p>
                   )}
                   {serieAsistencia.length > 0 && (
-                    <div className="estad-serie-scroll">
+                    <div className="estad-serie-scroll mt-auto">
                       <div className="estad-serie">
                         {serieAsistencia.map((item) => (
                           <div
@@ -471,3 +471,4 @@ export default function EstadisticasPage() {
     </div>
   );
 }
+
