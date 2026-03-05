@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import WAVES from 'vanta/dist/vanta.waves.min';
 import * as THREE from 'three';
+
+const ERRORES_VACIOS = {};
 
 /**
  * LoginForm
@@ -9,14 +11,14 @@ import * as THREE from 'three';
  *  - cargando  : boolean
  *  - errores   : { usuario?: string, password?: string }
  */
-export default function LoginForm({ onSubmit, cargando, errores = {} }) {
-  const [usuario, setUsuario]   = useState('');
+export default function LoginForm({ onSubmit, cargando, errores = ERRORES_VACIOS }) {
+  const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
 
-  const vantaRef    = useRef(null);
+  const vantaRef = useRef(null);
   const vantaEffect = useRef(null);
 
-  /* ── Inicializar / destruir Vanta ── */
+  // Inicializar / destruir Vanta
   useEffect(() => {
     if (!vantaEffect.current) {
       vantaEffect.current = WAVES({
@@ -24,14 +26,15 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
         THREE,
         mouseControls: true,
         touchControls: true,
-        gyroControls:  false,
-        color:      0x0a4d7a,
-        shininess:  45,
+        gyroControls: false,
+        color: 0x0a4d7a,
+        shininess: 45,
         waveHeight: 12,
-        waveSpeed:  0.6,
-        zoom:       0.80,
+        waveSpeed: 0.6,
+        zoom: 0.8,
       });
     }
+
     return () => {
       if (vantaEffect.current) {
         vantaEffect.current.destroy();
@@ -47,17 +50,11 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
 
   return (
     <>
-      {/* z-index: 0 — canvas Vanta, cubre toda la pantalla */}
       <div ref={vantaRef} className="login-vanta-bg" />
-
-      {/* z-index: 1 — blanco sólido en la mitad inferior, corte recto */}
       <div className="login-split-bg" />
 
-      {/* z-index: 10 — tarjeta centrada sobre el corte */}
       <div className="login-container">
         <div className="login-card">
-
-          {/* Encabezado */}
           <div className="login-header">
             <div className="login-logo-wrapper">
               <img
@@ -66,18 +63,15 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
                 className="login-logo"
               />
             </div>
-            <div className="login-ornament">◆</div>
+            <div className="login-ornament">&diams;</div>
             <div className="login-brand">Iglesia Adventista</div>
-            <div className="login-brand-sub">del Séptimo Día</div>
+            <div className="login-brand-sub">del Septimo Dia</div>
           </div>
 
-          {/* Cuerpo — fondo semitransparente, el blur viene de .login-card en el CSS */}
           <div className="login-body">
             <p className="login-form-title">Control de Asistencia</p>
 
             <form onSubmit={manejarEnvio} noValidate>
-
-              {/* Campo usuario */}
               <div className="login-field">
                 <label htmlFor="usuario">Usuario</label>
                 <input
@@ -87,7 +81,6 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
                   value={usuario}
                   onChange={(e) => setUsuario(e.target.value)}
                   autoComplete="username"
-                  autoFocus
                   disabled={cargando}
                   className={errores.usuario ? 'login-input-error' : ''}
                 />
@@ -96,13 +89,12 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
                 )}
               </div>
 
-              {/* Campo contraseña */}
               <div className="login-field">
-                <label htmlFor="password">Contraseña</label>
+                <label htmlFor="password">{'Contrase\u00f1a'}</label>
                 <input
                   type="password"
                   id="password"
-                  placeholder="Ingrese su contraseña"
+                  placeholder={'Ingrese su contrase\u00f1a'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
@@ -114,7 +106,6 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
                 )}
               </div>
 
-              {/* Botón */}
               <button
                 type="submit"
                 className={`login-btn-submit${cargando ? ' loading' : ''}`}
@@ -133,15 +124,12 @@ export default function LoginForm({ onSubmit, cargando, errores = {} }) {
                   'Ingresar'
                 )}
               </button>
-
             </form>
           </div>
 
-          {/* Footer */}
           <div className="login-footer">
-            © {new Date().getFullYear()} IASD · Sistema de Control de Asistencia
+            (c) {new Date().getFullYear()} IASD - Sistema de Control de Asistencia
           </div>
-
         </div>
       </div>
     </>

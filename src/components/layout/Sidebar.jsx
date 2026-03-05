@@ -43,7 +43,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     <div className="sidebar-layout">
       {/* Overlay oscuro en mobile cuando el menu esta abierto */}
       {abierto && (
-        <div className="sidebar-overlay" onClick={cerrarMenu}></div>
+        <div
+          className="sidebar-overlay"
+          onClick={cerrarMenu}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') cerrarMenu();
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar menu lateral"
+        ></div>
       )}
 
       {/* Sidebar */}
@@ -87,7 +96,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <span className="badge bg-secondary sidebar-usuario-rol">{usuario?.rol}</span>
           </div>
           <button
-            className="btn btn-outline-light btn-sm w-100 mt-2"
+            className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn"
             onClick={onCerrarSesion}
           >
             Cerrar sesión
@@ -121,3 +130,4 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     </div>
   );
 }
+

@@ -46,6 +46,10 @@ body {
   width: 100%;
 }
 
+body.login-screen-active {
+  overflow-y: auto;
+}
+
 #root {
   width: 100%;
   overflow-x: hidden;
@@ -243,9 +247,15 @@ a:hover {
 /* ===== Tabla de registros: scroll vertical + horizontal ===== */
 .tabla-registros-scroll {
   max-height: 65vh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: auto;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 
 .tabla-registros {
@@ -427,9 +437,11 @@ a:hover {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 52%;
+  height: 50vh;
+  height: 50svh;
   background: #ffffff;
   z-index: 1;
+  pointer-events: none;
 }
 
 /* Contenedor centrador — siempre encima de ambos fondos */
@@ -437,10 +449,13 @@ a:hover {
   position: relative;
   z-index: 10;
   min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
+  min-height: 100svh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
 /* Tarjeta */
@@ -450,6 +465,7 @@ a:hover {
   border-radius: 1rem;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  margin-inline: auto;
 }
 
 /* Encabezado — diseño llamativo y reverente */
@@ -579,7 +595,7 @@ a:hover {
   width: 100%;
   padding: 0.75rem 1rem;
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--iasd-texto);
   background: #f8f9fa;
   border: 1.5px solid var(--iasd-borde);
@@ -649,6 +665,31 @@ a:hover {
   .login-footer    { padding: 0.65rem 1.2rem; font-size: 0.65rem; }
 }
 
+/* Ajuste por altura/zoom: compacta sin romper la estetica */
+@media (max-height: 900px) {
+  .login-card { max-width: 400px; }
+  .login-header { padding: 2.1rem 1.8rem 1.5rem; }
+  .login-logo { width: 78px; height: 78px; }
+  .login-brand { font-size: 1.28rem; letter-spacing: 0.16em; }
+  .login-brand-sub { font-size: 0.92rem; letter-spacing: 0.17em; }
+  .login-body { padding: 1.35rem 1.6rem 1.55rem; }
+  .login-form-title { margin-bottom: 1rem; font-size: 0.78rem; }
+  .login-field { margin-bottom: 0.95rem; }
+  .login-footer { padding: 0.62rem 1rem; font-size: 0.64rem; }
+}
+
+@media (max-height: 760px) {
+  .login-card { max-width: 360px; }
+  .login-header { padding: 1.65rem 1.4rem 1.2rem; }
+  .login-logo { width: 68px; height: 68px; }
+  .login-ornament { margin: 0.6rem auto 0.65rem; max-width: 120px; }
+  .login-brand { font-size: 1.1rem; letter-spacing: 0.13em; }
+  .login-brand-sub { font-size: 0.8rem; letter-spacing: 0.14em; }
+  .login-body { padding: 1rem 1.1rem 1.2rem; }
+  .login-field { margin-bottom: 0.75rem; }
+  .login-footer { padding: 0.5rem 0.9rem; font-size: 0.6rem; }
+}
+
 /* ==============================================
    Sidebar Layout
    ============================================== */
@@ -671,9 +712,12 @@ a:hover {
   top: 0;
   left: 0;
   height: 100vh;
+  height: 100svh;
   height: 100dvh;
   z-index: 1050;
   transition: transform 0.3s ease;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .sidebar-header {
@@ -733,10 +777,18 @@ a:hover {
 
 .sidebar-footer {
   padding: 1rem;
-  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: max(1.6rem, calc(1.2rem + env(safe-area-inset-bottom, 0px)));
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
-  margin-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--iasd-azul);
+}
+
+.sidebar-logout-btn {
+  min-height: 42px;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .sidebar-usuario-info  { display: flex; flex-direction: column; gap: 4px; }
@@ -748,9 +800,10 @@ a:hover {
   margin-left: 260px;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  width: calc(100% - 260px);
+  width: auto;
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -789,8 +842,15 @@ a:hover {
   flex: 1;
   background-color: var(--iasd-fondo);
   overflow-x: hidden;
+  min-width: 0;
   width: 100%;
   box-sizing: border-box;
+}
+
+.sidebar-main > .container-fluid {
+  width: min(100%, 1240px);
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .sidebar-contenido-bloqueado {
@@ -814,6 +874,7 @@ a:hover {
   .sidebar-contenido  { margin-left: 0; width: 100%; }
   .sidebar-hamburguesa { display: flex; }
   .sidebar-cerrar     { display: block; }
+  .sidebar-main > .container-fluid { width: 100%; }
 }
 
 @media (max-width: 480px) {

@@ -9,11 +9,11 @@ import { useAuth } from '../hooks/useAuth';
 export default function LoginPage() {
   const { iniciarSesion, cargando, errores } = useAuth();
 
-  /* Bloquea el scroll del body mientras el login está montado */
+  /* Marca login activo para estilos responsivos del viewport */
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.classList.add('login-screen-active');
     return () => {
-      document.body.style.overflow = '';
+      document.body.classList.remove('login-screen-active');
     };
   }, []);
 
