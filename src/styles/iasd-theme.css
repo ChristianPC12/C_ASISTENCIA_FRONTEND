@@ -248,19 +248,26 @@ a:hover {
 .tabla-registros-scroll {
   max-height: 65vh;
   overflow-y: auto;
-  overflow-x: auto;
+  overflow-x: hidden;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
   width: 100%;
   max-width: 100%;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+}
+
+.tabla-registros-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
 }
 
 .tabla-registros {
   min-width: 1100px;      /* fuerza scroll horizontal en pantallas chicas */
   margin-bottom: 0 !important;
+  touch-action: pan-x;
 }
 
 .tabla-registros-thead {

@@ -167,138 +167,140 @@ export default function AsistenciaTable({
 
         {!cargando && registros.length > 0 && (
           <div className="tabla-registros-scroll">
-            <table className="table table-striped table-hover align-middle mb-0 tabla-registros">
-              <thead className="tabla-registros-thead">
-                <tr>
-                  <th>Fecha</th>
-                  <th>Culto</th>
-                  <th className="text-center">Total</th>
-                  <th className="text-center">Niños</th>
-                  <th className="text-center">Jóvenes</th>
-                  <th className="text-center">Antes</th>
-                  <th className="text-center">Después</th>
-                  <th className="text-center">Barrio</th>
-                  <th className="text-center">Guayabo</th>
-                  <th className="text-center">Visitas B.</th>
-                  <th className="text-center">Visitas G.</th>
-                  <th className="text-center">Retiros</th>
-                  <th className="text-center">Quedaron</th>
-                  <th className="text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {registros.map((reg) => (
-                  <Fragment key={reg.id}>
-                    <tr
-                      className={`fila-registro ${filaExpandida === reg.id ? 'fila-activa' : ''}`}
-                      onClick={() => toggleFila(reg.id)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <td className="fw-semibold text-nowrap">{formatearFecha(reg.fecha)}</td>
-                      <td>
-                        <span className="badge bg-primary">
-                          {formatearNombreCulto(reg.culto_nombre, reg.culto_codigo)}
-                        </span>
-                      </td>
-                      <td className="text-center fw-bold">{reg.total_asistentes}</td>
-                      <td className="text-center">{reg.ninos}</td>
-                      <td className="text-center">{reg.jovenes}</td>
-                      <td className="text-center">{reg.llegaron_antes_hora}</td>
-                      <td className="text-center">{reg.llegaron_despues_hora}</td>
-                      <td className="text-center">{reg.proc_barrio}</td>
-                      <td className="text-center">{reg.proc_guayabo}</td>
-                      <td className="text-center">{reg.visitas_barrio}</td>
-                      <td className="text-center">{reg.visitas_guayabo}</td>
-                      <td className="text-center">{reg.retiros_antes_terminar}</td>
-                      <td className="text-center">{reg.se_quedaron_todo}</td>
-                      <td className="text-center">
-                        <div className="d-flex flex-wrap gap-1 justify-content-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                            onClick={() => onEditar(reg)}
-                            title="Editar"
-                            aria-label="Editar registro"
-                            style={{ width: '34px', height: '34px' }}
-                          >
-                            <i className="bi bi-pencil-square" aria-hidden="true"></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                            onClick={() => onEliminar(reg.id)}
-                            title="Eliminar"
-                            aria-label="Eliminar registro"
-                            style={{ width: '34px', height: '34px' }}
-                          >
-                            <i className="bi bi-trash" aria-hidden="true"></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-success btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                            onClick={() => onExportar(reg)}
-                            title="Exportar a Excel"
-                            aria-label="Exportar registro a Excel"
-                            style={{ width: '34px', height: '34px' }}
-                          >
-                            <i className="bi bi-file-earmark-excel" aria-hidden="true"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {filaExpandida === reg.id && (
-                      <tr className="fila-detalle">
-                        <td colSpan={totalColumnas} className="p-0">
-                          <div className="registro-detalle">
-                            <div className="row g-3">
-                              <div className="col-md-6">
-                                <div className="detalle-seccion">
-                                  <h6 className="detalle-titulo">
-                                    <i className="bi bi-people-fill me-2"></i>
-                                    Visitas del Barrio
-                                    {reg.visitas_barrio > 0 && (
-                                      <span className="badge bg-primary ms-2">{reg.visitas_barrio}</span>
-                                    )}
-                                  </h6>
-                                  <p className="detalle-texto">
-                                    {reg.nombres_visitas_barrio || <span className="text-muted fst-italic">Sin visitas registradas</span>}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="col-md-6">
-                                <div className="detalle-seccion">
-                                  <h6 className="detalle-titulo">
-                                    <i className="bi bi-people-fill me-2"></i>
-                                    Visitas de Guayabo
-                                    {reg.visitas_guayabo > 0 && (
-                                      <span className="badge bg-primary ms-2">{reg.visitas_guayabo}</span>
-                                    )}
-                                  </h6>
-                                  <p className="detalle-texto">
-                                    {reg.nombres_visitas_guayabo || <span className="text-muted fst-italic">Sin visitas registradas</span>}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="col-12">
-                                <div className="detalle-seccion">
-                                  <h6 className="detalle-titulo">
-                                    <i className="bi bi-chat-left-text-fill me-2"></i>
-                                    Observaciones
-                                  </h6>
-                                  <p className="detalle-texto mb-0">
-                                    {reg.observaciones || <span className="text-muted fst-italic">Sin observaciones</span>}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
+            <div className="tabla-registros-scroll-x">
+              <table className="table table-striped table-hover align-middle mb-0 tabla-registros">
+                <thead className="tabla-registros-thead">
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Culto</th>
+                    <th className="text-center">Total</th>
+                    <th className="text-center">Niños</th>
+                    <th className="text-center">Jóvenes</th>
+                    <th className="text-center">Antes</th>
+                    <th className="text-center">Después</th>
+                    <th className="text-center">Barrio</th>
+                    <th className="text-center">Guayabo</th>
+                    <th className="text-center">Visitas B.</th>
+                    <th className="text-center">Visitas G.</th>
+                    <th className="text-center">Retiros</th>
+                    <th className="text-center">Quedaron</th>
+                    <th className="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registros.map((reg) => (
+                    <Fragment key={reg.id}>
+                      <tr
+                        className={`fila-registro ${filaExpandida === reg.id ? 'fila-activa' : ''}`}
+                        onClick={() => toggleFila(reg.id)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <td className="fw-semibold text-nowrap">{formatearFecha(reg.fecha)}</td>
+                        <td>
+                          <span className="badge bg-primary">
+                            {formatearNombreCulto(reg.culto_nombre, reg.culto_codigo)}
+                          </span>
+                        </td>
+                        <td className="text-center fw-bold">{reg.total_asistentes}</td>
+                        <td className="text-center">{reg.ninos}</td>
+                        <td className="text-center">{reg.jovenes}</td>
+                        <td className="text-center">{reg.llegaron_antes_hora}</td>
+                        <td className="text-center">{reg.llegaron_despues_hora}</td>
+                        <td className="text-center">{reg.proc_barrio}</td>
+                        <td className="text-center">{reg.proc_guayabo}</td>
+                        <td className="text-center">{reg.visitas_barrio}</td>
+                        <td className="text-center">{reg.visitas_guayabo}</td>
+                        <td className="text-center">{reg.retiros_antes_terminar}</td>
+                        <td className="text-center">{reg.se_quedaron_todo}</td>
+                        <td className="text-center">
+                          <div className="d-flex flex-wrap gap-1 justify-content-center" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                              onClick={() => onEditar(reg)}
+                              title="Editar"
+                              aria-label="Editar registro"
+                              style={{ width: '34px', height: '34px' }}
+                            >
+                              <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                              onClick={() => onEliminar(reg.id)}
+                              title="Eliminar"
+                              aria-label="Eliminar registro"
+                              style={{ width: '34px', height: '34px' }}
+                            >
+                              <i className="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              className="btn btn-outline-success btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                              onClick={() => onExportar(reg)}
+                              title="Exportar a Excel"
+                              aria-label="Exportar registro a Excel"
+                              style={{ width: '34px', height: '34px' }}
+                            >
+                              <i className="bi bi-file-earmark-excel" aria-hidden="true"></i>
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
+
+                      {filaExpandida === reg.id && (
+                        <tr className="fila-detalle">
+                          <td colSpan={totalColumnas} className="p-0">
+                            <div className="registro-detalle">
+                              <div className="row g-3">
+                                <div className="col-md-6">
+                                  <div className="detalle-seccion">
+                                    <h6 className="detalle-titulo">
+                                      <i className="bi bi-people-fill me-2"></i>
+                                      Visitas del Barrio
+                                      {reg.visitas_barrio > 0 && (
+                                        <span className="badge bg-primary ms-2">{reg.visitas_barrio}</span>
+                                      )}
+                                    </h6>
+                                    <p className="detalle-texto">
+                                      {reg.nombres_visitas_barrio || <span className="text-muted fst-italic">Sin visitas registradas</span>}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                  <div className="detalle-seccion">
+                                    <h6 className="detalle-titulo">
+                                      <i className="bi bi-people-fill me-2"></i>
+                                      Visitas de Guayabo
+                                      {reg.visitas_guayabo > 0 && (
+                                        <span className="badge bg-primary ms-2">{reg.visitas_guayabo}</span>
+                                      )}
+                                    </h6>
+                                    <p className="detalle-texto">
+                                      {reg.nombres_visitas_guayabo || <span className="text-muted fst-italic">Sin visitas registradas</span>}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="col-12">
+                                  <div className="detalle-seccion">
+                                    <h6 className="detalle-titulo">
+                                      <i className="bi bi-chat-left-text-fill me-2"></i>
+                                      Observaciones
+                                    </h6>
+                                    <p className="detalle-texto mb-0">
+                                      {reg.observaciones || <span className="text-muted fst-italic">Sin observaciones</span>}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
