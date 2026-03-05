@@ -15,6 +15,22 @@
 
 ## Cambios recientes importantes
 
+### UI/Responsive (ajuste fino, Mar 2026)
+
+- Login:
+  - se removio el bloqueo de scroll global en `body` para evitar cortes en zoom/viewport bajo
+  - la card ajusta mejor por altura sin romper el diseno visual
+  - inputs del login en `font-size: 1rem` para evitar auto-zoom agresivo en iOS
+- Sidebar/layout:
+  - se reforzo el ancho de contenido con `width/max-width: calc(100% - 260px)` para que no se desplace al aumentar zoom en desktop
+  - boton `Cerrar sesion` con mejor estabilidad en mobile/safe-area
+- Ver Registros:
+  - scroll horizontal mobile mas usable y separado del vertical (`tabla-registros-scroll` + `tabla-registros-scroll-x`)
+  - recuperado el scroll vertical dentro de la tabla sin perder el horizontal
+- Estadisticas:
+  - bloque de serie (`estad-serie`) anclado visualmente al fondo del card de tendencia
+  - scrollbar horizontal de la serie oculto visualmente, manteniendo scroll funcional
+
 ### Registros
 
 - Filtro de fecha en `Ver Registros` mejorado:
@@ -67,4 +83,3 @@
 ```bash
 npx -y react-doctor@latest . --verbose --diff
 ```
-

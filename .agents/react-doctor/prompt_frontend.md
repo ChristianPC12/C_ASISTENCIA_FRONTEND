@@ -4,6 +4,13 @@
 
 Este es el frontend del Sistema de Control de Asistencia de la Iglesia Adventista del Septimo Dia. Es una aplicacion React que consume una API REST en PHP 8 puro (sin frameworks). La aplicacion registra la asistencia de 3 cultos semanales: Sabado 09:00, Domingo 18:30 y Miercoles 18:30. Tiene dos roles: ADMIN (gestiona todo) y SECRETARIO (solo registra asistencia). La aplicacion corre en desarrollo sobre Vite con un proxy que redirige las peticiones /api hacia el backend en http://localhost/C_ASISTENCIA_BACKEND/C_ASISTENCIA_BAKCEND.
 
+### Nota de mantenimiento (Mar 2026)
+
+- Login y layout recibieron ajustes de responsive para zoom/viewport bajo.
+- Se reforzo el ancho de `sidebar-contenido` para evitar desbordes al aumentar zoom en desktop.
+- `Ver Registros` usa scroll vertical + horizontal separados en mobile para mejor usabilidad tactil.
+- En `Estadisticas`, la serie se ancla al fondo del card y su barra de scroll horizontal se oculta visualmente (manteniendo el desplazamiento).
+
 ---
 
 ## Versiones y dependencias
