@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+﻿import { useState, Fragment } from 'react';
 import { TRIMESTRE_OPCIONES, ANIO_OPCIONES, MES_OPCIONES } from '../../config/constants';
 
 /**
@@ -16,6 +16,15 @@ export default function AsistenciaTable({
   onExportarInforme
 }) {
   const [filaExpandida, setFilaExpandida] = useState(null);
+
+  const formatearNombreCulto = (nombre = '', codigo = '') => {
+    const valor = nombre || codigo || '';
+    if (!valor) return '';
+
+    return valor
+      .replace(/Sabado/gi, 'Sábado')
+      .replace(/Miercoles/gi, 'Miércoles');
+  };
 
   const formatearFecha = (fecha) => {
     if (!fecha) return '';
@@ -63,7 +72,7 @@ export default function AsistenciaTable({
                 <option value="">Todos</option>
                 {cultos.map((culto) => (
                   <option key={culto.codigo} value={culto.codigo}>
-                    {culto.nombre}
+                    {formatearNombreCulto(culto.nombre, culto.codigo)}
                   </option>
                 ))}
               </select>
@@ -115,14 +124,14 @@ export default function AsistenciaTable({
             </div>
 
             <div className="col-12 col-md-3">
-              <label htmlFor="filtro-buscar-culto" className="form-label fw-semibold">Buscar culto</label>
+              <label htmlFor="filtro-fecha-exacta" className="form-label fw-semibold">Fecha exacta</label>
               <input
-                id="filtro-buscar-culto"
+                id="filtro-fecha-exacta"
                 type="text"
                 className="form-control"
-                placeholder="Nombre o código"
-                value={filtros.buscar_culto || ''}
-                onChange={(e) => onCambiarFiltro('buscar_culto', e.target.value)}
+                placeholder="Ej: 2026-03-14"
+                value={filtros.fecha_exacta || ''}
+                onChange={(e) => onCambiarFiltro('fecha_exacta', e.target.value)}
               />
             </div>
 
@@ -130,16 +139,7 @@ export default function AsistenciaTable({
               <button
                 className="btn btn-outline-secondary btn-sm"
                 type="button"
-                onClick={() => onExportarInforme('pdf')}
-                title="Generar informe PDF"
-              >
-                <i className="bi bi-filetype-pdf me-1" aria-hidden="true"></i>
-                Informe PDF
-              </button>
-              <button
-                className="btn btn-outline-success btn-sm"
-                type="button"
-                onClick={() => onExportarInforme('excel')}
+                onClick={() => onExportarInforme()}
                 title="Generar informe Excel"
               >
                 <i className="bi bi-filetype-xls me-1" aria-hidden="true"></i>
@@ -194,7 +194,9 @@ export default function AsistenciaTable({
                     >
                       <td className="fw-semibold text-nowrap">{formatearFecha(reg.fecha)}</td>
                       <td>
-                        <span className="badge bg-primary">{reg.culto_nombre || reg.culto_codigo}</span>
+                        <span className="badge bg-primary">
+                          {formatearNombreCulto(reg.culto_nombre, reg.culto_codigo)}
+                        </span>
                       </td>
                       <td className="text-center fw-bold">{reg.total_asistentes}</td>
                       <td className="text-center">{reg.ninos}</td>
@@ -229,21 +231,12 @@ export default function AsistenciaTable({
                           </button>
                           <button
                             className="btn btn-outline-success btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                            onClick={() => onExportar(reg, 'excel')}
+                            onClick={() => onExportar(reg)}
                             title="Exportar a Excel"
                             aria-label="Exportar registro a Excel"
                             style={{ width: '34px', height: '34px' }}
                           >
                             <i className="bi bi-file-earmark-excel" aria-hidden="true"></i>
-                          </button>
-                          <button
-                            className="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                            onClick={() => onExportar(reg, 'pdf')}
-                            title="Exportar a PDF"
-                            aria-label="Exportar registro a PDF"
-                            style={{ width: '34px', height: '34px' }}
-                          >
-                            <i className="bi bi-file-earmark-pdf" aria-hidden="true"></i>
                           </button>
                         </div>
                       </td>

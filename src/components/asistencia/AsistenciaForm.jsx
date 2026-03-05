@@ -28,6 +28,15 @@ export default function AsistenciaForm({
   onGuardar,
   onLimpiar
 }) {
+  const formatearNombreCulto = (nombre = '', codigo = '') => {
+    const valor = nombre || codigo || '';
+    if (!valor) return '';
+
+    return valor
+      .replace(/Sabado/gi, 'Sábado')
+      .replace(/Miercoles/gi, 'Miércoles');
+  };
+
   const manejarEnvio = (e) => {
     e.preventDefault();
     onGuardar();
@@ -121,7 +130,7 @@ export default function AsistenciaForm({
                   <option value="">-- Seleccionar culto --</option>
                   {cultos.map((culto) => (
                     <option key={culto.id} value={culto.id}>
-                      {culto.nombre} - {culto.hora_inicio?.substring(0, 5)}
+                      {formatearNombreCulto(culto.nombre, culto.codigo)} - {culto.hora_inicio?.substring(0, 5)}
                     </option>
                   ))}
                 </select>

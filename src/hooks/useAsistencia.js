@@ -25,7 +25,7 @@ export function useAsistencia() {
     anio: ANIO_ACTUAL,
     trimestre: TRIMESTRE_ACTUAL,
     mes: '',
-    buscar_culto: ''
+    fecha_exacta: ''
   });
 
   // Auto-calcular total_asistentes cuando cambian antes/despues
@@ -90,8 +90,8 @@ export function useAsistencia() {
         const mesStr = String(filtros.mes).padStart(2, '0');
         params.mes = mesStr;
       }
-      if (filtros.buscar_culto?.trim()) {
-        params.buscar_culto = filtros.buscar_culto.trim();
+      if (filtros.fecha_exacta?.trim()) {
+        params.fecha_exacta = filtros.fecha_exacta.trim();
       }
 
       const res = await asistenciaApi.listar(params);
@@ -279,16 +279,13 @@ export function useAsistencia() {
     }
   }, [cargarRegistros]);
 
-  // Exportar un registro puntual a Excel o PDF
-  const exportarRegistro = useCallback(async (registro, tipo) => {
+  // Exportar un registro puntual a Excel
+  const exportarRegistro = useCallback(async (registro) => {
     if (!registro?.id) return false;
 
     try {
-      const blob = tipo === 'excel'
-        ? await asistenciaApi.exportarExcel(registro.id)
-        : await asistenciaApi.exportarPdf(registro.id);
-
-      const extension = tipo === 'excel' ? 'xls' : 'pdf';
+      const blob = await asistenciaApi.exportarExcel(registro.id);
+      const extension = 'xls';
       const fecha = (registro.fecha || 'sin-fecha').replace(/[^\d-]/g, '');
       const nombre = `asistencia_${fecha}.${extension}`;
       const url = window.URL.createObjectURL(blob);
@@ -300,29 +297,26 @@ export function useAsistencia() {
       a.remove();
       window.URL.revokeObjectURL(url);
 
-      notificarExito(`Exportacion ${tipo === 'excel' ? 'Excel' : 'PDF'} generada.`);
+      notificarExito('Exportacion Excel generada.');
       return true;
     } catch (error) {
-      notificarError(`No se pudo exportar el registro a ${tipo === 'excel' ? 'Excel' : 'PDF'}.`);
+      notificarError('No se pudo exportar el registro a Excel.');
       return false;
     }
   }, []);
 
-  // Exportar informe segun filtros actuales
-  const exportarInforme = useCallback(async (tipo = 'pdf') => {
+  // Exportar informe segun filtros actuales (solo Excel)
+  const exportarInforme = useCallback(async () => {
     try {
       const params = {};
       if (filtros.culto) params.culto = filtros.culto;
       if (filtros.anio) params.anio = filtros.anio;
       if (filtros.trimestre) params.trimestre = filtros.trimestre;
       if (filtros.mes) params.mes = String(filtros.mes).padStart(2, '0');
-      if (filtros.buscar_culto?.trim()) params.buscar_culto = filtros.buscar_culto.trim();
+      if (filtros.fecha_exacta?.trim()) params.fecha_exacta = filtros.fecha_exacta.trim();
 
-      const blob = tipo === 'excel'
-        ? await asistenciaApi.exportarInformeExcel(params)
-        : await asistenciaApi.exportarInformePdf(params);
-
-      const extension = tipo === 'excel' ? 'xls' : 'pdf';
+      const blob = await asistenciaApi.exportarInformeExcel(params);
+      const extension = 'xls';
       const anio = filtros.anio || ANIO_ACTUAL;
       const periodo = filtros.mes
         ? `mes-${String(filtros.mes).padStart(2, '0')}`
@@ -338,10 +332,10 @@ export function useAsistencia() {
       a.remove();
       window.URL.revokeObjectURL(url);
 
-      notificarExito(`Informe ${tipo === 'excel' ? 'Excel' : 'PDF'} generado.`);
+      notificarExito('Informe Excel generado.');
       return true;
     } catch {
-      notificarError(`No se pudo generar el informe en ${tipo === 'excel' ? 'Excel' : 'PDF'}.`);
+      notificarError('No se pudo generar el informe en Excel.');
       return false;
     }
   }, [filtros]);

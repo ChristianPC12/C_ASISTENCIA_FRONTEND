@@ -7,9 +7,7 @@ const asistenciaApi = {
   actualizar:   (id, data) => ApiCliente.put(`/asistencias/${id}`, data),
   eliminar:     (id)     => ApiCliente.delete(`/asistencias/${id}`),
   exportarExcel: (id)    => ApiCliente.get(`/asistencias/${id}/exportar/excel`, { responseType: 'blob' }),
-  exportarPdf:   (id)    => ApiCliente.get(`/asistencias/${id}/exportar/pdf`, { responseType: 'blob' }),
-  exportarInformeExcel: (params) => ApiCliente.get('/asistencias/reportes/excel', { params, responseType: 'blob' }),
-  exportarInformePdf:   (params) => ApiCliente.get('/asistencias/reportes/pdf', { params, responseType: 'blob' })
+  exportarInformeExcel: (params) => ApiCliente.get('/asistencias/reportes/excel', { params, responseType: 'blob' })
 };
 
 export default asistenciaApi;
