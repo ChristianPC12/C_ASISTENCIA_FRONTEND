@@ -129,9 +129,11 @@ export default function AsistenciaTable({
                 id="filtro-fecha-exacta"
                 type="text"
                 className="form-control"
-                placeholder="Ej: 2026-03-14"
+                placeholder="Ej: 28/02/2026"
+                inputMode="numeric"
+                maxLength={10}
                 value={filtros.fecha_exacta || ''}
-                onChange={(e) => onCambiarFiltro('fecha_exacta', e.target.value)}
+                onChange={(e) => onCambiarFiltro('fecha_exacta', e.target.value.replace(/[^\d/]/g, ''))}
               />
             </div>
 

@@ -6,6 +6,54 @@ import { sanitizarObjeto, aEnteroPositivo } from '../utils/sanitizer';
 import { notificarExito, notificarError, confirmar } from '../utils/notify';
 import { ASISTENCIA_FORM_INICIAL, ANIO_ACTUAL } from '../config/constants';
 
+const normalizarFechaExacta = (valor) => {
+  const fecha = (valor || '').trim();
+  if (!fecha) return '';
+
+  const construirFechaIso = (anio, mes, dia) => {
+    const y = Number(anio);
+    const m = Number(mes);
+    const d = Number(dia);
+    if (!Number.isInteger(y) || !Number.isInteger(m) || !Number.isInteger(d)) return '';
+
+    const dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return '';
+
+    return `${String(y).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  };
+
+  const matchLatino = fecha.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (matchLatino) {
+    const [, dia, mes, anio] = matchLatino;
+    return construirFechaIso(anio, mes, dia);
+  }
+
+  const matchIso = fecha.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (matchIso) {
+    const [, anio, mes, dia] = matchIso;
+    return construirFechaIso(anio, mes, dia);
+  }
+
+  return '';
+};
+
+const coincideTextoFecha = (fechaIso, textoBusqueda) => {
+  const texto = (textoBusqueda || '').trim();
+  if (!texto) return true;
+  if (!fechaIso) return false;
+
+  const partes = String(fechaIso).split('-');
+  if (partes.length !== 3) return false;
+
+  const [anio, mesRaw, diaRaw] = partes;
+  const dia = String(Number(diaRaw));
+  const mes = String(Number(mesRaw));
+  const fechaCorta = `${dia}/${mes}/${anio}`;
+  const fechaLarga = `${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${anio}`;
+
+  return fechaCorta.startsWith(texto) || fechaLarga.startsWith(texto);
+};
+
 /**
  * Hook para CRUD de asistencia
  */
@@ -83,20 +131,31 @@ export function useAsistencia() {
     try {
       const params = {};
       if (filtros.culto) params.culto = filtros.culto;
-      if (filtros.anio) params.anio = filtros.anio;
-      if (filtros.trimestre) params.trimestre = filtros.trimestre;
-      if (filtros.mes) {
-        // Enviar mes como string de dos dígitos ("01", "02", ...)
-        const mesStr = String(filtros.mes).padStart(2, '0');
-        params.mes = mesStr;
-      }
-      if (filtros.fecha_exacta?.trim()) {
-        params.fecha_exacta = filtros.fecha_exacta.trim();
+      const fechaExactaTexto = (filtros.fecha_exacta || '').trim();
+      const fechaExactaNormalizada = normalizarFechaExacta(filtros.fecha_exacta);
+
+      if (fechaExactaNormalizada) {
+        params.fecha_exacta = fechaExactaNormalizada;
+      } else {
+        if (filtros.anio) params.anio = filtros.anio;
+        if (filtros.trimestre) params.trimestre = filtros.trimestre;
+        if (filtros.mes) {
+          // Enviar mes como string de dos dígitos ("01", "02", ...)
+          const mesStr = String(filtros.mes).padStart(2, '0');
+          params.mes = mesStr;
+        }
       }
 
       const res = await asistenciaApi.listar(params);
       if (res.exito) {
-        setRegistros(res.datos || []);
+        let datos = res.datos || [];
+
+        // Si el usuario va escribiendo una fecha parcial, filtrar coincidencias en cliente.
+        if (fechaExactaTexto && !fechaExactaNormalizada) {
+          datos = datos.filter((r) => coincideTextoFecha(r.fecha, fechaExactaTexto));
+        }
+
+        setRegistros(datos);
       }
     } catch (error) {
       notificarError('Error al cargar los registros de asistencia.');
@@ -310,10 +369,15 @@ export function useAsistencia() {
     try {
       const params = {};
       if (filtros.culto) params.culto = filtros.culto;
-      if (filtros.anio) params.anio = filtros.anio;
-      if (filtros.trimestre) params.trimestre = filtros.trimestre;
-      if (filtros.mes) params.mes = String(filtros.mes).padStart(2, '0');
-      if (filtros.fecha_exacta?.trim()) params.fecha_exacta = filtros.fecha_exacta.trim();
+      const fechaExactaTexto = (filtros.fecha_exacta || '').trim();
+      const fechaExactaNormalizada = normalizarFechaExacta(filtros.fecha_exacta);
+      if (fechaExactaNormalizada) {
+        params.fecha_exacta = fechaExactaNormalizada;
+      } else {
+        if (filtros.anio) params.anio = filtros.anio;
+        if (filtros.trimestre) params.trimestre = filtros.trimestre;
+        if (filtros.mes) params.mes = String(filtros.mes).padStart(2, '0');
+      }
 
       const blob = await asistenciaApi.exportarInformeExcel(params);
       const extension = 'xls';
