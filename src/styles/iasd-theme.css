@@ -261,13 +261,13 @@ a:hover {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  touch-action: pan-x;
+  touch-action: auto;
 }
 
 .tabla-registros {
   min-width: 1100px;      /* fuerza scroll horizontal en pantallas chicas */
   margin-bottom: 0 !important;
-  touch-action: pan-x;
+  touch-action: auto;
 }
 
 .tabla-registros-thead {
