@@ -337,6 +337,80 @@ a:hover {
 }
 
 /* ==============================================
+   Estadisticas de asistencia
+   ============================================== */
+
+.estad-kpi-card {
+  border-left: 4px solid var(--iasd-dorado);
+}
+
+.estad-kpi-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--iasd-texto-sec);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.estad-kpi-valor {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--iasd-azul);
+  line-height: 1.2;
+}
+
+.estad-card-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--iasd-azul);
+  margin-bottom: 0.95rem;
+}
+
+.estad-progress {
+  height: 0.56rem;
+  border-radius: 999px;
+  background-color: rgba(0, 51, 102, 0.08);
+}
+
+.estad-serie-scroll {
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+}
+
+.estad-serie {
+  min-height: 220px;
+  min-width: 680px;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  padding: 0.5rem 0.25rem 0;
+}
+
+.estad-serie-item {
+  width: 24px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.estad-serie-barra {
+  width: 100%;
+  border-radius: 0.45rem 0.45rem 0 0;
+  background: linear-gradient(180deg, var(--iasd-dorado) 0%, var(--iasd-azul) 100%);
+  box-shadow: 0 2px 8px rgba(0, 51, 102, 0.25);
+}
+
+.estad-serie-label {
+  font-size: 0.68rem;
+  color: var(--iasd-texto-sec);
+  white-space: nowrap;
+}
+
+/* ==============================================
    Login — Vanta.js WAVES + Split Background
    ============================================== */
 

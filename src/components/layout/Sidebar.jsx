@@ -31,6 +31,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const enlaces = [
     { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
     { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
+    { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
   ];
 
   // Agregar enlace de Usuarios solo para ADMIN

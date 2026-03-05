@@ -8,6 +8,7 @@ import ConfirmModal from './components/ui/ConfirmModal';
 import LoginPage from './pages/LoginPage';
 import RegistroPage from './pages/RegistroPage';
 import RegistrosPage from './pages/RegistrosPage';
+import EstadisticasPage from './pages/EstadisticasPage';
 import UsuarioPage from './pages/UsuarioPage';
 import { ROLES } from './config/constants';
 
@@ -58,6 +59,16 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <RegistrosPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Estadisticas */}
+        <Route
+          path="/estadisticas"
+          element={
+            <ProtectedRoute>
+              <EstadisticasPage />
             </ProtectedRoute>
           }
         />

@@ -6,6 +6,7 @@ const asistenciaApi = {
   crear:        (data)   => ApiCliente.post('/asistencias', data),
   actualizar:   (id, data) => ApiCliente.put(`/asistencias/${id}`, data),
   eliminar:     (id)     => ApiCliente.delete(`/asistencias/${id}`),
+  obtenerEstadisticas: (params) => ApiCliente.get('/asistencias/estadisticas', { params }),
   exportarExcel: (id)    => ApiCliente.get(`/asistencias/${id}/exportar/excel`, { responseType: 'blob' }),
   exportarInformeExcel: (params) => ApiCliente.get('/asistencias/reportes/excel', { params, responseType: 'blob' })
 };
