@@ -3,15 +3,6 @@ import { TRIMESTRE_OPCIONES, ANIO_OPCIONES, MES_OPCIONES } from '../../config/co
 
 /**
  * Tabla de registros de asistencia con filtros y filas expandibles
- * Props:
- *  - registros: array de registros de asistencia
- *  - cultos: array de cultos disponibles
- *  - filtros: { culto, anio, trimestre, mes }
- *  - cargando: boolean
- *  - onCambiarFiltro: funcion (campo, valor)
- *  - onEditar: funcion (registro)
- *  - onEliminar: funcion (id)
- *  - onExportar: funcion (registro, tipo: 'excel' | 'pdf')
  */
 export default function AsistenciaTable({
   registros,
@@ -21,7 +12,8 @@ export default function AsistenciaTable({
   onCambiarFiltro,
   onEditar,
   onEliminar,
-  onExportar
+  onExportar,
+  onExportarInforme
 }) {
   const [filaExpandida, setFilaExpandida] = useState(null);
 
@@ -60,8 +52,7 @@ export default function AsistenciaTable({
         {/* Filtros */}
         <div className="filtros-container">
           <div className="row g-3 align-items-end">
-            {/* Filtro por culto */}
-            <div className="col-6 col-md-3">
+            <div className="col-6 col-md-2">
               <label htmlFor="filtro-culto" className="form-label fw-semibold">Culto</label>
               <select
                 id="filtro-culto"
@@ -78,7 +69,6 @@ export default function AsistenciaTable({
               </select>
             </div>
 
-            {/* Filtro por año */}
             <div className="col-6 col-md-2">
               <label htmlFor="filtro-anio" className="form-label fw-semibold">Año</label>
               <select
@@ -94,8 +84,7 @@ export default function AsistenciaTable({
               </select>
             </div>
 
-            {/* Filtro por trimestre */}
-            <div className="col-6 col-md-4">
+            <div className="col-6 col-md-3">
               <label htmlFor="filtro-trimestre" className="form-label fw-semibold">Trimestre</label>
               <select
                 id="filtro-trimestre"
@@ -110,8 +99,7 @@ export default function AsistenciaTable({
               </select>
             </div>
 
-            {/* Filtro por mes */}
-            <div className="col-6 col-md-3">
+            <div className="col-6 col-md-2">
               <label htmlFor="filtro-mes" className="form-label fw-semibold">Mes</label>
               <select
                 id="filtro-mes"
@@ -125,10 +113,42 @@ export default function AsistenciaTable({
                 ))}
               </select>
             </div>
+
+            <div className="col-12 col-md-3">
+              <label htmlFor="filtro-buscar-culto" className="form-label fw-semibold">Buscar culto</label>
+              <input
+                id="filtro-buscar-culto"
+                type="text"
+                className="form-control"
+                placeholder="Nombre o código"
+                value={filtros.buscar_culto || ''}
+                onChange={(e) => onCambiarFiltro('buscar_culto', e.target.value)}
+              />
+            </div>
+
+            <div className="col-12 d-flex flex-wrap gap-2 justify-content-end">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                type="button"
+                onClick={() => onExportarInforme('pdf')}
+                title="Generar informe PDF"
+              >
+                <i className="bi bi-filetype-pdf me-1" aria-hidden="true"></i>
+                Informe PDF
+              </button>
+              <button
+                className="btn btn-outline-success btn-sm"
+                type="button"
+                onClick={() => onExportarInforme('excel')}
+                title="Generar informe Excel"
+              >
+                <i className="bi bi-filetype-xls me-1" aria-hidden="true"></i>
+                Informe Excel
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Spinner de carga */}
         {cargando && (
           <div className="text-center py-4">
             <div className="spinner-border spinner-iasd" role="status">
@@ -137,14 +157,12 @@ export default function AsistenciaTable({
           </div>
         )}
 
-        {/* Mensaje si no hay registros */}
         {!cargando && registros.length === 0 && (
           <div className="alert alert-iasd text-center">
             No se encontraron registros de asistencia con los filtros seleccionados.
           </div>
         )}
 
-        {/* Tabla de registros con scroll vertical y horizontal */}
         {!cargando && registros.length > 0 && (
           <div className="tabla-registros-scroll">
             <table className="table table-striped table-hover align-middle mb-0 tabla-registros">
@@ -231,13 +249,11 @@ export default function AsistenciaTable({
                       </td>
                     </tr>
 
-                    {/* Fila expandible con detalles */}
                     {filaExpandida === reg.id && (
                       <tr className="fila-detalle">
                         <td colSpan={totalColumnas} className="p-0">
                           <div className="registro-detalle">
                             <div className="row g-3">
-                              {/* Visitas del barrio */}
                               <div className="col-md-6">
                                 <div className="detalle-seccion">
                                   <h6 className="detalle-titulo">
@@ -253,7 +269,6 @@ export default function AsistenciaTable({
                                 </div>
                               </div>
 
-                              {/* Visitas de Guayabo */}
                               <div className="col-md-6">
                                 <div className="detalle-seccion">
                                   <h6 className="detalle-titulo">
@@ -269,7 +284,6 @@ export default function AsistenciaTable({
                                 </div>
                               </div>
 
-                              {/* Observaciones */}
                               <div className="col-12">
                                 <div className="detalle-seccion">
                                   <h6 className="detalle-titulo">

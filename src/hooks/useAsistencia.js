@@ -10,6 +10,7 @@ import { ASISTENCIA_FORM_INICIAL, ANIO_ACTUAL } from '../config/constants';
  * Hook para CRUD de asistencia
  */
 export function useAsistencia() {
+  const TRIMESTRE_ACTUAL = Math.floor(new Date().getMonth() / 3) + 1;
   const [registros, setRegistros] = useState([]);
   const [cultos, setCultos] = useState([]);
   const [formulario, setFormulario] = useState({ ...ASISTENCIA_FORM_INICIAL });
@@ -22,8 +23,9 @@ export function useAsistencia() {
   const [filtros, setFiltros] = useState({
     culto: '',
     anio: ANIO_ACTUAL,
-    trimestre: '',
-    mes: ''
+    trimestre: TRIMESTRE_ACTUAL,
+    mes: '',
+    buscar_culto: ''
   });
 
   // Auto-calcular total_asistentes cuando cambian antes/despues
@@ -87,6 +89,9 @@ export function useAsistencia() {
         // Enviar mes como string de dos dígitos ("01", "02", ...)
         const mesStr = String(filtros.mes).padStart(2, '0');
         params.mes = mesStr;
+      }
+      if (filtros.buscar_culto?.trim()) {
+        params.buscar_culto = filtros.buscar_culto.trim();
       }
 
       const res = await asistenciaApi.listar(params);
@@ -303,6 +308,44 @@ export function useAsistencia() {
     }
   }, []);
 
+  // Exportar informe segun filtros actuales
+  const exportarInforme = useCallback(async (tipo = 'pdf') => {
+    try {
+      const params = {};
+      if (filtros.culto) params.culto = filtros.culto;
+      if (filtros.anio) params.anio = filtros.anio;
+      if (filtros.trimestre) params.trimestre = filtros.trimestre;
+      if (filtros.mes) params.mes = String(filtros.mes).padStart(2, '0');
+      if (filtros.buscar_culto?.trim()) params.buscar_culto = filtros.buscar_culto.trim();
+
+      const blob = tipo === 'excel'
+        ? await asistenciaApi.exportarInformeExcel(params)
+        : await asistenciaApi.exportarInformePdf(params);
+
+      const extension = tipo === 'excel' ? 'xls' : 'pdf';
+      const anio = filtros.anio || ANIO_ACTUAL;
+      const periodo = filtros.mes
+        ? `mes-${String(filtros.mes).padStart(2, '0')}`
+        : (filtros.trimestre ? `t${filtros.trimestre}` : 'todos');
+      const nombre = `informe_asistencia_${anio}_${periodo}.${extension}`;
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = nombre;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      notificarExito(`Informe ${tipo === 'excel' ? 'Excel' : 'PDF'} generado.`);
+      return true;
+    } catch {
+      notificarError(`No se pudo generar el informe en ${tipo === 'excel' ? 'Excel' : 'PDF'}.`);
+      return false;
+    }
+  }, [filtros]);
+
   // Limpiar formulario
   const limpiarFormulario = useCallback(() => {
     setFormulario({ ...ASISTENCIA_FORM_INICIAL });
@@ -329,6 +372,7 @@ export function useAsistencia() {
     editar,
     eliminar,
     exportarRegistro,
+    exportarInforme,
     limpiarFormulario,
     cambiarFiltro
   };
