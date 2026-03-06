@@ -65,7 +65,7 @@ export default function LoginForm({ onSubmit, cargando, errores = ERRORES_VACIOS
             </div>
             <div className="login-ornament">&diams;</div>
             <div className="login-brand">Iglesia Adventista</div>
-            <div className="login-brand-sub">del Septimo Dia</div>
+            <div className="login-brand-sub">del S&eacute;ptimo D&iacute;a</div>
           </div>
 
           <div className="login-body">
@@ -128,7 +128,7 @@ export default function LoginForm({ onSubmit, cargando, errores = ERRORES_VACIOS
           </div>
 
           <div className="login-footer">
-            (c) {new Date().getFullYear()} IASD - Sistema de Control de Asistencia
+            &copy; {new Date().getFullYear()} IASD - Sistema de Control de Asistencia
           </div>
         </div>
       </div>
