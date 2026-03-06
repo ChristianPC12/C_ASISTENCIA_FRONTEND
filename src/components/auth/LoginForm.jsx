@@ -7,7 +7,7 @@ const ERRORES_VACIOS = {};
 /**
  * LoginForm
  * Props:
- *  - onSubmit  : ({ usuario, password }) => void
+ *  - onSubmit  : ({ usuario, password }) => Promise<{ exito: boolean, limpiarCampos?: boolean }> | void
  *  - cargando  : boolean
  *  - errores   : { usuario?: string, password?: string }
  */
@@ -43,9 +43,14 @@ export default function LoginForm({ onSubmit, cargando, errores = ERRORES_VACIOS
     };
   }, []);
 
-  const manejarEnvio = (e) => {
+  const manejarEnvio = async (e) => {
     e.preventDefault();
-    onSubmit({ usuario, password });
+
+    const resultado = await onSubmit({ usuario, password });
+    if (resultado?.limpiarCampos) {
+      setUsuario('');
+      setPassword('');
+    }
   };
 
   return (

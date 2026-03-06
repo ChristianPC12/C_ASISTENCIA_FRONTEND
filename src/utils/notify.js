@@ -2,6 +2,10 @@
 import { lanzarToast } from '../components/ui/ToastContainer';
 import { lanzarConfirm } from '../components/ui/ConfirmModal';
 
+function toastsErrorSilenciados() {
+  return typeof window !== 'undefined' && window.__suppressErrorToasts === true;
+}
+
 /**
  * Muestra un toast de exito
  * @param {string} mensaje
@@ -15,7 +19,19 @@ export function notificarExito(mensaje) {
  * @param {string} mensaje
  */
 export function notificarError(mensaje) {
+  if (toastsErrorSilenciados()) {
+    return;
+  }
+
   lanzarToast(mensaje, 'error');
+}
+
+/**
+ * Muestra un toast informativo
+ * @param {string} mensaje
+ */
+export function notificarInfo(mensaje) {
+  lanzarToast(mensaje, 'info');
 }
 
 /**

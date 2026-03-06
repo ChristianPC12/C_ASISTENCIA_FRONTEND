@@ -6,6 +6,20 @@ import { notificarExito, notificarError } from '../utils/notify';
 import { ROLES } from '../config/constants';
 
 const AuthContext = createContext(null);
+const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
+
+function esMensajeCredencialesInvalidas(mensaje) {
+  if (typeof mensaje !== 'string' || mensaje.trim() === '') {
+    return false;
+  }
+
+  const normalizado = mensaje
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toLowerCase();
+
+  return normalizado.includes('credenciales invalidas');
+}
 
 /**
  * Provider de autenticacion: envuelve toda la app para compartir un solo estado
@@ -51,7 +65,7 @@ export function AuthProvider({ children }) {
 
     if (!validacion.valido) {
       setErrores(validacion.errores);
-      return false;
+      return { exito: false, limpiarCampos: false };
     }
 
     setCargando(true);
@@ -65,14 +79,22 @@ export function AuthProvider({ children }) {
         setToken(res.datos.token);
         setUsuario(res.datos.usuario);
         notificarExito(res.mensaje);
-        return true;
+        return { exito: true, limpiarCampos: false };
       }
-      notificarError(res.mensaje || 'Error al iniciar sesion.');
-      return false;
+
+      const mensaje = res.mensaje || 'Error al iniciar sesion.';
+      notificarError(mensaje);
+      return {
+        exito: false,
+        limpiarCampos: esMensajeCredencialesInvalidas(mensaje)
+      };
     } catch (error) {
       const mensaje = error?.mensaje || 'Error al conectar con el servidor.';
       notificarError(mensaje);
-      return false;
+      return {
+        exito: false,
+        limpiarCampos: esMensajeCredencialesInvalidas(mensaje)
+      };
     } finally {
       setCargando(false);
     }
