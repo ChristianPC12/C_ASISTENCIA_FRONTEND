@@ -55,13 +55,13 @@ const DEFINICIONES_INDICADORES = [
   },
   {
     id: 'maximo_asistentes',
-    etiqueta: 'Maximo asistentes',
+    etiqueta: 'Máximo asistentes',
     unidad: 'entero',
     obtener: (stats) => Number(stats?.resumen_general?.maximo_asistentes || 0)
   },
   {
     id: 'minimo_asistentes',
-    etiqueta: 'Minimo asistentes',
+    etiqueta: 'Mínimo asistentes',
     unidad: 'entero',
     obtener: (stats) => Number(stats?.resumen_general?.minimo_asistentes || 0)
   },
@@ -73,13 +73,13 @@ const DEFINICIONES_INDICADORES = [
   },
   {
     id: 'ninos_porcentaje',
-    etiqueta: 'Ninos (%)',
+    etiqueta: 'Niños (%)',
     unidad: 'porcentaje',
     obtener: (stats) => Number(stats?.composicion_asistentes?.ninos?.porcentaje || 0)
   },
   {
     id: 'jovenes_porcentaje',
-    etiqueta: 'Jovenes (%)',
+    etiqueta: 'Jóvenes (%)',
     unidad: 'porcentaje',
     obtener: (stats) => Number(stats?.composicion_asistentes?.jovenes?.porcentaje || 0)
   },
@@ -112,8 +112,8 @@ const DEFINICIONES_INDICADORES = [
 function formatearNombreCulto(nombre = '', codigo = '') {
   const valor = nombre || codigo || '';
   return valor
-    .replace(/Sabado/gi, 'Sabado')
-    .replace(/Miercoles/gi, 'Miercoles');
+    .replace(/Sabado/gi, 'Sábado')
+    .replace(/Miercoles/gi, 'Miércoles');
 }
 
 function obtenerPeriodosIniciales() {
@@ -233,12 +233,12 @@ export function useComparaciones() {
       setPeriodoB(resB?.exito ? (resB.datos || ESTADISTICAS_VACIAS) : ESTADISTICAS_VACIAS);
 
       if (!resA?.exito || !resB?.exito) {
-        notificarError(resA?.mensaje || resB?.mensaje || 'No fue posible cargar la comparacion.');
+        notificarError(resA?.mensaje || resB?.mensaje || 'No fue posible cargar la comparación.');
       }
     } catch (error) {
       setPeriodoA(ESTADISTICAS_VACIAS);
       setPeriodoB(ESTADISTICAS_VACIAS);
-      notificarError(error?.mensaje || 'No fue posible cargar la comparacion entre meses.');
+      notificarError(error?.mensaje || 'No fue posible cargar la comparación entre meses.');
     } finally {
       setCargando(false);
     }

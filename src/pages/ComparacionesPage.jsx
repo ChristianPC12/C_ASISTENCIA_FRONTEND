@@ -109,7 +109,7 @@ export default function ComparacionesPage() {
 
       <div className="card shadow-sm mb-4">
         <div className="card-header">
-          <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros de comparacion</h5>
+          <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros de comparación</h5>
         </div>
         <div className="card-body">
           <div className="row g-3 align-items-end">
@@ -131,7 +131,7 @@ export default function ComparacionesPage() {
             </div>
 
             <div className="col-6 col-lg-2">
-              <label htmlFor="comp-anio-a" className="form-label fw-semibold">Ano A</label>
+              <label htmlFor="comp-anio-a" className="form-label fw-semibold">Año A</label>
               <select
                 id="comp-anio-a"
                 className="form-select"
@@ -158,7 +158,7 @@ export default function ComparacionesPage() {
             </div>
 
             <div className="col-6 col-lg-2">
-              <label htmlFor="comp-anio-b" className="form-label fw-semibold">Ano B</label>
+              <label htmlFor="comp-anio-b" className="form-label fw-semibold">Año B</label>
               <select
                 id="comp-anio-b"
                 className="form-select"
@@ -232,7 +232,7 @@ export default function ComparacionesPage() {
                       <th className="text-end">{etiquetaPeriodoA}</th>
                       <th className="text-end">{etiquetaPeriodoB}</th>
                       <th className="text-end">Diferencia</th>
-                      <th className="text-end">Variacion</th>
+                      <th className="text-end">Variación</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -262,7 +262,7 @@ export default function ComparacionesPage() {
             <div className="card-body p-0">
               {topNombresComparados.length === 0 && (
                 <div className="p-3 text-muted">
-                  No hay nombres de visitas para los periodos seleccionados.
+                  No hay nombres de visitas para los períodos seleccionados.
                 </div>
               )}
               {topNombresComparados.length > 0 && (
