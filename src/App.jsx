@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import RegistroPage from './pages/RegistroPage';
 import RegistrosPage from './pages/RegistrosPage';
 import EstadisticasPage from './pages/EstadisticasPage';
+import ComparacionesPage from './pages/ComparacionesPage';
 import UsuarioPage from './pages/UsuarioPage';
 import { ROLES } from './config/constants';
 
@@ -69,6 +70,16 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <EstadisticasPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Comparaciones */}
+        <Route
+          path="/comparaciones"
+          element={
+            <ProtectedRoute>
+              <ComparacionesPage />
             </ProtectedRoute>
           }
         />

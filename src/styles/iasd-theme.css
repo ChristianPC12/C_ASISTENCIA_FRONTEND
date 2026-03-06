@@ -440,6 +440,51 @@ a:hover {
 }
 
 /* ==============================================
+   Comparaciones mensuales
+   ============================================== */
+
+.comparacion-resumen-card {
+  border-left: 4px solid var(--iasd-azul);
+}
+
+.comparacion-resumen-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--iasd-azul);
+  margin-bottom: 0.95rem;
+}
+
+.comparacion-resumen-valor {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--iasd-azul);
+  line-height: 1.15;
+}
+
+.comparacion-tabla th,
+.comparacion-tabla td {
+  white-space: nowrap;
+}
+
+.comparacion-cambio-sube {
+  color: var(--iasd-exito);
+}
+
+.comparacion-cambio-baja {
+  color: var(--iasd-peligro);
+}
+
+.comparacion-cambio-igual {
+  color: var(--iasd-texto-sec);
+}
+
+@media (max-width: 768px) {
+  .comparacion-resumen-valor {
+    font-size: 1.15rem;
+  }
+}
+
+/* ==============================================
    Login — Vanta.js WAVES + Split Background
    ============================================== */
 

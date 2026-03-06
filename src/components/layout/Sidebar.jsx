@@ -32,6 +32,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
     { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
     { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
+    { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
   ];
 
   // Agregar enlace de Usuarios solo para ADMIN
@@ -130,4 +131,3 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     </div>
   );
 }
-
