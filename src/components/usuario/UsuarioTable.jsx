@@ -19,6 +19,29 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
     });
   };
 
+  const formatearFechaSolo = (fecha) => {
+    if (!fecha) return '';
+    const d = new Date(fecha);
+    return d.toLocaleDateString('es-CR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const obtenerEstadoExpiracion = (fechaExpira) => {
+    if (!fechaExpira) return { texto: 'Sin fecha', clase: 'bg-secondary' };
+
+    const hoy = new Date();
+    const expira = new Date(fechaExpira);
+    const diffMs = expira.getTime() - hoy.getTime();
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDias < 0) return { texto: 'Expirada', clase: 'bg-danger' };
+    if (diffDias <= 7) return { texto: 'Por vencer', clase: 'bg-warning text-dark' };
+    return { texto: 'Vigente', clase: 'bg-success' };
+  };
+
   return (
     <div className="card shadow-sm">
       <div className="card-header d-flex justify-content-between align-items-center">
@@ -54,49 +77,66 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                   <th>Usuario</th>
                   <th className="text-center">Rol</th>
                   <th className="text-center">Estado</th>
+                  <th className="text-center">Expira contraseña</th>
                   <th>Creado</th>
                   <th className="text-center">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {usuarios.map((usr) => (
-                  <tr key={usr.id}>
-                    <td>{usr.id}</td>
-                    <td className="fw-semibold">{usr.nombre_completo}</td>
-                    <td>{usr.usuario}</td>
-                    <td className="text-center">
-                      <span className={`badge ${usr.rol === 'ADMIN' ? 'bg-primary' : 'bg-secondary'}`}>
-                        {usr.rol}
-                      </span>
-                    </td>
-                    <td className="text-center">
-                      <span className={`badge ${usr.activo ? 'bg-success' : 'bg-danger'}`}>
-                        {usr.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: '0.85rem' }}>{formatearFecha(usr.creado_en)}</td>
-                    <td className="text-center">
-                      <div className="d-flex gap-1 justify-content-center">
-                        <button
-                          className="btn btn-outline-primary btn-sm"
-                          onClick={() => onEditar(usr)}
-                          title="Editar"
-                        >
-                          Editar
-                        </button>
-                        {usr.activo && (
-                          <button
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => onEliminar(usr.id)}
-                            title="Desactivar"
-                          >
-                            Desactivar
-                          </button>
+                {usuarios.map((usr) => {
+                  const estadoExpiracion = obtenerEstadoExpiracion(usr.password_expira_en);
+
+                  return (
+                    <tr key={usr.id}>
+                      <td>{usr.id}</td>
+                      <td className="fw-semibold">{usr.nombre_completo}</td>
+                      <td>{usr.usuario}</td>
+                      <td className="text-center">
+                        <span className={`badge ${usr.rol === 'ADMIN' ? 'bg-primary' : 'bg-secondary'}`}>
+                          {usr.rol}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <span className={`badge ${usr.activo ? 'bg-success' : 'bg-danger'}`}>
+                          {usr.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        {usr.password_expira_en ? (
+                          <div className="d-flex flex-column align-items-center gap-1">
+                            <span className="small text-nowrap">{formatearFechaSolo(usr.password_expira_en)}</span>
+                            <span className={`badge ${estadoExpiracion.clase}`}>
+                              {estadoExpiracion.texto}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted small">No disponible</span>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td style={{ fontSize: '0.85rem' }}>{formatearFecha(usr.creado_en)}</td>
+                      <td className="text-center">
+                        <div className="d-flex gap-1 justify-content-center">
+                          <button
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => onEditar(usr)}
+                            title="Editar"
+                          >
+                            Editar
+                          </button>
+                          {usr.activo && (
+                            <button
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => onEliminar(usr.id)}
+                              title="Desactivar"
+                            >
+                              Desactivar
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
