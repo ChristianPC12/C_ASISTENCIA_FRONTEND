@@ -224,7 +224,7 @@ export default function ComparacionesPage() {
               <small className="text-white-50">Diferencia calculada como B - A</small>
             </div>
             <div className="card-body p-0">
-              <div className="table-responsive">
+              <div className="table-responsive comparacion-table-wrap">
                 <table className="table table-hover align-middle mb-0 comparacion-tabla">
                   <thead>
                     <tr>
@@ -266,7 +266,7 @@ export default function ComparacionesPage() {
                 </div>
               )}
               {topNombresComparados.length > 0 && (
-                <div className="table-responsive">
+                <div className="table-responsive comparacion-table-wrap">
                   <table className="table table-sm align-middle mb-0 comparacion-tabla">
                     <thead>
                       <tr>
