@@ -203,7 +203,9 @@ a:hover {
 }
 .table-responsive {
   border-radius: 0.5rem;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ==============================================
@@ -889,7 +891,7 @@ a:hover {
 @media (max-width: 991.98px) {
   .sidebar            { transform: translateX(-100%); }
   .sidebar-abierto    { transform: translateX(0); }
-  .sidebar-contenido  { margin-left: 0; width: 100%; }
+  .sidebar-contenido  { margin-left: 0; width: 100%; max-width: 100%; }
   .sidebar-hamburguesa { display: flex; }
   .sidebar-cerrar     { display: block; }
   .sidebar-main > .container-fluid { width: 100%; }
