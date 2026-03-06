@@ -38,7 +38,7 @@ export default function UsuarioForm({
         </h5>
       </div>
       <div className="card-body">
-        <form onSubmit={manejarEnvio}>
+        <form onSubmit={manejarEnvio} noValidate>
           <div className="row g-3">
             {/* Nombre completo */}
             <div className="col-md-6">
