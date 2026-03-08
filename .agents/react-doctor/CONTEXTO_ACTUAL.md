@@ -11,6 +11,7 @@
 
 - `/registro`: formulario de nuevo registro de asistencia.
 - `/registros`: tabla de registros, filtros, exportacion Excel.
+- `/presentaciones`: historial y detalle de presentaciones por periodo.
 - `/estadisticas`: KPIs y resumen por periodo.
 - `/comparaciones`: comparacion mensual A vs B.
 - `/usuarios`: solo ADMIN.
@@ -45,6 +46,15 @@
 - Registros:
   - filtros por `anio`, `trimestre`, `mes`, `fecha_exacta`.
   - exportacion por registro e informe general solo en Excel.
+- Prompts/Presentaciones:
+  - boton flotante `Prompt` en `/registros` con modal de filtros mensuales.
+  - generacion por `POST /presentaciones/generar` con `anio` + `mes` obligatorios.
+  - no permite generar si el mes no tiene registros.
+  - no permite duplicados por combinacion `anio + mes + culto` (incluye `TODOS`).
+  - almacenamiento en BD de salida estructurada (plantilla `v1`, 8 secciones).
+  - motor de generacion deterministico interno (sin proveedor IA externo).
+  - nuevo modulo `/presentaciones` con filtros y scroll interno cuando hay mas de 8 items.
+  - detalle con exportacion a PDF desde frontend.
 - Usuarios:
   - password fuerte (12-64, mayuscula, minuscula, numero, especial).
   - columna de expiracion (`Vigente`, `Por vencer`, `Expirada`).
@@ -68,6 +78,7 @@
   - `src/components/layout/Sidebar.jsx`
 - Frontend modulos:
   - `src/hooks/useAsistencia.js`
+  - `src/hooks/usePresentaciones.js`
   - `src/hooks/useComparaciones.js`
   - `src/hooks/useUsuario.js`
 - Backend auth/seguridad:
@@ -76,3 +87,7 @@
   - `Middleware/AuthMiddleware.php`
   - `Modelo/Seguridad/LoginIntentoDAO.php`
   - `Modelo/Token/TokenDAO.php`
+- Backend presentaciones:
+  - `Services/PresentacionService.php`
+  - `Controller/PresentacionController.php`
+  - `Router/PresentacionRoutes.php`

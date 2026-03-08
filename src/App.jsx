@@ -11,6 +11,7 @@ import RegistrosPage from './pages/RegistrosPage';
 import EstadisticasPage from './pages/EstadisticasPage';
 import ComparacionesPage from './pages/ComparacionesPage';
 import UsuarioPage from './pages/UsuarioPage';
+import PresentacionesPage from './pages/PresentacionesPage';
 import { ROLES } from './config/constants';
 
 /**
@@ -80,6 +81,16 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <ComparacionesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Presentaciones */}
+        <Route
+          path="/presentaciones"
+          element={
+            <ProtectedRoute>
+              <PresentacionesPage />
             </ProtectedRoute>
           }
         />

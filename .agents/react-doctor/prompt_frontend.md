@@ -109,6 +109,7 @@ Rutas definidas en `src/App.jsx`:
 - `/` -> login (cuando no autenticado)
 - `/registro` -> protegido
 - `/registros` -> protegido
+- `/presentaciones` -> protegido
 - `/estadisticas` -> protegido
 - `/comparaciones` -> protegido
 - `/usuarios` -> protegido + solo `ADMIN`
@@ -194,6 +195,12 @@ Usuarios (solo ADMIN en backend):
 - `PUT /usuarios/{id}`
 - `DELETE /usuarios/{id}` (soft delete)
 
+Presentaciones (autenticado; alcance por rol):
+
+- `POST /presentaciones/generar` (Bearer; body: `{ filtros: { anio, mes, culto? } }`)
+- `GET /presentaciones` (Bearer; filtros: `anio`, `mes`, `culto`, `usuario_id`, `page`, `limit`)
+- `GET /presentaciones/{id}` (Bearer; detalle completo; no ADMIN solo propias)
+
 Codigos HTTP relevantes:
 
 - `200`, `201`, `204`
@@ -218,6 +225,15 @@ Registros (`/registros`):
 - tabla expandible con detalle
 - filtros por culto/anio/trimestre/mes/fecha exacta parcial o completa
 - exportacion por registro e informe general a Excel
+- boton flotante `Prompt` para generar presentacion mensual con filtros (sin IA externa)
+
+Presentaciones (`/presentaciones`):
+
+- listado persistido de presentaciones generadas por motor deterministico interno
+- filtros por anio/mes/culto y por usuario para ADMIN
+- detalle por plantilla `v1` con 8 secciones fijas
+- scroll interno en historial al superar 8 items
+- boton `Exportar PDF` en detalle
 
 Estadisticas (`/estadisticas`):
 
@@ -267,6 +283,7 @@ Tablas activas relevantes:
 - `login_intentos`
 - `cultos`
 - `asistencia_registro`
+- `presentaciones`
 
 Sobre `user_tokens`:
 
@@ -291,6 +308,9 @@ Implementado:
 - revocacion de tokens ante desactivacion/cambio de password/logout
 - control de rol ADMIN en backend para usuarios
 - validaciones de entrada en frontend y backend
+- generacion de presentaciones con motor de reglas interno y plantilla fija `v1`
+- bloqueo de generacion sin datos en el mes (422)
+- bloqueo de duplicado por `anio + mes + culto` (409)
 
 Pendiente o mejorable:
 
@@ -314,7 +334,8 @@ Pendiente o mejorable:
 4. Confirmar limites de seguridad en `Config/Global.php`.
 5. Confirmar validaciones en `src/validators/*` y `Validator/*.php`.
 6. Revisar si hay archivos legacy nuevos y documentarlos.
-7. Correr `react-doctor` cuando el cambio toque React.
+7. Confirmar contrato de `presentaciones` (`POST /presentaciones/generar`, `GET /presentaciones`, `GET /presentaciones/{id}`).
+8. Correr `react-doctor` cuando el cambio toque React.
 
 ## 15) Regla para mantener este documento vivo
 

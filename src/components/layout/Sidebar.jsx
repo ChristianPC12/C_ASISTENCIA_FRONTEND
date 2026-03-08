@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ROLES } from '../../config/constants';
 
@@ -33,6 +33,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
     { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
     { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
+    { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' },
   ];
 
   // Agregar enlace de Usuarios solo para ADMIN
@@ -131,3 +132,4 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     </div>
   );
 }
+
