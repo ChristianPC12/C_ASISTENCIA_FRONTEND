@@ -1,6 +1,31 @@
 import axios from 'axios';
 
 const AUTH_REDIRECT_MESSAGE_KEY = 'auth_redirect_message';
+const DEVICE_ID_STORAGE_KEY = 'auth_device_id';
+const DEVICE_ID_REGEX = /^[A-Za-z0-9._:-]{8,120}$/;
+
+function generarDeviceId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `dev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function obtenerDeviceId() {
+  try {
+    const actual = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+    if (actual && DEVICE_ID_REGEX.test(actual)) {
+      return actual;
+    }
+
+    const nuevo = generarDeviceId();
+    localStorage.setItem(DEVICE_ID_STORAGE_KEY, nuevo);
+    return nuevo;
+  } catch {
+    return '';
+  }
+}
 
 const ApiCliente = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -14,6 +39,12 @@ ApiCliente.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  const deviceId = obtenerDeviceId();
+  if (deviceId) {
+    config.headers['X-Device-Id'] = deviceId;
+  }
+
   return config;
 });
 
