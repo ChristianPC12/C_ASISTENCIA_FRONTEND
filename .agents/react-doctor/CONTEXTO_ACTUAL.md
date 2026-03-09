@@ -1,4 +1,4 @@
-# Contexto Actual (2026-03-06)
+# Contexto Actual (2026-03-09)
 
 ## Estado general
 
@@ -6,6 +6,15 @@
 - Backend: PHP 8 sin framework (`C_ASISTENCIA_BACKEND/C_ASISTENCIA_BAKCEND`).
 - BD: MariaDB/MySQL (`iglesia_asistencia`).
 - Layout principal: sidebar responsive + topbar; login con fondo Vanta (three + vanta).
+- Modelo operativo vigente: single-tenant (una sola instancia de datos compartida).
+
+## Ruta de escalabilidad nacional (nuevo)
+
+- Se crea el plan maestro en `ROADMAP_ESCALABILIDAD_NACIONAL.md`.
+- Estado actual del plan: solo documentacion inicial, sin cambios funcionales aplicados.
+- Objetivo del plan: evolucionar a multiiglesia/multigrupo con aislamiento real por tenant.
+- Punto critico de negocio: permitir misma fecha/culto en distintas iglesias sin conflicto.
+- Nuevo rol objetivo en roadmap: `SUPERADMIN` (todavia no implementado).
 
 ## Modulos y rutas activas
 

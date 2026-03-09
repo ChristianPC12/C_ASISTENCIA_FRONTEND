@@ -346,3 +346,16 @@ Actualizar este archivo cada vez que cambie:
 - contrato de endpoints
 - estructura principal de modulos/rutas
 - convenciones de datos que impacten frontend
+
+## 16) Escalabilidad nacional (multiiglesia / multigrupo)
+
+El plan de ejecucion por fases no se detalla aqui para evitar duplicidad de mantenimiento.
+
+Fuente de verdad del programa de escalabilidad:
+
+- `ROADMAP_ESCALABILIDAD_NACIONAL.md`
+
+Regla operativa:
+
+- Si una tarea toca superadmin, aislamiento por tenant, onboarding de instancias, modulo de administracion inicial o parametros dinamicos, leer y actualizar primero ese roadmap.
+- Este documento (`prompt_frontend.md`) solo debe reflejar el estado real ya implementado; no debe adelantarse a marcar features futuras.
