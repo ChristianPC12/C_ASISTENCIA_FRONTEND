@@ -16,6 +16,7 @@ export default function UsuarioForm({
   editandoId,
   errores,
   cargando,
+  cupoRolSeleccionado,
   onCambiarCampo,
   onGuardar,
   onLimpiar
@@ -124,6 +125,12 @@ export default function UsuarioForm({
               </select>
               {errores.rol_id && (
                 <div className="invalid-feedback">{errores.rol_id}</div>
+              )}
+              {cupoRolSeleccionado && (
+                <div className="form-text">
+                  Cupo {cupoRolSeleccionado.rol_nombre}: {cupoRolSeleccionado.consumo_actual}/{cupoRolSeleccionado.cupo_maximo}
+                  {' '}({cupoRolSeleccionado.disponibles} disponibles).
+                </div>
               )}
             </div>
 

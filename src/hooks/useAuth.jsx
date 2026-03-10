@@ -21,36 +21,118 @@ function esMensajeCredencialesInvalidas(mensaje) {
   return normalizado.includes('credenciales invalidas');
 }
 
+function parseFecha(valor) {
+  if (typeof valor !== 'string' || !valor.trim()) {
+    return null;
+  }
+
+  const dt = new Date(valor);
+  if (Number.isNaN(dt.getTime())) {
+    return null;
+  }
+  return dt;
+}
+
+function calcularDiasRestantes(fechaFin) {
+  const fin = parseFecha(fechaFin);
+  if (!fin) return null;
+  const ahora = new Date();
+  const diffMs = fin.getTime() - ahora.getTime();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function esCuentaAdminTemporal(usuario) {
+  if (usuario?.rol !== ROLES.ADMIN) {
+    return false;
+  }
+
+  const creado = parseFecha(usuario?.creado_en);
+  const expira = parseFecha(usuario?.password_expira_en);
+  if (!creado || !expira) {
+    return false;
+  }
+
+  const diffDias = (expira.getTime() - creado.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDias > 0 && diffDias <= 5.1;
+}
+
 /**
  * Provider de autenticacion: envuelve toda la app para compartir un solo estado
  */
 export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(() => {
-    const guardado = localStorage.getItem('usuario');
-    return guardado ? JSON.parse(guardado) : null;
+  const [authState, setAuthState] = useState(() => {
+    const guardadoUsuario = localStorage.getItem('usuario');
+    const guardadoTenant = localStorage.getItem('tenant');
+    const guardadoSession = localStorage.getItem('session');
+
+    return {
+      usuario: guardadoUsuario ? JSON.parse(guardadoUsuario) : null,
+      tenant: guardadoTenant ? JSON.parse(guardadoTenant) : null,
+      session: guardadoSession ? JSON.parse(guardadoSession) : null,
+      token: localStorage.getItem('token')
+    };
   });
-  const [token, setToken] = useState(() => localStorage.getItem('token'));
-  const [cargando, setCargando] = useState(false);
-  const [errores, setErrores] = useState({});
+  const [estadoUI, setEstadoUI] = useState({
+    cargando: false,
+    errores: {}
+  });
+
+  const { usuario, tenant, session, token } = authState;
+  const cargando = estadoUI.cargando;
+  const errores = estadoUI.errores;
+
+  const setCargando = useCallback((valor) => {
+    setEstadoUI((prev) => (
+      prev.cargando === valor
+        ? prev
+        : { ...prev, cargando: valor }
+    ));
+  }, []);
+
+  const setErrores = useCallback((valor) => {
+    setEstadoUI((prev) => ({
+      ...prev,
+      errores: typeof valor === 'function' ? valor(prev.errores) : valor
+    }));
+  }, []);
+
+  const actualizarAuth = useCallback((cambios) => {
+    setAuthState((prev) => ({ ...prev, ...cambios }));
+  }, []);
 
   const cerrarSesionLocal = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
-    setToken(null);
-    setUsuario(null);
+    localStorage.removeItem('tenant');
+    localStorage.removeItem('session');
+    setAuthState({
+      usuario: null,
+      tenant: null,
+      session: null,
+      token: null
+    });
   }, []);
 
   const verificarSesion = useCallback(async () => {
     try {
       const res = await authApi.me();
       if (res.exito) {
-        setUsuario(res.datos);
+        const tenantSesion = res?.datos?.tenant || null;
         localStorage.setItem('usuario', JSON.stringify(res.datos));
+        if (tenantSesion) {
+          localStorage.setItem('tenant', JSON.stringify(tenantSesion));
+        } else {
+          localStorage.removeItem('tenant');
+        }
+        actualizarAuth({
+          usuario: res.datos,
+          tenant: tenantSesion
+        });
       }
     } catch {
       cerrarSesionLocal();
     }
-  }, [cerrarSesionLocal]);
+  }, [actualizarAuth, cerrarSesionLocal]);
 
   // Verificar si el token sigue valido al montar
   useEffect(() => {
@@ -74,10 +156,27 @@ export function AuthProvider({ children }) {
     try {
       const res = await authApi.login(datosSanitizados);
       if (res.exito) {
+        const tenantSesion = res?.datos?.tenant || res?.datos?.usuario?.tenant || null;
+        const sessionInfo = res?.datos?.session || null;
+
         localStorage.setItem('token', res.datos.token);
         localStorage.setItem('usuario', JSON.stringify(res.datos.usuario));
-        setToken(res.datos.token);
-        setUsuario(res.datos.usuario);
+        if (tenantSesion) {
+          localStorage.setItem('tenant', JSON.stringify(tenantSesion));
+        } else {
+          localStorage.removeItem('tenant');
+        }
+        if (sessionInfo) {
+          localStorage.setItem('session', JSON.stringify(sessionInfo));
+        } else {
+          localStorage.removeItem('session');
+        }
+        actualizarAuth({
+          token: res.datos.token,
+          usuario: res.datos.usuario,
+          tenant: tenantSesion,
+          session: sessionInfo
+        });
         notificarExito(res.mensaje);
         return { exito: true, limpiarCampos: false };
       }
@@ -98,7 +197,7 @@ export function AuthProvider({ children }) {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [actualizarAuth, setCargando, setErrores]);
 
   const cerrarSesion = useCallback(async () => {
     try {
@@ -112,14 +211,22 @@ export function AuthProvider({ children }) {
 
   const estaAutenticado = !!usuario && !!token;
   const esAdmin = usuario?.rol === ROLES.ADMIN;
+  const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
+  const diasRestantesPassword = calcularDiasRestantes(usuario?.password_expira_en);
+  const esAdminTemporal = esCuentaAdminTemporal(usuario);
 
   const valor = {
     usuario,
+    tenant,
+    session,
     cargando,
     errores,
     setErrores,
     estaAutenticado,
     esAdmin,
+    esSuperadmin,
+    esAdminTemporal,
+    diasRestantesPassword,
     iniciarSesion,
     cerrarSesion
   };

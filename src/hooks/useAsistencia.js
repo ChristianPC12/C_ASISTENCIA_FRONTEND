@@ -1,10 +1,20 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { validarAsistencia } from '../validators/asistenciaValidator';
 import { sanitizarObjeto, aEnteroPositivo } from '../utils/sanitizer';
 import { notificarExito, notificarError, confirmar } from '../utils/notify';
-import { ASISTENCIA_FORM_INICIAL, ANIO_ACTUAL } from '../config/constants';
+import { ANIO_ACTUAL } from '../config/constants';
+import {
+  METRICAS_FALLBACK,
+  construirFormularioMetricas,
+  normalizarPayloadMetricas,
+  obtenerClaveTotalAsistentes,
+  obtenerMapaEtiquetasMetricas,
+  obtenerMetricasActivas,
+  obtenerParPuntualidad
+} from '../utils/metricasConfig';
+import { useSetupStatus } from './useSetupStatus';
 
 const normalizarFechaExacta = (valor) => {
   const fecha = (valor || '').trim();
@@ -54,14 +64,40 @@ const coincideTextoFecha = (fechaIso, textoBusqueda) => {
   return fechaCorta.startsWith(texto) || fechaLarga.startsWith(texto);
 };
 
+function crearFormularioVacio(metricasActivas) {
+  return {
+    culto_id: '',
+    fecha: '',
+    metricas: construirFormularioMetricas(metricasActivas, {})
+  };
+}
+
 /**
- * Hook para CRUD de asistencia
+ * Hook para CRUD de asistencia con metricas dinamicas por tenant
  */
 export function useAsistencia() {
   const TRIMESTRE_ACTUAL = Math.floor(new Date().getMonth() / 3) + 1;
+  const { metricasActivas: metricasSetup } = useSetupStatus();
+  const metricasActivas = useMemo(
+    () => obtenerMetricasActivas(metricasSetup?.length ? metricasSetup : METRICAS_FALLBACK),
+    [metricasSetup]
+  );
+  const mapaEtiquetasMetricas = useMemo(
+    () => obtenerMapaEtiquetasMetricas(metricasActivas),
+    [metricasActivas]
+  );
+  const claveTotal = useMemo(
+    () => obtenerClaveTotalAsistentes(metricasActivas),
+    [metricasActivas]
+  );
+  const parPuntualidad = useMemo(
+    () => obtenerParPuntualidad(metricasActivas),
+    [metricasActivas]
+  );
+
   const [registros, setRegistros] = useState([]);
   const [cultos, setCultos] = useState([]);
-  const [formulario, setFormulario] = useState({ ...ASISTENCIA_FORM_INICIAL });
+  const [formulario, setFormulario] = useState(() => crearFormularioVacio(metricasActivas));
   const [editandoId, setEditandoId] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [errores, setErrores] = useState({});
@@ -76,25 +112,61 @@ export function useAsistencia() {
     fecha_exacta: ''
   });
 
-  // Auto-calcular total_asistentes cuando cambian antes/despues
   useEffect(() => {
-    const antesVacio = formulario.llegaron_antes_hora === '' || formulario.llegaron_antes_hora === null;
-    const despuesVacio = formulario.llegaron_despues_hora === '' || formulario.llegaron_despues_hora === null;
-    // Si ambos estan vacios, dejar total vacio tambien
-    if (antesVacio && despuesVacio) {
-      setFormulario(prev => prev.total_asistentes === '' ? prev : { ...prev, total_asistentes: '' });
+    setFormulario((prev) => ({
+      ...prev,
+      metricas: construirFormularioMetricas(metricasActivas, prev.metricas)
+    }));
+  }, [metricasActivas]);
+
+  // Auto-calcular total_asistentes si existen metricas de puntualidad
+  useEffect(() => {
+    if (!claveTotal || !parPuntualidad.antes || !parPuntualidad.despues) {
       return;
     }
-    const antes = aEnteroPositivo(formulario.llegaron_antes_hora);
-    const despues = aEnteroPositivo(formulario.llegaron_despues_hora);
-    const nuevoTotal = antes + despues;
-    setFormulario(prev => {
-      if (aEnteroPositivo(prev.total_asistentes) !== nuevoTotal) {
-        return { ...prev, total_asistentes: nuevoTotal };
+
+    const antesRaw = formulario.metricas?.[parPuntualidad.antes];
+    const despuesRaw = formulario.metricas?.[parPuntualidad.despues];
+    const antesVacio = antesRaw === '' || antesRaw === null || antesRaw === undefined;
+    const despuesVacio = despuesRaw === '' || despuesRaw === null || despuesRaw === undefined;
+
+    if (antesVacio && despuesVacio) {
+      setFormulario((prev) => {
+        if ((prev.metricas?.[claveTotal] ?? '') === '') return prev;
+        return {
+          ...prev,
+          metricas: {
+            ...prev.metricas,
+            [claveTotal]: ''
+          }
+        };
+      });
+      return;
+    }
+
+    const antes = aEnteroPositivo(antesRaw);
+    const despues = aEnteroPositivo(despuesRaw);
+    const nuevoTotal = String(antes + despues);
+
+    setFormulario((prev) => {
+      const actual = String(prev.metricas?.[claveTotal] ?? '');
+      if (actual === nuevoTotal) {
+        return prev;
       }
-      return prev;
+      return {
+        ...prev,
+        metricas: {
+          ...prev.metricas,
+          [claveTotal]: nuevoTotal
+        }
+      };
     });
-  }, [formulario.llegaron_antes_hora, formulario.llegaron_despues_hora]);
+  }, [
+    formulario.metricas,
+    claveTotal,
+    parPuntualidad.antes,
+    parPuntualidad.despues
+  ]);
 
   // Cargar cultos al montar
   useEffect(() => {
@@ -106,22 +178,26 @@ export function useAsistencia() {
       const registro = JSON.parse(registroEditar);
       cargarParaEdicion(registro);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [metricasActivas]);
 
   // Cargar registros cuando cambian los filtros
   useEffect(() => {
     cargarRegistros();
-  }, [filtros]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtros]);
 
   // Cargar cultos del backend
   const cargarCultos = useCallback(async () => {
     try {
       const res = await cultoApi.listar();
       if (res.exito) {
-        setCultos(res.datos);
+        setCultos(res.datos || []);
       }
     } catch (error) {
-      notificarError('Error al cargar los cultos.');
+      if (String(error?.codigo || '').toUpperCase() !== 'SETUP_REQUIRED') {
+        notificarError('Error al cargar los cultos.');
+      }
     }
   }, []);
 
@@ -140,9 +216,7 @@ export function useAsistencia() {
         if (filtros.anio) params.anio = filtros.anio;
         if (filtros.trimestre) params.trimestre = filtros.trimestre;
         if (filtros.mes) {
-          // Enviar mes como string de dos dígitos ("01", "02", ...)
-          const mesStr = String(filtros.mes).padStart(2, '0');
-          params.mes = mesStr;
+          params.mes = String(filtros.mes).padStart(2, '0');
         }
       }
 
@@ -150,7 +224,6 @@ export function useAsistencia() {
       if (res.exito) {
         let datos = res.datos || [];
 
-        // Si el usuario va escribiendo una fecha parcial, filtrar coincidencias en cliente.
         if (fechaExactaTexto && !fechaExactaNormalizada) {
           datos = datos.filter((r) => coincideTextoFecha(r.fecha, fechaExactaTexto));
         }
@@ -158,7 +231,9 @@ export function useAsistencia() {
         setRegistros(datos);
       }
     } catch (error) {
-      notificarError('Error al cargar los registros de asistencia.');
+      if (String(error?.codigo || '').toUpperCase() !== 'SETUP_REQUIRED') {
+        notificarError('Error al cargar los registros de asistencia.');
+      }
       setRegistros([]);
     } finally {
       setCargando(false);
@@ -172,12 +247,12 @@ export function useAsistencia() {
       return;
     }
     try {
-      const cultoObj = cultos.find(c => String(c.id) === String(cultoId));
+      const cultoObj = cultos.find((c) => String(c.id) === String(cultoId));
       const params = {};
       if (cultoObj) params.culto = cultoObj.codigo;
       const res = await asistenciaApi.listar(params);
       if (res.exito) {
-        setFechasRegistradas((res.datos || []).map(r => r.fecha));
+        setFechasRegistradas((res.datos || []).map((r) => r.fecha));
       }
     } catch {
       setFechasRegistradas([]);
@@ -187,54 +262,52 @@ export function useAsistencia() {
   // Recargar fechas registradas cuando cambia el culto seleccionado
   useEffect(() => {
     cargarFechasRegistradas(formulario.culto_id);
-  }, [formulario.culto_id, cultos]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [formulario.culto_id, cultos, cargarFechasRegistradas]);
 
-  // Cambiar un campo del formulario
   const cambiarCampo = useCallback((campo, valor) => {
-    setFormulario(prev => ({ ...prev, [campo]: valor }));
-    // Limpiar error del campo al modificarlo
-    setErrores(prev => {
+    if (campo === 'culto_id' || campo === 'fecha') {
+      setFormulario((prev) => ({ ...prev, [campo]: valor }));
+    } else {
+      setFormulario((prev) => ({
+        ...prev,
+        metricas: {
+          ...prev.metricas,
+          [campo]: valor
+        }
+      }));
+    }
+
+    setErrores((prev) => {
       const nuevos = { ...prev };
       delete nuevos[campo];
       return nuevos;
     });
   }, []);
 
-  // Preparar datos para enviar al backend
   const prepararDatos = useCallback((datos) => {
     const sanitizados = sanitizarObjeto(datos);
+    const metricasPayload = normalizarPayloadMetricas(metricasActivas, sanitizados.metricas || {});
+
     return {
       culto_id: aEnteroPositivo(sanitizados.culto_id),
       fecha: sanitizados.fecha,
-      llegaron_antes_hora: aEnteroPositivo(sanitizados.llegaron_antes_hora),
-      llegaron_despues_hora: aEnteroPositivo(sanitizados.llegaron_despues_hora),
-      ninos: aEnteroPositivo(sanitizados.ninos),
-      jovenes: aEnteroPositivo(sanitizados.jovenes),
-      total_asistentes: aEnteroPositivo(sanitizados.total_asistentes),
-      proc_barrio: aEnteroPositivo(sanitizados.proc_barrio),
-      proc_guayabo: aEnteroPositivo(sanitizados.proc_guayabo),
-      visitas_barrio: aEnteroPositivo(sanitizados.visitas_barrio),
-      nombres_visitas_barrio: sanitizados.nombres_visitas_barrio || null,
-      visitas_guayabo: aEnteroPositivo(sanitizados.visitas_guayabo),
-      nombres_visitas_guayabo: sanitizados.nombres_visitas_guayabo || null,
-      retiros_antes_terminar: aEnteroPositivo(sanitizados.retiros_antes_terminar),
-      se_quedaron_todo: aEnteroPositivo(sanitizados.se_quedaron_todo),
-      observaciones: sanitizados.observaciones || null
+      metricas: metricasPayload,
+      observaciones: typeof metricasPayload.observaciones === 'string'
+        ? metricasPayload.observaciones
+        : null
     };
-  }, []);
+  }, [metricasActivas]);
 
   // Guardar (crear o actualizar)
   const guardar = useCallback(async () => {
-    const validacion = validarAsistencia(formulario);
+    const validacion = validarAsistencia(formulario, { metricasActivas });
     if (!validacion.valido) {
       setErrores(validacion.errores);
-      // Enfocar el primer campo con error para que el usuario sepa donde corregir
       if (validacion.primerCampoError) {
         setTimeout(() => {
           const el = document.getElementById(validacion.primerCampoError);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Para el selector de fecha usamos un click, para el resto focus
             if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
               el.focus({ preventScroll: true });
             } else {
@@ -264,7 +337,6 @@ export function useAsistencia() {
         const cultoIdGuardado = formulario.culto_id;
         limpiarFormulario();
         await cargarRegistros();
-        // Refrescar fechas registradas para que el calendario se actualice
         await cargarFechasRegistradas(cultoIdGuardado);
         return true;
       }
@@ -278,40 +350,30 @@ export function useAsistencia() {
     } finally {
       setCargando(false);
     }
-  }, [formulario, editandoId, prepararDatos, cargarRegistros]);
+  }, [
+    formulario,
+    metricasActivas,
+    editandoId,
+    prepararDatos,
+    cargarRegistros,
+    cargarFechasRegistradas
+  ]);
 
-  // Funcion interna para cargar datos de edicion
-  const cargarParaEdicion = (registro) => {
-    // Convertir 0 a '' en campos numéricos para que se muestre el placeholder
-    const aVacio = (val) => (val === 0 || val === '0') ? '' : val;
-
+  const cargarParaEdicion = useCallback((registro) => {
+    const metricasRegistro = registro?.metricas || {};
     setFormulario({
       culto_id: registro.culto_id,
       fecha: registro.fecha,
-      llegaron_antes_hora: aVacio(registro.llegaron_antes_hora),
-      llegaron_despues_hora: aVacio(registro.llegaron_despues_hora),
-      ninos: aVacio(registro.ninos),
-      jovenes: aVacio(registro.jovenes),
-      total_asistentes: aVacio(registro.total_asistentes),
-      proc_barrio: aVacio(registro.proc_barrio),
-      proc_guayabo: aVacio(registro.proc_guayabo),
-      visitas_barrio: aVacio(registro.visitas_barrio),
-      nombres_visitas_barrio: registro.nombres_visitas_barrio || '',
-      visitas_guayabo: aVacio(registro.visitas_guayabo),
-      nombres_visitas_guayabo: registro.nombres_visitas_guayabo || '',
-      retiros_antes_terminar: aVacio(registro.retiros_antes_terminar),
-      se_quedaron_todo: aVacio(registro.se_quedaron_todo),
-      observaciones: registro.observaciones || ''
+      metricas: construirFormularioMetricas(metricasActivas, metricasRegistro)
     });
     setEditandoId(registro.id);
     setErrores({});
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [metricasActivas]);
 
-  // Cargar registro para edicion (usado desde la misma pagina)
   const editar = useCallback((registro) => {
     cargarParaEdicion(registro);
-  }, []);
+  }, [cargarParaEdicion]);
 
   // Eliminar registro
   const eliminar = useCallback(async (id) => {
@@ -369,7 +431,6 @@ export function useAsistencia() {
     try {
       const params = {};
       if (filtros.culto) params.culto = filtros.culto;
-      const fechaExactaTexto = (filtros.fecha_exacta || '').trim();
       const fechaExactaNormalizada = normalizarFechaExacta(filtros.fecha_exacta);
       if (fechaExactaNormalizada) {
         params.fecha_exacta = fechaExactaNormalizada;
@@ -406,14 +467,13 @@ export function useAsistencia() {
 
   // Limpiar formulario
   const limpiarFormulario = useCallback(() => {
-    setFormulario({ ...ASISTENCIA_FORM_INICIAL });
+    setFormulario(crearFormularioVacio(metricasActivas));
     setEditandoId(null);
     setErrores({});
-  }, []);
+  }, [metricasActivas]);
 
-  // Cambiar filtros
   const cambiarFiltro = useCallback((campo, valor) => {
-    setFiltros(prev => ({ ...prev, [campo]: valor }));
+    setFiltros((prev) => ({ ...prev, [campo]: valor }));
   }, []);
 
   return {
@@ -425,6 +485,8 @@ export function useAsistencia() {
     errores,
     fechasRegistradas,
     filtros,
+    metricasActivas,
+    mapaEtiquetasMetricas,
     cambiarCampo,
     guardar,
     editar,

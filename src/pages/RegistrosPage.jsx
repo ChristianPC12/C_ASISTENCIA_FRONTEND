@@ -17,6 +17,7 @@ export default function RegistrosPage() {
     cultos,
     cargando,
     filtros,
+    mapaEtiquetasMetricas,
     eliminar,
     cambiarFiltro,
     exportarRegistro,
@@ -91,6 +92,7 @@ export default function RegistrosPage() {
           cultos={cultos}
           filtros={filtros}
           cargando={cargando}
+          mapaEtiquetasMetricas={mapaEtiquetasMetricas}
           onCambiarFiltro={cambiarFiltro}
           onEditar={manejarEditar}
           onEliminar={eliminar}

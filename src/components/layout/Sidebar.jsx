@@ -1,6 +1,8 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ROLES } from '../../config/constants';
+import { useSetupStatus } from '../../hooks/useSetupStatus';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Sidebar de navegacion con hamburguesa
@@ -12,8 +14,10 @@ import { ROLES } from '../../config/constants';
 export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [abierto, setAbierto] = useState(false);
   const location = useLocation();
+  const { requiereSetup } = useSetupStatus();
+  const { esAdminTemporal, diasRestantesPassword } = useAuth();
 
-  /* Bloquear scroll del body cuando el sidebar está abierto (mobile) */
+  /* Bloquear scroll del body cuando el sidebar esta abierto (mobile) */
   useEffect(() => {
     if (abierto) {
       document.body.style.overflow = 'hidden';
@@ -27,18 +31,30 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const toggleMenu = () => setAbierto(!abierto);
   const cerrarMenu = () => setAbierto(false);
+  const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
 
-  const enlaces = [
-    { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
-    { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
-    { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
-    { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
-    { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' },
-  ];
+  let enlaces = [];
 
-  // Agregar enlace de Usuarios solo para ADMIN
-  if (usuario?.rol === ROLES.ADMIN) {
-    enlaces.push({ ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'bi-people' });
+  if (esSuperadmin) {
+    enlaces = [
+      { ruta: '/superadmin', etiqueta: 'Superadministrador', icono: 'bi-shield-lock' }
+    ];
+  } else {
+    enlaces = [
+      ...(usuario?.rol === ROLES.ADMIN
+        ? [{ ruta: '/administrador', etiqueta: 'Administrador', icono: 'bi-sliders2' }]
+        : []),
+      { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
+      { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
+      { ruta: '/estadisticas', etiqueta: 'Estadisticas', icono: 'bi-bar-chart-line' },
+      { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
+      { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' }
+    ];
+
+    // Agregar enlace de Usuarios solo para ADMIN
+    if (usuario?.rol === ROLES.ADMIN) {
+      enlaces.push({ ruta: '/usuarios', etiqueta: 'Usuarios', icono: 'bi-people' });
+    }
   }
 
   return (
@@ -68,16 +84,24 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           />
           <div className="sidebar-marca">
             <span className="sidebar-marca-titulo">Iglesia Adventista</span>
-            <span className="sidebar-marca-subtitulo">del Séptimo Día</span>
+            <span className="sidebar-marca-subtitulo">del Septimo Dia</span>
           </div>
           {/* Boton cerrar en mobile */}
-          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menú">
+          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menu">
             &times;
           </button>
         </div>
 
         {/* Navegacion */}
         <nav className="sidebar-nav">
+          {!esSuperadmin && requiereSetup && (
+            <div className="px-3 pb-2">
+              <span className="badge text-bg-warning text-dark w-100 py-2">
+                Setup inicial pendiente
+              </span>
+            </div>
+          )}
+
           {enlaces.map((enlace) => (
             <Link
               key={enlace.ruta}
@@ -101,7 +125,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn"
             onClick={onCerrarSesion}
           >
-            Cerrar sesión
+            Cerrar sesion
           </button>
         </div>
       </aside>
@@ -110,13 +134,15 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
         <header className="sidebar-topbar">
-          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
+          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menu">
             <span></span>
             <span></span>
             <span></span>
           </button>
           <span className="sidebar-topbar-titulo">
-            {enlaces.find(e => esRutaActiva(e.ruta))?.etiqueta || 'Iglesia Adventista'}
+            {enlaces.find((e) => esRutaActiva(e.ruta))?.etiqueta || (
+              esSuperadmin ? 'Superadministracion' : 'Iglesia Adventista'
+            )}
           </span>
           <div className="sidebar-topbar-usuario d-none d-md-flex">
             <span>{usuario?.nombre_completo}</span>
@@ -126,10 +152,17 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
         {/* Contenido de la pagina */}
         <main className="sidebar-main">
+          {esAdminTemporal && (
+            <div className="container-fluid pt-3">
+              <div className="alert alert-warning mb-0">
+                <strong>Cuenta temporal:</strong> este acceso ADMIN vence en{' '}
+                <strong>{diasRestantesPassword ?? 0}</strong> dia(s). Coordine con superadministracion para actualizar credenciales antes del vencimiento.
+              </div>
+            </div>
+          )}
           {children}
         </main>
       </div>
     </div>
   );
 }
-

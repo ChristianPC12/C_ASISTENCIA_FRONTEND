@@ -1,31 +1,42 @@
 # React Doctor - Agent Guide
 
-Este paquete de agentes documenta el sistema C_ASISTENCIA para que el contexto tecnico se entienda rapido y sin ambiguedad.
+Este paquete de agentes define como ejecutar la escalabilidad nacional por tickets,
+sin perder trazabilidad entre frontend y backend.
 
 ## Objetivo
 
-- Acelerar onboarding tecnico del sistema.
-- Mantener una fuente de verdad unica para frontend + contrato backend consumido.
-- Ejecutar revisiones React consistentes despues de cambios UI/logica.
+- Mantener una ruta unica y clara para multiiglesia/multigrupo.
+- Permitir ejecucion incremental: un ticket por vez, con evidencia.
+- Cerrar cada cambio React con `react-doctor`.
 
-## Orden de lectura recomendado
+## Orden de lectura obligatorio
 
-1. `CONTEXTO_ACTUAL.md` (snapshot corto)
-2. `ROADMAP_ESCALABILIDAD_NACIONAL.md` (ruta por fases para multiiglesia/multigrupo)
-3. `prompt_frontend.md` (documentacion completa)
-4. `SKILL.md` (uso operativo de react-doctor)
+1. `CONTEXTO_ACTUAL.md`
+2. `ROADMAP_ESCALABILIDAD_NACIONAL.md`
+3. `TICKETS_ESCALABILIDAD_NACIONAL.md`
+4. `prompt_frontend.md`
+5. `SKILL.md`
 
-## Regla de activacion para escalabilidad
+## Activacion obligatoria de este paquete
 
-Si la solicitud menciona alguno de estos temas, leer siempre el roadmap antes de proponer cambios:
+Si la solicitud incluye uno o mas temas de esta lista:
 
 - escalabilidad nacional
 - multiiglesia / multigrupo
 - superadmin
-- aislamiento de datos por iglesia
-- configuracion inicial por instancia
+- tenant / organizacion / campo IASD
+- bloqueo de modulos por configuracion inicial
+- parametros dinamicos de registro
 - cuotas de usuarios por rol
-- nuevos modulos nacionales (campanas, pequenas congregaciones, estudios biblicos)
+- modulos futuros (campanas, pequenas congregaciones, estudios biblicos)
+
+## Reglas de ejecucion
+
+- No implementar una fase completa de una sola vez: ejecutar por ticket.
+- Marcar `[~]` antes de tocar codigo y `[x]` al terminar ticket.
+- Agregar fecha de cierre en el ticket cerrado.
+- Si cambia contrato/backend, sincronizar tambien los agentes backend.
+- No marcar `[x]` sin aprobacion explicita del owner funcional.
 
 ## Uso de react-doctor
 
@@ -33,26 +44,20 @@ Si la solicitud menciona alguno de estos temas, leer siempre el roadmap antes de
 npx -y react-doctor@latest . --verbose --diff
 ```
 
-Ejecutar cuando se modifique JSX, hooks, rutas, formularios, estado o estilos que afecten renderizado/comportamiento.
+Ejecutar cuando se modifique JSX, hooks, rutas, formularios, estado o estilos que afecten comportamiento.
 
-## Regla de mantenimiento de estos agentes
+## Regla de mantenimiento documental
 
-Actualizar `CONTEXTO_ACTUAL.md`, `ROADMAP_ESCALABILIDAD_NACIONAL.md` y `prompt_frontend.md` si cambia cualquiera de estos puntos:
+Actualizar estos archivos si cambia auth, rutas, endpoints, validaciones o prioridad del plan:
 
-- rutas en `src/App.jsx`
-- autenticacion/sesion (`src/hooks/useAuth.jsx`, `src/config/api.js`, backend auth)
-- endpoints en `src/api/*` o routers backend
-- validaciones (`src/validators/*`, backend validators)
-- configuracion de seguridad (rate limit, expiracion, roles, CORS)
-- estructura de datos en BD relevante para frontend
-- prioridades/fases de ejecucion del plan de escalabilidad
+- `CONTEXTO_ACTUAL.md`
+- `ROADMAP_ESCALABILIDAD_NACIONAL.md`
+- `TICKETS_ESCALABILIDAD_NACIONAL.md`
+- `prompt_frontend.md`
 
-## Criterio de calidad documental
+## Checklist de cierre documental
 
-Antes de dar por terminada una actualizacion de agentes, validar:
-
-- no hay contradicciones entre frontend y backend
-- el flujo de login/logout/expiracion de sesion esta descrito tal como ocurre
-- se incluyen controles de seguridad activos y brechas pendientes
-- se anotan deudas tecnicas reales (por ejemplo, archivos legacy sin uso)
-- el estado de cada fase del roadmap coincide con el estado real del codigo
+- no hay contradiccion frontend/backend
+- el estado `[ ]/[~]/[x]` coincide con codigo real
+- los tickets tienen dependencia y criterio de aceptacion claros
+- se deja visible el siguiente ticket recomendado

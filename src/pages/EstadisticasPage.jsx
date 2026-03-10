@@ -3,6 +3,7 @@ import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { ANIO_ACTUAL, ANIO_OPCIONES, TRIMESTRE_OPCIONES, MES_OPCIONES } from '../config/constants';
 import { notificarError } from '../utils/notify';
+import { useSetupStatus } from '../hooks/useSetupStatus';
 
 const TRIMESTRE_ACTUAL = Math.floor(new Date().getMonth() / 3) + 1;
 
@@ -42,14 +43,15 @@ const ESTADISTICAS_VACIAS = {
   series: {
     asistencia_por_fecha: []
   },
+  metricas_dinamicas: [],
   resumen_condensado: ''
 };
 
 function formatearNombreCulto(nombre = '', codigo = '') {
   const valor = nombre || codigo || '';
   return valor
-    .replace(/Sabado/gi, 'Sábado')
-    .replace(/Miercoles/gi, 'Miércoles');
+    .replace(/Sabado/gi, 'Sabado')
+    .replace(/Miercoles/gi, 'Miercoles');
 }
 
 function formatearPorcentaje(valor) {
@@ -89,7 +91,7 @@ function CardComparativa({ titulo, izquierda, derecha, colorIzquierda, colorDere
               aria-valuenow={Number(izquierda.porcentaje || 0)}
               aria-valuemin="0"
               aria-valuemax="100"
-            ></div>
+            />
           </div>
         </div>
 
@@ -106,7 +108,7 @@ function CardComparativa({ titulo, izquierda, derecha, colorIzquierda, colorDere
               aria-valuenow={Number(derecha.porcentaje || 0)}
               aria-valuemin="0"
               aria-valuemax="100"
-            ></div>
+            />
           </div>
         </div>
       </div>
@@ -114,11 +116,312 @@ function CardComparativa({ titulo, izquierda, derecha, colorIzquierda, colorDere
   );
 }
 
+function EstadisticasFiltrosCard({ filtros, cultos, onCambiarFiltro }) {
+  return (
+    <div className="card shadow-sm mb-4">
+      <div className="card-header">
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros del periodo</h5>
+      </div>
+      <div className="card-body">
+        <div className="row g-3 align-items-end">
+          <div className="col-12 col-md-3">
+            <label htmlFor="estad-anio" className="form-label fw-semibold">Anio</label>
+            <select
+              id="estad-anio"
+              className="form-select"
+              value={filtros.anio}
+              onChange={(event) => onCambiarFiltro('anio', event.target.value)}
+            >
+              {ANIO_OPCIONES.map((anio) => (
+                <option key={anio} value={anio}>{anio}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-md-3">
+            <label htmlFor="estad-trimestre" className="form-label fw-semibold">Trimestre</label>
+            <select
+              id="estad-trimestre"
+              className="form-select"
+              value={filtros.trimestre}
+              onChange={(event) => onCambiarFiltro('trimestre', event.target.value)}
+            >
+              <option value="">Todos</option>
+              {TRIMESTRE_OPCIONES.map((trimestre) => (
+                <option key={trimestre.valor} value={trimestre.valor}>{trimestre.etiqueta}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-md-3">
+            <label htmlFor="estad-mes" className="form-label fw-semibold">Mes</label>
+            <select
+              id="estad-mes"
+              className="form-select"
+              value={filtros.mes}
+              onChange={(event) => onCambiarFiltro('mes', event.target.value)}
+            >
+              <option value="">Todos</option>
+              {MES_OPCIONES.map((mes) => (
+                <option key={mes.valor} value={mes.valor}>{mes.etiqueta}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-md-3">
+            <label htmlFor="estad-culto" className="form-label fw-semibold">Culto (obligatorio)</label>
+            <select
+              id="estad-culto"
+              className="form-select"
+              value={filtros.culto}
+              onChange={(event) => onCambiarFiltro('culto', event.target.value)}
+              required
+            >
+              <option value="" disabled>Seleccione un culto</option>
+              {cultos.map((culto) => (
+                <option key={culto.codigo} value={culto.codigo}>
+                  {formatearNombreCulto(culto.nombre, culto.codigo)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EstadisticasKpisRow({ resumenGeneral }) {
+  return (
+    <div className="row g-3 mb-4">
+      <div className="col-12 col-md-6 col-xl-3">
+        <div className="card shadow-sm h-100 estad-kpi-card">
+          <div className="card-body d-flex flex-column">
+            <span className="estad-kpi-label">Total de cultos registrados</span>
+            <div className="estad-kpi-valor">{resumenGeneral.total_cultos_registrados}</div>
+          </div>
+        </div>
+      </div>
+      <div className="col-12 col-md-6 col-xl-3">
+        <div className="card shadow-sm h-100 estad-kpi-card">
+          <div className="card-body d-flex flex-column">
+            <span className="estad-kpi-label">Total de asistentes</span>
+            <div className="estad-kpi-valor">{resumenGeneral.total_asistentes}</div>
+          </div>
+        </div>
+      </div>
+      <div className="col-12 col-md-6 col-xl-3">
+        <div className="card shadow-sm h-100 estad-kpi-card">
+          <div className="card-body">
+            <span className="estad-kpi-label">Promedio por culto</span>
+            <div className="estad-kpi-valor">{resumenGeneral.promedio_por_culto}</div>
+          </div>
+        </div>
+      </div>
+      <div className="col-12 col-md-6 col-xl-3">
+        <div className="card shadow-sm h-100 estad-kpi-card">
+          <div className="card-body">
+            <span className="estad-kpi-label">Maximo y minimo</span>
+            <div className="small mt-2">
+              <div><strong>Maximo:</strong> {resumenGeneral.maximo_asistentes}</div>
+              <div><strong>Minimo:</strong> {resumenGeneral.minimo_asistentes}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EstadisticasComparativasRow({ estadisticas }) {
+  return (
+    <div className="row g-3 mb-4">
+      <div className="col-12 col-lg-4">
+        <CardComparativa
+          titulo="Composicion de asistentes"
+          izquierda={{
+            etiqueta: 'Ninos',
+            cantidad: estadisticas.composicion_asistentes.ninos.cantidad,
+            porcentaje: estadisticas.composicion_asistentes.ninos.porcentaje
+          }}
+          derecha={{
+            etiqueta: 'Jovenes',
+            cantidad: estadisticas.composicion_asistentes.jovenes.cantidad,
+            porcentaje: estadisticas.composicion_asistentes.jovenes.porcentaje
+          }}
+          colorIzquierda="bg-primary"
+          colorDerecha="bg-secondary"
+        />
+      </div>
+      <div className="col-12 col-lg-4">
+        <CardComparativa
+          titulo="Puntualidad"
+          izquierda={{
+            etiqueta: 'Temprano',
+            cantidad: estadisticas.puntualidad.antes.cantidad,
+            porcentaje: estadisticas.puntualidad.antes.porcentaje
+          }}
+          derecha={{
+            etiqueta: 'Tarde',
+            cantidad: estadisticas.puntualidad.despues.cantidad,
+            porcentaje: estadisticas.puntualidad.despues.porcentaje
+          }}
+          colorIzquierda="bg-success"
+          colorDerecha="bg-warning"
+        />
+      </div>
+      <div className="col-12 col-lg-4">
+        <CardComparativa
+          titulo="Procedencia"
+          izquierda={{
+            etiqueta: 'Barrio',
+            cantidad: estadisticas.procedencia.barrio.cantidad,
+            porcentaje: estadisticas.procedencia.barrio.porcentaje
+          }}
+          derecha={{
+            etiqueta: 'Guayabo',
+            cantidad: estadisticas.procedencia.guayabo.cantidad,
+            porcentaje: estadisticas.procedencia.guayabo.porcentaje
+          }}
+          colorIzquierda="bg-info"
+          colorDerecha="bg-dark"
+        />
+      </div>
+    </div>
+  );
+}
+
+function EstadisticasSerieCard({ serieAsistencia, maxSerie }) {
+  return (
+    <div className="card shadow-sm h-100">
+      <div className="card-body d-flex flex-column">
+        <h6 className="estad-card-titulo">Tendencia por fecha (asistentes)</h6>
+        {serieAsistencia.length === 0 && (
+          <p className="text-muted mb-0">Sin datos para el periodo seleccionado.</p>
+        )}
+        {serieAsistencia.length > 0 && (
+          <div className="estad-serie-scroll mt-auto">
+            <div className="estad-serie">
+              {serieAsistencia.map((item) => (
+                <div
+                  className="estad-serie-item"
+                  key={item.fecha}
+                  title={`${formatearFechaSerie(item.fecha)}: ${item.total_asistentes} asistentes`}
+                >
+                  <div
+                    className="estad-serie-barra"
+                    style={{
+                      height: `${Math.max((Number(item.total_asistentes || 0) / maxSerie) * 100, 6)}%`
+                    }}
+                  />
+                  <span className="estad-serie-label">{formatearEtiquetaSerie(item.fecha)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EstadisticasVisitasCard({ visitas }) {
+  return (
+    <div className="card shadow-sm h-100">
+      <div className="card-body">
+        <h6 className="estad-card-titulo">Visitas del periodo</h6>
+        <div className="mb-3">
+          <span className="estad-kpi-label">Total de visitas</span>
+          <div className="estad-kpi-valor">{visitas.total_visitas}</div>
+        </div>
+
+        <div className="small fw-semibold mb-2">
+          Barrio: {visitas.barrio.cantidad} ({formatearPorcentaje(visitas.barrio.porcentaje)})
+        </div>
+        <div className="small fw-semibold mb-3">
+          Guayabo: {visitas.guayabo.cantidad} ({formatearPorcentaje(visitas.guayabo.porcentaje)})
+        </div>
+
+        <h6 className="estad-card-titulo mb-2">Top de nombres mas repetidos</h6>
+        {visitas.top_nombres.length === 0 && (
+          <p className="text-muted mb-0">No hay nombres de visitas en este periodo.</p>
+        )}
+        {visitas.top_nombres.length > 0 && (
+          <div className="table-responsive">
+            <table className="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th className="text-end">Cantidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visitas.top_nombres.map((item) => (
+                  <tr key={item.nombre}>
+                    <td>{item.nombre}</td>
+                    <td className="text-end fw-semibold">{item.cantidad}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMetricas }) {
+  return (
+    <div className="card shadow-sm">
+      <div className="card-header">
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Metricas dinamicas del periodo</h5>
+      </div>
+      <div className="card-body p-0">
+        {metricasDinamicas.length === 0 && (
+          <div className="p-3 text-muted">
+            No hay metricas dinamicas numericas para este periodo.
+          </div>
+        )}
+        {metricasDinamicas.length > 0 && (
+          <div className="table-responsive">
+            <table className="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Metrica</th>
+                  <th className="text-end">Suma</th>
+                  <th className="text-end">Promedio</th>
+                  <th className="text-end">Maximo</th>
+                  <th className="text-end">Minimo</th>
+                  <th className="text-end">Registros</th>
+                </tr>
+              </thead>
+              <tbody>
+                {metricasDinamicas.map((item) => (
+                  <tr key={item.clave}>
+                    <td className="fw-semibold">{mapaEtiquetasMetricas[item.clave] || item.clave}</td>
+                    <td className="text-end">{Number(item.suma || 0).toLocaleString('es-CR')}</td>
+                    <td className="text-end">{Number(item.promedio || 0).toLocaleString('es-CR')}</td>
+                    <td className="text-end">{Number(item.maximo || 0).toLocaleString('es-CR')}</td>
+                    <td className="text-end">{Number(item.minimo || 0).toLocaleString('es-CR')}</td>
+                    <td className="text-end">{Number(item.registros || 0).toLocaleString('es-CR')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function EstadisticasPage() {
+  const { metricasActivas } = useSetupStatus();
+
   const [cultos, setCultos] = useState([]);
   const [estadisticas, setEstadisticas] = useState(ESTADISTICAS_VACIAS);
   const [cargando, setCargando] = useState(false);
-
   const [filtros, setFiltros] = useState({
     anio: ANIO_ACTUAL,
     trimestre: TRIMESTRE_ACTUAL,
@@ -129,17 +432,18 @@ export default function EstadisticasPage() {
   const cargarCultos = useCallback(async () => {
     try {
       const res = await cultoApi.listar();
-      if (res.exito) {
-        const lista = res.datos || [];
-        setCultos(lista);
-        if (!filtros.culto && lista.length > 0) {
-          setFiltros((prev) => ({ ...prev, culto: lista[0].codigo }));
-        }
-      }
+      if (!res.exito) return;
+
+      const lista = res.datos || [];
+      setCultos(lista);
+      setFiltros((prev) => {
+        if (prev.culto || lista.length === 0) return prev;
+        return { ...prev, culto: lista[0].codigo };
+      });
     } catch {
       notificarError('No se pudieron cargar los cultos.');
     }
-  }, [filtros.culto]);
+  }, []);
 
   const cargarEstadisticas = useCallback(async () => {
     if (!filtros.anio || !filtros.culto) return;
@@ -165,7 +469,7 @@ export default function EstadisticasPage() {
       }
     } catch (error) {
       setEstadisticas(ESTADISTICAS_VACIAS);
-      notificarError(error?.mensaje || 'No se pudieron cargar las estadísticas.');
+      notificarError(error?.mensaje || 'No se pudieron cargar las estadisticas.');
     } finally {
       setCargando(false);
     }
@@ -173,13 +477,13 @@ export default function EstadisticasPage() {
 
   useEffect(() => {
     cargarCultos();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cargarCultos]);
 
   useEffect(() => {
     cargarEstadisticas();
   }, [cargarEstadisticas]);
 
-  const cambiarFiltro = (campo, valor) => {
+  const cambiarFiltro = useCallback((campo, valor) => {
     setFiltros((prev) => {
       if (campo === 'mes') {
         return {
@@ -199,9 +503,18 @@ export default function EstadisticasPage() {
 
       return { ...prev, [campo]: valor };
     });
-  };
+  }, []);
 
   const serieAsistencia = estadisticas?.series?.asistencia_por_fecha || [];
+  const metricasDinamicas = estadisticas?.metricas_dinamicas || [];
+
+  const mapaEtiquetasMetricas = useMemo(() => {
+    return metricasActivas.reduce((acc, item) => {
+      acc[item.clave] = item.etiqueta || item.clave;
+      return acc;
+    }, {});
+  }, [metricasActivas]);
+
   const maxSerie = useMemo(() => {
     if (serieAsistencia.length === 0) return 1;
     return Math.max(...serieAsistencia.map((item) => Number(item.total_asistentes || 0)), 1);
@@ -209,78 +522,13 @@ export default function EstadisticasPage() {
 
   return (
     <div className="container-fluid py-4">
-      <h2 className="mb-3">Estadísticas de Asistencia</h2>
+      <h2 className="mb-3">Estadisticas de Asistencia</h2>
 
-      <div className="card shadow-sm mb-4">
-        <div className="card-header">
-          <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros del período</h5>
-        </div>
-        <div className="card-body">
-          <div className="row g-3 align-items-end">
-            <div className="col-12 col-md-3">
-              <label htmlFor="estad-anio" className="form-label fw-semibold">Año</label>
-              <select
-                id="estad-anio"
-                className="form-select"
-                value={filtros.anio}
-                onChange={(e) => cambiarFiltro('anio', e.target.value)}
-              >
-                {ANIO_OPCIONES.map((anio) => (
-                  <option key={anio} value={anio}>{anio}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-12 col-md-3">
-              <label htmlFor="estad-trimestre" className="form-label fw-semibold">Trimestre</label>
-              <select
-                id="estad-trimestre"
-                className="form-select"
-                value={filtros.trimestre}
-                onChange={(e) => cambiarFiltro('trimestre', e.target.value)}
-              >
-                <option value="">Todos</option>
-                {TRIMESTRE_OPCIONES.map((t) => (
-                  <option key={t.valor} value={t.valor}>{t.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-12 col-md-3">
-              <label htmlFor="estad-mes" className="form-label fw-semibold">Mes</label>
-              <select
-                id="estad-mes"
-                className="form-select"
-                value={filtros.mes}
-                onChange={(e) => cambiarFiltro('mes', e.target.value)}
-              >
-                <option value="">Todos</option>
-                {MES_OPCIONES.map((m) => (
-                  <option key={m.valor} value={m.valor}>{m.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-12 col-md-3">
-              <label htmlFor="estad-culto" className="form-label fw-semibold">Culto (obligatorio)</label>
-              <select
-                id="estad-culto"
-                className="form-select"
-                value={filtros.culto}
-                onChange={(e) => cambiarFiltro('culto', e.target.value)}
-                required
-              >
-                <option value="" disabled>Seleccione un culto</option>
-                {cultos.map((culto) => (
-                  <option key={culto.codigo} value={culto.codigo}>
-                    {formatearNombreCulto(culto.nombre, culto.codigo)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+      <EstadisticasFiltrosCard
+        filtros={filtros}
+        cultos={cultos}
+        onCambiarFiltro={cambiarFiltro}
+      />
 
       {cargando && (
         <div className="text-center py-4">
@@ -293,182 +541,32 @@ export default function EstadisticasPage() {
       {!cargando && (
         <>
           <div className="alert alert-iasd mb-4">
-            <i className="bi bi-lightbulb me-2"></i>
-            {estadisticas.resumen_condensado || 'Seleccione filtros para visualizar estadísticas.'}
+            <i className="bi bi-lightbulb me-2" />
+            {estadisticas.resumen_condensado || 'Seleccione filtros para visualizar estadisticas.'}
           </div>
 
-          <div className="row g-3 mb-4">
-            <div className="col-12 col-md-6 col-xl-3">
-              <div className="card shadow-sm h-100 estad-kpi-card">
-                <div className="card-body d-flex flex-column">
-                  <span className="estad-kpi-label">Total de cultos registrados</span>
-                  <div className="estad-kpi-valor">{estadisticas.resumen_general.total_cultos_registrados}</div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6 col-xl-3">
-              <div className="card shadow-sm h-100 estad-kpi-card">
-                <div className="card-body d-flex flex-column">
-                  <span className="estad-kpi-label">Total de asistentes</span>
-                  <div className="estad-kpi-valor">{estadisticas.resumen_general.total_asistentes}</div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6 col-xl-3">
-              <div className="card shadow-sm h-100 estad-kpi-card">
-                <div className="card-body">
-                  <span className="estad-kpi-label">Promedio por culto</span>
-                  <div className="estad-kpi-valor">{estadisticas.resumen_general.promedio_por_culto}</div>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-md-6 col-xl-3">
-              <div className="card shadow-sm h-100 estad-kpi-card">
-                <div className="card-body">
-                  <span className="estad-kpi-label">Máximo y mínimo</span>
-                  <div className="small mt-2">
-                    <div><strong>Máximo:</strong> {estadisticas.resumen_general.maximo_asistentes}</div>
-                    <div><strong>Mínimo:</strong> {estadisticas.resumen_general.minimo_asistentes}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="row g-3 mb-4">
-            <div className="col-12 col-lg-4">
-              <CardComparativa
-                titulo="Composición de asistentes"
-                izquierda={{
-                  etiqueta: 'Niños',
-                  cantidad: estadisticas.composicion_asistentes.ninos.cantidad,
-                  porcentaje: estadisticas.composicion_asistentes.ninos.porcentaje
-                }}
-                derecha={{
-                  etiqueta: 'Jóvenes',
-                  cantidad: estadisticas.composicion_asistentes.jovenes.cantidad,
-                  porcentaje: estadisticas.composicion_asistentes.jovenes.porcentaje
-                }}
-                colorIzquierda="bg-primary"
-                colorDerecha="bg-secondary"
-              />
-            </div>
-            <div className="col-12 col-lg-4">
-              <CardComparativa
-                titulo="Puntualidad"
-                izquierda={{
-                  etiqueta: 'Temprano',
-                  cantidad: estadisticas.puntualidad.antes.cantidad,
-                  porcentaje: estadisticas.puntualidad.antes.porcentaje
-                }}
-                derecha={{
-                  etiqueta: 'Tarde',
-                  cantidad: estadisticas.puntualidad.despues.cantidad,
-                  porcentaje: estadisticas.puntualidad.despues.porcentaje
-                }}
-                colorIzquierda="bg-success"
-                colorDerecha="bg-warning"
-              />
-            </div>
-            <div className="col-12 col-lg-4">
-              <CardComparativa
-                titulo="Procedencia"
-                izquierda={{
-                  etiqueta: 'Barrio',
-                  cantidad: estadisticas.procedencia.barrio.cantidad,
-                  porcentaje: estadisticas.procedencia.barrio.porcentaje
-                }}
-                derecha={{
-                  etiqueta: 'Guayabo',
-                  cantidad: estadisticas.procedencia.guayabo.cantidad,
-                  porcentaje: estadisticas.procedencia.guayabo.porcentaje
-                }}
-                colorIzquierda="bg-info"
-                colorDerecha="bg-dark"
-              />
-            </div>
-          </div>
+          <EstadisticasKpisRow resumenGeneral={estadisticas.resumen_general} />
+          <EstadisticasComparativasRow estadisticas={estadisticas} />
 
           <div className="row g-3 mb-4">
             <div className="col-12 col-xl-7">
-              <div className="card shadow-sm h-100">
-                <div className="card-body d-flex flex-column">
-                  <h6 className="estad-card-titulo">Tendencia por fecha (asistentes)</h6>
-                  {serieAsistencia.length === 0 && (
-                    <p className="text-muted mb-0">Sin datos para el período seleccionado.</p>
-                  )}
-                  {serieAsistencia.length > 0 && (
-                    <div className="estad-serie-scroll mt-auto">
-                      <div className="estad-serie">
-                        {serieAsistencia.map((item) => (
-                          <div
-                            className="estad-serie-item"
-                            key={item.fecha}
-                            title={`${formatearFechaSerie(item.fecha)}: ${item.total_asistentes} asistentes`}
-                          >
-                            <div
-                              className="estad-serie-barra"
-                              style={{
-                                height: `${Math.max((Number(item.total_asistentes || 0) / maxSerie) * 100, 6)}%`
-                              }}
-                            ></div>
-                            <span className="estad-serie-label">{formatearEtiquetaSerie(item.fecha)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <EstadisticasSerieCard
+                serieAsistencia={serieAsistencia}
+                maxSerie={maxSerie}
+              />
             </div>
 
             <div className="col-12 col-xl-5">
-              <div className="card shadow-sm h-100">
-                <div className="card-body">
-                  <h6 className="estad-card-titulo">Visitas del período</h6>
-                  <div className="mb-3">
-                    <span className="estad-kpi-label">Total de visitas</span>
-                    <div className="estad-kpi-valor">{estadisticas.visitas.total_visitas}</div>
-                  </div>
-
-                  <div className="small fw-semibold mb-2">
-                    Barrio: {estadisticas.visitas.barrio.cantidad} ({formatearPorcentaje(estadisticas.visitas.barrio.porcentaje)})
-                  </div>
-                  <div className="small fw-semibold mb-3">
-                    Guayabo: {estadisticas.visitas.guayabo.cantidad} ({formatearPorcentaje(estadisticas.visitas.guayabo.porcentaje)})
-                  </div>
-
-                  <h6 className="estad-card-titulo mb-2">Top de nombres más repetidos</h6>
-                  {estadisticas.visitas.top_nombres.length === 0 && (
-                    <p className="text-muted mb-0">No hay nombres de visitas en este período.</p>
-                  )}
-                  {estadisticas.visitas.top_nombres.length > 0 && (
-                    <div className="table-responsive">
-                      <table className="table table-sm align-middle mb-0">
-                        <thead>
-                          <tr>
-                            <th>Nombre</th>
-                            <th className="text-end">Cantidad</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {estadisticas.visitas.top_nombres.map((item) => (
-                            <tr key={item.nombre}>
-                              <td>{item.nombre}</td>
-                              <td className="text-end fw-semibold">{item.cantidad}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <EstadisticasVisitasCard visitas={estadisticas.visitas} />
             </div>
           </div>
+
+          <EstadisticasMetricasDinamicasCard
+            metricasDinamicas={metricasDinamicas}
+            mapaEtiquetasMetricas={mapaEtiquetasMetricas}
+          />
         </>
       )}
     </div>
   );
 }
-

@@ -1,14 +1,53 @@
-﻿import { useState, Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { TRIMESTRE_OPCIONES, ANIO_OPCIONES, MES_OPCIONES } from '../../config/constants';
 
+function formatearNombreCulto(nombre = '', codigo = '') {
+  const valor = nombre || codigo || '';
+  if (!valor) return '';
+
+  return valor
+    .replace(/Sabado/gi, 'Sabado')
+    .replace(/Miercoles/gi, 'Miercoles');
+}
+
+function formatearFecha(fecha) {
+  if (!fecha) return '';
+  const partes = fecha.split('-');
+  if (partes.length !== 3) return fecha;
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatearValorMetrica(valor) {
+  if (valor === null || valor === undefined || valor === '') return '-';
+  if (typeof valor === 'number') return String(valor);
+  return String(valor);
+}
+
+function obtenerResumenMetricas(registro, mapaEtiquetasMetricas) {
+  const metricas = registro?.metricas || {};
+  const entradas = Object.entries(metricas)
+    .filter(([, valor]) => typeof valor === 'number' && valor > 0)
+    .sort((a, b) => Number(b[1]) - Number(a[1]))
+    .slice(0, 3);
+
+  if (entradas.length === 0) {
+    return 'Sin metricas numericas destacadas';
+  }
+
+  return entradas
+    .map(([clave, valor]) => `${mapaEtiquetasMetricas?.[clave] || clave}: ${valor}`)
+    .join(' | ');
+}
+
 /**
- * Tabla de registros de asistencia con filtros y filas expandibles
+ * Tabla de registros de asistencia con filtros y detalle dinamico por metrica
  */
 export default function AsistenciaTable({
   registros,
   cultos,
   filtros,
   cargando,
+  mapaEtiquetasMetricas,
   onCambiarFiltro,
   onEditar,
   onEliminar,
@@ -17,27 +56,10 @@ export default function AsistenciaTable({
 }) {
   const [filaExpandida, setFilaExpandida] = useState(null);
 
-  const formatearNombreCulto = (nombre = '', codigo = '') => {
-    const valor = nombre || codigo || '';
-    if (!valor) return '';
-
-    return valor
-      .replace(/Sabado/gi, 'Sábado')
-      .replace(/Miercoles/gi, 'Miércoles');
-  };
-
-  const formatearFecha = (fecha) => {
-    if (!fecha) return '';
-    const partes = fecha.split('-');
-    if (partes.length !== 3) return fecha;
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
-  };
-
   const toggleFila = (id) => {
     setFilaExpandida((prev) => (prev === id ? null : id));
   };
 
-  // Al cambiar trimestre, limpiar mes y viceversa
   const manejarCambioTrimestre = (valor) => {
     onCambiarFiltro('trimestre', valor);
     if (valor) onCambiarFiltro('mes', '');
@@ -48,8 +70,6 @@ export default function AsistenciaTable({
     if (valor) onCambiarFiltro('trimestre', '');
   };
 
-  const totalColumnas = 14;
-
   return (
     <div className="card shadow-sm">
       <div className="card-header d-flex justify-content-between align-items-center">
@@ -57,8 +77,6 @@ export default function AsistenciaTable({
         <span className="badge bg-light text-dark">{registros.length} registros</span>
       </div>
       <div className="card-body">
-
-        {/* Filtros */}
         <div className="filtros-container">
           <div className="row g-3 align-items-end">
             <div className="col-6 col-md-2">
@@ -79,7 +97,7 @@ export default function AsistenciaTable({
             </div>
 
             <div className="col-6 col-md-2">
-              <label htmlFor="filtro-anio" className="form-label fw-semibold">Año</label>
+              <label htmlFor="filtro-anio" className="form-label fw-semibold">Ano</label>
               <select
                 id="filtro-anio"
                 className="form-select"
@@ -174,16 +192,7 @@ export default function AsistenciaTable({
                     <th>Fecha</th>
                     <th>Culto</th>
                     <th className="text-center">Total</th>
-                    <th className="text-center">Niños</th>
-                    <th className="text-center">Jóvenes</th>
-                    <th className="text-center">Antes</th>
-                    <th className="text-center">Después</th>
-                    <th className="text-center">Barrio</th>
-                    <th className="text-center">Guayabo</th>
-                    <th className="text-center">Visitas B.</th>
-                    <th className="text-center">Visitas G.</th>
-                    <th className="text-center">Retiros</th>
-                    <th className="text-center">Quedaron</th>
+                    <th>Resumen de metricas</th>
                     <th className="text-center">Acciones</th>
                   </tr>
                 </thead>
@@ -193,6 +202,14 @@ export default function AsistenciaTable({
                       <tr
                         className={`fila-registro ${filaExpandida === reg.id ? 'fila-activa' : ''}`}
                         onClick={() => toggleFila(reg.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            toggleFila(reg.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
                         style={{ cursor: 'pointer' }}
                       >
                         <td className="fw-semibold text-nowrap">{formatearFecha(reg.fecha)}</td>
@@ -202,21 +219,17 @@ export default function AsistenciaTable({
                           </span>
                         </td>
                         <td className="text-center fw-bold">{reg.total_asistentes}</td>
-                        <td className="text-center">{reg.ninos}</td>
-                        <td className="text-center">{reg.jovenes}</td>
-                        <td className="text-center">{reg.llegaron_antes_hora}</td>
-                        <td className="text-center">{reg.llegaron_despues_hora}</td>
-                        <td className="text-center">{reg.proc_barrio}</td>
-                        <td className="text-center">{reg.proc_guayabo}</td>
-                        <td className="text-center">{reg.visitas_barrio}</td>
-                        <td className="text-center">{reg.visitas_guayabo}</td>
-                        <td className="text-center">{reg.retiros_antes_terminar}</td>
-                        <td className="text-center">{reg.se_quedaron_todo}</td>
+                        <td className="small text-muted">
+                          {obtenerResumenMetricas(reg, mapaEtiquetasMetricas)}
+                        </td>
                         <td className="text-center">
-                          <div className="d-flex flex-wrap gap-1 justify-content-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="d-flex flex-wrap gap-1 justify-content-center">
                             <button
                               className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                              onClick={() => onEditar(reg)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditar(reg);
+                              }}
                               title="Editar"
                               aria-label="Editar registro"
                               style={{ width: '34px', height: '34px' }}
@@ -225,7 +238,10 @@ export default function AsistenciaTable({
                             </button>
                             <button
                               className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                              onClick={() => onEliminar(reg.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEliminar(reg.id);
+                              }}
                               title="Eliminar"
                               aria-label="Eliminar registro"
                               style={{ width: '34px', height: '34px' }}
@@ -234,7 +250,10 @@ export default function AsistenciaTable({
                             </button>
                             <button
                               className="btn btn-outline-success btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                              onClick={() => onExportar(reg)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onExportar(reg);
+                              }}
                               title="Exportar a Excel"
                               aria-label="Exportar registro a Excel"
                               style={{ width: '34px', height: '34px' }}
@@ -247,50 +266,36 @@ export default function AsistenciaTable({
 
                       {filaExpandida === reg.id && (
                         <tr className="fila-detalle">
-                          <td colSpan={totalColumnas} className="p-0">
+                          <td colSpan={5} className="p-0">
                             <div className="registro-detalle">
-                              <div className="row g-3">
-                                <div className="col-md-6">
-                                  <div className="detalle-seccion">
-                                    <h6 className="detalle-titulo">
-                                      <i className="bi bi-people-fill me-2"></i>
-                                      Visitas del Barrio
-                                      {reg.visitas_barrio > 0 && (
-                                        <span className="badge bg-primary ms-2">{reg.visitas_barrio}</span>
-                                      )}
-                                    </h6>
-                                    <p className="detalle-texto">
-                                      {reg.nombres_visitas_barrio || <span className="text-muted fst-italic">Sin visitas registradas</span>}
-                                    </p>
-                                  </div>
+                              <div className="detalle-seccion">
+                                <h6 className="detalle-titulo mb-3">
+                                  <i className="bi bi-bar-chart-line me-2"></i>
+                                  Detalle completo de metricas
+                                </h6>
+
+                                <div className="table-responsive">
+                                  <table className="table table-sm mb-2">
+                                    <thead>
+                                      <tr>
+                                        <th>Metrica</th>
+                                        <th>Valor</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Object.entries(reg.metricas || {}).map(([clave, valor]) => (
+                                        <tr key={`${reg.id}-${clave}`}>
+                                          <td className="fw-semibold">{mapaEtiquetasMetricas?.[clave] || clave}</td>
+                                          <td>{formatearValorMetrica(valor)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
                                 </div>
 
-                                <div className="col-md-6">
-                                  <div className="detalle-seccion">
-                                    <h6 className="detalle-titulo">
-                                      <i className="bi bi-people-fill me-2"></i>
-                                      Visitas de Guayabo
-                                      {reg.visitas_guayabo > 0 && (
-                                        <span className="badge bg-primary ms-2">{reg.visitas_guayabo}</span>
-                                      )}
-                                    </h6>
-                                    <p className="detalle-texto">
-                                      {reg.nombres_visitas_guayabo || <span className="text-muted fst-italic">Sin visitas registradas</span>}
-                                    </p>
-                                  </div>
-                                </div>
-
-                                <div className="col-12">
-                                  <div className="detalle-seccion">
-                                    <h6 className="detalle-titulo">
-                                      <i className="bi bi-chat-left-text-fill me-2"></i>
-                                      Observaciones
-                                    </h6>
-                                    <p className="detalle-texto mb-0">
-                                      {reg.observaciones || <span className="text-muted fst-italic">Sin observaciones</span>}
-                                    </p>
-                                  </div>
-                                </div>
+                                <p className="mb-0 text-muted">
+                                  Registrado por: <strong>{reg.registrado_por_nombre || '-'}</strong>
+                                </p>
                               </div>
                             </div>
                           </td>

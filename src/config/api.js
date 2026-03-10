@@ -3,6 +3,7 @@ import axios from 'axios';
 const AUTH_REDIRECT_MESSAGE_KEY = 'auth_redirect_message';
 const DEVICE_ID_STORAGE_KEY = 'auth_device_id';
 const DEVICE_ID_REGEX = /^[A-Za-z0-9._:-]{8,120}$/;
+const SETUP_REQUIRED_EVENT = 'setup:required';
 
 function generarDeviceId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -53,6 +54,17 @@ ApiCliente.interceptors.response.use(
   (res) => res.data,
   (error) => {
     if (error.response) {
+      if (
+        error.response.status === 403
+        && String(error.response?.data?.codigo || '').toUpperCase() === 'SETUP_REQUIRED'
+      ) {
+        try {
+          window.dispatchEvent(new CustomEvent(SETUP_REQUIRED_EVENT));
+        } catch {
+          // Ignorar si el entorno no soporta CustomEvent
+        }
+      }
+
       // Si el backend responde con 401, limpiar sesion y redirigir al login
       // (excepto si es la propia peticion de login, para mostrar el mensaje de error)
       if (error.response.status === 401 && !error.config.url?.includes('/auth/login')) {
@@ -71,6 +83,8 @@ ApiCliente.interceptors.response.use(
 
         localStorage.removeItem('token');
         localStorage.removeItem('usuario');
+        localStorage.removeItem('tenant');
+        localStorage.removeItem('session');
         if (window.location.pathname !== '/') {
           window.location.replace('/');
         }

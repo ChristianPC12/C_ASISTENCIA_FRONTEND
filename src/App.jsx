@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import { SetupProvider, useSetupStatus } from './hooks/useSetupStatus';
 import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import ToastContainer from './components/ui/ToastContainer';
@@ -12,13 +13,19 @@ import EstadisticasPage from './pages/EstadisticasPage';
 import ComparacionesPage from './pages/ComparacionesPage';
 import UsuarioPage from './pages/UsuarioPage';
 import PresentacionesPage from './pages/PresentacionesPage';
+import SuperadminPage from './pages/SuperadminPage';
+import AdministradorPage from './pages/AdministradorPage';
 import { ROLES } from './config/constants';
 
 /**
  * Componente interior que usa los hooks de auth dentro del BrowserRouter
  */
 function AppContent() {
-  const { usuario, estaAutenticado, esAdmin, cerrarSesion } = useAuth();
+  const { usuario, estaAutenticado, esSuperadmin, esAdmin, cerrarSesion } = useAuth();
+  const { requiereSetup } = useSetupStatus();
+  const rutaInicio = esSuperadmin
+    ? '/superadmin'
+    : (esAdmin && requiereSetup ? '/administrador' : '/registro');
 
   /* Resetear scroll al cambiar el estado de autenticacion */
   useEffect(() => {
@@ -42,14 +49,37 @@ function AppContent() {
   return (
     <Sidebar usuario={usuario} onCerrarSesion={cerrarSesion}>
       <Routes>
-        {/* Redirigir raiz a registro */}
-        <Route path="/" element={<Navigate to="/registro" replace />} />
+        {/* Redirigir raiz segun rol */}
+        <Route path="/" element={<Navigate to={rutaInicio} replace />} />
+
+        {/* Modulo SUPERADMIN */}
+        <Route
+          path="/superadmin"
+          element={(
+            <ProtectedRoute rolesPermitidos={[ROLES.SUPERADMIN]}>
+              <SuperadminPage />
+            </ProtectedRoute>
+          )}
+        />
+
+        <Route
+          path="/administrador"
+          element={(
+            <ProtectedRoute rolesPermitidos={[ROLES.ADMIN]}>
+              <AdministradorPage />
+            </ProtectedRoute>
+          )}
+        />
 
         {/* Nuevo Registro */}
         <Route
           path="/registro"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+              requiereSetupInicial
+              nombreModulo="Registro"
+            >
               <RegistroPage />
             </ProtectedRoute>
           }
@@ -59,7 +89,11 @@ function AppContent() {
         <Route
           path="/registros"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+              requiereSetupInicial
+              nombreModulo="Registros"
+            >
               <RegistrosPage />
             </ProtectedRoute>
           }
@@ -69,7 +103,11 @@ function AppContent() {
         <Route
           path="/estadisticas"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+              requiereSetupInicial
+              nombreModulo="Estadisticas"
+            >
               <EstadisticasPage />
             </ProtectedRoute>
           }
@@ -79,7 +117,11 @@ function AppContent() {
         <Route
           path="/comparaciones"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+              requiereSetupInicial
+              nombreModulo="Comparaciones"
+            >
               <ComparacionesPage />
             </ProtectedRoute>
           }
@@ -89,7 +131,11 @@ function AppContent() {
         <Route
           path="/presentaciones"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+              requiereSetupInicial
+              nombreModulo="Presentaciones"
+            >
               <PresentacionesPage />
             </ProtectedRoute>
           }
@@ -99,18 +145,18 @@ function AppContent() {
         <Route
           path="/usuarios"
           element={
-            <ProtectedRoute>
-              {esAdmin ? (
-                <UsuarioPage />
-              ) : (
-                <Navigate to="/registro" replace />
-              )}
+            <ProtectedRoute
+              rolesPermitidos={[ROLES.ADMIN]}
+              requiereSetupInicial
+              nombreModulo="Usuarios"
+            >
+              <UsuarioPage />
             </ProtectedRoute>
           }
         />
 
         {/* Ruta no encontrada */}
-        <Route path="*" element={<Navigate to="/registro" replace />} />
+        <Route path="*" element={<Navigate to={rutaInicio} replace />} />
       </Routes>
     </Sidebar>
   );
@@ -123,9 +169,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
-        <ToastContainer />
-        <ConfirmModal />
+        <SetupProvider>
+          <AppContent />
+          <ToastContainer />
+          <ConfirmModal />
+        </SetupProvider>
       </AuthProvider>
     </BrowserRouter>
   );

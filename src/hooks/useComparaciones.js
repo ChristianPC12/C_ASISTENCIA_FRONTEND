@@ -3,6 +3,7 @@ import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { ANIO_ACTUAL, MES_OPCIONES } from '../config/constants';
 import { notificarError } from '../utils/notify';
+import { useSetupStatus } from './useSetupStatus';
 
 const ESTADISTICAS_VACIAS = {
   resumen_general: {
@@ -33,6 +34,7 @@ const ESTADISTICAS_VACIAS = {
   series: {
     asistencia_por_fecha: []
   },
+  metricas_dinamicas: [],
   resumen_condensado: ''
 };
 
@@ -174,7 +176,18 @@ function construirTopNombresComparados(periodoA, periodoB) {
     .slice(0, 10);
 }
 
+function mapearMetricasDinamicas(stats) {
+  const lista = Array.isArray(stats?.metricas_dinamicas) ? stats.metricas_dinamicas : [];
+  return lista.reduce((acc, item) => {
+    const clave = String(item?.clave || '').trim();
+    if (!clave) return acc;
+    acc[clave] = Number(item?.suma || 0);
+    return acc;
+  }, {});
+}
+
 export function useComparaciones() {
+  const { metricasActivas } = useSetupStatus();
   const inicial = obtenerPeriodosIniciales();
 
   const [cultos, setCultos] = useState([]);
@@ -273,7 +286,7 @@ export function useComparaciones() {
   }, [cultos, filtros.culto]);
 
   const indicadores = useMemo(() => {
-    return DEFINICIONES_INDICADORES.map((definicion) => {
+    const base = DEFINICIONES_INDICADORES.map((definicion) => {
       const valorA = definicion.obtener(periodoA);
       const valorB = definicion.obtener(periodoB);
       const diferencia = valorB - valorA;
@@ -291,7 +304,38 @@ export function useComparaciones() {
         cambioTipo
       };
     });
-  }, [periodoA, periodoB]);
+
+    const mapaEtiquetas = metricasActivas.reduce((acc, item) => {
+      acc[item.clave] = item.etiqueta || item.clave;
+      return acc;
+    }, {});
+
+    const dinamicasA = mapearMetricasDinamicas(periodoA);
+    const dinamicasB = mapearMetricasDinamicas(periodoB);
+    const claves = Array.from(new Set([...Object.keys(dinamicasA), ...Object.keys(dinamicasB)]))
+      .sort((a, b) => a.localeCompare(b));
+
+    const dinamicas = claves.map((clave) => {
+      const valorA = Number(dinamicasA[clave] || 0);
+      const valorB = Number(dinamicasB[clave] || 0);
+      const diferencia = valorB - valorA;
+      const variacion = calcularVariacion(valorA, valorB);
+      const cambioTipo = diferencia > 0 ? 'sube' : diferencia < 0 ? 'baja' : 'igual';
+
+      return {
+        id: `dinamica_${clave}`,
+        etiqueta: `${mapaEtiquetas[clave] || clave} (dinamica)`,
+        unidad: 'decimal',
+        valorA,
+        valorB,
+        diferencia,
+        variacion,
+        cambioTipo
+      };
+    });
+
+    return [...base, ...dinamicas];
+  }, [periodoA, periodoB, metricasActivas]);
 
   const topNombresComparados = useMemo(() => {
     return construirTopNombresComparados(periodoA, periodoB);

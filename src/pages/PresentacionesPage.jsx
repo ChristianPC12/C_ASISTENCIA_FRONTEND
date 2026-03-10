@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { ANIO_OPCIONES, MES_OPCIONES } from '../config/constants';
 import { usePresentaciones } from '../hooks/usePresentaciones';
+import { useSetupStatus } from '../hooks/useSetupStatus';
 
 function formatearFechaHora(valor) {
   if (!valor) return '';
@@ -24,10 +26,283 @@ function SeccionPresentacion({ seccion }) {
         <h6 className="presentacion-seccion-titulo">{titulo}</h6>
         <p className="mb-2">{seccion.resumen}</p>
         <ul className="mb-0">
-          {Array.isArray(seccion.puntos) && seccion.puntos.map((punto, idx) => (
-            <li key={`${seccion.id}-${idx}`}>{punto}</li>
+          {Array.isArray(seccion.puntos) && seccion.puntos.map((punto) => (
+            <li key={`${seccion.id}-${punto}`}>{punto}</li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+function PresentacionesFiltrosCard({
+  esAdmin,
+  cultos,
+  usuarios,
+  filtros,
+  onCambiarFiltro
+}) {
+  return (
+    <div className="card shadow-sm mb-4">
+      <div className="card-header">
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros</h5>
+      </div>
+      <div className="card-body">
+        <div className="row g-3 align-items-end">
+          <div className="col-6 col-md-3">
+            <label htmlFor="pres-anio" className="form-label fw-semibold">Anio</label>
+            <select
+              id="pres-anio"
+              className="form-select"
+              value={filtros.anio}
+              onChange={(event) => onCambiarFiltro('anio', event.target.value)}
+            >
+              <option value="">Todos</option>
+              {ANIO_OPCIONES.map((anio) => (
+                <option key={anio} value={anio}>{anio}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-6 col-md-3">
+            <label htmlFor="pres-mes" className="form-label fw-semibold">Mes</label>
+            <select
+              id="pres-mes"
+              className="form-select"
+              value={filtros.mes}
+              onChange={(event) => onCambiarFiltro('mes', event.target.value)}
+            >
+              <option value="">Todos</option>
+              {MES_OPCIONES.map((mes) => (
+                <option key={mes.valor} value={mes.valor}>{mes.etiqueta}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-12 col-md-3">
+            <label htmlFor="pres-culto" className="form-label fw-semibold">Culto</label>
+            <select
+              id="pres-culto"
+              className="form-select"
+              value={filtros.culto}
+              onChange={(event) => onCambiarFiltro('culto', event.target.value)}
+            >
+              <option value="">Todos</option>
+              {cultos.map((culto) => (
+                <option key={culto.codigo} value={culto.codigo}>{culto.nombre}</option>
+              ))}
+            </select>
+          </div>
+
+          {esAdmin && (
+            <div className="col-12 col-md-3">
+              <label htmlFor="pres-usuario" className="form-label fw-semibold">Usuario</label>
+              <select
+                id="pres-usuario"
+                className="form-select"
+                value={filtros.usuario_id}
+                onChange={(event) => onCambiarFiltro('usuario_id', event.target.value)}
+              >
+                <option value="">Todos</option>
+                {usuarios.map((usuario) => (
+                  <option key={usuario.id} value={usuario.id}>
+                    {usuario.nombre_completo}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PresentacionesHistorialCard({
+  presentaciones,
+  meta,
+  seleccionadaId,
+  cargandoLista,
+  setSeleccionadaId,
+  irPagina,
+  etiquetaMes
+}) {
+  const aplicarScrollLista = presentaciones.length > 8;
+
+  return (
+    <div className="card shadow-sm h-100">
+      <div className="card-header d-flex justify-content-between align-items-center">
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Historial</h5>
+        <span className="badge bg-light text-dark">{meta.total} items</span>
+      </div>
+      <div className="card-body">
+        {cargandoLista && (
+          <div className="text-center py-3">
+            <div className="spinner-border spinner-iasd" role="status">
+              <span className="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        )}
+
+        {!cargandoLista && presentaciones.length === 0 && (
+          <div className="alert alert-iasd mb-0">No hay presentaciones para los filtros seleccionados.</div>
+        )}
+
+        {!cargandoLista && presentaciones.length > 0 && (
+          <div className={aplicarScrollLista ? 'presentaciones-lista-scroll' : ''}>
+            <div className="list-group">
+              {presentaciones.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`list-group-item list-group-item-action presentacion-item ${seleccionadaId === item.id ? 'presentacion-item-activo' : ''}`}
+                  onClick={() => setSeleccionadaId(item.id)}
+                >
+                  <div className="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                      <div className="fw-semibold">
+                        {etiquetaMes(item.mes)} {item.anio}
+                        {item.culto_codigo ? ` - ${item.culto_codigo}` : ' - TODOS'}
+                      </div>
+                      <small className="text-muted d-block">{item.usuario_nombre}</small>
+                    </div>
+                    <small className="text-muted text-nowrap">{formatearFechaHora(item.creado_en)}</small>
+                  </div>
+                  <p className="mb-0 mt-2 text-muted presentacion-item-resumen">
+                    {item.resumen || 'Sin resumen disponible.'}
+                  </p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="d-flex align-items-center justify-content-between mt-3">
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            disabled={meta.page <= 1}
+            onClick={() => irPagina(meta.page - 1)}
+          >
+            Anterior
+          </button>
+          <small className="text-muted">Pagina {meta.page} de {meta.total_pages}</small>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            disabled={meta.page >= meta.total_pages}
+            onClick={() => irPagina(meta.page + 1)}
+          >
+            Siguiente
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PresentacionesDetalleCard({
+  detalle,
+  cargandoDetalle,
+  etiquetaMes,
+  mapaEtiquetasMetricas,
+  onExportarPdf
+}) {
+  const secciones = detalle?.presentacion?.secciones || [];
+  const periodo = detalle?.presentacion?.periodo || {};
+  const metricasDinamicas = detalle?.metricas?.metricas_dinamicas || [];
+
+  return (
+    <div className="card shadow-sm h-100">
+      <div className="card-header">
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Detalle</h5>
+      </div>
+      <div className="card-body">
+        {cargandoDetalle && (
+          <div className="text-center py-3">
+            <div className="spinner-border spinner-iasd" role="status">
+              <span className="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        )}
+
+        {!cargandoDetalle && !detalle && (
+          <div className="alert alert-iasd mb-0">Seleccione una presentacion para ver su contenido.</div>
+        )}
+
+        {!cargandoDetalle && detalle && (
+          <>
+            <div className="presentacion-detalle-head mb-3 d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <h6 className="mb-1">Plantilla {detalle.prompt_version} - {detalle.modelo}</h6>
+                <p className="mb-0 text-muted">
+                  {etiquetaMes(periodo.mes || detalle.mes)} {periodo.anio || detalle.anio}
+                  {' - '}
+                  {(periodo.culto_codigo || detalle.culto_codigo || 'TODOS')}
+                  {' - generado el '}
+                  {formatearFechaHora(detalle.creado_en)}
+                </p>
+              </div>
+              <button type="button" className="btn btn-outline-primary btn-sm" onClick={onExportarPdf}>
+                <i className="bi bi-file-earmark-pdf me-1" aria-hidden="true" />
+                Exportar PDF
+              </button>
+            </div>
+
+            <div className="row g-3 mb-3">
+              <div className="col-6 col-md-6">
+                <div className="card bg-light">
+                  <div className="card-body py-2">
+                    <small className="text-muted d-block">Total registros</small>
+                    <strong>{periodo.total_registros ?? detalle?.metricas?.resumen?.total_registros ?? 0}</strong>
+                  </div>
+                </div>
+              </div>
+              <div className="col-6 col-md-6">
+                <div className="card bg-light">
+                  <div className="card-body py-2">
+                    <small className="text-muted d-block">Total asistentes</small>
+                    <strong>{periodo.total_asistentes ?? detalle?.metricas?.resumen?.total_asistentes ?? 0}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {metricasDinamicas.length > 0 && (
+              <div className="card bg-light mb-3">
+                <div className="card-body py-2">
+                  <small className="text-muted d-block mb-2">Metricas dinamicas</small>
+                  <div className="table-responsive">
+                    <table className="table table-sm mb-0">
+                      <thead>
+                        <tr>
+                          <th>Metrica</th>
+                          <th className="text-end">Suma</th>
+                          <th className="text-end">Promedio</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {metricasDinamicas.map((item) => (
+                          <tr key={item.clave}>
+                            <td>{mapaEtiquetasMetricas[item.clave] || item.clave}</td>
+                            <td className="text-end">{Number(item.suma || 0).toLocaleString('es-CR')}</td>
+                            <td className="text-end">{Number(item.promedio || 0).toLocaleString('es-CR')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="d-grid gap-3">
+              {secciones.map((seccion) => (
+                <SeccionPresentacion key={seccion.id} seccion={seccion} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -50,16 +325,21 @@ export default function PresentacionesPage() {
     irPagina,
     etiquetaMes
   } = usePresentaciones();
+  const { metricasActivas } = useSetupStatus();
 
-  const aplicarScrollLista = presentaciones.length > 8;
-
-  const secciones = detalle?.presentacion?.secciones || [];
-  const periodo = detalle?.presentacion?.periodo || {};
+  const mapaEtiquetasMetricas = useMemo(() => {
+    return metricasActivas.reduce((acc, item) => {
+      acc[item.clave] = item.etiqueta || item.clave;
+      return acc;
+    }, {});
+  }, [metricasActivas]);
 
   const exportarPdf = async () => {
     if (!detalle) return;
     const { jsPDF } = await import('jspdf');
 
+    const periodo = detalle?.presentacion?.periodo || {};
+    const secciones = detalle?.presentacion?.secciones || [];
     const tituloPeriodo = `${etiquetaMes(periodo.mes || detalle.mes)} ${periodo.anio || detalle.anio}`;
     const culto = periodo.culto_codigo || detalle.culto_codigo || 'TODOS';
     const generado = formatearFechaHora(detalle.creado_en);
@@ -137,214 +417,35 @@ export default function PresentacionesPage() {
     <div className="container-fluid py-4">
       <h2 className="mb-3">Presentaciones</h2>
 
-      <div className="card shadow-sm mb-4">
-        <div className="card-header">
-          <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros</h5>
-        </div>
-        <div className="card-body">
-          <div className="row g-3 align-items-end">
-            <div className="col-6 col-md-3">
-              <label htmlFor="pres-anio" className="form-label fw-semibold">Año</label>
-              <select
-                id="pres-anio"
-                className="form-select"
-                value={filtros.anio}
-                onChange={(e) => cambiarFiltro('anio', e.target.value)}
-              >
-                <option value="">Todos</option>
-                {ANIO_OPCIONES.map((anio) => (
-                  <option key={anio} value={anio}>{anio}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-6 col-md-3">
-              <label htmlFor="pres-mes" className="form-label fw-semibold">Mes</label>
-              <select
-                id="pres-mes"
-                className="form-select"
-                value={filtros.mes}
-                onChange={(e) => cambiarFiltro('mes', e.target.value)}
-              >
-                <option value="">Todos</option>
-                {MES_OPCIONES.map((mes) => (
-                  <option key={mes.valor} value={mes.valor}>{mes.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-12 col-md-3">
-              <label htmlFor="pres-culto" className="form-label fw-semibold">Culto</label>
-              <select
-                id="pres-culto"
-                className="form-select"
-                value={filtros.culto}
-                onChange={(e) => cambiarFiltro('culto', e.target.value)}
-              >
-                <option value="">Todos</option>
-                {cultos.map((culto) => (
-                  <option key={culto.codigo} value={culto.codigo}>{culto.nombre}</option>
-                ))}
-              </select>
-            </div>
-
-            {esAdmin && (
-              <div className="col-12 col-md-3">
-                <label htmlFor="pres-usuario" className="form-label fw-semibold">Usuario</label>
-                <select
-                  id="pres-usuario"
-                  className="form-select"
-                  value={filtros.usuario_id}
-                  onChange={(e) => cambiarFiltro('usuario_id', e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {usuarios.map((usuario) => (
-                    <option key={usuario.id} value={usuario.id}>
-                      {usuario.nombre_completo}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      <PresentacionesFiltrosCard
+        esAdmin={esAdmin}
+        cultos={cultos}
+        usuarios={usuarios}
+        filtros={filtros}
+        onCambiarFiltro={cambiarFiltro}
+      />
 
       <div className="row g-3">
         <div className="col-12 col-xl-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-header d-flex justify-content-between align-items-center">
-              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Historial</h5>
-              <span className="badge bg-light text-dark">{meta.total} items</span>
-            </div>
-            <div className="card-body">
-              {cargandoLista && (
-                <div className="text-center py-3">
-                  <div className="spinner-border spinner-iasd" role="status">
-                    <span className="visually-hidden">Cargando...</span>
-                  </div>
-                </div>
-              )}
-
-              {!cargandoLista && presentaciones.length === 0 && (
-                <div className="alert alert-iasd mb-0">No hay presentaciones para los filtros seleccionados.</div>
-              )}
-
-              {!cargandoLista && presentaciones.length > 0 && (
-                <div className={aplicarScrollLista ? 'presentaciones-lista-scroll' : ''}>
-                  <div className="list-group">
-                    {presentaciones.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`list-group-item list-group-item-action presentacion-item ${seleccionadaId === item.id ? 'presentacion-item-activo' : ''}`}
-                        onClick={() => setSeleccionadaId(item.id)}
-                      >
-                        <div className="d-flex justify-content-between align-items-start gap-2">
-                          <div>
-                            <div className="fw-semibold">
-                              {etiquetaMes(item.mes)} {item.anio}
-                              {item.culto_codigo ? ` - ${item.culto_codigo}` : ' - TODOS'}
-                            </div>
-                            <small className="text-muted d-block">{item.usuario_nombre}</small>
-                          </div>
-                          <small className="text-muted text-nowrap">{formatearFechaHora(item.creado_en)}</small>
-                        </div>
-                        <p className="mb-0 mt-2 text-muted presentacion-item-resumen">{item.resumen || 'Sin resumen disponible.'}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="d-flex align-items-center justify-content-between mt-3">
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm"
-                  disabled={meta.page <= 1}
-                  onClick={() => irPagina(meta.page - 1)}
-                >
-                  Anterior
-                </button>
-                <small className="text-muted">Pagina {meta.page} de {meta.total_pages}</small>
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm"
-                  disabled={meta.page >= meta.total_pages}
-                  onClick={() => irPagina(meta.page + 1)}
-                >
-                  Siguiente
-                </button>
-              </div>
-            </div>
-          </div>
+          <PresentacionesHistorialCard
+            presentaciones={presentaciones}
+            meta={meta}
+            seleccionadaId={seleccionadaId}
+            cargandoLista={cargandoLista}
+            setSeleccionadaId={setSeleccionadaId}
+            irPagina={irPagina}
+            etiquetaMes={etiquetaMes}
+          />
         </div>
 
         <div className="col-12 col-xl-8">
-          <div className="card shadow-sm h-100">
-            <div className="card-header">
-              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Detalle</h5>
-            </div>
-            <div className="card-body">
-              {cargandoDetalle && (
-                <div className="text-center py-3">
-                  <div className="spinner-border spinner-iasd" role="status">
-                    <span className="visually-hidden">Cargando...</span>
-                  </div>
-                </div>
-              )}
-
-              {!cargandoDetalle && !detalle && (
-                <div className="alert alert-iasd mb-0">Seleccione una presentacion para ver su contenido.</div>
-              )}
-
-              {!cargandoDetalle && detalle && (
-                <>
-                  <div className="presentacion-detalle-head mb-3 d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                      <h6 className="mb-1">Plantilla {detalle.prompt_version} - {detalle.modelo}</h6>
-                      <p className="mb-0 text-muted">
-                        {etiquetaMes(periodo.mes || detalle.mes)} {periodo.anio || detalle.anio}
-                        {' - '}
-                        {(periodo.culto_codigo || detalle.culto_codigo || 'TODOS')}
-                        {' - generado el '}
-                        {formatearFechaHora(detalle.creado_en)}
-                      </p>
-                    </div>
-                    <button type="button" className="btn btn-outline-primary btn-sm" onClick={exportarPdf}>
-                      <i className="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>
-                      Exportar PDF
-                    </button>
-                  </div>
-
-                  <div className="row g-3 mb-3">
-                    <div className="col-6 col-md-6">
-                      <div className="card bg-light">
-                        <div className="card-body py-2">
-                          <small className="text-muted d-block">Total registros</small>
-                          <strong>{periodo.total_registros ?? detalle?.metricas?.resumen?.total_registros ?? 0}</strong>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-6 col-md-6">
-                      <div className="card bg-light">
-                        <div className="card-body py-2">
-                          <small className="text-muted d-block">Total asistentes</small>
-                          <strong>{periodo.total_asistentes ?? detalle?.metricas?.resumen?.total_asistentes ?? 0}</strong>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="d-grid gap-3">
-                    {secciones.map((seccion) => (
-                      <SeccionPresentacion key={seccion.id} seccion={seccion} />
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
+          <PresentacionesDetalleCard
+            detalle={detalle}
+            cargandoDetalle={cargandoDetalle}
+            etiquetaMes={etiquetaMes}
+            mapaEtiquetasMetricas={mapaEtiquetasMetricas}
+            onExportarPdf={exportarPdf}
+          />
         </div>
       </div>
     </div>

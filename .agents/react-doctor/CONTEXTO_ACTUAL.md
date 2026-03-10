@@ -1,102 +1,75 @@
-# Contexto Actual (2026-03-09)
+# Contexto Actual Frontend (2026-03-10)
 
-## Estado general
+## Estado general vigente
 
 - Frontend: React 19 + Vite 7 + Bootstrap 5.
 - Backend: PHP 8 sin framework (`C_ASISTENCIA_BACKEND/C_ASISTENCIA_BAKCEND`).
-- BD: MariaDB/MySQL (`iglesia_asistencia`).
-- Layout principal: sidebar responsive + topbar; login con fondo Vanta (three + vanta).
-- Modelo operativo vigente: single-tenant (una sola instancia de datos compartida).
+- Escalabilidad nacional frontend: fases F0..F7 cerradas.
+- Backlog futuro: F8 (discovery de modulos nacionales).
 
-## Ruta de escalabilidad nacional (nuevo)
+## Estado funcional real en codigo
 
-- Se crea el plan maestro en `ROADMAP_ESCALABILIDAD_NACIONAL.md`.
-- Estado actual del plan: solo documentacion inicial, sin cambios funcionales aplicados.
-- Objetivo del plan: evolucionar a multiiglesia/multigrupo con aislamiento real por tenant.
-- Punto critico de negocio: permitir misma fecha/culto en distintas iglesias sin conflicto.
-- Nuevo rol objetivo en roadmap: `SUPERADMIN` (todavia no implementado).
+Rutas activas:
 
-## Modulos y rutas activas
+- `/superadmin` (solo `SUPERADMIN`)
+- `/administrador` (solo `ADMIN`, setup inicial)
+- `/registro` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
+- `/registros` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
+- `/estadisticas` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
+- `/comparaciones` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
+- `/presentaciones` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
+- `/usuarios` (solo `ADMIN`, bloqueada si setup pendiente)
 
-- `/registro`: formulario de nuevo registro de asistencia.
-- `/registros`: tabla de registros, filtros, exportacion Excel.
-- `/presentaciones`: historial y detalle de presentaciones por periodo.
-- `/estadisticas`: KPIs y resumen por periodo.
-- `/comparaciones`: comparacion mensual A vs B.
-- `/usuarios`: solo ADMIN.
+## Cierre por fases
 
-## Seguridad y sesion vigentes
+- F0: decisiones base de identidad/login/contrato v2 cerradas.
+- F1: scoping tenant UI y prueba funcional de aislamiento cerradas.
+- F2: superadmin UI (acceso, alta, admin temporal, edicion organizacion) cerrada.
+- F3: login canonico + sesion tenant-aware cerradas.
+- F4: setup inicial por tenant + bloqueo visual de modulos cerrados.
+- F5: formulario/reportes/estadisticas/comparaciones/presentaciones dinamicas cerrados.
+- F6: UI de cupos por rol + UX de excedentes cerrada.
+- F7: hardening frontend (admin temporal, 401/403/429, checklist salida) cerrado.
 
-- Token Bearer obligatorio para todo excepto `POST /auth/login`.
-- Rate limit login por usuario + IP:
-  - maximo 5 intentos fallidos
-  - ventana de 15 minutos
-  - bloqueo de 15 minutos
-- Expiracion de sesion:
-  - inactividad: 15 minutos
-  - duracion maxima: 8 horas
-- Expiracion de password:
-  - 30 dias
-  - si vence, el usuario se desactiva y se revocan tokens
-- En frontend, el interceptor de Axios:
-  - captura 401 (excepto login)
-  - limpia sesion local
-  - evita cascada de toasts de error
-  - redirige a login mostrando un mensaje claro de expiracion
+## Evidencias frontend recientes (2026-03-10)
 
-## Cambios recientes relevantes
+- F4: `.agents/react-doctor/EVIDENCIA_F4_T01_T02_T03_SETUP_INICIAL_2026-03-10.md`
+- F5: `.agents/react-doctor/EVIDENCIA_F5_T01_T02_T03_T04_DINAMICO_2026-03-10.md`
+- F6: `.agents/react-doctor/EVIDENCIA_F6_T01_T02_CUPOS_UI_2026-03-10.md`
+- F7: `.agents/react-doctor/EVIDENCIA_F7_T01_T02_T03_HARDENING_2026-03-10.md`
+- Checklist salida frontend: `.agents/react-doctor/CHECKLIST_SALIDA_PRODUCCION_F7_T03.md`
 
-- Login:
-  - limpieza de usuario/password cuando backend responde "Credenciales invalidas".
-  - footer actualizado con `&copy;` y texto con tildes correctas.
-- Sesion:
-  - ajuste para no "expulsar" inmediatamente tras login al verificar `me()`.
-  - mensaje explicito al volver al login por sesion expirada.
-- Registros:
-  - filtros por `anio`, `trimestre`, `mes`, `fecha_exacta`.
-  - exportacion por registro e informe general solo en Excel.
-- Prompts/Presentaciones:
-  - boton flotante `Prompt` en `/registros` con modal de filtros mensuales.
-  - generacion por `POST /presentaciones/generar` con `anio` + `mes` obligatorios.
-  - no permite generar si el mes no tiene registros.
-  - no permite duplicados por combinacion `anio + mes + culto` (incluye `TODOS`).
-  - almacenamiento en BD de salida estructurada (plantilla `v1`, 8 secciones).
-  - motor de generacion deterministico interno (sin proveedor IA externo).
-  - nuevo modulo `/presentaciones` con filtros y scroll interno cuando hay mas de 8 items.
-  - detalle con exportacion a PDF desde frontend.
-- Usuarios:
-  - password fuerte (12-64, mayuscula, minuscula, numero, especial).
-  - columna de expiracion (`Vigente`, `Por vencer`, `Expirada`).
+## Validaciones tecnicas vigentes
 
-## Deuda tecnica y riesgos conocidos
+- `npm run build` -> OK.
+- `react-doctor` -> 100/100.
+- Flujo runtime API comprobado:
+  - `401` auth sin token.
+  - `429` rate limit de login.
+  - `403 SETUP_REQUIRED` manejado en UI por evento global + bloqueo visual.
 
-- Hay texto con mojibake en varios archivos legacy (`Ã`, `â`), por mezcla de encodings.
-- `src/pages/AsistenciaPage.jsx` existe pero no esta enrutada.
-- `src/components/layout/Navbar.jsx` existe pero no se usa (layout actual usa `Sidebar`).
-- CORS backend en `*`; recomendado restringir origen en produccion.
-- Token en `localStorage` (riesgo ante XSS). Recomendado migrar a cookie `HttpOnly` si cambia arquitectura auth.
+## Riesgos tecnicos abiertos
 
-## Archivos clave para ubicacion rapida
+- Chunk principal grande en build (warning Vite), sin fallo funcional.
+- Token continua en `localStorage` (riesgo XSS conocido; mitigacion futura recomendada).
+- Decision de salida productiva final depende del runbook operativo de backend/infra.
 
-- Frontend auth/sesion:
-  - `src/hooks/useAuth.jsx`
-  - `src/config/api.js`
-  - `src/pages/LoginPage.jsx`
-- Frontend rutas/layout:
-  - `src/App.jsx`
-  - `src/components/layout/Sidebar.jsx`
-- Frontend modulos:
-  - `src/hooks/useAsistencia.js`
-  - `src/hooks/usePresentaciones.js`
-  - `src/hooks/useComparaciones.js`
-  - `src/hooks/useUsuario.js`
-- Backend auth/seguridad:
-  - `Config/Global.php`
-  - `Services/AuthService.php`
-  - `Middleware/AuthMiddleware.php`
-  - `Modelo/Seguridad/LoginIntentoDAO.php`
-  - `Modelo/Token/TokenDAO.php`
-- Backend presentaciones:
-  - `Services/PresentacionService.php`
-  - `Controller/PresentacionController.php`
-  - `Router/PresentacionRoutes.php`
+## Archivos clave de esta etapa
+
+- `src/App.jsx`
+- `src/hooks/useAuth.jsx`
+- `src/hooks/useSetupStatus.jsx`
+- `src/hooks/useSetupAdministrador.js`
+- `src/hooks/useAsistencia.js`
+- `src/hooks/useComparaciones.js`
+- `src/hooks/useUsuario.js`
+- `src/pages/AdministradorPage.jsx`
+- `src/pages/EstadisticasPage.jsx`
+- `src/pages/PresentacionesPage.jsx`
+- `src/pages/SuperadminPage.jsx`
+- `src/config/api.js`
+
+## Proximo foco
+
+- F8 discovery UX (Campanas, Pequenas Congregaciones, Estudios Biblicos).
+

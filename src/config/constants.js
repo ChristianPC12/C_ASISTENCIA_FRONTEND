@@ -1,7 +1,8 @@
 // Roles del sistema
 export const ROLES = {
   ADMIN: 'ADMIN',
-  SECRETARIO: 'SECRETARIO'
+  SECRETARIO: 'SECRETARIO',
+  SUPERADMIN: 'SUPERADMIN'
 };
 
 export const ROL_OPCIONES = [

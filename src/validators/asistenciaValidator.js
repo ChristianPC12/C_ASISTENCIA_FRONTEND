@@ -1,104 +1,89 @@
 import { aEnteroPositivo } from '../utils/sanitizer';
+import { METRICAS_FALLBACK, obtenerMetricasActivas, validarDependenciasMetricas } from '../utils/metricasConfig';
 
-/** Limite de caracteres para observaciones */
-export const OBSERVACIONES_MAX = 100;
+/** Limite de caracteres para observaciones y metricas de texto */
+export const OBSERVACIONES_MAX = 1000;
+
+function esVacio(valor) {
+  return valor === '' || valor === null || valor === undefined;
+}
+
+function resolverMetricasActivas(metricasActivas) {
+  if (Array.isArray(metricasActivas) && metricasActivas.length > 0) {
+    return metricasActivas;
+  }
+
+  return obtenerMetricasActivas(METRICAS_FALLBACK);
+}
+
+function construirOrdenCampos(metricasActivas) {
+  return [
+    'culto_id',
+    'fecha',
+    ...metricasActivas.map((item) => item.clave)
+  ];
+}
 
 /**
- * Orden de campos para determinar cual enfocar primero ante errores.
- * Debe coincidir con el orden visual del formulario.
- */
-const ORDEN_CAMPOS = [
-  'culto_id', 'fecha',
-  'llegaron_antes_hora', 'llegaron_despues_hora',
-  'proc_barrio', 'proc_guayabo',
-  'ninos', 'jovenes',
-  'total_asistentes',
-  'visitas_barrio', 'visitas_guayabo',
-  'retiros_antes_terminar', 'se_quedaron_todo',
-  'observaciones'
-];
-
-/**
- * Valida el formulario de asistencia
- * @param {Object} datos - Datos del formulario
+ * Valida el formulario de asistencia dinamico
+ *
+ * @param {Object} datos
+ * @param {Object} opciones
+ * @param {Array} opciones.metricasActivas
  * @returns {{ valido: boolean, errores: Object, primerCampoError: string|null }}
  */
-export function validarAsistencia(datos) {
+export function validarAsistencia(datos, opciones = {}) {
   const errores = {};
+  const metricasActivas = resolverMetricasActivas(opciones.metricasActivas);
+  const metricasFormulario = datos?.metricas || {};
 
-  // Culto obligatorio
-  if (!datos.culto_id) {
+  if (!datos?.culto_id) {
     errores.culto_id = 'Debe seleccionar un culto.';
   }
 
-  // Fecha obligatoria
-  if (!datos.fecha) {
+  if (!datos?.fecha) {
     errores.fecha = 'La fecha es obligatoria.';
   }
 
-  // ── Campos obligatorios (deben tener un valor >= 0) ────────────────
-  const camposObligatorios = [
-    { campo: 'llegaron_antes_hora', etiqueta: 'Llegaron antes de la hora' },
-    { campo: 'llegaron_despues_hora', etiqueta: 'Llegaron después de la hora' },
-    { campo: 'proc_barrio', etiqueta: 'Procedentes del barrio' },
-    { campo: 'proc_guayabo', etiqueta: 'Procedentes de Guayabo' }
-  ];
+  metricasActivas.forEach((metrica) => {
+    const clave = metrica.clave;
+    const etiqueta = metrica.etiqueta || clave;
+    const valorRaw = metricasFormulario?.[clave];
 
-  for (const { campo, etiqueta } of camposObligatorios) {
-    const valorRaw = datos[campo];
-    if (valorRaw === '' || valorRaw === null || valorRaw === undefined) {
-      errores[campo] = `${etiqueta} es obligatorio.`;
-    } else {
-      const num = parseInt(valorRaw, 10);
-      if (isNaN(num) || num < 0) {
-        errores[campo] = `${etiqueta} debe ser un número válido (>= 0).`;
+    if (metrica.obligatorio && esVacio(valorRaw)) {
+      errores[clave] = `${etiqueta} es obligatorio.`;
+      return;
+    }
+
+    if (metrica.tipo === 'numero' && !esVacio(valorRaw)) {
+      const numero = Number(valorRaw);
+      if (!Number.isFinite(numero) || numero < 0) {
+        errores[clave] = `${etiqueta} debe ser un numero valido (>= 0).`;
       }
     }
-  }
 
-  // ── Campos opcionales (si se escriben deben ser >= 0) ─────────────
-  const camposOpcionales = [
-    { campo: 'ninos', etiqueta: 'Niños' },
-    { campo: 'jovenes', etiqueta: 'Jóvenes' },
-    { campo: 'total_asistentes', etiqueta: 'Total de asistentes' },
-    { campo: 'visitas_barrio', etiqueta: 'Visitas del barrio' },
-    { campo: 'visitas_guayabo', etiqueta: 'Visitas de Guayabo' },
-    { campo: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar' },
-    { campo: 'se_quedaron_todo', etiqueta: 'Se quedaron todo el culto' }
-  ];
-
-  for (const { campo, etiqueta } of camposOpcionales) {
-    const valorRaw = datos[campo];
-    if (valorRaw !== '' && valorRaw !== null && valorRaw !== undefined) {
-      const num = parseInt(valorRaw, 10);
-      if (isNaN(num) || num < 0) {
-        errores[campo] = `${etiqueta} debe ser un número válido (>= 0).`;
-      }
+    if (metrica.tipo === 'texto' && !esVacio(valorRaw) && String(valorRaw).length > OBSERVACIONES_MAX) {
+      errores[clave] = `${etiqueta} no debe superar ${OBSERVACIONES_MAX} caracteres.`;
     }
+  });
+
+  Object.assign(errores, validarDependenciasMetricas(metricasActivas, metricasFormulario));
+
+  const total = aEnteroPositivo(metricasFormulario?.total_asistentes);
+  const ninos = aEnteroPositivo(metricasFormulario?.ninos);
+  const jovenes = aEnteroPositivo(metricasFormulario?.jovenes);
+  if (total > 0 && total < ninos + jovenes) {
+    errores.total_asistentes = 'El total de asistentes debe ser mayor o igual a ninos + jovenes.';
   }
 
-  // Validacion: total_asistentes >= ninos + jovenes
-  const total = aEnteroPositivo(datos.total_asistentes);
-  const ninos = aEnteroPositivo(datos.ninos);
-  const jovenes = aEnteroPositivo(datos.jovenes);
-  if (total < ninos + jovenes) {
-    errores.total_asistentes = 'El total de asistentes debe ser mayor o igual a niños + jóvenes.';
-  }
-
-  // Validacion: retiros + se_quedaron <= total_asistentes
-  const retiros = aEnteroPositivo(datos.retiros_antes_terminar);
-  const seQuedaron = aEnteroPositivo(datos.se_quedaron_todo);
-  if (retiros + seQuedaron > total) {
+  const retiros = aEnteroPositivo(metricasFormulario?.retiros_antes_terminar);
+  const seQuedaron = aEnteroPositivo(metricasFormulario?.se_quedaron_todo);
+  if (total > 0 && retiros + seQuedaron > total) {
     errores.se_quedaron_todo = 'Retiros + Se quedaron no puede superar el total de asistentes.';
   }
 
-  // Observaciones: limite de caracteres
-  if (datos.observaciones && datos.observaciones.length > OBSERVACIONES_MAX) {
-    errores.observaciones = `Las observaciones no deben superar los ${OBSERVACIONES_MAX} caracteres.`;
-  }
-
-  // Determinar primer campo con error segun orden visual
-  const primerCampoError = ORDEN_CAMPOS.find(c => errores[c]) || null;
+  const ordenCampos = construirOrdenCampos(metricasActivas);
+  const primerCampoError = ordenCampos.find((campo) => errores[campo]) || null;
 
   return {
     valido: Object.keys(errores).length === 0,
