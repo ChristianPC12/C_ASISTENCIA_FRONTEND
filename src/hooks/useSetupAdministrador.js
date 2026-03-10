@@ -26,6 +26,28 @@ const PROCEDENCIAS_DEFAULT = [
   { nombre: 'Guayabo', activo: true, orden: 2 }
 ];
 
+let setupRowSeq = 0;
+
+function generarUiId(prefijo) {
+  setupRowSeq += 1;
+  return `${prefijo}_${setupRowSeq}`;
+}
+
+function resolverUiId(item, prefijo, campos = []) {
+  if (typeof item?.ui_id === 'string' && item.ui_id.trim()) {
+    return item.ui_id;
+  }
+
+  for (const campo of campos) {
+    const valor = item?.[campo];
+    if (Number.isInteger(Number(valor)) && Number(valor) > 0) {
+      return `${prefijo}_${Number(valor)}`;
+    }
+  }
+
+  return generarUiId(prefijo);
+}
+
 function toBool(valor) {
   if (typeof valor === 'boolean') return valor;
   if (typeof valor === 'number') return valor === 1;
@@ -51,6 +73,7 @@ function normalizarCultos(cultosRaw) {
   const lista = Array.isArray(cultosRaw) && cultosRaw.length > 0 ? cultosRaw : CULTOS_DEFAULT;
   return lista
     .map((item, idx) => ({
+      ui_id: resolverUiId(item, 'culto', ['culto_id', 'id']),
       codigo: String(item?.codigo || '').trim().toUpperCase(),
       nombre: String(item?.nombre || '').trim(),
       dia_semana: toInt(item?.dia_semana, 1),
@@ -66,6 +89,7 @@ function normalizarProcedencias(procedenciasRaw) {
     ? procedenciasRaw
     : PROCEDENCIAS_DEFAULT;
   return lista.map((item, idx) => ({
+    ui_id: resolverUiId(item, 'procedencia', ['procedencia_id', 'id']),
     nombre: String(item?.nombre || '').trim(),
     activo: toBool(item?.activo ?? true),
     orden: toInt(item?.orden, idx + 1)
@@ -75,6 +99,7 @@ function normalizarProcedencias(procedenciasRaw) {
 function normalizarMetricas(metricasRaw) {
   const base = normalizarMetricasConfig(metricasRaw?.length ? metricasRaw : METRICAS_FALLBACK);
   return base.map((item, idx) => ({
+    ui_id: resolverUiId(item, 'metrica', ['metrica_id', 'id']),
     clave: item.clave,
     etiqueta: item.etiqueta,
     habilitado: item.habilitado,
@@ -250,9 +275,9 @@ export function useSetupAdministrador() {
     aplicarDetalleSetup
   } = useSetupStatus();
 
-  const [cultos, setCultos] = useState(CULTOS_DEFAULT);
-  const [procedencias, setProcedencias] = useState(PROCEDENCIAS_DEFAULT);
-  const [metricas, setMetricas] = useState(normalizarMetricas(METRICAS_FALLBACK));
+  const [cultos, setCultos] = useState(() => normalizarCultos(CULTOS_DEFAULT));
+  const [procedencias, setProcedencias] = useState(() => normalizarProcedencias(PROCEDENCIAS_DEFAULT));
+  const [metricas, setMetricas] = useState(() => normalizarMetricas(METRICAS_FALLBACK));
 
   const [erroresCultos, setErroresCultos] = useState({});
   const [erroresProcedencias, setErroresProcedencias] = useState({});
@@ -283,6 +308,7 @@ export function useSetupAdministrador() {
     setCultos((prev) => ([
       ...prev,
       {
+        ui_id: generarUiId('culto'),
         codigo: '',
         nombre: '',
         dia_semana: 1,
@@ -310,6 +336,7 @@ export function useSetupAdministrador() {
     setProcedencias((prev) => ([
       ...prev,
       {
+        ui_id: generarUiId('procedencia'),
         nombre: '',
         activo: true,
         orden: prev.length + 1
@@ -366,6 +393,7 @@ export function useSetupAdministrador() {
     setMetricas((prev) => ([
       ...prev,
       {
+        ui_id: generarUiId('metrica'),
         clave: `metrica_nueva_${prev.length + 1}`,
         etiqueta: 'Nueva metrica',
         habilitado: true,

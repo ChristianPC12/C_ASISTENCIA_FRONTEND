@@ -1,9 +1,9 @@
 import axios from 'axios';
+import { EVENT_SETUP_REQUIRED } from './events';
 
 const AUTH_REDIRECT_MESSAGE_KEY = 'auth_redirect_message';
 const DEVICE_ID_STORAGE_KEY = 'auth_device_id';
 const DEVICE_ID_REGEX = /^[A-Za-z0-9._:-]{8,120}$/;
-const SETUP_REQUIRED_EVENT = 'setup:required';
 
 function generarDeviceId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -59,7 +59,7 @@ ApiCliente.interceptors.response.use(
         && String(error.response?.data?.codigo || '').toUpperCase() === 'SETUP_REQUIRED'
       ) {
         try {
-          window.dispatchEvent(new CustomEvent(SETUP_REQUIRED_EVENT));
+          window.dispatchEvent(new CustomEvent(EVENT_SETUP_REQUIRED));
         } catch {
           // Ignorar si el entorno no soporta CustomEvent
         }

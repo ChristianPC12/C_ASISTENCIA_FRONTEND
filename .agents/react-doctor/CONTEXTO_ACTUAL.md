@@ -42,7 +42,7 @@ Rutas activas:
 ## Validaciones tecnicas vigentes
 
 - `npm run build` -> OK.
-- `react-doctor` -> 100/100.
+- `react-doctor` (`--diff`, 6 archivos cambiados) -> 99/100 (2 warnings: `ConfirmModal` y tamano de `AdministradorPage`).
 - Flujo runtime API comprobado:
   - `401` auth sin token.
   - `429` rate limit de login.
@@ -50,7 +50,7 @@ Rutas activas:
 
 ## Riesgos tecnicos abiertos
 
-- Chunk principal grande en build (warning Vite), sin fallo funcional.
+- Chunk `LoginPage` mayor a 500 kB en build (warning Vite), sin fallo funcional.
 - Token continua en `localStorage` (riesgo XSS conocido; mitigacion futura recomendada).
 - Decision de salida productiva final depende del runbook operativo de backend/infra.
 
@@ -72,4 +72,3 @@ Rutas activas:
 ## Proximo foco
 
 - F8 discovery UX (Campanas, Pequenas Congregaciones, Estudios Biblicos).
-

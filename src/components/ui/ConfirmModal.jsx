@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
  * Modal de confirmacion reutilizable.
@@ -24,6 +24,7 @@ export default function ConfirmModal() {
   const [mensaje, setMensaje] = useState('');
   const [resolver, setResolver] = useState(null);
   const [saliendo, setSaliendo] = useState(false);
+  const botonAceptarRef = useRef(null);
 
   const mostrar = useCallback((msg) => {
     return new Promise((resolve) => {
@@ -38,6 +39,12 @@ export default function ConfirmModal() {
     registrarDispatchConfirm(mostrar);
     return () => { mostrarConfirmExterno = null; };
   }, [mostrar]);
+
+  useEffect(() => {
+    if (visible) {
+      botonAceptarRef.current?.focus();
+    }
+  }, [visible]);
 
   const cerrarConAnimacion = (resultado) => {
     setSaliendo(true);
@@ -75,7 +82,11 @@ export default function ConfirmModal() {
           <button className="confirm-btn confirm-btn-cancelar" onClick={cancelar}>
             Cancelar
           </button>
-          <button className="confirm-btn confirm-btn-aceptar" onClick={aceptar} autoFocus>
+          <button
+            className="confirm-btn confirm-btn-aceptar"
+            onClick={aceptar}
+            ref={botonAceptarRef}
+          >
             Aceptar
           </button>
         </div>

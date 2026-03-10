@@ -104,7 +104,7 @@ export default function AdministradorPage() {
                 {cultos.map((item, index) => {
                   const filaErrores = erroresCultos[`fila_${index}`] || {};
                   return (
-                    <tr key={`${item.codigo || 'culto'}-${index}`}>
+                    <tr key={item.ui_id}>
                       <td>
                         <input
                           className={`form-control form-control-sm ${filaErrores.codigo ? 'is-invalid' : ''}`}
@@ -217,7 +217,7 @@ export default function AdministradorPage() {
                 {metricas.map((item, index) => {
                   const filaErrores = erroresMetricas[`fila_${index}`] || {};
                   return (
-                    <tr key={`${item.clave || 'metrica'}-${index}`}>
+                    <tr key={item.ui_id}>
                       <td>
                         <input
                           className={`form-control form-control-sm ${filaErrores.clave ? 'is-invalid' : ''}`}
@@ -335,7 +335,7 @@ export default function AdministradorPage() {
                 {procedencias.map((item, index) => {
                   const filaErrores = erroresProcedencias[`fila_${index}`] || {};
                   return (
-                    <tr key={`${item.nombre || 'procedencia'}-${index}`}>
+                    <tr key={item.ui_id}>
                       <td>
                         <input
                           className={`form-control form-control-sm ${filaErrores.nombre ? 'is-invalid' : ''}`}

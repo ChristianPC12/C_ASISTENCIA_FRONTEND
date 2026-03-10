@@ -3,9 +3,9 @@ import setupApi from '../api/setupApi';
 import cultoApi from '../api/cultoApi';
 import { useAuth } from './useAuth';
 import { obtenerMetricasActivas } from '../utils/metricasConfig';
+import { EVENT_SETUP_REQUIRED } from '../config/events';
 
 const SetupContext = createContext(null);
-const EVENT_SETUP_REQUIRED = 'setup:required';
 
 function getOrganizacionId(usuario, tenant) {
   const tenantId = Number(tenant?.organizacion_id);
@@ -243,5 +243,3 @@ export function useSetupStatus() {
   }
   return contexto;
 }
-
-export { EVENT_SETUP_REQUIRED };
