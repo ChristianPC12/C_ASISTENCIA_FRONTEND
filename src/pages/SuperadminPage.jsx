@@ -76,15 +76,6 @@ export default function SuperadminPage() {
 
   return (
     <div className="container-fluid py-4">
-      <div className="mb-4">
-        <div>
-          <h2 className="mb-1">Superadministracion Nacional</h2>
-          <p className="text-muted mb-0">
-            Alta de instancias y admins temporales para iglesias y grupos.
-          </p>
-        </div>
-      </div>
-
       {!estaEditando && (
         <>
           {!adminTemporalVisible && (
