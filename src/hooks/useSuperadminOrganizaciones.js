@@ -55,9 +55,9 @@ const PAGINACION_INICIAL = {
 };
 
 export const CAMPOS_IA_OPCIONES = [
-  { valor: 'AN', etiqueta: 'Asociacion Norte' },
-  { valor: 'ACS', etiqueta: 'Asociacion Central Sur' },
-  { valor: 'MC', etiqueta: 'Mision Caribe' }
+  { valor: 'AN', etiqueta: 'Asociación Norte' },
+  { valor: 'ACS', etiqueta: 'Asociación Central Sur' },
+  { valor: 'MC', etiqueta: 'Misión Caribe' }
 ];
 
 export const TIPO_ORGANIZACION_OPCIONES = [
@@ -184,17 +184,17 @@ function validarFormulario(formulario) {
   }
 
   if (!formulario.tipo_organizacion) {
-    errores.tipo_organizacion = 'Seleccione el tipo de organizacion.';
+    errores.tipo_organizacion = 'Seleccione el tipo de organización.';
   }
 
   const nombre = (formulario.nombre_organizacion || '').trim();
   if (!esNombreValidoSinNumeros(nombre, NOMBRE_ORGANIZACION_MIN, NOMBRE_ORGANIZACION_MAX)) {
-    errores.nombre_organizacion = 'El nombre debe tener 5-30 caracteres validos y no puede incluir numeros.';
+    errores.nombre_organizacion = 'El nombre debe tener 5-30 caracteres válidos y no puede incluir números.';
   }
 
   const correo = (formulario.correo_contacto || '').trim();
   if (correo && !esCorreoValidoEstricto(correo)) {
-    errores.correo_contacto = 'El correo debe ser valido y no superar 30 caracteres.';
+    errores.correo_contacto = 'El correo debe ser válido y no superar 30 caracteres.';
   }
 
   return {
@@ -207,17 +207,17 @@ function validarFormularioEdicion(formulario) {
   const errores = {};
 
   if (!formulario.tipo_organizacion) {
-    errores.tipo_organizacion = 'Seleccione el tipo de organizacion.';
+    errores.tipo_organizacion = 'Seleccione el tipo de organización.';
   }
 
   const nombre = (formulario.nombre_organizacion || '').trim();
   if (!esNombreValidoSinNumeros(nombre, NOMBRE_ORGANIZACION_MIN, NOMBRE_ORGANIZACION_MAX)) {
-    errores.nombre_organizacion = 'El nombre debe tener 5-30 caracteres validos y no puede incluir numeros.';
+    errores.nombre_organizacion = 'El nombre debe tener 5-30 caracteres válidos y no puede incluir números.';
   }
 
   const correo = (formulario.correo_contacto || '').trim();
   if (correo && !esCorreoValidoEstricto(correo)) {
-    errores.correo_contacto = 'El correo debe ser valido y no superar 30 caracteres.';
+    errores.correo_contacto = 'El correo debe ser válido y no superar 30 caracteres.';
   }
 
   return {
@@ -231,26 +231,26 @@ function validarFormularioAdminTemporal(formulario) {
 
   const organizacionId = Number(formulario.organizacion_id);
   if (!Number.isInteger(organizacionId) || organizacionId <= 0) {
-    errores.organizacion_id = 'Seleccione la organizacion.';
+    errores.organizacion_id = 'Seleccione la organización.';
   }
 
   const nombreCompleto = (formulario.nombre_completo || '').trim();
   if (!esNombreValidoSinNumeros(nombreCompleto, NOMBRE_ADMIN_MIN, NOMBRE_ADMIN_MAX)) {
-    errores.nombre_completo = 'El nombre debe tener 5-30 caracteres validos y no puede incluir numeros.';
+    errores.nombre_completo = 'El nombre debe tener 5-30 caracteres válidos y no puede incluir números.';
   }
 
   const usuario = (formulario.usuario || '').trim().toLowerCase();
   if (usuario.length < 3 || usuario.length > USUARIO_MAX || !USUARIO_REGEX.test(usuario)) {
-    errores.usuario = 'El usuario debe tener 3-50 caracteres validos (a-z, 0-9, . _ -).';
+    errores.usuario = 'El usuario debe tener 3-50 caracteres válidos (a-z, 0-9, . _ -).';
   }
 
   const correoDestino = (formulario.correo_destino || '').trim();
   if (correoDestino && !esCorreoValidoEstricto(correoDestino)) {
-    errores.correo_destino = 'El correo destino debe ser valido y no superar 30 caracteres.';
+    errores.correo_destino = 'El correo destino debe ser válido y no superar 30 caracteres.';
   }
 
   if (formulario.enviar_correo && !correoDestino) {
-    errores.correo_destino = 'La organizacion seleccionada no tiene correo valido para envio.';
+    errores.correo_destino = 'La organización seleccionada no tiene correo válido para envío.';
   }
 
   return {
@@ -604,7 +604,7 @@ export function useSuperadminOrganizaciones() {
       tipo: formulario.tipo_organizacion,
       nombre: formulario.nombre_organizacion
     })) {
-      const mensaje = 'Ya existe una organizacion con ese nombre para el campo y tipo seleccionados.';
+      const mensaje = 'Ya existe una organización con ese nombre para el campo y tipo seleccionados.';
       setErrores((prev) => ({ ...prev, nombre_organizacion: mensaje }));
       notificarError(mensaje);
       return false;
@@ -627,16 +627,16 @@ export function useSuperadminOrganizaciones() {
       if (res?.exito) {
         const organizacionCreada = res?.datos?.organizacion || null;
         setUltimaCreada(organizacionCreada);
-        notificarExito(res.mensaje || 'Organizacion creada correctamente.');
+        notificarExito(res.mensaje || 'Organización creada correctamente.');
         limpiarFormulario();
         await cargarOrganizaciones();
         return true;
       }
 
-      notificarError(res?.mensaje || 'No se pudo crear la organizacion.');
+      notificarError(res?.mensaje || 'No se pudo crear la organización.');
       return false;
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo crear la organizacion.');
+      notificarError(error?.mensaje || 'No se pudo crear la organización.');
       return false;
     } finally {
       setGuardando(false);
@@ -686,7 +686,7 @@ export function useSuperadminOrganizaciones() {
   const actualizarOrganizacion = useCallback(async () => {
     const organizacionId = Number(formularioEdicion.id);
     if (!Number.isInteger(organizacionId) || organizacionId <= 0) {
-      notificarError('No hay una organizacion seleccionada para editar.');
+      notificarError('No hay una organización seleccionada para editar.');
       return false;
     }
 
@@ -703,7 +703,7 @@ export function useSuperadminOrganizaciones() {
       nombre: formularioEdicion.nombre_organizacion,
       excludeId: organizacionId
     })) {
-      const mensaje = 'Ya existe una organizacion con ese nombre para el campo y tipo seleccionados.';
+      const mensaje = 'Ya existe una organización con ese nombre para el campo y tipo seleccionados.';
       setErroresEdicion((prev) => ({ ...prev, nombre_organizacion: mensaje }));
       notificarError(mensaje);
       return false;
@@ -725,16 +725,16 @@ export function useSuperadminOrganizaciones() {
       if (res?.exito) {
         const organizacionActualizada = res?.datos?.organizacion || null;
         setUltimaEditada(organizacionActualizada);
-        notificarExito(res.mensaje || 'Organizacion actualizada correctamente.');
+        notificarExito(res.mensaje || 'Organización actualizada correctamente.');
         cancelarEdicion();
         await cargarOrganizaciones();
         return true;
       }
 
-      notificarError(res?.mensaje || 'No se pudo actualizar la organizacion.');
+      notificarError(res?.mensaje || 'No se pudo actualizar la organización.');
       return false;
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo actualizar la organizacion.');
+      notificarError(error?.mensaje || 'No se pudo actualizar la organización.');
       return false;
     } finally {
       setGuardandoEdicion(false);

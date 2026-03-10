@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import {
   useSuperadminOrganizaciones,
   CAMPOS_IA_OPCIONES,
@@ -19,12 +20,10 @@ export default function SuperadminPage() {
     formularioAdminTemporal,
     erroresAdminTemporal,
     adminTemporalVisible,
-    filtrosAdminTemporal,
     formularioEdicion,
     erroresEdicion,
     organizaciones,
     organizacionesFiltradas,
-    organizacionesAdminFiltradas,
     organizacionesTablaOpciones,
     organizacionSeleccionadaAdmin,
     paginacion,
@@ -41,7 +40,6 @@ export default function SuperadminPage() {
     cambiarCampoAdminTemporal,
     abrirFormularioAdminTemporal,
     cerrarFormularioAdminTemporal,
-    cambiarFiltroAdminTemporal,
     iniciarEdicion,
     cambiarCampoEdicion,
     cambiarFiltroTabla,
@@ -73,6 +71,39 @@ export default function SuperadminPage() {
   const estaEditando = !!formularioEdicion.id;
   const totalRegistros = paginacion.total || organizaciones.length;
   const totalFiltrados = organizacionesFiltradas.length;
+  const adminTemporalTituloRef = useRef(null);
+  const edicionTituloRef = useRef(null);
+  const campoOrganizacionAdmin = organizacionSeleccionadaAdmin?.campo_nombre
+    || organizacionSeleccionadaAdmin?.campo
+    || '-';
+  const tipoOrganizacionAdmin = organizacionSeleccionadaAdmin?.tipo_organizacion || '-';
+  const nombreOrganizacionAdmin = organizacionSeleccionadaAdmin?.nombre_organizacion || '-';
+
+  useEffect(() => {
+    if (!adminTemporalVisible || estaEditando) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      adminTemporalTituloRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      adminTemporalTituloRef.current?.focus({ preventScroll: true });
+    }, 60);
+
+    return () => clearTimeout(timer);
+  }, [adminTemporalVisible, estaEditando, formularioAdminTemporal.organizacion_id]);
+
+  useEffect(() => {
+    if (!formularioEdicion.id) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      edicionTituloRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      edicionTituloRef.current?.focus({ preventScroll: true });
+    }, 60);
+
+    return () => clearTimeout(timer);
+  }, [formularioEdicion.id]);
 
   return (
     <div className="container-fluid py-4">
@@ -105,7 +136,7 @@ export default function SuperadminPage() {
                   </div>
 
                   <div className="col-12 col-md-6">
-                    <label htmlFor="tipo" className="form-label">Tipo de organizacion</label>
+                    <label htmlFor="tipo" className="form-label">Tipo de organización</label>
                     <select
                       id="tipo"
                       className={`form-select ${errores.tipo_organizacion ? 'is-invalid' : ''}`}
@@ -125,7 +156,7 @@ export default function SuperadminPage() {
                   </div>
 
                   <div className="col-12 col-md-8">
-                    <label htmlFor="nombre_organizacion" className="form-label">Nombre de organizacion</label>
+                    <label htmlFor="nombre_organizacion" className="form-label">Nombre de organización</label>
                     <input
                       id="nombre_organizacion"
                       type="text"
@@ -187,7 +218,14 @@ export default function SuperadminPage() {
             <div id="admin-temporal-form" className="card border-0 shadow-sm mb-4">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
-                  <h3 className="h5 mb-0">Crear ADMIN temporal</h3>
+                  <h3
+                    ref={adminTemporalTituloRef}
+                    tabIndex={-1}
+                    className="h5 mb-0"
+                    style={{ scrollMarginTop: '5.5rem' }}
+                  >
+                    Crear ADMIN temporal
+                  </h3>
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm"
@@ -199,63 +237,45 @@ export default function SuperadminPage() {
                 </div>
 
                 <div className="alert alert-warning py-2">
-                  El ADMIN temporal se crea con vigencia maxima de <strong>5 dias</strong>.
+                  El ADMIN temporal se crea con vigencia máxima de <strong>5 días</strong>.
                 </div>
 
                 <form onSubmit={manejarSubmitAdminTemporal} noValidate>
                   <div className="row g-3">
                     <div className="col-12 col-md-4">
-                      <label htmlFor="admin_filtro_campo" className="form-label">Campo</label>
-                      <select
-                        id="admin_filtro_campo"
-                        className="form-select"
-                        value={filtrosAdminTemporal.campo}
-                        onChange={(event) => cambiarFiltroAdminTemporal('campo', event.target.value)}
-                        disabled={guardandoAdminTemporal}
-                      >
-                        <option value="TODOS">Todos</option>
-                        {CAMPOS_IA_OPCIONES.map((campo) => (
-                          <option key={campo.valor} value={campo.valor}>
-                            {campo.etiqueta}
-                          </option>
-                        ))}
-                      </select>
+                      <label htmlFor="admin_campo" className="form-label">Campo</label>
+                      <input
+                        id="admin_campo"
+                        type="text"
+                        className="form-control bg-light"
+                        value={campoOrganizacionAdmin}
+                        readOnly
+                        disabled
+                      />
                     </div>
 
                     <div className="col-12 col-md-4">
-                      <label htmlFor="admin_filtro_tipo" className="form-label">Tipo</label>
-                      <select
-                        id="admin_filtro_tipo"
-                        className="form-select"
-                        value={filtrosAdminTemporal.tipo_organizacion}
-                        onChange={(event) => cambiarFiltroAdminTemporal('tipo_organizacion', event.target.value)}
-                        disabled={guardandoAdminTemporal}
-                      >
-                        <option value="TODOS">Todos</option>
-                        {TIPO_ORGANIZACION_OPCIONES.map((tipo) => (
-                          <option key={tipo.valor} value={tipo.valor}>
-                            {tipo.etiqueta}
-                          </option>
-                        ))}
-                      </select>
+                      <label htmlFor="admin_tipo" className="form-label">Tipo</label>
+                      <input
+                        id="admin_tipo"
+                        type="text"
+                        className="form-control bg-light"
+                        value={tipoOrganizacionAdmin}
+                        readOnly
+                        disabled
+                      />
                     </div>
 
                     <div className="col-12 col-md-4">
-                      <label htmlFor="organizacion_id" className="form-label">Organizacion</label>
-                      <select
+                      <label htmlFor="organizacion_id" className="form-label">Organización</label>
+                      <input
                         id="organizacion_id"
-                        className={`form-select ${erroresAdminTemporal.organizacion_id ? 'is-invalid' : ''}`}
-                        value={formularioAdminTemporal.organizacion_id}
-                        onChange={(event) => cambiarCampoAdminTemporal('organizacion_id', event.target.value)}
-                        disabled={guardandoAdminTemporal}
-                      >
-                        <option value="">Seleccione una organizacion</option>
-                        {organizacionesAdminFiltradas.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.nombre_organizacion}
-                          </option>
-                        ))}
-                      </select>
+                        type="text"
+                        className={`form-control bg-light ${erroresAdminTemporal.organizacion_id ? 'is-invalid' : ''}`}
+                        value={nombreOrganizacionAdmin}
+                        readOnly
+                        disabled
+                      />
                       {erroresAdminTemporal.organizacion_id && (
                         <div className="invalid-feedback">{erroresAdminTemporal.organizacion_id}</div>
                       )}
@@ -296,7 +316,7 @@ export default function SuperadminPage() {
                     </div>
 
                     <div className="col-12 col-md-6">
-                      <label htmlFor="correo_destino" className="form-label">Correo destino (automatico)</label>
+                      <label htmlFor="correo_destino" className="form-label">Correo destino (automático)</label>
                       <input
                         id="correo_destino"
                         type="email"
@@ -312,7 +332,7 @@ export default function SuperadminPage() {
                       )}
                       {!erroresAdminTemporal.correo_destino && organizacionSeleccionadaAdmin && !formularioAdminTemporal.correo_destino && (
                         <div className="form-text text-warning">
-                          La organizacion seleccionada no tiene correo de contacto registrado.
+                          La organización seleccionada no tiene correo de contacto registrado.
                         </div>
                       )}
                     </div>
@@ -333,7 +353,11 @@ export default function SuperadminPage() {
                   </div>
 
                   <div className="d-flex flex-wrap gap-2 mt-4">
-                    <button type="submit" className="btn btn-primary" disabled={guardandoAdminTemporal}>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={guardandoAdminTemporal || !formularioAdminTemporal.organizacion_id}
+                    >
                       {guardandoAdminTemporal ? 'Creando...' : 'Crear ADMIN temporal'}
                     </button>
                     <button
@@ -374,19 +398,26 @@ export default function SuperadminPage() {
 
       {ultimaEditada && (
         <div className="alert alert-success border-0 shadow-sm" role="alert">
-          Organizacion actualizada: <strong>{ultimaEditada.nombre_organizacion}</strong>
+          Organización actualizada: <strong>{ultimaEditada.nombre_organizacion}</strong>
         </div>
       )}
 
       {formularioEdicion.id && (
         <div className="card border-0 shadow-sm mb-4">
           <div className="card-body">
-            <h3 className="h5 mb-3">Editar organizacion</h3>
+            <h3
+              ref={edicionTituloRef}
+              tabIndex={-1}
+              className="h5 mb-3"
+              style={{ scrollMarginTop: '5.5rem' }}
+            >
+              Editar organización
+            </h3>
 
             <form onSubmit={manejarSubmitEdicion} noValidate>
               <div className="row g-3">
                 <div className="col-12 col-md-3">
-                  <label htmlFor="edicion_tipo" className="form-label">Tipo de organizacion</label>
+                  <label htmlFor="edicion_tipo" className="form-label">Tipo de organización</label>
                   <select
                     id="edicion_tipo"
                     className={`form-select ${erroresEdicion.tipo_organizacion ? 'is-invalid' : ''}`}
@@ -406,7 +437,7 @@ export default function SuperadminPage() {
                 </div>
 
                 <div className="col-12 col-md-4">
-                  <label htmlFor="edicion_nombre" className="form-label">Nombre de organizacion</label>
+                  <label htmlFor="edicion_nombre" className="form-label">Nombre de organización</label>
                   <input
                     id="edicion_nombre"
                     type="text"
@@ -525,7 +556,7 @@ export default function SuperadminPage() {
             </div>
 
             <div className="col-12 col-md-2">
-              <label htmlFor="filtro_anio_tabla" className="form-label mb-1">Anio</label>
+              <label htmlFor="filtro_anio_tabla" className="form-label mb-1">Año</label>
               <select
                 id="filtro_anio_tabla"
                 className="form-select form-select-sm"
@@ -542,7 +573,7 @@ export default function SuperadminPage() {
             </div>
 
             <div className="col-12 col-md-4">
-              <label htmlFor="filtro_organizacion_tabla" className="form-label mb-1">Organizacion</label>
+              <label htmlFor="filtro_organizacion_tabla" className="form-label mb-1">Organización</label>
               <select
                 id="filtro_organizacion_tabla"
                 className="form-select form-select-sm"
@@ -572,7 +603,7 @@ export default function SuperadminPage() {
           {cargandoLista ? (
             <div className="text-muted">Cargando organizaciones...</div>
           ) : organizacionesFiltradas.length === 0 ? (
-            <div className="text-muted">Aun no hay organizaciones registradas.</div>
+            <div className="text-muted">Aún no hay organizaciones registradas.</div>
           ) : (
             <div className="superadmin-tabla-scroll">
               <div className="table-responsive">
@@ -582,7 +613,7 @@ export default function SuperadminPage() {
                       <th>Campo</th>
                       <th>Tipo</th>
                       <th>Nombre</th>
-                      <th>Anio alta</th>
+                      <th>Año de alta</th>
                       <th>Correo</th>
                       <th>Estado</th>
                       <th>Acciones</th>
@@ -602,7 +633,7 @@ export default function SuperadminPage() {
                           </span>
                         </td>
                         <td>
-                          <div className="btn-group btn-group-sm" role="group" aria-label="Acciones organizacion">
+                          <div className="btn-group btn-group-sm" role="group" aria-label="Acciones organización">
                             <button
                               type="button"
                               className="btn btn-outline-success"
@@ -616,8 +647,8 @@ export default function SuperadminPage() {
                             <button
                               type="button"
                               className="btn btn-outline-primary"
-                              title="Editar organizacion"
-                              aria-label="Editar organizacion"
+                              title="Editar organización"
+                              aria-label="Editar organización"
                               onClick={() => iniciarEdicion(item)}
                               disabled={guardandoEdicion}
                             >
