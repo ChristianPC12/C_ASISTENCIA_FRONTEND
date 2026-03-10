@@ -20,6 +20,19 @@ Rutas activas:
 - `/presentaciones` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
 - `/usuarios` (solo `ADMIN`, bloqueada si setup pendiente)
 
+Ajustes de pulido superadmin (post F7, 2026-03-10):
+
+- nombre de organizacion y nombre de ADMIN temporal restringidos sin numeros.
+- nombre de organizacion y nombre de ADMIN temporal con rango valido de 5-30 caracteres.
+- correo de contacto y correo destino con validacion de formato mas estricta + maximo 30 caracteres.
+- en `Crear ADMIN temporal`, el correo destino se autocompleta desde la organizacion y queda bloqueado en UI.
+- `Crear ADMIN temporal` se activa desde acciones de la tabla (no visible por defecto).
+- al abrir `Crear ADMIN temporal` se oculta `Crear nueva instancia`; al cerrar vuelve a mostrarse.
+- boton `Actualizar lista` movido a la seccion `Organizaciones registradas`.
+- tabla de organizaciones con scroll vertical y filtros por campo/tipo/anio/organizacion (opcion `Todos`).
+- al editar organizacion se ocultan formularios de creacion; al cancelar/guardar se restauran.
+- edicion de organizacion ahora permite cambiar estado `Activa/Inactiva`.
+
 ## Cierre por fases
 
 - F0: decisiones base de identidad/login/contrato v2 cerradas.
@@ -42,7 +55,7 @@ Rutas activas:
 ## Validaciones tecnicas vigentes
 
 - `npm run build` -> OK.
-- `react-doctor` (`--diff`, 6 archivos cambiados) -> 99/100 (2 warnings: `ConfirmModal` y tamano de `AdministradorPage`).
+- `react-doctor` (`--diff`, cambios actuales) -> 99/100 (1 warning: tamano de `SuperadminPage`).
 - Flujo runtime API comprobado:
   - `401` auth sin token.
   - `429` rate limit de login.

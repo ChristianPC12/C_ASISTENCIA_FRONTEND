@@ -285,6 +285,21 @@ a:hover {
   white-space: nowrap;
 }
 
+.superadmin-tabla-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.5rem;
+  overscroll-behavior-y: contain;
+}
+
+.superadmin-tabla-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 /* Fila clickeable */
 .fila-registro {
   transition: background-color 0.15s;
@@ -342,6 +357,10 @@ a:hover {
 @media (max-width: 768px) {
   .tabla-registros-scroll {
     max-height: 55vh;
+  }
+
+  .superadmin-tabla-scroll {
+    max-height: 52vh;
   }
 }
 

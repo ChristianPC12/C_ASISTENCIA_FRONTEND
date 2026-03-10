@@ -94,8 +94,18 @@ Superadmin:
 
 - `GET /v2/superadmin/organizaciones`
 - `POST /v2/superadmin/organizaciones`
-- `PUT /v2/superadmin/organizaciones/{organizacion_id}`
+- `PUT /v2/superadmin/organizaciones/{organizacion_id}` (incluye `activa` en edicion)
 - `POST /v2/superadmin/organizaciones/{organizacion_id}/admin-temporal`
+
+UX actual superadmin:
+
+- nombre de organizacion/ADMIN temporal sin numeros y con rango de 5-30 caracteres.
+- correo con validacion estricta en create/edit y maximo de 30 caracteres.
+- `correo_destino` de admin temporal se autocompleta desde la organizacion seleccionada y queda bloqueado en UI.
+- formulario de admin temporal se abre desde acciones en la tabla de organizaciones.
+- al abrir formulario de admin temporal se oculta el formulario de nueva instancia.
+- boton `Actualizar lista` ubicado en la tarjeta `Organizaciones registradas`.
+- tabla de organizaciones con filtros por campo/tipo/anio/organizacion y scroll vertical.
 
 Cupos por rol:
 
@@ -120,7 +130,7 @@ Comportamiento:
 
 - banner UX para ADMIN temporal (5 dias),
 - build validado,
-- `react-doctor` en 100/100,
+- `react-doctor` en 99/100,
 - checklist de salida frontend:
   - `.agents/react-doctor/CHECKLIST_SALIDA_PRODUCCION_F7_T03.md`
 
@@ -147,4 +157,3 @@ Actualizar este archivo cuando cambie:
 - rutas protegidas o roles,
 - endpoints consumidos por frontend,
 - setup/cupos/dinamismo tenant-aware.
-
