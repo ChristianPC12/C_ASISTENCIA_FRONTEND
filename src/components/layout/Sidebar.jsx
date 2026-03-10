@@ -46,7 +46,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
         : []),
       { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
       { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
-      { ruta: '/estadisticas', etiqueta: 'Estadisticas', icono: 'bi-bar-chart-line' },
+      { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
       { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
       { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' }
     ];
@@ -69,7 +69,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           }}
           role="button"
           tabIndex={0}
-          aria-label="Cerrar menu lateral"
+          aria-label="Cerrar menú lateral"
         ></div>
       )}
 
@@ -84,10 +84,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           />
           <div className="sidebar-marca">
             <span className="sidebar-marca-titulo">Iglesia Adventista</span>
-            <span className="sidebar-marca-subtitulo">del Septimo Dia</span>
+            <span className="sidebar-marca-subtitulo">del Séptimo Día</span>
           </div>
           {/* Boton cerrar en mobile */}
-          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menu">
+          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menú">
             &times;
           </button>
         </div>
@@ -125,7 +125,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn"
             onClick={onCerrarSesion}
           >
-            Cerrar sesion
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -134,19 +134,31 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
         <header className="sidebar-topbar">
-          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menu">
+          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
             <span></span>
             <span></span>
             <span></span>
           </button>
           <span className="sidebar-topbar-titulo">
             {enlaces.find((e) => esRutaActiva(e.ruta))?.etiqueta || (
-              esSuperadmin ? 'Superadministracion' : 'Iglesia Adventista'
+              esSuperadmin ? 'Superadministración' : 'Iglesia Adventista'
             )}
           </span>
-          <div className="sidebar-topbar-usuario d-none d-md-flex">
-            <span>{usuario?.nombre_completo}</span>
-            <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
+          <div className="sidebar-topbar-acciones">
+            <div className="sidebar-topbar-usuario d-none d-md-flex">
+              <span>{usuario?.nombre_completo}</span>
+              <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
+            </div>
+            <button
+              type="button"
+              className="sidebar-topbar-logout"
+              onClick={onCerrarSesion}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <i className="bi bi-box-arrow-right" aria-hidden="true"></i>
+              <span className="visually-hidden">Cerrar sesión</span>
+            </button>
           </div>
         </header>
 
@@ -156,7 +168,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <div className="container-fluid pt-3">
               <div className="alert alert-warning mb-0">
                 <strong>Cuenta temporal:</strong> este acceso ADMIN vence en{' '}
-                <strong>{diasRestantesPassword ?? 0}</strong> dia(s). Coordine con superadministracion para actualizar credenciales antes del vencimiento.
+                <strong>{diasRestantesPassword ?? 0}</strong> día(s). Coordine con superadministración para actualizar credenciales antes del vencimiento.
               </div>
             </div>
           )}
