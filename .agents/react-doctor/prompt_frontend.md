@@ -105,6 +105,7 @@ UX actual superadmin:
 - formulario de admin temporal se abre desde acciones en la tabla de organizaciones.
 - al abrir formulario de admin temporal se oculta el formulario de nueva instancia.
 - boton `Actualizar lista` ubicado en la tarjeta `Organizaciones registradas`.
+- encabezado superior de superadmin removido para maximizar espacio de trabajo.
 - tabla de organizaciones con filtros por campo/tipo/anio/organizacion y scroll vertical.
 
 Cupos por rol:

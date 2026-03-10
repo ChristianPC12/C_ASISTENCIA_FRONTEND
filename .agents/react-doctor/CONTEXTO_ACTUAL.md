@@ -29,6 +29,7 @@ Ajustes de pulido superadmin (post F7, 2026-03-10):
 - `Crear ADMIN temporal` se activa desde acciones de la tabla (no visible por defecto).
 - al abrir `Crear ADMIN temporal` se oculta `Crear nueva instancia`; al cerrar vuelve a mostrarse.
 - boton `Actualizar lista` movido a la seccion `Organizaciones registradas`.
+- encabezado superior de superadmin removido para liberar espacio util del modulo.
 - tabla de organizaciones con scroll vertical y filtros por campo/tipo/anio/organizacion (opcion `Todos`).
 - al editar organizacion se ocultan formularios de creacion; al cancelar/guardar se restauran.
 - edicion de organizacion ahora permite cambiar estado `Activa/Inactiva`.
