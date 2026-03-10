@@ -389,6 +389,11 @@ export function useSuperadminOrganizaciones() {
   }, []);
 
   const abrirFormularioAdminTemporal = useCallback((organizacion = null) => {
+    // Si venimos desde "Editar organizacion", forzar salida de ese modo
+    // para mostrar el formulario de ADMIN temporal y permitir su foco.
+    setFormularioEdicion(FORMULARIO_EDICION_INICIAL);
+    setErroresEdicion({});
+
     if (organizacion && organizacion.id) {
       const correoDestino = normalizarCorreo(organizacion.correo_contacto || '');
       const campo = String(organizacion.campo || 'TODOS');
