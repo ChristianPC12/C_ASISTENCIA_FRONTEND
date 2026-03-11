@@ -1,8 +1,14 @@
-# Prompt Operativo Frontend + Contrato Backend (Mar 2026)
+# Prompt Operativo Frontend + Contrato Backend (Actualizado 2026-03-11)
 
 ## 1) Objetivo
 
 Fuente de verdad tecnica del estado real frontend para etapa nacional multi-tenant.
+
+## 1.1) Modo de trabajo obligatorio para nuevas solicitudes
+
+- Fase 1 (discovery): leer agentes y devolver brief corto de alcance/riesgos/dependencias.
+- Fase 2 (implementacion): solo iniciar cuando el owner lo indique explicitamente.
+- Si no hay autorizacion explicita, no tocar codigo.
 
 ## 2) Mapa rapido
 
@@ -88,7 +94,7 @@ Endpoints consumidos:
 - `PUT /v2/setup/procedencias`
 - `POST /v2/setup/finalizar`
 
-## 7) Superadmin (F2) y cupos (F6)
+## 7) Superadmin consolidado y cupos (F6)
 
 Superadmin:
 
@@ -96,6 +102,14 @@ Superadmin:
 - `POST /v2/superadmin/organizaciones`
 - `PUT /v2/superadmin/organizaciones/{organizacion_id}` (incluye `activa` en edicion)
 - `POST /v2/superadmin/organizaciones/{organizacion_id}/admin-temporal`
+- `GET /v2/superadmin/campos`
+- `POST /v2/superadmin/campos`
+- `PUT /v2/superadmin/campos/{codigo}`
+- `DELETE /v2/superadmin/campos/{codigo}`
+- `GET /v2/superadmin/distritos`
+- `POST /v2/superadmin/distritos`
+- `PUT /v2/superadmin/distritos/{codigo}`
+- `DELETE /v2/superadmin/distritos/{codigo}`
 
 UX actual superadmin:
 
@@ -103,10 +117,13 @@ UX actual superadmin:
 - correo con validacion estricta en create/edit y maximo de 30 caracteres.
 - `correo_destino` de admin temporal se autocompleta desde la organizacion seleccionada y queda bloqueado en UI.
 - formulario de admin temporal se abre desde acciones en la tabla de organizaciones.
-- al abrir formulario de admin temporal se oculta el formulario de nueva instancia.
+- solo una accion visible por vez (crear instancia, admin temporal, editar, gestionar campos, gestionar distritos).
 - boton `Actualizar lista` ubicado en la tarjeta `Organizaciones registradas`.
 - encabezado superior de superadmin removido para maximizar espacio de trabajo.
-- tabla de organizaciones con filtros por campo/tipo/anio/organizacion y scroll vertical.
+- tabla de organizaciones con filtros por campo/distrito/tipo/anio/estado y scroll vertical con encabezado fijo.
+- exportacion de tabla a Excel (`.xlsx`) segun filtros aplicados.
+- estados visuales de admin: activo (turquesa), expirado (amarillo), sin admin (rojo).
+- detalle de admin/correo en acordeon por fila.
 
 Cupos por rol:
 
@@ -131,7 +148,7 @@ Comportamiento:
 
 - banner UX para ADMIN temporal (5 dias),
 - build validado,
-- `react-doctor` en 99/100,
+- `react-doctor` en 98/100 (sin bloqueos),
 - checklist de salida frontend:
   - `.agents/react-doctor/CHECKLIST_SALIDA_PRODUCCION_F7_T03.md`
 

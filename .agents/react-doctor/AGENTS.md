@@ -17,6 +17,16 @@ sin perder trazabilidad entre frontend y backend.
 4. `prompt_frontend.md`
 5. `SKILL.md`
 
+## Modo de arranque obligatorio (discovery-first)
+
+Antes de tocar codigo:
+
+1. leer los 5 documentos en orden,
+2. entregar un brief corto de alcance/riesgos/dependencias,
+3. esperar instruccion explicita del owner para implementar.
+
+Sin esa instruccion, el agente debe permanecer en modo analisis.
+
 ## Activacion obligatoria de este paquete
 
 Si la solicitud incluye uno o mas temas de esta lista:

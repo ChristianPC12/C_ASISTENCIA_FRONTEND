@@ -1,10 +1,11 @@
-# Contexto Actual Frontend (2026-03-10)
+# Contexto Actual Frontend (2026-03-11)
 
 ## Estado general vigente
 
 - Frontend: React 19 + Vite 7 + Bootstrap 5.
 - Backend: PHP 8 sin framework (`C_ASISTENCIA_BACKEND/C_ASISTENCIA_BAKCEND`).
 - Escalabilidad nacional frontend: fases F0..F7 cerradas.
+- Modulo de superadmin cerrado para esta etapa funcional.
 - Backlog futuro: F8 (discovery de modulos nacionales).
 
 ## Estado funcional real en codigo
@@ -20,19 +21,37 @@ Rutas activas:
 - `/presentaciones` (ADMIN/SECRETARIO, bloqueada si setup pendiente)
 - `/usuarios` (solo `ADMIN`, bloqueada si setup pendiente)
 
-Ajustes de pulido superadmin (post F7, 2026-03-10):
+## Superadmin consolidado (2026-03-11)
 
-- nombre de organizacion y nombre de ADMIN temporal restringidos sin numeros.
-- nombre de organizacion y nombre de ADMIN temporal con rango valido de 5-30 caracteres.
-- correo de contacto y correo destino con validacion de formato mas estricta + maximo 30 caracteres.
-- en `Crear ADMIN temporal`, el correo destino se autocompleta desde la organizacion y queda bloqueado en UI.
-- `Crear ADMIN temporal` se activa desde acciones de la tabla (no visible por defecto).
-- al abrir `Crear ADMIN temporal` se oculta `Crear nueva instancia`; al cerrar vuelve a mostrarse.
-- boton `Actualizar lista` movido a la seccion `Organizaciones registradas`.
-- encabezado superior de superadmin removido para liberar espacio util del modulo.
-- tabla de organizaciones con scroll vertical y filtros por campo/tipo/anio/organizacion (opcion `Todos`).
-- al editar organizacion se ocultan formularios de creacion; al cancelar/guardar se restauran.
-- edicion de organizacion ahora permite cambiar estado `Activa/Inactiva`.
+- Alta de organizacion exige `campo` y `distrito`.
+- Gestion de catalogos de `campos` y `distritos` desde UI (crear/editar/eliminar).
+- Filtros de tabla por campo, distrito, tipo, anio y estado de admin.
+- Tabla de organizaciones con encabezado fijo y scroll interno.
+- Exportacion de tabla a Excel (`.xlsx`) basada en el filtrado actual.
+- Estados de admin temporal visibles:
+  - `ADMIN activo` (turquesa),
+  - `ADMIN expirado` (amarillo),
+  - `Sin ADMIN` (rojo).
+- Detalle de admin/correo en acordeon dentro de la misma fila (toggle al reseleccionar).
+- Formularios de accion compactados:
+  - solo una accion visible a la vez (`Crear instancia`, `Crear ADMIN temporal`, `Editar organizacion`, `Gestionar campos`, `Gestionar distritos`).
+- `correo_destino` se autocompleta desde organizacion y se bloquea en UI.
+- Mensajeria de resultado via notificaciones flotantes (sin banners persistentes).
+
+## Contrato consumido en frontend (superadmin)
+
+- `GET /v2/superadmin/organizaciones`
+- `POST /v2/superadmin/organizaciones`
+- `PUT /v2/superadmin/organizaciones/{organizacion_id}`
+- `POST /v2/superadmin/organizaciones/{organizacion_id}/admin-temporal`
+- `GET /v2/superadmin/campos`
+- `POST /v2/superadmin/campos`
+- `PUT /v2/superadmin/campos/{codigo}`
+- `DELETE /v2/superadmin/campos/{codigo}`
+- `GET /v2/superadmin/distritos`
+- `POST /v2/superadmin/distritos`
+- `PUT /v2/superadmin/distritos/{codigo}`
+- `DELETE /v2/superadmin/distritos/{codigo}`
 
 ## Cierre por fases
 
@@ -45,18 +64,11 @@ Ajustes de pulido superadmin (post F7, 2026-03-10):
 - F6: UI de cupos por rol + UX de excedentes cerrada.
 - F7: hardening frontend (admin temporal, 401/403/429, checklist salida) cerrado.
 
-## Evidencias frontend recientes (2026-03-10)
-
-- F4: `.agents/react-doctor/EVIDENCIA_F4_T01_T02_T03_SETUP_INICIAL_2026-03-10.md`
-- F5: `.agents/react-doctor/EVIDENCIA_F5_T01_T02_T03_T04_DINAMICO_2026-03-10.md`
-- F6: `.agents/react-doctor/EVIDENCIA_F6_T01_T02_CUPOS_UI_2026-03-10.md`
-- F7: `.agents/react-doctor/EVIDENCIA_F7_T01_T02_T03_HARDENING_2026-03-10.md`
-- Checklist salida frontend: `.agents/react-doctor/CHECKLIST_SALIDA_PRODUCCION_F7_T03.md`
-
 ## Validaciones tecnicas vigentes
 
 - `npm run build` -> OK.
-- `react-doctor` (`--diff`, cambios actuales) -> 99/100 (1 warning: tamano de `SuperadminPage`).
+- `npx eslint src/pages/SuperadminPage.jsx` -> OK.
+- `react-doctor` (`--diff`, cambios actuales) -> 98/100 (warnings estructurales, sin bloqueos).
 - Flujo runtime API comprobado:
   - `401` auth sin token.
   - `429` rate limit de login.
@@ -66,23 +78,17 @@ Ajustes de pulido superadmin (post F7, 2026-03-10):
 
 - Chunk `LoginPage` mayor a 500 kB en build (warning Vite), sin fallo funcional.
 - Token continua en `localStorage` (riesgo XSS conocido; mitigacion futura recomendada).
-- Decision de salida productiva final depende del runbook operativo de backend/infra.
+- `SuperadminPage.jsx` sigue siendo un componente grande (deuda de modularizacion).
 
 ## Archivos clave de esta etapa
 
-- `src/App.jsx`
-- `src/hooks/useAuth.jsx`
-- `src/hooks/useSetupStatus.jsx`
-- `src/hooks/useSetupAdministrador.js`
-- `src/hooks/useAsistencia.js`
-- `src/hooks/useComparaciones.js`
-- `src/hooks/useUsuario.js`
-- `src/pages/AdministradorPage.jsx`
-- `src/pages/EstadisticasPage.jsx`
-- `src/pages/PresentacionesPage.jsx`
 - `src/pages/SuperadminPage.jsx`
+- `src/hooks/useSuperadminOrganizaciones.js`
+- `src/api/superadminApi.js`
+- `src/components/layout/Sidebar.jsx`
+- `src/config/events.js`
 - `src/config/api.js`
 
 ## Proximo foco
 
-- F8 discovery UX (Campanas, Pequenas Congregaciones, Estudios Biblicos).
+- F8 discovery UX (Campanas, Pequenas Congregaciones, Estudios Biblicos), definido por owner.

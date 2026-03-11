@@ -1,9 +1,18 @@
-# AGENTS - C_ASISTENCIA_FRONTEND
+# AGENTS - C_ASISTENCIA_FRONTEND (Actualizado 2026-03-11)
 
 ## Objetivo
 
-Guiar a futuros agentes para ejecutar la escalabilidad nacional por pasos pequenos,
-sin romper el sistema actual ni desalinear frontend y backend.
+Guiar a futuros agentes para mantener estable el modulo de superadmin ya cerrado,
+y avanzar los siguientes modulos con ejecucion controlada (discovery -> implementacion).
+
+## Estado base confirmado (2026-03-11)
+
+- Modulo superadmin funcionalmente cerrado para esta etapa.
+- Organizaciones con `campo` + `distrito` en alta, edicion, tabla y filtros.
+- Gestion de catalogos globales de campos y distritos (crear/editar/eliminar).
+- Estados de admin temporal visibles (`ADMIN activo`, `ADMIN expirado`, `Sin ADMIN`) y detalle en acordeon por fila.
+- Exportacion de tabla filtrada a Excel.
+- Envio opcional de credenciales por correo (Brevo) integrado por backend.
 
 ## Lectura obligatoria al iniciar
 
@@ -12,6 +21,20 @@ sin romper el sistema actual ni desalinear frontend y backend.
 3. `.agents/react-doctor/TICKETS_ESCALABILIDAD_NACIONAL.md`
 4. `.agents/react-doctor/prompt_frontend.md`
 5. `.agents/react-doctor/SKILL.md`
+
+## Modo de arranque obligatorio (sin programar)
+
+Antes de tocar codigo, el agente debe:
+
+1. Leer los documentos obligatorios.
+2. Entregar un brief corto con:
+   - que entendio,
+   - alcance propuesto,
+   - riesgos/dependencias,
+   - archivos potencialmente impactados.
+3. Esperar aprobacion explicita del owner para implementar.
+
+Si no hay instruccion explicita de implementacion, el agente permanece en modo analisis.
 
 ## Regla de uso por tipo de tarea
 
@@ -41,6 +64,6 @@ Si una tarea toca contrato, auth, roles o modelo de datos, reflejar el cambio ta
 - `C_ASISTENCIA_BAKCEND/.agents/escalabilidad/ROADMAP_BACKEND_MULTIIGLESIA.md`
 - `C_ASISTENCIA_BAKCEND/.agents/escalabilidad/TICKETS_BACKEND_MULTIIGLESIA.md`
 
-## Primer ticket recomendado para iniciar
+## Nota operativa
 
-- `F0-T01` en `.agents/react-doctor/TICKETS_ESCALABILIDAD_NACIONAL.md`
+El siguiente bloque de trabajo lo define el owner funcional segun prioridad de modulo.
