@@ -24,7 +24,8 @@ function construirEstadoCorreoDetalle(detalleAdmin, organizacion) {
   if (correo && typeof correo === 'object') {
     const enviado = !!correo.enviado;
     const destino = String(correo.destino || '').trim();
-    return `${enviado ? 'Enviado' : 'No enviado'}${destino ? ` (${destino})` : ''}`;
+    const detalle = String(correo.detalle || '').trim();
+    return `${enviado ? 'Enviado' : 'No enviado'}${destino ? ` (${destino})` : ''}${detalle ? ` - ${detalle}` : ''}`;
   }
 
   const correoContacto = String(organizacion?.correo_contacto || '').trim();
