@@ -6,6 +6,7 @@ import {
   ESTADO_ADMIN_OPCIONES
 } from '../hooks/useSuperadminOrganizaciones';
 import { EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA } from '../config/events';
+import { notificarError } from '../utils/notify';
 
 function obtenerAnioRegistro(organizacion) {
   const raw = String(organizacion?.creado_en || '');
@@ -36,9 +37,9 @@ function obtenerConfigEstadoAdmin(estadoAdmin) {
     case 'ADMIN_ACTIVO':
       return { etiqueta: 'ADMIN activo', clase: 'text-bg-info' };
     case 'ADMIN_EXPIRADO':
-      return { etiqueta: 'ADMIN expirado', clase: 'text-bg-danger' };
+      return { etiqueta: 'ADMIN expirado', clase: 'text-bg-warning text-dark' };
     default:
-      return { etiqueta: 'Sin ADMIN', clase: 'text-bg-warning text-dark' };
+      return { etiqueta: 'Sin ADMIN', clase: 'text-bg-danger' };
   }
 }
 
@@ -61,15 +62,10 @@ function formatearFechaDetalle(fecha) {
   });
 }
 
-function escaparValorCsv(valor) {
-  const texto = String(valor ?? '').replace(/"/g, '""');
-  return `"${texto}"`;
-}
-
 function generarNombreArchivoExportacion() {
   const ahora = new Date();
   const fecha = ahora.toISOString().slice(0, 10);
-  return `organizaciones_filtradas_${fecha}.csv`;
+  return `organizaciones_filtradas_${fecha}.xlsx`;
 }
 
 export default function SuperadminPage() {
@@ -116,6 +112,7 @@ export default function SuperadminPage() {
   } = useSuperadminOrganizaciones();
 
   const [crearInstanciaVisible, setCrearInstanciaVisible] = useState(false);
+  const [exportandoExcel, setExportandoExcel] = useState(false);
 
   const manejarSubmitOrganizacion = async (event) => {
     event.preventDefault();
@@ -173,47 +170,113 @@ export default function SuperadminPage() {
     || '-';
   const tipoOrganizacionAdmin = organizacionSeleccionadaAdmin?.tipo_organizacion || '-';
   const nombreOrganizacionAdmin = organizacionSeleccionadaAdmin?.nombre_organizacion || '-';
-  const manejarExportarExcel = () => {
+  const manejarExportarExcel = async () => {
     if (organizacionesFiltradas.length === 0) {
       return;
     }
 
-    const encabezados = [
-      'Campo',
-      'Tipo',
-      'Nombre',
-      'Año de alta',
-      'Correo',
-      'Estado organización',
-      'Estado ADMIN'
-    ];
+    try {
+      setExportandoExcel(true);
 
-    const filas = organizacionesFiltradas.map((item) => {
-      const estadoAdmin = obtenerConfigEstadoAdmin(obtenerEstadoAdminOrganizacion(item)).etiqueta;
-      return [
-        item.campo_nombre || item.campo || '-',
-        item.tipo_organizacion || '-',
-        item.nombre_organizacion || '-',
-        obtenerAnioRegistro(item),
-        item.correo_contacto || '-',
-        item.activa ? 'Activa' : 'Inactiva',
-        estadoAdmin
+      const exceljs = await import('exceljs');
+      const workbook = new exceljs.Workbook();
+      workbook.creator = 'Sistema C_ASISTENCIA';
+      workbook.created = new Date();
+
+      const worksheet = workbook.addWorksheet('Organizaciones');
+
+      worksheet.columns = [
+        { header: 'Campo', key: 'campo', width: 24 },
+        { header: 'Tipo', key: 'tipo', width: 14 },
+        { header: 'Nombre', key: 'nombre', width: 38 },
+        { header: 'Año de alta', key: 'anio', width: 14 },
+        { header: 'Correo', key: 'correo', width: 32 },
+        { header: 'Estado organización', key: 'estado_org', width: 20 },
+        { header: 'Estado ADMIN', key: 'estado_admin', width: 20 }
       ];
-    });
 
-    const contenido = [encabezados, ...filas]
-      .map((fila) => fila.map(escaparValorCsv).join(';'))
-      .join('\r\n');
+      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+      worksheet.autoFilter = 'A1:G1';
 
-    const blob = new Blob([`\uFEFF${contenido}`], { type: 'text/csv;charset=utf-8;' });
-    const enlace = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    enlace.href = url;
-    enlace.download = generarNombreArchivoExportacion();
-    document.body.appendChild(enlace);
-    enlace.click();
-    document.body.removeChild(enlace);
-    URL.revokeObjectURL(url);
+      const headerRow = worksheet.getRow(1);
+      headerRow.height = 24;
+      headerRow.eachCell((cell) => {
+        cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF003366' }
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF002244' } },
+          left: { style: 'thin', color: { argb: 'FF002244' } },
+          bottom: { style: 'thin', color: { argb: 'FF002244' } },
+          right: { style: 'thin', color: { argb: 'FF002244' } }
+        };
+      });
+
+      organizacionesFiltradas.forEach((item, index) => {
+        const estadoAdminCodigo = obtenerEstadoAdminOrganizacion(item);
+        const estadoAdmin = obtenerConfigEstadoAdmin(estadoAdminCodigo).etiqueta;
+
+        const row = worksheet.addRow({
+          campo: item.campo_nombre || item.campo || '-',
+          tipo: item.tipo_organizacion || '-',
+          nombre: item.nombre_organizacion || '-',
+          anio: obtenerAnioRegistro(item),
+          correo: item.correo_contacto || '-',
+          estado_org: item.activa ? 'Activa' : 'Inactiva',
+          estado_admin: estadoAdmin
+        });
+
+        row.height = 22;
+
+        let colorBase = index % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF';
+        if (estadoAdminCodigo === 'SIN_ADMIN') {
+          colorBase = 'FFFBE1E1';
+        } else if (estadoAdminCodigo === 'ADMIN_EXPIRADO') {
+          colorBase = 'FFFFF2D9';
+        }
+
+        row.eachCell((cell, colNumber) => {
+          cell.font = { name: 'Calibri', size: 11, color: { argb: 'FF2D3436' } };
+          cell.alignment = {
+            vertical: 'middle',
+            horizontal: colNumber >= 6 ? 'center' : 'left'
+          };
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: colorBase }
+          };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFDDE3EA' } },
+            left: { style: 'thin', color: { argb: 'FFDDE3EA' } },
+            bottom: { style: 'thin', color: { argb: 'FFDDE3EA' } },
+            right: { style: 'thin', color: { argb: 'FFDDE3EA' } }
+          };
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob(
+        [buffer],
+        { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+      );
+      const enlace = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      enlace.href = url;
+      enlace.download = generarNombreArchivoExportacion();
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      notificarError('No se pudo exportar la tabla a Excel.');
+    } finally {
+      setExportandoExcel(false);
+    }
   };
 
   useEffect(() => {
@@ -770,9 +833,9 @@ export default function SuperadminPage() {
                   type="button"
                   className="btn btn-outline-success btn-sm"
                   onClick={manejarExportarExcel}
-                  disabled={organizacionesFiltradas.length === 0}
+                  disabled={organizacionesFiltradas.length === 0 || exportandoExcel}
                 >
-                  Exportar Excel
+                  {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
                 </button>
               </div>
             </div>

@@ -287,7 +287,7 @@ a:hover {
 
 .superadmin-tabla-scroll {
   position: relative;
-  max-height: 60vh;
+  max-height: clamp(340px, 52vh, 560px);
   overflow: auto;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
@@ -321,11 +321,11 @@ a:hover {
 }
 
 .superadmin-fila-pendiente {
-  background-color: rgba(243, 156, 18, 0.14) !important;
+  background-color: rgba(231, 76, 60, 0.12) !important;
 }
 
 .superadmin-fila-expirada {
-  background-color: rgba(231, 76, 60, 0.12) !important;
+  background-color: rgba(243, 156, 18, 0.16) !important;
 }
 
 /* Fila de detalle expandible */
@@ -376,7 +376,7 @@ a:hover {
   }
 
   .superadmin-tabla-scroll {
-    max-height: 52vh;
+    max-height: clamp(300px, 46vh, 460px);
   }
 }
 
