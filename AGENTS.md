@@ -20,7 +20,8 @@ y avanzar los siguientes modulos con ejecucion controlada (discovery -> implemen
 2. `.agents/react-doctor/ROADMAP_ESCALABILIDAD_NACIONAL.md`
 3. `.agents/react-doctor/TICKETS_ESCALABILIDAD_NACIONAL.md`
 4. `.agents/react-doctor/prompt_frontend.md`
-5. `.agents/react-doctor/SKILL.md`
+5. `.agents/react-doctor/AGENTE_ANTI_ERRORES_UI.md`
+6. `.agents/react-doctor/SKILL.md`
 
 ## Modo de arranque obligatorio (sin programar)
 
