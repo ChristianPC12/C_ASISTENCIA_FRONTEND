@@ -44,6 +44,7 @@ const FILTROS_TABLA_INICIALES = {
   campo: 'TODOS',
   tipo: 'TODOS',
   anio: 'TODOS',
+  estado_admin: 'TODOS',
   organizacion_id: 'TODOS'
 };
 
@@ -63,6 +64,13 @@ export const CAMPOS_IA_OPCIONES = [
 export const TIPO_ORGANIZACION_OPCIONES = [
   { valor: 'IGLESIA', etiqueta: 'Iglesia' },
   { valor: 'GRUPO', etiqueta: 'Grupo' }
+];
+
+export const ESTADO_ADMIN_OPCIONES = [
+  { valor: 'TODOS', etiqueta: 'Todos' },
+  { valor: 'SIN_ADMIN', etiqueta: 'Sin ADMIN' },
+  { valor: 'ADMIN_ACTIVO', etiqueta: 'ADMIN activo' },
+  { valor: 'ADMIN_EXPIRADO', etiqueta: 'ADMIN expirado' }
 ];
 
 const EMAIL_REGEX = /^(?=.{1,30}$)[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9]))+$/;
@@ -180,37 +188,104 @@ function esValorBooleanoVerdadero(valor) {
   return valor === true || valor === 1 || valor === '1' || valor === 'true';
 }
 
-function tieneAdminActivoEnOrganizacion(organizacion, detalleCache = null) {
+function parsearFechaValida(valor) {
+  if (!valor) {
+    return null;
+  }
+
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) {
+    return null;
+  }
+
+  return fecha;
+}
+
+function obtenerFechaExpiracionAdmin(organizacion, detalleCache = null) {
+  const fechaDesdeCache = String(detalleCache?.admin_temporal?.expira_en || '').trim();
+  if (fechaDesdeCache) {
+    return fechaDesdeCache;
+  }
+
+  const fechaDesdeOrganizacion = String(organizacion?.admin_password_expira_en || '').trim();
+  return fechaDesdeOrganizacion || null;
+}
+
+function tieneRegistroAdminTemporal(organizacion, detalleCache = null) {
   if (!organizacion) {
     return false;
   }
 
   const usuarioCache = String(detalleCache?.admin_temporal?.usuario || '').trim();
-  if (usuarioCache) {
-    return true;
-  }
-
-  if (esValorBooleanoVerdadero(organizacion?.tiene_admin_activo)) {
-    return true;
-  }
-
   const usuarioActivo = String(organizacion?.admin_usuario_activo || '').trim();
-  return usuarioActivo.length > 0;
+  const fechaExpiracion = obtenerFechaExpiracionAdmin(organizacion, detalleCache);
+
+  return usuarioCache.length > 0
+    || usuarioActivo.length > 0
+    || esValorBooleanoVerdadero(organizacion?.tiene_admin_activo)
+    || !!fechaExpiracion;
 }
 
-function construirDetalleAdminDesdeOrganizacion(organizacion) {
-  if (!organizacion || !tieneAdminActivoEnOrganizacion(organizacion)) {
+function adminTemporalExpirado(organizacion, detalleCache = null) {
+  const fechaExpiracion = parsearFechaValida(obtenerFechaExpiracionAdmin(organizacion, detalleCache));
+  if (!fechaExpiracion) {
+    return false;
+  }
+
+  return fechaExpiracion.getTime() < Date.now();
+}
+
+function resolverEstadoAdminOrganizacion(organizacion, detalleCache = null) {
+  if (!organizacion) {
+    return 'SIN_ADMIN';
+  }
+
+  if (adminTemporalExpirado(organizacion, detalleCache)) {
+    return 'ADMIN_EXPIRADO';
+  }
+
+  if (tieneRegistroAdminTemporal(organizacion, detalleCache)) {
+    return 'ADMIN_ACTIVO';
+  }
+
+  return 'SIN_ADMIN';
+}
+
+function construirDetalleAdminDesdeOrganizacion(organizacion, detalleCache = null) {
+  if (!organizacion || !tieneRegistroAdminTemporal(organizacion, detalleCache)) {
     return null;
   }
 
+  const usuarioCache = String(detalleCache?.admin_temporal?.usuario || '').trim();
+  const usuarioOrganizacion = String(organizacion.admin_usuario_activo || '').trim();
+
   return {
     admin_temporal: {
-      usuario: String(organizacion.admin_usuario_activo || '').trim() || null,
+      usuario: usuarioCache || usuarioOrganizacion || null,
       password_temporal: null,
-      expira_en: organizacion.admin_password_expira_en || null
+      expira_en: obtenerFechaExpiracionAdmin(organizacion, detalleCache)
     },
     correo: null
   };
+}
+
+function coincideFiltrosTablaBase(organizacion, filtrosTabla, detalleCache = null) {
+  const campoOk = filtrosTabla.campo === 'TODOS'
+    || String(organizacion?.campo || '') === filtrosTabla.campo;
+  const tipoOk = filtrosTabla.tipo === 'TODOS'
+    || String(organizacion?.tipo_organizacion || '') === filtrosTabla.tipo;
+
+  let anioOk = true;
+  if (filtrosTabla.anio !== 'TODOS') {
+    const anioItem = obtenerAnioCreacion(organizacion?.creado_en);
+    anioOk = String(anioItem || '') === filtrosTabla.anio;
+  }
+
+  const estadoAdminItem = resolverEstadoAdminOrganizacion(organizacion, detalleCache);
+  const estadoFiltro = filtrosTabla.estado_admin || 'TODOS';
+  const estadoOk = estadoFiltro === 'TODOS' || estadoAdminItem === estadoFiltro;
+
+  return campoOk && tipoOk && anioOk && estadoOk;
 }
 
 function validarFormulario(formulario) {
@@ -365,36 +440,35 @@ export function useSuperadminOrganizaciones() {
   }, [organizaciones, filtrosAdminTemporal]);
 
   const organizacionesTablaOpciones = useMemo(() => {
-    const filtradas = filtrarOrganizacionesPorCampoTipo(
-      organizaciones,
-      filtrosTabla.campo,
-      filtrosTabla.tipo
-    );
+    const filtradas = organizaciones.filter((item) => {
+      const organizacionId = Number(item?.id);
+      const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
+        ? detallesAdminTemporalPorOrganizacion[organizacionId]
+        : null;
+      return coincideFiltrosTablaBase(item, filtrosTabla, detalleCache);
+    });
 
     return [...filtradas].sort((a, b) => {
       const nombreA = String(a?.nombre_organizacion || '').toLowerCase();
       const nombreB = String(b?.nombre_organizacion || '').toLowerCase();
       return nombreA.localeCompare(nombreB);
     });
-  }, [organizaciones, filtrosTabla.campo, filtrosTabla.tipo]);
+  }, [organizaciones, filtrosTabla, detallesAdminTemporalPorOrganizacion]);
 
   const organizacionesFiltradas = useMemo(() => {
     return organizaciones.filter((item) => {
-      const campoOk = filtrosTabla.campo === 'TODOS' || String(item?.campo || '') === filtrosTabla.campo;
-      const tipoOk = filtrosTabla.tipo === 'TODOS' || String(item?.tipo_organizacion || '') === filtrosTabla.tipo;
-
-      let anioOk = true;
-      if (filtrosTabla.anio !== 'TODOS') {
-        const anioItem = obtenerAnioCreacion(item?.creado_en);
-        anioOk = String(anioItem || '') === filtrosTabla.anio;
-      }
+      const organizacionId = Number(item?.id);
+      const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
+        ? detallesAdminTemporalPorOrganizacion[organizacionId]
+        : null;
+      const baseOk = coincideFiltrosTablaBase(item, filtrosTabla, detalleCache);
 
       const organizacionOk = filtrosTabla.organizacion_id === 'TODOS'
         || Number(item?.id) === Number(filtrosTabla.organizacion_id);
 
-      return campoOk && tipoOk && anioOk && organizacionOk;
+      return baseOk && organizacionOk;
     });
-  }, [organizaciones, filtrosTabla]);
+  }, [organizaciones, filtrosTabla, detallesAdminTemporalPorOrganizacion]);
 
   const organizacionSeleccionadaTabla = useMemo(
     () => buscarOrganizacionPorId(organizaciones, organizacionTablaSeleccionadaId),
@@ -416,7 +490,7 @@ export function useSuperadminOrganizaciones() {
       return detalleCache;
     }
 
-    return construirDetalleAdminDesdeOrganizacion(organizacionSeleccionadaTabla);
+    return construirDetalleAdminDesdeOrganizacion(organizacionSeleccionadaTabla, detalleCache);
   }, [organizacionSeleccionadaTabla, detallesAdminTemporalPorOrganizacion]);
 
   const organizacionSeleccionadaAdmin = useMemo(
@@ -447,14 +521,18 @@ export function useSuperadminOrganizaciones() {
     ));
   }, []);
 
-  const tieneAdminActivoOrganizacion = useCallback((organizacion) => {
+  const obtenerEstadoAdminOrganizacion = useCallback((organizacion) => {
     const organizacionId = Number(organizacion?.id);
     const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
       ? detallesAdminTemporalPorOrganizacion[organizacionId]
       : null;
 
-    return tieneAdminActivoEnOrganizacion(organizacion, detalleCache);
+    return resolverEstadoAdminOrganizacion(organizacion, detalleCache);
   }, [detallesAdminTemporalPorOrganizacion]);
+
+  const tieneAdminActivoOrganizacion = useCallback((organizacion) => {
+    return obtenerEstadoAdminOrganizacion(organizacion) === 'ADMIN_ACTIVO';
+  }, [obtenerEstadoAdminOrganizacion]);
 
   const cambiarCampo = useCallback((campo, valor) => {
     let valorNormalizado = valor;
@@ -676,17 +754,22 @@ export function useSuperadminOrganizaciones() {
         [campo]: valor || 'TODOS'
       };
 
-      if (campo === 'campo' || campo === 'tipo') {
-        const opciones = filtrarOrganizacionesPorCampoTipo(organizaciones, next.campo, next.tipo);
-        const seleccionada = buscarOrganizacionPorId(opciones, next.organizacion_id);
-        if (!seleccionada) {
-          next.organizacion_id = 'TODOS';
-        }
+      const opciones = organizaciones.filter((item) => {
+        const organizacionId = Number(item?.id);
+        const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
+          ? detallesAdminTemporalPorOrganizacion[organizacionId]
+          : null;
+        return coincideFiltrosTablaBase(item, next, detalleCache);
+      });
+
+      const seleccionada = buscarOrganizacionPorId(opciones, next.organizacion_id);
+      if (!seleccionada) {
+        next.organizacion_id = 'TODOS';
       }
 
       return next;
     });
-  }, [organizaciones]);
+  }, [organizaciones, detallesAdminTemporalPorOrganizacion]);
 
   const limpiarFiltrosTabla = useCallback(() => {
     setFiltrosTabla(FILTROS_TABLA_INICIALES);
@@ -895,6 +978,7 @@ export function useSuperadminOrganizaciones() {
     iniciarEdicion,
     cambiarCampoEdicion,
     seleccionarOrganizacionTabla,
+    obtenerEstadoAdminOrganizacion,
     tieneAdminActivoOrganizacion,
     cambiarFiltroTabla,
     limpiarFiltrosTabla,

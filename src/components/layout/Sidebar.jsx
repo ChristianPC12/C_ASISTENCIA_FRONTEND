@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { ROLES } from '../../config/constants';
 import { useSetupStatus } from '../../hooks/useSetupStatus';
 import { useAuth } from '../../hooks/useAuth';
+import { EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA } from '../../config/events';
 
 /**
  * Sidebar de navegacion con hamburguesa
@@ -32,6 +33,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const toggleMenu = () => setAbierto(!abierto);
   const cerrarMenu = () => setAbierto(false);
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
+  const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
+
+  const abrirPanelNuevaInstancia = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA));
+  };
 
   let enlaces = [];
 
@@ -145,6 +151,18 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             )}
           </span>
           <div className="sidebar-topbar-acciones">
+            {enPantallaSuperadmin && (
+              <button
+                type="button"
+                className="sidebar-topbar-plus"
+                onClick={abrirPanelNuevaInstancia}
+                aria-label="Crear nueva instancia"
+                title="Crear nueva instancia"
+              >
+                <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                <span className="visually-hidden">Crear nueva instancia</span>
+              </button>
+            )}
             <div className="sidebar-topbar-usuario d-none d-md-flex">
               <span>{usuario?.nombre_completo}</span>
               <span className="badge bg-secondary ms-2">{usuario?.rol}</span>

@@ -1,9 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   useSuperadminOrganizaciones,
   CAMPOS_IA_OPCIONES,
-  TIPO_ORGANIZACION_OPCIONES
+  TIPO_ORGANIZACION_OPCIONES,
+  ESTADO_ADMIN_OPCIONES
 } from '../hooks/useSuperadminOrganizaciones';
+import { EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA } from '../config/events';
 
 function obtenerAnioRegistro(organizacion) {
   const raw = String(organizacion?.creado_en || '');
@@ -27,6 +29,47 @@ function construirEstadoCorreoDetalle(detalleAdmin, organizacion) {
   }
 
   return 'No enviado';
+}
+
+function obtenerConfigEstadoAdmin(estadoAdmin) {
+  switch (estadoAdmin) {
+    case 'ADMIN_ACTIVO':
+      return { etiqueta: 'ADMIN activo', clase: 'text-bg-info' };
+    case 'ADMIN_EXPIRADO':
+      return { etiqueta: 'ADMIN expirado', clase: 'text-bg-danger' };
+    default:
+      return { etiqueta: 'Sin ADMIN', clase: 'text-bg-warning text-dark' };
+  }
+}
+
+function formatearFechaDetalle(fecha) {
+  if (!fecha) {
+    return 'Sin fecha disponible';
+  }
+
+  const fechaDate = new Date(fecha);
+  if (Number.isNaN(fechaDate.getTime())) {
+    return String(fecha);
+  }
+
+  return fechaDate.toLocaleString('es-CR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function escaparValorCsv(valor) {
+  const texto = String(valor ?? '').replace(/"/g, '""');
+  return `"${texto}"`;
+}
+
+function generarNombreArchivoExportacion() {
+  const ahora = new Date();
+  const fecha = ahora.toISOString().slice(0, 10);
+  return `organizaciones_filtradas_${fecha}.csv`;
 }
 
 export default function SuperadminPage() {
@@ -60,7 +103,7 @@ export default function SuperadminPage() {
     iniciarEdicion,
     cambiarCampoEdicion,
     seleccionarOrganizacionTabla,
-    tieneAdminActivoOrganizacion,
+    obtenerEstadoAdminOrganizacion,
     cambiarFiltroTabla,
     limpiarFiltrosTabla,
     crearOrganizacion,
@@ -72,14 +115,22 @@ export default function SuperadminPage() {
     recargarOrganizaciones
   } = useSuperadminOrganizaciones();
 
+  const [crearInstanciaVisible, setCrearInstanciaVisible] = useState(false);
+
   const manejarSubmitOrganizacion = async (event) => {
     event.preventDefault();
-    await crearOrganizacion();
+    const creada = await crearOrganizacion();
+    if (creada) {
+      setCrearInstanciaVisible(false);
+    }
   };
 
   const manejarSubmitAdminTemporal = async (event) => {
     event.preventDefault();
-    await crearAdminTemporal();
+    const creado = await crearAdminTemporal();
+    if (creado) {
+      manejarCerrarFormularioAdminTemporal();
+    }
   };
 
   const manejarSubmitEdicion = async (event) => {
@@ -87,7 +138,32 @@ export default function SuperadminPage() {
     await actualizarOrganizacion();
   };
 
+  const manejarCerrarPanelCrearInstancia = () => {
+    setCrearInstanciaVisible(false);
+    limpiarFormulario();
+  };
+
+  const manejarAbrirFormularioAdminTemporal = (organizacion) => {
+    setCrearInstanciaVisible(false);
+    abrirFormularioAdminTemporal(organizacion);
+  };
+
+  const manejarCerrarFormularioAdminTemporal = () => {
+    cerrarFormularioAdminTemporal();
+  };
+
+  const manejarIniciarEdicion = (organizacion) => {
+    setCrearInstanciaVisible(false);
+    iniciarEdicion(organizacion);
+  };
+
+  const manejarCancelarEdicion = () => {
+    cancelarEdicion();
+  };
+
   const estaEditando = !!formularioEdicion.id;
+  const hayAccionAbierta = crearInstanciaVisible || adminTemporalVisible || estaEditando;
+  const mostrarTablaOrganizaciones = !hayAccionAbierta;
   const totalRegistros = paginacion.total || organizaciones.length;
   const totalFiltrados = organizacionesFiltradas.length;
   const adminTemporalTituloRef = useRef(null);
@@ -97,10 +173,62 @@ export default function SuperadminPage() {
     || '-';
   const tipoOrganizacionAdmin = organizacionSeleccionadaAdmin?.tipo_organizacion || '-';
   const nombreOrganizacionAdmin = organizacionSeleccionadaAdmin?.nombre_organizacion || '-';
-  const adminTemporalDetalle = detalleAdminTemporalSeleccionado?.admin_temporal || null;
-  const estadoCorreoDetalle = organizacionSeleccionadaTabla
-    ? construirEstadoCorreoDetalle(detalleAdminTemporalSeleccionado, organizacionSeleccionadaTabla)
-    : 'No enviado';
+  const manejarExportarExcel = () => {
+    if (organizacionesFiltradas.length === 0) {
+      return;
+    }
+
+    const encabezados = [
+      'Campo',
+      'Tipo',
+      'Nombre',
+      'Año de alta',
+      'Correo',
+      'Estado organización',
+      'Estado ADMIN'
+    ];
+
+    const filas = organizacionesFiltradas.map((item) => {
+      const estadoAdmin = obtenerConfigEstadoAdmin(obtenerEstadoAdminOrganizacion(item)).etiqueta;
+      return [
+        item.campo_nombre || item.campo || '-',
+        item.tipo_organizacion || '-',
+        item.nombre_organizacion || '-',
+        obtenerAnioRegistro(item),
+        item.correo_contacto || '-',
+        item.activa ? 'Activa' : 'Inactiva',
+        estadoAdmin
+      ];
+    });
+
+    const contenido = [encabezados, ...filas]
+      .map((fila) => fila.map(escaparValorCsv).join(';'))
+      .join('\r\n');
+
+    const blob = new Blob([`\uFEFF${contenido}`], { type: 'text/csv;charset=utf-8;' });
+    const enlace = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    enlace.href = url;
+    enlace.download = generarNombreArchivoExportacion();
+    document.body.appendChild(enlace);
+    enlace.click();
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+  };
+
+  useEffect(() => {
+    const manejarAbrirDesdeTopbar = () => {
+      cerrarFormularioAdminTemporal();
+      cancelarEdicion();
+      setCrearInstanciaVisible(true);
+    };
+
+    window.addEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirDesdeTopbar);
+
+    return () => {
+      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirDesdeTopbar);
+    };
+  }, [cerrarFormularioAdminTemporal, cancelarEdicion]);
 
   useEffect(() => {
     if (!adminTemporalVisible || estaEditando) {
@@ -132,10 +260,20 @@ export default function SuperadminPage() {
     <div className="container-fluid py-4">
       {!estaEditando && (
         <>
-          {!adminTemporalVisible && (
+          {crearInstanciaVisible && !adminTemporalVisible && (
             <div className="card border-0 shadow-sm mb-4">
               <div className="card-body">
-                <h3 className="h5 mb-3">Crear nueva instancia</h3>
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                  <h3 className="h5 mb-0">Crear nueva instancia</h3>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={manejarCerrarPanelCrearInstancia}
+                    disabled={guardando}
+                  >
+                    Cerrar
+                  </button>
+                </div>
 
               <form onSubmit={manejarSubmitOrganizacion} noValidate>
                 <div className="row g-3">
@@ -252,7 +390,7 @@ export default function SuperadminPage() {
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm"
-                    onClick={cerrarFormularioAdminTemporal}
+                    onClick={manejarCerrarFormularioAdminTemporal}
                     disabled={guardandoAdminTemporal}
                   >
                     Cerrar
@@ -409,14 +547,24 @@ export default function SuperadminPage() {
       {formularioEdicion.id && (
         <div className="card border-0 shadow-sm mb-4">
           <div className="card-body">
-            <h3
-              ref={edicionTituloRef}
-              tabIndex={-1}
-              className="h5 mb-3"
-              style={{ scrollMarginTop: '5.5rem' }}
-            >
-              Editar organización
-            </h3>
+            <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+              <h3
+                ref={edicionTituloRef}
+                tabIndex={-1}
+                className="h5 mb-0"
+                style={{ scrollMarginTop: '5.5rem' }}
+              >
+                Editar organización
+              </h3>
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                onClick={manejarCancelarEdicion}
+                disabled={guardandoEdicion}
+              >
+                Cerrar
+              </button>
+            </div>
 
             <form onSubmit={manejarSubmitEdicion} noValidate>
               <div className="row g-3">
@@ -494,7 +642,7 @@ export default function SuperadminPage() {
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
-                  onClick={cancelarEdicion}
+                  onClick={manejarCancelarEdicion}
                   disabled={guardandoEdicion}
                 >
                   Cancelar
@@ -505,113 +653,137 @@ export default function SuperadminPage() {
         </div>
       )}
 
-      <div className="card border-0 shadow-sm">
-        <div className="card-body">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <h3 className="h5 mb-0">Organizaciones registradas</h3>
-            <div className="d-flex flex-wrap align-items-center gap-2">
-              <button
-                className="btn btn-outline-primary btn-sm"
-                type="button"
-                onClick={recargarOrganizaciones}
-                disabled={cargandoLista}
-              >
-                {cargandoLista ? 'Actualizando...' : 'Actualizar lista'}
-              </button>
-              <span className="badge text-bg-light border">
-                Mostrando: {totalFiltrados} de {totalRegistros}
-              </span>
-            </div>
-          </div>
-
-          <div className="row g-2 mb-3">
-            <div className="col-12 col-md-3">
-              <label htmlFor="filtro_campo_tabla" className="form-label mb-1">Campo</label>
-              <select
-                id="filtro_campo_tabla"
-                className="form-select form-select-sm"
-                value={filtrosTabla.campo}
-                onChange={(event) => cambiarFiltroTabla('campo', event.target.value)}
-              >
-                <option value="TODOS">Todos</option>
-                {CAMPOS_IA_OPCIONES.map((campo) => (
-                  <option key={campo.valor} value={campo.valor}>
-                    {campo.etiqueta}
-                  </option>
-                ))}
-              </select>
+      {mostrarTablaOrganizaciones && (
+        <div className="card border-0 shadow-sm">
+          <div className="card-body">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <h3 className="h5 mb-0">Organizaciones registradas</h3>
+              <div className="d-flex flex-wrap align-items-center gap-2">
+                <button
+                  className="btn btn-outline-primary btn-sm"
+                  type="button"
+                  onClick={recargarOrganizaciones}
+                  disabled={cargandoLista}
+                >
+                  {cargandoLista ? 'Actualizando...' : 'Actualizar lista'}
+                </button>
+                <span className="badge text-bg-light border">
+                  Mostrando: {totalFiltrados} de {totalRegistros}
+                </span>
+              </div>
             </div>
 
-            <div className="col-12 col-md-3">
-              <label htmlFor="filtro_tipo_tabla" className="form-label mb-1">Tipo</label>
-              <select
-                id="filtro_tipo_tabla"
-                className="form-select form-select-sm"
-                value={filtrosTabla.tipo}
-                onChange={(event) => cambiarFiltroTabla('tipo', event.target.value)}
-              >
-                <option value="TODOS">Todos</option>
-                {TIPO_ORGANIZACION_OPCIONES.map((tipo) => (
-                  <option key={tipo.valor} value={tipo.valor}>
-                    {tipo.etiqueta}
-                  </option>
-                ))}
-              </select>
+            <div className="row g-2 mb-3">
+              <div className="col-12 col-md-2">
+                <label htmlFor="filtro_campo_tabla" className="form-label mb-1">Campo</label>
+                <select
+                  id="filtro_campo_tabla"
+                  className="form-select form-select-sm"
+                  value={filtrosTabla.campo}
+                  onChange={(event) => cambiarFiltroTabla('campo', event.target.value)}
+                >
+                  <option value="TODOS">Todos</option>
+                  {CAMPOS_IA_OPCIONES.map((campo) => (
+                    <option key={campo.valor} value={campo.valor}>
+                      {campo.etiqueta}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-2">
+                <label htmlFor="filtro_tipo_tabla" className="form-label mb-1">Tipo</label>
+                <select
+                  id="filtro_tipo_tabla"
+                  className="form-select form-select-sm"
+                  value={filtrosTabla.tipo}
+                  onChange={(event) => cambiarFiltroTabla('tipo', event.target.value)}
+                >
+                  <option value="TODOS">Todos</option>
+                  {TIPO_ORGANIZACION_OPCIONES.map((tipo) => (
+                    <option key={tipo.valor} value={tipo.valor}>
+                      {tipo.etiqueta}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-2">
+                <label htmlFor="filtro_anio_tabla" className="form-label mb-1">Año</label>
+                <select
+                  id="filtro_anio_tabla"
+                  className="form-select form-select-sm"
+                  value={filtrosTabla.anio}
+                  onChange={(event) => cambiarFiltroTabla('anio', event.target.value)}
+                >
+                  <option value="TODOS">Todos</option>
+                  {opcionesAnioFiltro.map((anio) => (
+                    <option key={anio} value={String(anio)}>
+                      {anio}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-2">
+                <label htmlFor="filtro_estado_admin_tabla" className="form-label mb-1">Estado ADMIN</label>
+                <select
+                  id="filtro_estado_admin_tabla"
+                  className="form-select form-select-sm"
+                  value={filtrosTabla.estado_admin}
+                  onChange={(event) => cambiarFiltroTabla('estado_admin', event.target.value)}
+                >
+                  {ESTADO_ADMIN_OPCIONES.map((estado) => (
+                    <option key={estado.valor} value={estado.valor}>
+                      {estado.etiqueta}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-4">
+                <label htmlFor="filtro_organizacion_tabla" className="form-label mb-1">Organización</label>
+                <select
+                  id="filtro_organizacion_tabla"
+                  className="form-select form-select-sm"
+                  value={filtrosTabla.organizacion_id}
+                  onChange={(event) => cambiarFiltroTabla('organizacion_id', event.target.value)}
+                >
+                  <option value="TODOS">Todas</option>
+                  {organizacionesTablaOpciones.map((item) => (
+                    <option key={item.id} value={String(item.id)}>
+                      {item.nombre_organizacion}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 d-flex flex-wrap align-items-end gap-2">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={limpiarFiltrosTabla}
+                >
+                  Limpiar filtros
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-success btn-sm"
+                  onClick={manejarExportarExcel}
+                  disabled={organizacionesFiltradas.length === 0}
+                >
+                  Exportar Excel
+                </button>
+              </div>
             </div>
 
-            <div className="col-12 col-md-2">
-              <label htmlFor="filtro_anio_tabla" className="form-label mb-1">Año</label>
-              <select
-                id="filtro_anio_tabla"
-                className="form-select form-select-sm"
-                value={filtrosTabla.anio}
-                onChange={(event) => cambiarFiltroTabla('anio', event.target.value)}
-              >
-                <option value="TODOS">Todos</option>
-                {opcionesAnioFiltro.map((anio) => (
-                  <option key={anio} value={String(anio)}>
-                    {anio}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-12 col-md-4">
-              <label htmlFor="filtro_organizacion_tabla" className="form-label mb-1">Organización</label>
-              <select
-                id="filtro_organizacion_tabla"
-                className="form-select form-select-sm"
-                value={filtrosTabla.organizacion_id}
-                onChange={(event) => cambiarFiltroTabla('organizacion_id', event.target.value)}
-              >
-                <option value="TODOS">Todas</option>
-                {organizacionesTablaOpciones.map((item) => (
-                  <option key={item.id} value={String(item.id)}>
-                    {item.nombre_organizacion}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="col-12 d-flex align-items-end">
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm"
-                onClick={limpiarFiltrosTabla}
-              >
-                Limpiar filtros
-              </button>
-            </div>
-          </div>
-
-          {cargandoLista ? (
-            <div className="text-muted">Cargando organizaciones...</div>
-          ) : organizacionesFiltradas.length === 0 ? (
-            <div className="text-muted">Aún no hay organizaciones registradas.</div>
-          ) : (
-            <div className="superadmin-tabla-scroll">
-              <div className="table-responsive">
-                <table className="table table-sm table-striped align-middle mb-0">
+            {cargandoLista ? (
+              <div className="text-muted">Cargando organizaciones...</div>
+            ) : organizacionesFiltradas.length === 0 ? (
+              <div className="text-muted">No hay organizaciones para los filtros seleccionados.</div>
+            ) : (
+              <div className="superadmin-tabla-scroll">
+                <table className="table table-sm table-striped align-middle mb-0 superadmin-tabla">
                   <thead>
                     <tr>
                       <th>Campo</th>
@@ -626,111 +798,129 @@ export default function SuperadminPage() {
                   <tbody>
                     {organizacionesFiltradas.map((item) => {
                       const filaSeleccionada = Number(organizacionSeleccionadaTabla?.id) === Number(item.id);
-                      const tieneAdminActivo = tieneAdminActivoOrganizacion(item);
+                      const estadoAdmin = obtenerEstadoAdminOrganizacion(item);
+                      const estadoAdminConfig = obtenerConfigEstadoAdmin(estadoAdmin);
+                      const filaPendiente = estadoAdmin === 'SIN_ADMIN';
+                      const filaExpirada = estadoAdmin === 'ADMIN_EXPIRADO';
+                      const detalleFila = filaSeleccionada
+                        ? detalleAdminTemporalSeleccionado?.admin_temporal || null
+                        : null;
+                      const estadoCorreoFila = filaSeleccionada
+                        ? construirEstadoCorreoDetalle(detalleAdminTemporalSeleccionado, item)
+                        : 'No enviado';
 
                       return (
-                        <tr
-                          key={item.id}
-                          className={`fila-registro ${filaSeleccionada ? 'fila-activa' : ''} ${!tieneAdminActivo ? 'superadmin-fila-pendiente' : ''}`}
-                          role="button"
-                          tabIndex={0}
-                          aria-pressed={filaSeleccionada}
-                          onClick={() => seleccionarOrganizacionTabla(item.id)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter' || event.key === ' ') {
-                              event.preventDefault();
-                              seleccionarOrganizacionTabla(item.id);
-                            }
-                          }}
-                        >
-                        <td>{item.campo_nombre || item.campo}</td>
-                        <td>{item.tipo_organizacion}</td>
-                        <td>{item.nombre_organizacion}</td>
-                        <td>{obtenerAnioRegistro(item)}</td>
-                        <td>{item.correo_contacto || '-'}</td>
-                        <td>
-                          <div className="d-flex flex-wrap gap-1">
-                            <span className={`badge ${item.activa ? 'text-bg-success' : 'text-bg-secondary'}`}>
-                              {item.activa ? 'Activa' : 'Inactiva'}
-                            </span>
-                            <span className={`badge ${tieneAdminActivo ? 'text-bg-info' : 'text-bg-warning text-dark'}`}>
-                              {tieneAdminActivo ? 'ADMIN activo' : 'Sin ADMIN'}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="btn-group btn-group-sm" role="group" aria-label="Acciones organización">
-                            <button
-                              type="button"
-                              className="btn btn-outline-success"
-                              title="Crear ADMIN temporal"
-                              aria-label="Crear ADMIN temporal"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                abrirFormularioAdminTemporal(item);
-                              }}
-                              disabled={!item.activa || guardandoAdminTemporal}
-                            >
-                              <i className="bi bi-person-plus-fill"></i>
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary"
-                              title="Editar organización"
-                              aria-label="Editar organización"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                iniciarEdicion(item);
-                              }}
-                              disabled={guardandoEdicion}
-                            >
-                              <i className="bi bi-pencil-square"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                        <Fragment key={item.id}>
+                          <tr
+                            className={`fila-registro ${filaSeleccionada ? 'fila-activa' : ''} ${filaPendiente ? 'superadmin-fila-pendiente' : ''} ${filaExpirada ? 'superadmin-fila-expirada' : ''}`}
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={filaSeleccionada}
+                            aria-expanded={filaSeleccionada}
+                            onClick={() => seleccionarOrganizacionTabla(item.id)}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                seleccionarOrganizacionTabla(item.id);
+                              }
+                            }}
+                          >
+                            <td>{item.campo_nombre || item.campo}</td>
+                            <td>{item.tipo_organizacion}</td>
+                            <td>{item.nombre_organizacion}</td>
+                            <td>{obtenerAnioRegistro(item)}</td>
+                            <td>{item.correo_contacto || '-'}</td>
+                            <td>
+                              <div className="d-flex flex-wrap gap-1">
+                                <span className={`badge ${item.activa ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                                  {item.activa ? 'Activa' : 'Inactiva'}
+                                </span>
+                                <span className={`badge ${estadoAdminConfig.clase}`}>
+                                  {estadoAdminConfig.etiqueta}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <div className="btn-group btn-group-sm" role="group" aria-label="Acciones organización">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-success"
+                                  title="Crear ADMIN temporal"
+                                  aria-label="Crear ADMIN temporal"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    manejarAbrirFormularioAdminTemporal(item);
+                                  }}
+                                  disabled={!item.activa || guardandoAdminTemporal}
+                                >
+                                  <i className="bi bi-person-plus-fill"></i>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-primary"
+                                  title="Editar organización"
+                                  aria-label="Editar organización"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    manejarIniciarEdicion(item);
+                                  }}
+                                  disabled={guardandoEdicion}
+                                >
+                                  <i className="bi bi-pencil-square"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+
+                          {filaSeleccionada && (
+                            <tr className="fila-detalle">
+                              <td colSpan={7}>
+                                <div className="registro-detalle">
+                                  {detalleFila ? (
+                                    <div className="border rounded bg-light-subtle p-3 mb-0">
+                                      <div className="fw-semibold mb-2">{item.nombre_organizacion}</div>
+                                      <div className="mb-1">
+                                        Estado ADMIN:{' '}
+                                        <span className={`badge ${estadoAdminConfig.clase}`}>
+                                          {estadoAdminConfig.etiqueta}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        Usuario ADMIN temporal: <strong>{detalleFila.usuario || '-'}</strong>
+                                      </div>
+                                      <div>
+                                        Password temporal:{' '}
+                                        <strong>{detalleFila.password_temporal || 'No disponible'}</strong>
+                                      </div>
+                                      <div>
+                                        Expira en: <strong>{formatearFechaDetalle(detalleFila.expira_en)}</strong>
+                                      </div>
+                                      <div>
+                                        Correo: <strong>{estadoCorreoFila}</strong>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="border rounded bg-light-subtle p-3 mb-0">
+                                      <div className="fw-semibold mb-1">{item.nombre_organizacion}</div>
+                                      {estadoAdmin === 'ADMIN_EXPIRADO'
+                                        ? 'Este ADMIN temporal ya expiró. Cree uno nuevo para restablecer el acceso.'
+                                        : 'Esta organización no tiene ADMIN activo. Falta crear un administrador temporal.'}
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
-
-          <div className="mt-3">
-            {!organizacionSeleccionadaTabla ? (
-              <div className="text-muted small">
-                Seleccione un registro para ver el estado del ADMIN temporal.
-              </div>
-            ) : adminTemporalDetalle ? (
-              <div className="border rounded bg-light-subtle p-3 mb-0">
-                <div className="fw-semibold mb-2">
-                  {organizacionSeleccionadaTabla.nombre_organizacion}
-                </div>
-                <div>
-                  ADMIN temporal activo: <strong>{adminTemporalDetalle.usuario || '-'}</strong>
-                </div>
-                <div>
-                  Password temporal: <strong>{adminTemporalDetalle.password_temporal || 'No disponible'}</strong>
-                </div>
-                <div>
-                  Expira en: <strong>{adminTemporalDetalle.expira_en || 'Sin fecha disponible'}</strong>
-                </div>
-                <div>
-                  Correo: <strong>{estadoCorreoDetalle}</strong>
-                </div>
-              </div>
-            ) : (
-              <div className="border rounded bg-light-subtle p-3 mb-0">
-                <div className="fw-semibold mb-1">
-                  {organizacionSeleccionadaTabla.nombre_organizacion}
-                </div>
-                Esta organizacion no tiene ADMIN activo. Falta crear un administrador temporal.
-              </div>
             )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
