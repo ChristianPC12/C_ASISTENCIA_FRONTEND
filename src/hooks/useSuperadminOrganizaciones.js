@@ -11,9 +11,14 @@ const USUARIO_MAX = 50;
 const CORREO_MAX = 30;
 const ANIO_MIN = 2000;
 const ANIO_MAX = 2100;
+const CATALOGO_STORAGE_KEY = 'superadmin_catalogos_v1';
+const DISTRITOS_ORG_STORAGE_KEY = 'superadmin_distritos_por_org_v1';
+const CAMPO_CODIGO_REGEX = /^[A-Z0-9]{2,10}$/;
+const DISTRITO_CODIGO_REGEX = /^[A-Z0-9_]{2,24}$/;
 
 const FORMULARIO_INICIAL = {
   campo: '',
+  distrito: '',
   tipo_organizacion: 'IGLESIA',
   nombre_organizacion: '',
   correo_contacto: ''
@@ -34,6 +39,7 @@ const FILTROS_ADMIN_TEMPORAL_INICIALES = {
 
 const FORMULARIO_EDICION_INICIAL = {
   id: null,
+  distrito: '',
   tipo_organizacion: 'IGLESIA',
   nombre_organizacion: '',
   correo_contacto: '',
@@ -42,6 +48,7 @@ const FORMULARIO_EDICION_INICIAL = {
 
 const FILTROS_TABLA_INICIALES = {
   campo: 'TODOS',
+  distrito: 'TODOS',
   tipo: 'TODOS',
   anio: 'TODOS',
   estado_admin: 'TODOS',
@@ -60,6 +67,8 @@ export const CAMPOS_IA_OPCIONES = [
   { valor: 'ACS', etiqueta: 'Asociación Central Sur' },
   { valor: 'MC', etiqueta: 'Misión Caribe' }
 ];
+
+export const DISTRITOS_IA_OPCIONES_BASE = [];
 
 export const TIPO_ORGANIZACION_OPCIONES = [
   { valor: 'IGLESIA', etiqueta: 'Iglesia' },
@@ -105,6 +114,226 @@ function normalizarNombreClave(valor) {
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
+}
+
+function normalizarTextoCorto(valor, maximo = 60) {
+  return String(valor || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maximo);
+}
+
+function normalizarCodigoCampo(valor) {
+  const codigo = String(valor || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 10);
+
+  if (!CAMPO_CODIGO_REGEX.test(codigo)) {
+    return '';
+  }
+
+  return codigo;
+}
+
+function normalizarCodigoDistrito(valor) {
+  const codigo = String(valor || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_{2,}/g, '_')
+    .slice(0, 24);
+
+  if (!DISTRITO_CODIGO_REGEX.test(codigo)) {
+    return '';
+  }
+
+  return codigo;
+}
+
+function generarCodigoDistrito(nombre, codigosExistentes = new Set()) {
+  const base = normalizarCodigoDistrito(nombre) || 'DISTRITO';
+  if (!codigosExistentes.has(base)) {
+    return base;
+  }
+
+  let contador = 2;
+  while (contador <= 999) {
+    const candidato = normalizarCodigoDistrito(`${base}_${contador}`);
+    if (candidato && !codigosExistentes.has(candidato)) {
+      return candidato;
+    }
+    contador += 1;
+  }
+
+  return '';
+}
+
+function parsearJsonStorage(clave, fallback) {
+  try {
+    const raw = localStorage.getItem(clave);
+    if (!raw) {
+      return fallback;
+    }
+
+    const parseado = JSON.parse(raw);
+    return parseado ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function guardarJsonStorage(clave, valor) {
+  try {
+    localStorage.setItem(clave, JSON.stringify(valor));
+  } catch {
+    // Ignorar errores de cuota o navegadores restrictivos.
+  }
+}
+
+function normalizarOpcionesCatalogo(lista, tipo) {
+  const mapa = new Map();
+  const items = Array.isArray(lista) ? lista : [];
+
+  items.forEach((item) => {
+    const valorRaw = item?.valor ?? item?.codigo ?? item?.id ?? '';
+    const etiquetaRaw = item?.etiqueta ?? item?.nombre ?? item?.label ?? '';
+
+    const valor = tipo === 'campo'
+      ? normalizarCodigoCampo(valorRaw)
+      : normalizarCodigoDistrito(valorRaw || etiquetaRaw);
+    const etiqueta = normalizarTextoCorto(etiquetaRaw || valor, 80);
+
+    if (!valor || !etiqueta) {
+      return;
+    }
+
+    mapa.set(valor, { valor, etiqueta });
+  });
+
+  return Array.from(mapa.values()).sort((a, b) => (
+    a.etiqueta.localeCompare(b.etiqueta, 'es', { sensitivity: 'base' })
+  ));
+}
+
+function sonOpcionesIguales(actual, siguiente) {
+  if (actual === siguiente) {
+    return true;
+  }
+
+  if (!Array.isArray(actual) || !Array.isArray(siguiente) || actual.length !== siguiente.length) {
+    return false;
+  }
+
+  for (let i = 0; i < actual.length; i += 1) {
+    if (actual[i]?.valor !== siguiente[i]?.valor || actual[i]?.etiqueta !== siguiente[i]?.etiqueta) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function normalizarMapaDistritosPorOrganizacion(raw) {
+  if (!raw || typeof raw !== 'object') {
+    return {};
+  }
+
+  return Object.entries(raw).reduce((acc, [orgId, distritoValor]) => {
+    const idNormalizado = Number(orgId);
+    if (!Number.isInteger(idNormalizado) || idNormalizado <= 0) {
+      return acc;
+    }
+
+    const distrito = normalizarCodigoDistrito(distritoValor);
+    if (!distrito) {
+      return acc;
+    }
+
+    acc[idNormalizado] = distrito;
+    return acc;
+  }, {});
+}
+
+function leerCatalogosStorage() {
+  const cache = parsearJsonStorage(CATALOGO_STORAGE_KEY, {});
+  return {
+    campos: normalizarOpcionesCatalogo(cache?.campos, 'campo'),
+    distritos: normalizarOpcionesCatalogo(cache?.distritos, 'distrito')
+  };
+}
+
+function leerDistritosPorOrganizacionStorage() {
+  const cache = parsearJsonStorage(DISTRITOS_ORG_STORAGE_KEY, {});
+  return normalizarMapaDistritosPorOrganizacion(cache);
+}
+
+function fusionarOpcionesCatalogo(base, extra, tipo) {
+  return normalizarOpcionesCatalogo([
+    ...(Array.isArray(base) ? base : []),
+    ...(Array.isArray(extra) ? extra : [])
+  ], tipo);
+}
+
+function obtenerCodigoDistritoOrganizacion(organizacion, distritosPorOrganizacion = {}) {
+  if (!organizacion || typeof organizacion !== 'object') {
+    return '';
+  }
+
+  const distritoApi = normalizarCodigoDistrito(
+    organizacion?.distrito
+    || organizacion?.distrito_codigo
+    || organizacion?.distrito_id
+  );
+
+  if (distritoApi) {
+    return distritoApi;
+  }
+
+  const orgId = Number(organizacion?.id);
+  if (Number.isInteger(orgId) && orgId > 0) {
+    return normalizarCodigoDistrito(distritosPorOrganizacion[orgId] || '');
+  }
+
+  return '';
+}
+
+function extraerOpcionesCampoDesdeOrganizaciones(organizaciones) {
+  return (Array.isArray(organizaciones) ? organizaciones : [])
+    .map((item) => ({
+      valor: item?.campo || '',
+      etiqueta: item?.campo_nombre || item?.campo || ''
+    }))
+    .filter((item) => normalizarCodigoCampo(item.valor) && normalizarTextoCorto(item.etiqueta));
+}
+
+function extraerOpcionesDistritoDesdeOrganizaciones(organizaciones, distritosPorOrganizacion = {}) {
+  return (Array.isArray(organizaciones) ? organizaciones : [])
+    .map((item) => {
+      const valor = obtenerCodigoDistritoOrganizacion(item, distritosPorOrganizacion);
+      return {
+        valor,
+        etiqueta: item?.distrito_nombre || valor
+      };
+    })
+    .filter((item) => item.valor);
+}
+
+function enriquecerOrganizacion(organizacion, mapaCampos, mapaDistritos, distritosPorOrganizacion = {}) {
+  const campoCodigo = normalizarCodigoCampo(organizacion?.campo || '');
+  const distritoCodigo = obtenerCodigoDistritoOrganizacion(organizacion, distritosPorOrganizacion);
+
+  return {
+    ...organizacion,
+    campo: campoCodigo || String(organizacion?.campo || ''),
+    campo_nombre: mapaCampos.get(campoCodigo) || organizacion?.campo_nombre || organizacion?.campo || '',
+    distrito: distritoCodigo,
+    distrito_nombre: mapaDistritos.get(distritoCodigo)
+      || normalizarTextoCorto(organizacion?.distrito_nombre || '', 80)
+      || distritoCodigo
+  };
 }
 
 function esNombreValidoSinNumeros(nombre, min, max) {
@@ -272,6 +501,8 @@ function construirDetalleAdminDesdeOrganizacion(organizacion, detalleCache = nul
 function coincideFiltrosTablaBase(organizacion, filtrosTabla, detalleCache = null) {
   const campoOk = filtrosTabla.campo === 'TODOS'
     || String(organizacion?.campo || '') === filtrosTabla.campo;
+  const distritoOk = filtrosTabla.distrito === 'TODOS'
+    || String(organizacion?.distrito || '') === filtrosTabla.distrito;
   const tipoOk = filtrosTabla.tipo === 'TODOS'
     || String(organizacion?.tipo_organizacion || '') === filtrosTabla.tipo;
 
@@ -285,7 +516,7 @@ function coincideFiltrosTablaBase(organizacion, filtrosTabla, detalleCache = nul
   const estadoFiltro = filtrosTabla.estado_admin || 'TODOS';
   const estadoOk = estadoFiltro === 'TODOS' || estadoAdminItem === estadoFiltro;
 
-  return campoOk && tipoOk && anioOk && estadoOk;
+  return campoOk && distritoOk && tipoOk && anioOk && estadoOk;
 }
 
 function validarFormulario(formulario) {
@@ -293,6 +524,10 @@ function validarFormulario(formulario) {
 
   if (!formulario.campo) {
     errores.campo = 'Seleccione el campo.';
+  }
+
+  if (!formulario.distrito) {
+    errores.distrito = 'Seleccione el distrito.';
   }
 
   if (!formulario.tipo_organizacion) {
@@ -317,6 +552,10 @@ function validarFormulario(formulario) {
 
 function validarFormularioEdicion(formulario) {
   const errores = {};
+
+  if (!formulario.distrito) {
+    errores.distrito = 'Seleccione el distrito.';
+  }
 
   if (!formulario.tipo_organizacion) {
     errores.tipo_organizacion = 'Seleccione el tipo de organización.';
@@ -391,6 +630,17 @@ export function useSuperadminOrganizaciones() {
   const [organizacionTablaSeleccionadaId, setOrganizacionTablaSeleccionadaId] = useState(null);
   const [ultimaEditada, setUltimaEditada] = useState(null);
   const [filtrosTabla, setFiltrosTabla] = useState(FILTROS_TABLA_INICIALES);
+  const [camposOpciones, setCamposOpciones] = useState(() => {
+    const cache = leerCatalogosStorage();
+    return fusionarOpcionesCatalogo(CAMPOS_IA_OPCIONES, cache.campos, 'campo');
+  });
+  const [distritosOpciones, setDistritosOpciones] = useState(() => {
+    const cache = leerCatalogosStorage();
+    return fusionarOpcionesCatalogo(DISTRITOS_IA_OPCIONES_BASE, cache.distritos, 'distrito');
+  });
+  const [distritosPorOrganizacion, setDistritosPorOrganizacion] = useState(() => (
+    leerDistritosPorOrganizacionStorage()
+  ));
 
   const cargarOrganizaciones = useCallback(async () => {
     setCargandoLista(true);
@@ -419,9 +669,55 @@ export function useSuperadminOrganizaciones() {
     cargarOrganizaciones();
   }, [cargarOrganizaciones]);
 
+  useEffect(() => {
+    guardarJsonStorage(CATALOGO_STORAGE_KEY, {
+      campos: camposOpciones,
+      distritos: distritosOpciones
+    });
+  }, [camposOpciones, distritosOpciones]);
+
+  useEffect(() => {
+    guardarJsonStorage(DISTRITOS_ORG_STORAGE_KEY, distritosPorOrganizacion);
+  }, [distritosPorOrganizacion]);
+
+  useEffect(() => {
+    const camposDesdeOrganizaciones = extraerOpcionesCampoDesdeOrganizaciones(organizaciones);
+    if (camposDesdeOrganizaciones.length > 0) {
+      setCamposOpciones((prev) => {
+        const next = fusionarOpcionesCatalogo(camposDesdeOrganizaciones, prev, 'campo');
+        return sonOpcionesIguales(prev, next) ? prev : next;
+      });
+    }
+
+    const distritosDesdeOrganizaciones = extraerOpcionesDistritoDesdeOrganizaciones(
+      organizaciones,
+      distritosPorOrganizacion
+    );
+    if (distritosDesdeOrganizaciones.length > 0) {
+      setDistritosOpciones((prev) => {
+        const next = fusionarOpcionesCatalogo(distritosDesdeOrganizaciones, prev, 'distrito');
+        return sonOpcionesIguales(prev, next) ? prev : next;
+      });
+    }
+  }, [organizaciones, distritosPorOrganizacion]);
+
+  const mapaCampos = useMemo(() => {
+    return new Map(camposOpciones.map((item) => [item.valor, item.etiqueta]));
+  }, [camposOpciones]);
+
+  const mapaDistritos = useMemo(() => {
+    return new Map(distritosOpciones.map((item) => [item.valor, item.etiqueta]));
+  }, [distritosOpciones]);
+
+  const organizacionesEnriquecidas = useMemo(() => {
+    return organizaciones.map((item) => (
+      enriquecerOrganizacion(item, mapaCampos, mapaDistritos, distritosPorOrganizacion)
+    ));
+  }, [organizaciones, mapaCampos, mapaDistritos, distritosPorOrganizacion]);
+
   const opcionesAnioFiltro = useMemo(() => {
     const years = new Set();
-    organizaciones.forEach((item) => {
+    organizacionesEnriquecidas.forEach((item) => {
       const anio = obtenerAnioCreacion(item?.creado_en);
       if (anio !== null) {
         years.add(anio);
@@ -429,18 +725,18 @@ export function useSuperadminOrganizaciones() {
     });
 
     return Array.from(years).sort((a, b) => b - a);
-  }, [organizaciones]);
+  }, [organizacionesEnriquecidas]);
 
   const organizacionesAdminFiltradas = useMemo(() => {
     return filtrarOrganizacionesPorCampoTipo(
-      organizaciones,
+      organizacionesEnriquecidas,
       filtrosAdminTemporal.campo,
       filtrosAdminTemporal.tipo_organizacion
     );
-  }, [organizaciones, filtrosAdminTemporal]);
+  }, [organizacionesEnriquecidas, filtrosAdminTemporal]);
 
   const organizacionesTablaOpciones = useMemo(() => {
-    const filtradas = organizaciones.filter((item) => {
+    const filtradas = organizacionesEnriquecidas.filter((item) => {
       const organizacionId = Number(item?.id);
       const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
         ? detallesAdminTemporalPorOrganizacion[organizacionId]
@@ -453,10 +749,10 @@ export function useSuperadminOrganizaciones() {
       const nombreB = String(b?.nombre_organizacion || '').toLowerCase();
       return nombreA.localeCompare(nombreB);
     });
-  }, [organizaciones, filtrosTabla, detallesAdminTemporalPorOrganizacion]);
+  }, [organizacionesEnriquecidas, filtrosTabla, detallesAdminTemporalPorOrganizacion]);
 
   const organizacionesFiltradas = useMemo(() => {
-    return organizaciones.filter((item) => {
+    return organizacionesEnriquecidas.filter((item) => {
       const organizacionId = Number(item?.id);
       const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
         ? detallesAdminTemporalPorOrganizacion[organizacionId]
@@ -468,11 +764,11 @@ export function useSuperadminOrganizaciones() {
 
       return baseOk && organizacionOk;
     });
-  }, [organizaciones, filtrosTabla, detallesAdminTemporalPorOrganizacion]);
+  }, [organizacionesEnriquecidas, filtrosTabla, detallesAdminTemporalPorOrganizacion]);
 
   const organizacionSeleccionadaTabla = useMemo(
-    () => buscarOrganizacionPorId(organizaciones, organizacionTablaSeleccionadaId),
-    [organizaciones, organizacionTablaSeleccionadaId]
+    () => buscarOrganizacionPorId(organizacionesEnriquecidas, organizacionTablaSeleccionadaId),
+    [organizacionesEnriquecidas, organizacionTablaSeleccionadaId]
   );
 
   const detalleAdminTemporalSeleccionado = useMemo(() => {
@@ -494,8 +790,8 @@ export function useSuperadminOrganizaciones() {
   }, [organizacionSeleccionadaTabla, detallesAdminTemporalPorOrganizacion]);
 
   const organizacionSeleccionadaAdmin = useMemo(
-    () => buscarOrganizacionPorId(organizaciones, formularioAdminTemporal.organizacion_id),
-    [organizaciones, formularioAdminTemporal.organizacion_id]
+    () => buscarOrganizacionPorId(organizacionesEnriquecidas, formularioAdminTemporal.organizacion_id),
+    [organizacionesEnriquecidas, formularioAdminTemporal.organizacion_id]
   );
 
   useEffect(() => {
@@ -503,11 +799,11 @@ export function useSuperadminOrganizaciones() {
       return;
     }
 
-    const seleccionada = buscarOrganizacionPorId(organizaciones, organizacionTablaSeleccionadaId);
+    const seleccionada = buscarOrganizacionPorId(organizacionesEnriquecidas, organizacionTablaSeleccionadaId);
     if (!seleccionada) {
       setOrganizacionTablaSeleccionadaId(null);
     }
-  }, [organizaciones, organizacionTablaSeleccionadaId]);
+  }, [organizacionesEnriquecidas, organizacionTablaSeleccionadaId]);
 
   const seleccionarOrganizacionTabla = useCallback((organizacionId) => {
     const idNormalizado = Number(organizacionId);
@@ -537,7 +833,11 @@ export function useSuperadminOrganizaciones() {
   const cambiarCampo = useCallback((campo, valor) => {
     let valorNormalizado = valor;
 
-    if (campo === 'nombre_organizacion') {
+    if (campo === 'campo') {
+      valorNormalizado = normalizarCodigoCampo(valor);
+    } else if (campo === 'distrito') {
+      valorNormalizado = normalizarCodigoDistrito(valor);
+    } else if (campo === 'nombre_organizacion') {
       valorNormalizado = normalizarNombreSinNumeros(valor, NOMBRE_ORGANIZACION_MAX);
     } else if (campo === 'correo_contacto') {
       valorNormalizado = normalizarCorreo(valor);
@@ -607,7 +907,7 @@ export function useSuperadminOrganizaciones() {
 
       setFormularioAdminTemporal((prevForm) => {
         const disponibles = filtrarOrganizacionesPorCampoTipo(
-          organizaciones,
+          organizacionesEnriquecidas,
           next.campo,
           next.tipo_organizacion
         );
@@ -634,7 +934,7 @@ export function useSuperadminOrganizaciones() {
 
       return next;
     });
-  }, [organizaciones]);
+  }, [organizacionesEnriquecidas]);
 
   const cambiarCampoAdminTemporal = useCallback((campo, valor) => {
     if (campo === 'organizacion_id') {
@@ -712,6 +1012,7 @@ export function useSuperadminOrganizaciones() {
     setOrganizacionTablaSeleccionadaId(Number(organizacion?.id) || null);
     setFormularioEdicion({
       id: organizacion.id,
+      distrito: normalizarCodigoDistrito(organizacion?.distrito || ''),
       tipo_organizacion: organizacion.tipo_organizacion || 'IGLESIA',
       nombre_organizacion: organizacion.nombre_organizacion || '',
       correo_contacto: organizacion.correo_contacto || '',
@@ -723,7 +1024,9 @@ export function useSuperadminOrganizaciones() {
   const cambiarCampoEdicion = useCallback((campo, valor) => {
     let valorNormalizado = valor;
 
-    if (campo === 'nombre_organizacion') {
+    if (campo === 'distrito') {
+      valorNormalizado = normalizarCodigoDistrito(valor);
+    } else if (campo === 'nombre_organizacion') {
       valorNormalizado = normalizarNombreSinNumeros(valor, NOMBRE_ORGANIZACION_MAX);
     } else if (campo === 'correo_contacto') {
       valorNormalizado = normalizarCorreo(valor);
@@ -754,7 +1057,7 @@ export function useSuperadminOrganizaciones() {
         [campo]: valor || 'TODOS'
       };
 
-      const opciones = organizaciones.filter((item) => {
+      const opciones = organizacionesEnriquecidas.filter((item) => {
         const organizacionId = Number(item?.id);
         const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
           ? detallesAdminTemporalPorOrganizacion[organizacionId]
@@ -769,7 +1072,7 @@ export function useSuperadminOrganizaciones() {
 
       return next;
     });
-  }, [organizaciones, detallesAdminTemporalPorOrganizacion]);
+  }, [organizacionesEnriquecidas, detallesAdminTemporalPorOrganizacion]);
 
   const limpiarFiltrosTabla = useCallback(() => {
     setFiltrosTabla(FILTROS_TABLA_INICIALES);
@@ -782,7 +1085,7 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    if (existeDuplicadoNombreEnCampoTipo(organizaciones, {
+    if (existeDuplicadoNombreEnCampoTipo(organizacionesEnriquecidas, {
       campo: formulario.campo,
       tipo: formulario.tipo_organizacion,
       nombre: formulario.nombre_organizacion
@@ -800,6 +1103,7 @@ export function useSuperadminOrganizaciones() {
       const sanitizado = sanitizarObjeto(formulario);
       const payload = {
         campo: sanitizado.campo,
+        distrito: sanitizado.distrito,
         tipo_organizacion: sanitizado.tipo_organizacion,
         nombre_organizacion: sanitizado.nombre_organizacion,
         correo_contacto: sanitizado.correo_contacto || null
@@ -809,6 +1113,15 @@ export function useSuperadminOrganizaciones() {
 
       if (res?.exito) {
         const organizacionCreada = res?.datos?.organizacion || null;
+        const organizacionIdCreada = Number(organizacionCreada?.id);
+        const distritoCreado = normalizarCodigoDistrito(sanitizado.distrito);
+        if (Number.isInteger(organizacionIdCreada) && organizacionIdCreada > 0 && distritoCreado) {
+          setDistritosPorOrganizacion((prev) => ({
+            ...prev,
+            [organizacionIdCreada]: distritoCreado
+          }));
+        }
+
         setUltimaCreada(organizacionCreada);
         notificarExito(res.mensaje || 'Organización creada correctamente.');
         limpiarFormulario();
@@ -824,7 +1137,7 @@ export function useSuperadminOrganizaciones() {
     } finally {
       setGuardando(false);
     }
-  }, [formulario, organizaciones, limpiarFormulario, cargarOrganizaciones]);
+  }, [formulario, organizacionesEnriquecidas, limpiarFormulario, cargarOrganizaciones]);
 
   const crearAdminTemporal = useCallback(async () => {
     const validacion = validarFormularioAdminTemporal(formularioAdminTemporal);
@@ -900,8 +1213,8 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    const organizacionActual = buscarOrganizacionPorId(organizaciones, organizacionId);
-    if (organizacionActual && existeDuplicadoNombreEnCampoTipo(organizaciones, {
+    const organizacionActual = buscarOrganizacionPorId(organizacionesEnriquecidas, organizacionId);
+    if (organizacionActual && existeDuplicadoNombreEnCampoTipo(organizacionesEnriquecidas, {
       campo: String(organizacionActual.campo || ''),
       tipo: formularioEdicion.tipo_organizacion,
       nombre: formularioEdicion.nombre_organizacion,
@@ -919,6 +1232,7 @@ export function useSuperadminOrganizaciones() {
     try {
       const sanitizado = sanitizarObjeto(formularioEdicion);
       const payload = {
+        distrito: sanitizado.distrito,
         tipo_organizacion: sanitizado.tipo_organizacion,
         nombre_organizacion: sanitizado.nombre_organizacion,
         correo_contacto: sanitizado.correo_contacto || null,
@@ -928,6 +1242,14 @@ export function useSuperadminOrganizaciones() {
       const res = await superadminApi.actualizarOrganizacion(organizacionId, payload);
       if (res?.exito) {
         const organizacionActualizada = res?.datos?.organizacion || null;
+        const distritoEditado = normalizarCodigoDistrito(sanitizado.distrito);
+        if (distritoEditado) {
+          setDistritosPorOrganizacion((prev) => ({
+            ...prev,
+            [organizacionId]: distritoEditado
+          }));
+        }
+
         setUltimaEditada(organizacionActualizada);
         notificarExito(res.mensaje || 'Organización actualizada correctamente.');
         cancelarEdicion();
@@ -943,7 +1265,116 @@ export function useSuperadminOrganizaciones() {
     } finally {
       setGuardandoEdicion(false);
     }
-  }, [formularioEdicion, organizaciones, cancelarEdicion, cargarOrganizaciones]);
+  }, [formularioEdicion, organizacionesEnriquecidas, cancelarEdicion, cargarOrganizaciones]);
+
+  const crearCampoCatalogo = useCallback((codigoRaw, nombreRaw) => {
+    const codigo = normalizarCodigoCampo(codigoRaw);
+    const etiqueta = normalizarTextoCorto(nombreRaw, 80);
+
+    if (!codigo || !CAMPO_CODIGO_REGEX.test(codigo)) {
+      notificarError('El codigo del campo debe tener 2 a 10 caracteres alfanumericos.');
+      return false;
+    }
+
+    if (etiqueta.length < 3) {
+      notificarError('El nombre del campo debe tener al menos 3 caracteres.');
+      return false;
+    }
+
+    if (camposOpciones.some((item) => item.valor === codigo)) {
+      notificarError('Ese codigo de campo ya existe.');
+      return false;
+    }
+
+    setCamposOpciones((prev) => (
+      fusionarOpcionesCatalogo(prev, [{ valor: codigo, etiqueta }], 'campo')
+    ));
+    notificarExito('Campo agregado correctamente.');
+    return true;
+  }, [camposOpciones]);
+
+  const actualizarCampoCatalogo = useCallback((codigoRaw, nombreRaw) => {
+    const codigo = normalizarCodigoCampo(codigoRaw);
+    const etiqueta = normalizarTextoCorto(nombreRaw, 80);
+
+    if (!codigo) {
+      notificarError('Campo invalido.');
+      return false;
+    }
+
+    if (etiqueta.length < 3) {
+      notificarError('El nombre del campo debe tener al menos 3 caracteres.');
+      return false;
+    }
+
+    const existe = camposOpciones.some((item) => item.valor === codigo);
+    if (!existe) {
+      notificarError('No se encontro el campo a editar.');
+      return false;
+    }
+
+    setCamposOpciones((prev) => {
+      const next = prev.map((item) => (
+        item.valor === codigo ? { ...item, etiqueta } : item
+      ));
+      return normalizarOpcionesCatalogo(next, 'campo');
+    });
+
+    notificarExito('Nombre de campo actualizado.');
+    return true;
+  }, [camposOpciones]);
+
+  const crearDistritoCatalogo = useCallback((nombreRaw) => {
+    const etiqueta = normalizarTextoCorto(nombreRaw, 80);
+    if (etiqueta.length < 3) {
+      notificarError('El nombre del distrito debe tener al menos 3 caracteres.');
+      return null;
+    }
+
+    const codigosExistentes = new Set(distritosOpciones.map((item) => item.valor));
+    const codigo = generarCodigoDistrito(etiqueta, codigosExistentes);
+    if (!codigo) {
+      notificarError('No se pudo generar un codigo para el distrito.');
+      return null;
+    }
+
+    setDistritosOpciones((prev) => (
+      fusionarOpcionesCatalogo(prev, [{ valor: codigo, etiqueta }], 'distrito')
+    ));
+    notificarExito('Distrito agregado correctamente.');
+    return codigo;
+  }, [distritosOpciones]);
+
+  const actualizarDistritoCatalogo = useCallback((codigoRaw, nombreRaw) => {
+    const codigo = normalizarCodigoDistrito(codigoRaw);
+    const etiqueta = normalizarTextoCorto(nombreRaw, 80);
+
+    if (!codigo) {
+      notificarError('Distrito invalido.');
+      return false;
+    }
+
+    if (etiqueta.length < 3) {
+      notificarError('El nombre del distrito debe tener al menos 3 caracteres.');
+      return false;
+    }
+
+    const existe = distritosOpciones.some((item) => item.valor === codigo);
+    if (!existe) {
+      notificarError('No se encontro el distrito a editar.');
+      return false;
+    }
+
+    setDistritosOpciones((prev) => {
+      const next = prev.map((item) => (
+        item.valor === codigo ? { ...item, etiqueta } : item
+      ));
+      return normalizarOpcionesCatalogo(next, 'distrito');
+    });
+
+    notificarExito('Nombre de distrito actualizado.');
+    return true;
+  }, [distritosOpciones]);
 
   return {
     formulario,
@@ -954,7 +1385,7 @@ export function useSuperadminOrganizaciones() {
     filtrosAdminTemporal,
     formularioEdicion,
     erroresEdicion,
-    organizaciones,
+    organizaciones: organizacionesEnriquecidas,
     organizacionesFiltradas,
     organizacionesAdminFiltradas,
     organizacionesTablaOpciones,
@@ -969,6 +1400,8 @@ export function useSuperadminOrganizaciones() {
     ultimaCreada,
     ultimaEditada,
     filtrosTabla,
+    camposOpciones,
+    distritosOpciones,
     opcionesAnioFiltro,
     cambiarCampo,
     cambiarCampoAdminTemporal,
@@ -985,6 +1418,10 @@ export function useSuperadminOrganizaciones() {
     crearOrganizacion,
     crearAdminTemporal,
     actualizarOrganizacion,
+    crearCampoCatalogo,
+    actualizarCampoCatalogo,
+    crearDistritoCatalogo,
+    actualizarDistritoCatalogo,
     limpiarFormulario,
     limpiarFormularioAdminTemporal,
     cancelarEdicion,

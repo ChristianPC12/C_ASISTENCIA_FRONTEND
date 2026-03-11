@@ -3,7 +3,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { ROLES } from '../../config/constants';
 import { useSetupStatus } from '../../hooks/useSetupStatus';
 import { useAuth } from '../../hooks/useAuth';
-import { EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA } from '../../config/events';
+import {
+  EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
+  EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
+  EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
+} from '../../config/events';
 
 /**
  * Sidebar de navegacion con hamburguesa
@@ -37,6 +41,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirPanelNuevaInstancia = () => {
     window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA));
+  };
+
+  const abrirPanelGestionCampos = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS));
+  };
+
+  const abrirPanelGestionDistritos = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS));
   };
 
   let enlaces = [];
@@ -152,16 +164,38 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           </span>
           <div className="sidebar-topbar-acciones">
             {enPantallaSuperadmin && (
-              <button
-                type="button"
-                className="sidebar-topbar-plus"
-                onClick={abrirPanelNuevaInstancia}
-                aria-label="Crear nueva instancia"
-                title="Crear nueva instancia"
-              >
-                <i className="bi bi-plus-lg" aria-hidden="true"></i>
-                <span className="visually-hidden">Crear nueva instancia</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn"
+                  onClick={abrirPanelGestionCampos}
+                  aria-label="Gestionar campos"
+                  title="Gestionar campos"
+                >
+                  <i className="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Campos</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn"
+                  onClick={abrirPanelGestionDistritos}
+                  aria-label="Gestionar distritos"
+                  title="Gestionar distritos"
+                >
+                  <i className="bi bi-geo-alt" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Distritos</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-plus"
+                  onClick={abrirPanelNuevaInstancia}
+                  aria-label="Crear nueva instancia"
+                  title="Crear nueva instancia"
+                >
+                  <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                  <span className="visually-hidden">Crear nueva instancia</span>
+                </button>
+              </>
             )}
             <div className="sidebar-topbar-usuario d-none d-md-flex">
               <span>{usuario?.nombre_completo}</span>

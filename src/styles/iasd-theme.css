@@ -296,8 +296,14 @@ a:hover {
 }
 
 .superadmin-tabla {
-  min-width: 980px;
+  min-width: 1120px;
   margin-bottom: 0 !important;
+}
+
+.superadmin-metricas-tabla-wrap {
+  max-height: clamp(220px, 36vh, 360px);
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.5rem;
 }
 
 .superadmin-tabla thead th {
@@ -934,8 +940,36 @@ a:hover {
   z-index: 1000;
 }
 .sidebar-topbar-titulo  { font-size: 1.1rem; font-weight: 600; color: var(--iasd-azul); margin-left: 0.5rem; }
-.sidebar-topbar-acciones { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+.sidebar-topbar-acciones { margin-left: auto; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; }
 .sidebar-topbar-usuario { display: flex; align-items: center; font-size: 0.85rem; color: var(--iasd-texto-sec); }
+.sidebar-topbar-metric-btn {
+  height: 32px;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--iasd-azul);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 0.65rem;
+  min-width: 32px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.sidebar-topbar-metric-btn:hover,
+.sidebar-topbar-metric-btn:focus-visible {
+  background: var(--iasd-azul);
+  color: #ffffff;
+  border-color: var(--iasd-azul);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.18);
+  outline: none;
+}
+.sidebar-topbar-metric-btn i {
+  font-size: 0.85rem;
+}
 .sidebar-topbar-plus {
   width: 32px;
   height: 32px;
@@ -1050,6 +1084,10 @@ a:hover {
     padding: 0.6rem 0.75rem;
   }
   .sidebar-topbar-titulo { font-size: 0.95rem; margin-left: 0.35rem; }
+  .sidebar-topbar-metric-btn {
+    width: 32px;
+    padding: 0;
+  }
 }
 
 /* ==============================================

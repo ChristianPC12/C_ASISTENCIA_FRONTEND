@@ -1,11 +1,14 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   useSuperadminOrganizaciones,
-  CAMPOS_IA_OPCIONES,
   TIPO_ORGANIZACION_OPCIONES,
   ESTADO_ADMIN_OPCIONES
 } from '../hooks/useSuperadminOrganizaciones';
-import { EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA } from '../config/events';
+import {
+  EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
+  EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
+  EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
+} from '../config/events';
 import { notificarError } from '../utils/notify';
 
 function obtenerAnioRegistro(organizacion) {
@@ -91,6 +94,8 @@ export default function SuperadminPage() {
     ultimaCreada,
     ultimaEditada,
     filtrosTabla,
+    camposOpciones,
+    distritosOpciones,
     opcionesAnioFiltro,
     cambiarCampo,
     cambiarCampoAdminTemporal,
@@ -105,6 +110,10 @@ export default function SuperadminPage() {
     crearOrganizacion,
     crearAdminTemporal,
     actualizarOrganizacion,
+    crearCampoCatalogo,
+    actualizarCampoCatalogo,
+    crearDistritoCatalogo,
+    actualizarDistritoCatalogo,
     limpiarFormulario,
     limpiarFormularioAdminTemporal,
     cancelarEdicion,
@@ -112,7 +121,14 @@ export default function SuperadminPage() {
   } = useSuperadminOrganizaciones();
 
   const [crearInstanciaVisible, setCrearInstanciaVisible] = useState(false);
+  const [gestionCamposVisible, setGestionCamposVisible] = useState(false);
+  const [gestionDistritosVisible, setGestionDistritosVisible] = useState(false);
   const [exportandoExcel, setExportandoExcel] = useState(false);
+  const [nuevoCampoCodigo, setNuevoCampoCodigo] = useState('');
+  const [nuevoCampoNombre, setNuevoCampoNombre] = useState('');
+  const [nuevoDistritoNombre, setNuevoDistritoNombre] = useState('');
+  const [edicionCampos, setEdicionCampos] = useState({});
+  const [edicionDistritos, setEdicionDistritos] = useState({});
 
   const manejarSubmitOrganizacion = async (event) => {
     event.preventDefault();
@@ -142,6 +158,8 @@ export default function SuperadminPage() {
 
   const manejarAbrirFormularioAdminTemporal = (organizacion) => {
     setCrearInstanciaVisible(false);
+    setGestionCamposVisible(false);
+    setGestionDistritosVisible(false);
     abrirFormularioAdminTemporal(organizacion);
   };
 
@@ -151,6 +169,8 @@ export default function SuperadminPage() {
 
   const manejarIniciarEdicion = (organizacion) => {
     setCrearInstanciaVisible(false);
+    setGestionCamposVisible(false);
+    setGestionDistritosVisible(false);
     iniciarEdicion(organizacion);
   };
 
@@ -158,8 +178,74 @@ export default function SuperadminPage() {
     cancelarEdicion();
   };
 
+  const manejarCerrarGestionCampos = () => {
+    setGestionCamposVisible(false);
+    setNuevoCampoCodigo('');
+    setNuevoCampoNombre('');
+    setEdicionCampos({});
+  };
+
+  const manejarCerrarGestionDistritos = () => {
+    setGestionDistritosVisible(false);
+    setNuevoDistritoNombre('');
+    setEdicionDistritos({});
+  };
+
+  const manejarCrearCampo = (event) => {
+    event.preventDefault();
+    const creado = crearCampoCatalogo(nuevoCampoCodigo, nuevoCampoNombre);
+    if (creado) {
+      setNuevoCampoCodigo('');
+      setNuevoCampoNombre('');
+    }
+  };
+
+  const manejarCrearDistrito = (event) => {
+    event.preventDefault();
+    const codigoCreado = crearDistritoCatalogo(nuevoDistritoNombre);
+    if (codigoCreado) {
+      setNuevoDistritoNombre('');
+    }
+  };
+
+  const manejarGuardarEdicionCampo = (codigo) => {
+    const nombreEditado = edicionCampos[codigo];
+    if (typeof nombreEditado !== 'string') {
+      return;
+    }
+
+    const actualizado = actualizarCampoCatalogo(codigo, nombreEditado);
+    if (actualizado) {
+      setEdicionCampos((prev) => {
+        const copia = { ...prev };
+        delete copia[codigo];
+        return copia;
+      });
+    }
+  };
+
+  const manejarGuardarEdicionDistrito = (codigo) => {
+    const nombreEditado = edicionDistritos[codigo];
+    if (typeof nombreEditado !== 'string') {
+      return;
+    }
+
+    const actualizado = actualizarDistritoCatalogo(codigo, nombreEditado);
+    if (actualizado) {
+      setEdicionDistritos((prev) => {
+        const copia = { ...prev };
+        delete copia[codigo];
+        return copia;
+      });
+    }
+  };
+
   const estaEditando = !!formularioEdicion.id;
-  const hayAccionAbierta = crearInstanciaVisible || adminTemporalVisible || estaEditando;
+  const hayAccionAbierta = crearInstanciaVisible
+    || adminTemporalVisible
+    || estaEditando
+    || gestionCamposVisible
+    || gestionDistritosVisible;
   const mostrarTablaOrganizaciones = !hayAccionAbierta;
   const totalRegistros = paginacion.total || organizaciones.length;
   const totalFiltrados = organizacionesFiltradas.length;
@@ -187,6 +273,7 @@ export default function SuperadminPage() {
 
       worksheet.columns = [
         { header: 'Campo', key: 'campo', width: 24 },
+        { header: 'Distrito', key: 'distrito', width: 24 },
         { header: 'Tipo', key: 'tipo', width: 14 },
         { header: 'Nombre', key: 'nombre', width: 38 },
         { header: 'Año de alta', key: 'anio', width: 14 },
@@ -196,7 +283,7 @@ export default function SuperadminPage() {
       ];
 
       worksheet.views = [{ state: 'frozen', ySplit: 1 }];
-      worksheet.autoFilter = 'A1:G1';
+      worksheet.autoFilter = 'A1:H1';
 
       const headerRow = worksheet.getRow(1);
       headerRow.height = 24;
@@ -222,6 +309,7 @@ export default function SuperadminPage() {
 
         const row = worksheet.addRow({
           campo: item.campo_nombre || item.campo || '-',
+          distrito: item.distrito_nombre || item.distrito || '-',
           tipo: item.tipo_organizacion || '-',
           nombre: item.nombre_organizacion || '-',
           anio: obtenerAnioRegistro(item),
@@ -243,7 +331,7 @@ export default function SuperadminPage() {
           cell.font = { name: 'Calibri', size: 11, color: { argb: 'FF2D3436' } };
           cell.alignment = {
             vertical: 'middle',
-            horizontal: colNumber >= 6 ? 'center' : 'left'
+            horizontal: colNumber >= 7 ? 'center' : 'left'
           };
           cell.fill = {
             type: 'pattern',
@@ -280,16 +368,45 @@ export default function SuperadminPage() {
   };
 
   useEffect(() => {
-    const manejarAbrirDesdeTopbar = () => {
+    const manejarAbrirCrearInstancia = () => {
       cerrarFormularioAdminTemporal();
       cancelarEdicion();
+      setGestionCamposVisible(false);
+      setGestionDistritosVisible(false);
+      setEdicionCampos({});
+      setEdicionDistritos({});
       setCrearInstanciaVisible(true);
     };
 
-    window.addEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirDesdeTopbar);
+    const manejarAbrirGestionCampos = () => {
+      cerrarFormularioAdminTemporal();
+      cancelarEdicion();
+      setCrearInstanciaVisible(false);
+      setGestionDistritosVisible(false);
+      setGestionCamposVisible(true);
+      setNuevoCampoCodigo('');
+      setNuevoCampoNombre('');
+      setEdicionDistritos({});
+    };
+
+    const manejarAbrirGestionDistritos = () => {
+      cerrarFormularioAdminTemporal();
+      cancelarEdicion();
+      setCrearInstanciaVisible(false);
+      setGestionCamposVisible(false);
+      setGestionDistritosVisible(true);
+      setNuevoDistritoNombre('');
+      setEdicionCampos({});
+    };
+
+    window.addEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirCrearInstancia);
+    window.addEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS, manejarAbrirGestionCampos);
+    window.addEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS, manejarAbrirGestionDistritos);
 
     return () => {
-      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirDesdeTopbar);
+      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirCrearInstancia);
+      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS, manejarAbrirGestionCampos);
+      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS, manejarAbrirGestionDistritos);
     };
   }, [cerrarFormularioAdminTemporal, cancelarEdicion]);
 
@@ -350,13 +467,32 @@ export default function SuperadminPage() {
                       disabled={guardando}
                     >
                       <option value="">Seleccione un campo</option>
-                      {CAMPOS_IA_OPCIONES.map((campo) => (
+                      {camposOpciones.map((campo) => (
                         <option key={campo.valor} value={campo.valor}>
                           {campo.etiqueta}
                         </option>
                       ))}
                     </select>
                     {errores.campo && <div className="invalid-feedback">{errores.campo}</div>}
+                  </div>
+
+                  <div className="col-12 col-md-6">
+                    <label htmlFor="distrito" className="form-label">Distrito</label>
+                    <select
+                      id="distrito"
+                      className={`form-select ${errores.distrito ? 'is-invalid' : ''}`}
+                      value={formulario.distrito}
+                      onChange={(event) => cambiarCampo('distrito', event.target.value)}
+                      disabled={guardando}
+                    >
+                      <option value="">Seleccione un distrito</option>
+                      {distritosOpciones.map((distrito) => (
+                        <option key={distrito.valor} value={distrito.valor}>
+                          {distrito.etiqueta}
+                        </option>
+                      ))}
+                    </select>
+                    {errores.distrito && <div className="invalid-feedback">{errores.distrito}</div>}
                   </div>
 
                   <div className="col-12 col-md-6">
@@ -379,7 +515,7 @@ export default function SuperadminPage() {
                     )}
                   </div>
 
-                  <div className="col-12 col-md-8">
+                  <div className="col-12 col-md-6">
                     <label htmlFor="nombre_organizacion" className="form-label">Nombre de organización</label>
                     <input
                       id="nombre_organizacion"
@@ -396,7 +532,7 @@ export default function SuperadminPage() {
                     )}
                   </div>
 
-                  <div className="col-12 col-md-4">
+                  <div className="col-12 col-md-6">
                     <label htmlFor="correo_contacto" className="form-label">Correo de contacto (opcional)</label>
                     <input
                       id="correo_contacto"
@@ -428,6 +564,184 @@ export default function SuperadminPage() {
                   </button>
                 </div>
                 </form>
+              </div>
+            </div>
+          )}
+
+          {gestionCamposVisible && !adminTemporalVisible && (
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                  <h3 className="h5 mb-0">Gestionar campos</h3>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={manejarCerrarGestionCampos}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+
+                <form className="row g-2 mb-3" onSubmit={manejarCrearCampo}>
+                  <div className="col-12 col-md-3">
+                    <label htmlFor="nuevo_campo_codigo" className="form-label">Código</label>
+                    <input
+                      id="nuevo_campo_codigo"
+                      type="text"
+                      className="form-control form-control-sm text-uppercase"
+                      value={nuevoCampoCodigo}
+                      maxLength={10}
+                      onChange={(event) => setNuevoCampoCodigo(event.target.value.toUpperCase())}
+                      placeholder="AN"
+                    />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label htmlFor="nuevo_campo_nombre" className="form-label">Nombre del campo</label>
+                    <input
+                      id="nuevo_campo_nombre"
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={nuevoCampoNombre}
+                      maxLength={80}
+                      onChange={(event) => setNuevoCampoNombre(event.target.value)}
+                      placeholder="Asociación Norte"
+                    />
+                  </div>
+                  <div className="col-12 col-md-3 d-flex align-items-end">
+                    <button type="submit" className="btn btn-outline-primary btn-sm w-100">
+                      Agregar campo
+                    </button>
+                  </div>
+                </form>
+
+                <div className="table-responsive superadmin-metricas-tabla-wrap">
+                  <table className="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '140px' }}>Código</th>
+                        <th>Nombre</th>
+                        <th style={{ width: '120px' }}>Accion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {camposOpciones.map((item) => {
+                        const valorEdicion = edicionCampos[item.valor] ?? item.etiqueta;
+                        const cambioPendiente = valorEdicion.trim() !== item.etiqueta;
+
+                        return (
+                          <tr key={item.valor}>
+                            <td><span className="badge text-bg-light border">{item.valor}</span></td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                value={valorEdicion}
+                                maxLength={80}
+                                onChange={(event) => {
+                                  const nuevoValor = event.target.value;
+                                  setEdicionCampos((prev) => ({ ...prev, [item.valor]: nuevoValor }));
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm w-100"
+                                onClick={() => manejarGuardarEdicionCampo(item.valor)}
+                                disabled={!cambioPendiente}
+                              >
+                                Guardar
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {gestionDistritosVisible && !adminTemporalVisible && (
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
+                  <h3 className="h5 mb-0">Gestionar distritos</h3>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={manejarCerrarGestionDistritos}
+                  >
+                    Cerrar
+                  </button>
+                </div>
+
+                <form className="row g-2 mb-3" onSubmit={manejarCrearDistrito}>
+                  <div className="col-12 col-md-9">
+                    <label htmlFor="nuevo_distrito_nombre" className="form-label">Nombre del distrito</label>
+                    <input
+                      id="nuevo_distrito_nombre"
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={nuevoDistritoNombre}
+                      maxLength={80}
+                      onChange={(event) => setNuevoDistritoNombre(event.target.value)}
+                      placeholder="Guanacaste 1"
+                    />
+                  </div>
+                  <div className="col-12 col-md-3 d-flex align-items-end">
+                    <button type="submit" className="btn btn-outline-primary btn-sm w-100">
+                      Agregar distrito
+                    </button>
+                  </div>
+                </form>
+
+                <div className="table-responsive superadmin-metricas-tabla-wrap">
+                  <table className="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '180px' }}>Código</th>
+                        <th>Nombre</th>
+                        <th style={{ width: '120px' }}>Accion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {distritosOpciones.map((item) => {
+                        const valorEdicion = edicionDistritos[item.valor] ?? item.etiqueta;
+                        const cambioPendiente = valorEdicion.trim() !== item.etiqueta;
+
+                        return (
+                          <tr key={item.valor}>
+                            <td><span className="badge text-bg-light border">{item.valor}</span></td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                value={valorEdicion}
+                                maxLength={80}
+                                onChange={(event) => {
+                                  const nuevoValor = event.target.value;
+                                  setEdicionDistritos((prev) => ({ ...prev, [item.valor]: nuevoValor }));
+                                }}
+                              />
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm w-100"
+                                onClick={() => manejarGuardarEdicionDistrito(item.valor)}
+                                disabled={!cambioPendiente}
+                              >
+                                Guardar
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -632,6 +946,27 @@ export default function SuperadminPage() {
             <form onSubmit={manejarSubmitEdicion} noValidate>
               <div className="row g-3">
                 <div className="col-12 col-md-3">
+                  <label htmlFor="edicion_distrito" className="form-label">Distrito</label>
+                  <select
+                    id="edicion_distrito"
+                    className={`form-select ${erroresEdicion.distrito ? 'is-invalid' : ''}`}
+                    value={formularioEdicion.distrito}
+                    onChange={(event) => cambiarCampoEdicion('distrito', event.target.value)}
+                    disabled={guardandoEdicion}
+                  >
+                    <option value="">Seleccione un distrito</option>
+                    {distritosOpciones.map((distrito) => (
+                      <option key={distrito.valor} value={distrito.valor}>
+                        {distrito.etiqueta}
+                      </option>
+                    ))}
+                  </select>
+                  {erroresEdicion.distrito && (
+                    <div className="invalid-feedback">{erroresEdicion.distrito}</div>
+                  )}
+                </div>
+
+                <div className="col-12 col-md-3">
                   <label htmlFor="edicion_tipo" className="form-label">Tipo de organización</label>
                   <select
                     id="edicion_tipo"
@@ -651,7 +986,7 @@ export default function SuperadminPage() {
                   )}
                 </div>
 
-                <div className="col-12 col-md-4">
+                <div className="col-12 col-md-3">
                   <label htmlFor="edicion_nombre" className="form-label">Nombre de organización</label>
                   <input
                     id="edicion_nombre"
@@ -683,7 +1018,7 @@ export default function SuperadminPage() {
                   )}
                 </div>
 
-                <div className="col-12 col-md-2">
+                <div className="col-12 col-md-3">
                   <label htmlFor="edicion_activa" className="form-label">Estado</label>
                   <select
                     id="edicion_activa"
@@ -746,9 +1081,26 @@ export default function SuperadminPage() {
                   onChange={(event) => cambiarFiltroTabla('campo', event.target.value)}
                 >
                   <option value="TODOS">Todos</option>
-                  {CAMPOS_IA_OPCIONES.map((campo) => (
+                  {camposOpciones.map((campo) => (
                     <option key={campo.valor} value={campo.valor}>
                       {campo.etiqueta}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="col-12 col-md-2">
+                <label htmlFor="filtro_distrito_tabla" className="form-label mb-1">Distrito</label>
+                <select
+                  id="filtro_distrito_tabla"
+                  className="form-select form-select-sm"
+                  value={filtrosTabla.distrito}
+                  onChange={(event) => cambiarFiltroTabla('distrito', event.target.value)}
+                >
+                  <option value="TODOS">Todos</option>
+                  {distritosOpciones.map((distrito) => (
+                    <option key={distrito.valor} value={distrito.valor}>
+                      {distrito.etiqueta}
                     </option>
                   ))}
                 </select>
@@ -804,7 +1156,7 @@ export default function SuperadminPage() {
                 </select>
               </div>
 
-              <div className="col-12 col-md-4">
+              <div className="col-12 col-md-2">
                 <label htmlFor="filtro_organizacion_tabla" className="form-label mb-1">Organización</label>
                 <select
                   id="filtro_organizacion_tabla"
@@ -816,6 +1168,7 @@ export default function SuperadminPage() {
                   {organizacionesTablaOpciones.map((item) => (
                     <option key={item.id} value={String(item.id)}>
                       {item.nombre_organizacion}
+                      {item.distrito_nombre ? ` - ${item.distrito_nombre}` : ''}
                     </option>
                   ))}
                 </select>
@@ -850,6 +1203,7 @@ export default function SuperadminPage() {
                   <thead>
                     <tr>
                       <th>Campo</th>
+                      <th>Distrito</th>
                       <th>Tipo</th>
                       <th>Nombre</th>
                       <th>Año de alta</th>
@@ -889,6 +1243,7 @@ export default function SuperadminPage() {
                             }}
                           >
                             <td>{item.campo_nombre || item.campo}</td>
+                            <td>{item.distrito_nombre || item.distrito || '-'}</td>
                             <td>{item.tipo_organizacion}</td>
                             <td>{item.nombre_organizacion}</td>
                             <td>{obtenerAnioRegistro(item)}</td>
@@ -937,11 +1292,14 @@ export default function SuperadminPage() {
 
                           {filaSeleccionada && (
                             <tr className="fila-detalle">
-                              <td colSpan={7}>
+                              <td colSpan={8}>
                                 <div className="registro-detalle">
                                   {detalleFila ? (
                                     <div className="border rounded bg-light-subtle p-3 mb-0">
                                       <div className="fw-semibold mb-2">{item.nombre_organizacion}</div>
+                                      <div className="mb-1">
+                                        Distrito: <strong>{item.distrito_nombre || item.distrito || '-'}</strong>
+                                      </div>
                                       <div className="mb-1">
                                         Estado ADMIN:{' '}
                                         <span className={`badge ${estadoAdminConfig.clase}`}>
