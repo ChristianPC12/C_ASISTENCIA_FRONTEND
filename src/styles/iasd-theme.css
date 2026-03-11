@@ -312,6 +312,10 @@ a:hover {
   border-left: 3px solid var(--iasd-azul);
 }
 
+.superadmin-fila-pendiente {
+  background-color: rgba(243, 156, 18, 0.14) !important;
+}
+
 /* Fila de detalle expandible */
 .fila-detalle > td {
   background-color: #f8f9fa !important;

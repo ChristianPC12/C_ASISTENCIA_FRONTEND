@@ -13,6 +13,22 @@ function obtenerAnioRegistro(organizacion) {
   return '-';
 }
 
+function construirEstadoCorreoDetalle(detalleAdmin, organizacion) {
+  const correo = detalleAdmin?.correo;
+  if (correo && typeof correo === 'object') {
+    const enviado = !!correo.enviado;
+    const destino = String(correo.destino || '').trim();
+    return `${enviado ? 'Enviado' : 'No enviado'}${destino ? ` (${destino})` : ''}`;
+  }
+
+  const correoContacto = String(organizacion?.correo_contacto || '').trim();
+  if (correoContacto) {
+    return `No enviado (${correoContacto})`;
+  }
+
+  return 'No enviado';
+}
+
 export default function SuperadminPage() {
   const {
     formulario,
@@ -25,14 +41,15 @@ export default function SuperadminPage() {
     organizaciones,
     organizacionesFiltradas,
     organizacionesTablaOpciones,
+    organizacionSeleccionadaTabla,
     organizacionSeleccionadaAdmin,
+    detalleAdminTemporalSeleccionado,
     paginacion,
     cargandoLista,
     guardando,
     guardandoAdminTemporal,
     guardandoEdicion,
     ultimaCreada,
-    ultimoAdminTemporal,
     ultimaEditada,
     filtrosTabla,
     opcionesAnioFiltro,
@@ -42,6 +59,8 @@ export default function SuperadminPage() {
     cerrarFormularioAdminTemporal,
     iniciarEdicion,
     cambiarCampoEdicion,
+    seleccionarOrganizacionTabla,
+    tieneAdminActivoOrganizacion,
     cambiarFiltroTabla,
     limpiarFiltrosTabla,
     crearOrganizacion,
@@ -78,6 +97,10 @@ export default function SuperadminPage() {
     || '-';
   const tipoOrganizacionAdmin = organizacionSeleccionadaAdmin?.tipo_organizacion || '-';
   const nombreOrganizacionAdmin = organizacionSeleccionadaAdmin?.nombre_organizacion || '-';
+  const adminTemporalDetalle = detalleAdminTemporalSeleccionado?.admin_temporal || null;
+  const estadoCorreoDetalle = organizacionSeleccionadaTabla
+    ? construirEstadoCorreoDetalle(detalleAdminTemporalSeleccionado, organizacionSeleccionadaTabla)
+    : 'No enviado';
 
   useEffect(() => {
     if (!adminTemporalVisible || estaEditando) {
@@ -374,25 +397,6 @@ export default function SuperadminPage() {
             </div>
           )}
 
-          {ultimoAdminTemporal?.admin_temporal && (
-            <div className="alert alert-info border-0 shadow-sm" role="alert">
-              <div>
-                ADMIN temporal creado: <strong>{ultimoAdminTemporal.admin_temporal.usuario}</strong>
-              </div>
-              <div>
-                Password temporal: <strong>{ultimoAdminTemporal.admin_temporal.password_temporal}</strong>
-              </div>
-              <div>
-                Expira en: <strong>{ultimoAdminTemporal.admin_temporal.expira_en}</strong>
-              </div>
-              {ultimoAdminTemporal.correo && (
-                <div>
-                  Correo: <strong>{ultimoAdminTemporal.correo.enviado ? 'Enviado' : 'No enviado'}</strong>
-                  {ultimoAdminTemporal.correo.destino ? ` (${ultimoAdminTemporal.correo.destino})` : ''}
-                </div>
-              )}
-            </div>
-          )}
         </>
       )}
 
@@ -620,17 +624,39 @@ export default function SuperadminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {organizacionesFiltradas.map((item) => (
-                      <tr key={item.id}>
+                    {organizacionesFiltradas.map((item) => {
+                      const filaSeleccionada = Number(organizacionSeleccionadaTabla?.id) === Number(item.id);
+                      const tieneAdminActivo = tieneAdminActivoOrganizacion(item);
+
+                      return (
+                        <tr
+                          key={item.id}
+                          className={`fila-registro ${filaSeleccionada ? 'fila-activa' : ''} ${!tieneAdminActivo ? 'superadmin-fila-pendiente' : ''}`}
+                          role="button"
+                          tabIndex={0}
+                          aria-pressed={filaSeleccionada}
+                          onClick={() => seleccionarOrganizacionTabla(item.id)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              seleccionarOrganizacionTabla(item.id);
+                            }
+                          }}
+                        >
                         <td>{item.campo_nombre || item.campo}</td>
                         <td>{item.tipo_organizacion}</td>
                         <td>{item.nombre_organizacion}</td>
                         <td>{obtenerAnioRegistro(item)}</td>
                         <td>{item.correo_contacto || '-'}</td>
                         <td>
-                          <span className={`badge ${item.activa ? 'text-bg-success' : 'text-bg-secondary'}`}>
-                            {item.activa ? 'Activa' : 'Inactiva'}
-                          </span>
+                          <div className="d-flex flex-wrap gap-1">
+                            <span className={`badge ${item.activa ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                              {item.activa ? 'Activa' : 'Inactiva'}
+                            </span>
+                            <span className={`badge ${tieneAdminActivo ? 'text-bg-info' : 'text-bg-warning text-dark'}`}>
+                              {tieneAdminActivo ? 'ADMIN activo' : 'Sin ADMIN'}
+                            </span>
+                          </div>
                         </td>
                         <td>
                           <div className="btn-group btn-group-sm" role="group" aria-label="Acciones organización">
@@ -639,7 +665,10 @@ export default function SuperadminPage() {
                               className="btn btn-outline-success"
                               title="Crear ADMIN temporal"
                               aria-label="Crear ADMIN temporal"
-                              onClick={() => abrirFormularioAdminTemporal(item)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                abrirFormularioAdminTemporal(item);
+                              }}
                               disabled={!item.activa || guardandoAdminTemporal}
                             >
                               <i className="bi bi-person-plus-fill"></i>
@@ -649,7 +678,10 @@ export default function SuperadminPage() {
                               className="btn btn-outline-primary"
                               title="Editar organización"
                               aria-label="Editar organización"
-                              onClick={() => iniciarEdicion(item)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                iniciarEdicion(item);
+                              }}
                               disabled={guardandoEdicion}
                             >
                               <i className="bi bi-pencil-square"></i>
@@ -657,12 +689,46 @@ export default function SuperadminPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
+
+          <div className="mt-3">
+            {!organizacionSeleccionadaTabla ? (
+              <div className="text-muted small">
+                Seleccione un registro para ver el estado del ADMIN temporal.
+              </div>
+            ) : adminTemporalDetalle ? (
+              <div className="border rounded bg-light-subtle p-3 mb-0">
+                <div className="fw-semibold mb-2">
+                  {organizacionSeleccionadaTabla.nombre_organizacion}
+                </div>
+                <div>
+                  ADMIN temporal activo: <strong>{adminTemporalDetalle.usuario || '-'}</strong>
+                </div>
+                <div>
+                  Password temporal: <strong>{adminTemporalDetalle.password_temporal || 'No disponible'}</strong>
+                </div>
+                <div>
+                  Expira en: <strong>{adminTemporalDetalle.expira_en || 'Sin fecha disponible'}</strong>
+                </div>
+                <div>
+                  Correo: <strong>{estadoCorreoDetalle}</strong>
+                </div>
+              </div>
+            ) : (
+              <div className="border rounded bg-light-subtle p-3 mb-0">
+                <div className="fw-semibold mb-1">
+                  {organizacionSeleccionadaTabla.nombre_organizacion}
+                </div>
+                Esta organizacion no tiene ADMIN activo. Falta crear un administrador temporal.
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

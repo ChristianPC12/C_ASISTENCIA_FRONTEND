@@ -176,6 +176,43 @@ function existeDuplicadoNombreEnCampoTipo(organizaciones, { campo, tipo, nombre,
   });
 }
 
+function esValorBooleanoVerdadero(valor) {
+  return valor === true || valor === 1 || valor === '1' || valor === 'true';
+}
+
+function tieneAdminActivoEnOrganizacion(organizacion, detalleCache = null) {
+  if (!organizacion) {
+    return false;
+  }
+
+  const usuarioCache = String(detalleCache?.admin_temporal?.usuario || '').trim();
+  if (usuarioCache) {
+    return true;
+  }
+
+  if (esValorBooleanoVerdadero(organizacion?.tiene_admin_activo)) {
+    return true;
+  }
+
+  const usuarioActivo = String(organizacion?.admin_usuario_activo || '').trim();
+  return usuarioActivo.length > 0;
+}
+
+function construirDetalleAdminDesdeOrganizacion(organizacion) {
+  if (!organizacion || !tieneAdminActivoEnOrganizacion(organizacion)) {
+    return null;
+  }
+
+  return {
+    admin_temporal: {
+      usuario: String(organizacion.admin_usuario_activo || '').trim() || null,
+      password_temporal: null,
+      expira_en: organizacion.admin_password_expira_en || null
+    },
+    correo: null
+  };
+}
+
 function validarFormulario(formulario) {
   const errores = {};
 
@@ -275,7 +312,8 @@ export function useSuperadminOrganizaciones() {
   const [guardandoAdminTemporal, setGuardandoAdminTemporal] = useState(false);
   const [guardandoEdicion, setGuardandoEdicion] = useState(false);
   const [ultimaCreada, setUltimaCreada] = useState(null);
-  const [ultimoAdminTemporal, setUltimoAdminTemporal] = useState(null);
+  const [detallesAdminTemporalPorOrganizacion, setDetallesAdminTemporalPorOrganizacion] = useState({});
+  const [organizacionTablaSeleccionadaId, setOrganizacionTablaSeleccionadaId] = useState(null);
   const [ultimaEditada, setUltimaEditada] = useState(null);
   const [filtrosTabla, setFiltrosTabla] = useState(FILTROS_TABLA_INICIALES);
 
@@ -358,10 +396,65 @@ export function useSuperadminOrganizaciones() {
     });
   }, [organizaciones, filtrosTabla]);
 
+  const organizacionSeleccionadaTabla = useMemo(
+    () => buscarOrganizacionPorId(organizaciones, organizacionTablaSeleccionadaId),
+    [organizaciones, organizacionTablaSeleccionadaId]
+  );
+
+  const detalleAdminTemporalSeleccionado = useMemo(() => {
+    if (!organizacionSeleccionadaTabla) {
+      return null;
+    }
+
+    const organizacionId = Number(organizacionSeleccionadaTabla.id);
+    if (!Number.isInteger(organizacionId) || organizacionId <= 0) {
+      return null;
+    }
+
+    const detalleCache = detallesAdminTemporalPorOrganizacion[organizacionId];
+    if (detalleCache?.admin_temporal) {
+      return detalleCache;
+    }
+
+    return construirDetalleAdminDesdeOrganizacion(organizacionSeleccionadaTabla);
+  }, [organizacionSeleccionadaTabla, detallesAdminTemporalPorOrganizacion]);
+
   const organizacionSeleccionadaAdmin = useMemo(
     () => buscarOrganizacionPorId(organizaciones, formularioAdminTemporal.organizacion_id),
     [organizaciones, formularioAdminTemporal.organizacion_id]
   );
+
+  useEffect(() => {
+    if (organizacionTablaSeleccionadaId === null) {
+      return;
+    }
+
+    const seleccionada = buscarOrganizacionPorId(organizaciones, organizacionTablaSeleccionadaId);
+    if (!seleccionada) {
+      setOrganizacionTablaSeleccionadaId(null);
+    }
+  }, [organizaciones, organizacionTablaSeleccionadaId]);
+
+  const seleccionarOrganizacionTabla = useCallback((organizacionId) => {
+    const idNormalizado = Number(organizacionId);
+    if (!Number.isInteger(idNormalizado) || idNormalizado <= 0) {
+      setOrganizacionTablaSeleccionadaId(null);
+      return;
+    }
+
+    setOrganizacionTablaSeleccionadaId((prev) => (
+      Number(prev) === idNormalizado ? null : idNormalizado
+    ));
+  }, []);
+
+  const tieneAdminActivoOrganizacion = useCallback((organizacion) => {
+    const organizacionId = Number(organizacion?.id);
+    const detalleCache = Number.isInteger(organizacionId) && organizacionId > 0
+      ? detallesAdminTemporalPorOrganizacion[organizacionId]
+      : null;
+
+    return tieneAdminActivoEnOrganizacion(organizacion, detalleCache);
+  }, [detallesAdminTemporalPorOrganizacion]);
 
   const cambiarCampo = useCallback((campo, valor) => {
     let valorNormalizado = valor;
@@ -395,6 +488,7 @@ export function useSuperadminOrganizaciones() {
     setErroresEdicion({});
 
     if (organizacion && organizacion.id) {
+      setOrganizacionTablaSeleccionadaId(Number(organizacion.id));
       const correoDestino = normalizarCorreo(organizacion.correo_contacto || '');
       const campo = String(organizacion.campo || 'TODOS');
       const tipo = String(organizacion.tipo_organizacion || 'TODOS');
@@ -537,6 +631,7 @@ export function useSuperadminOrganizaciones() {
 
   const iniciarEdicion = useCallback((organizacion) => {
     setAdminTemporalVisible(false);
+    setOrganizacionTablaSeleccionadaId(Number(organizacion?.id) || null);
     setFormularioEdicion({
       id: organizacion.id,
       tipo_organizacion: organizacion.tipo_organizacion || 'IGLESIA',
@@ -672,7 +767,28 @@ export function useSuperadminOrganizaciones() {
       const res = await superadminApi.crearAdminTemporal(organizacionId, payload);
 
       if (res?.exito) {
-        setUltimoAdminTemporal(res?.datos || null);
+        const detalleAdmin = res?.datos || {};
+        const adminTemporal = detalleAdmin?.admin_temporal || {};
+
+        setDetallesAdminTemporalPorOrganizacion((prev) => ({
+          ...prev,
+          [organizacionId]: detalleAdmin
+        }));
+
+        setOrganizaciones((prev) => prev.map((item) => {
+          if (Number(item.id) !== organizacionId) {
+            return item;
+          }
+
+          return {
+            ...item,
+            tiene_admin_activo: true,
+            admin_temporal_activo: true,
+            admin_usuario_activo: adminTemporal.usuario || item.admin_usuario_activo || null,
+            admin_password_expira_en: adminTemporal.expira_en || item.admin_password_expira_en || null
+          };
+        }));
+        setOrganizacionTablaSeleccionadaId(organizacionId);
         notificarExito(res.mensaje || 'ADMIN temporal creado correctamente.');
         limpiarFormularioAdminTemporal();
         return true;
@@ -759,14 +875,15 @@ export function useSuperadminOrganizaciones() {
     organizacionesFiltradas,
     organizacionesAdminFiltradas,
     organizacionesTablaOpciones,
+    organizacionSeleccionadaTabla,
     organizacionSeleccionadaAdmin,
+    detalleAdminTemporalSeleccionado,
     paginacion,
     cargandoLista,
     guardando,
     guardandoAdminTemporal,
     guardandoEdicion,
     ultimaCreada,
-    ultimoAdminTemporal,
     ultimaEditada,
     filtrosTabla,
     opcionesAnioFiltro,
@@ -777,6 +894,8 @@ export function useSuperadminOrganizaciones() {
     cambiarFiltroAdminTemporal,
     iniciarEdicion,
     cambiarCampoEdicion,
+    seleccionarOrganizacionTabla,
+    tieneAdminActivoOrganizacion,
     cambiarFiltroTabla,
     limpiarFiltrosTabla,
     crearOrganizacion,
