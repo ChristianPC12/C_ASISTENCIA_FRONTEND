@@ -11,8 +11,6 @@ const USUARIO_MAX = 50;
 const CORREO_MAX = 30;
 const ANIO_MIN = 2000;
 const ANIO_MAX = 2100;
-const CATALOGO_STORAGE_KEY = 'superadmin_catalogos_v1';
-const DISTRITOS_ORG_STORAGE_KEY = 'superadmin_distritos_por_org_v1';
 const CAMPO_CODIGO_REGEX = /^[A-Z0-9]{2,10}$/;
 const DISTRITO_CODIGO_REGEX = /^[A-Z0-9_]{2,24}$/;
 
@@ -61,14 +59,6 @@ const PAGINACION_INICIAL = {
   total: 0,
   total_pages: 0
 };
-
-export const CAMPOS_IA_OPCIONES = [
-  { valor: 'AN', etiqueta: 'Asociación Norte' },
-  { valor: 'ACS', etiqueta: 'Asociación Central Sur' },
-  { valor: 'MC', etiqueta: 'Misión Caribe' }
-];
-
-export const DISTRITOS_IA_OPCIONES_BASE = [];
 
 export const TIPO_ORGANIZACION_OPCIONES = [
   { valor: 'IGLESIA', etiqueta: 'Iglesia' },
@@ -153,46 +143,6 @@ function normalizarCodigoDistrito(valor) {
   return codigo;
 }
 
-function generarCodigoDistrito(nombre, codigosExistentes = new Set()) {
-  const base = normalizarCodigoDistrito(nombre) || 'DISTRITO';
-  if (!codigosExistentes.has(base)) {
-    return base;
-  }
-
-  let contador = 2;
-  while (contador <= 999) {
-    const candidato = normalizarCodigoDistrito(`${base}_${contador}`);
-    if (candidato && !codigosExistentes.has(candidato)) {
-      return candidato;
-    }
-    contador += 1;
-  }
-
-  return '';
-}
-
-function parsearJsonStorage(clave, fallback) {
-  try {
-    const raw = localStorage.getItem(clave);
-    if (!raw) {
-      return fallback;
-    }
-
-    const parseado = JSON.parse(raw);
-    return parseado ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function guardarJsonStorage(clave, valor) {
-  try {
-    localStorage.setItem(clave, JSON.stringify(valor));
-  } catch {
-    // Ignorar errores de cuota o navegadores restrictivos.
-  }
-}
-
 function normalizarOpcionesCatalogo(lista, tipo) {
   const mapa = new Map();
   const items = Array.isArray(lista) ? lista : [];
@@ -210,7 +160,11 @@ function normalizarOpcionesCatalogo(lista, tipo) {
       return;
     }
 
-    mapa.set(valor, { valor, etiqueta });
+    mapa.set(valor, {
+      valor,
+      etiqueta,
+      activo: item?.activo !== false && item?.activo !== 0 && item?.activo !== '0'
+    });
   });
 
   return Array.from(mapa.values()).sort((a, b) => (
@@ -228,46 +182,16 @@ function sonOpcionesIguales(actual, siguiente) {
   }
 
   for (let i = 0; i < actual.length; i += 1) {
-    if (actual[i]?.valor !== siguiente[i]?.valor || actual[i]?.etiqueta !== siguiente[i]?.etiqueta) {
+    if (
+      actual[i]?.valor !== siguiente[i]?.valor
+      || actual[i]?.etiqueta !== siguiente[i]?.etiqueta
+      || !!actual[i]?.activo !== !!siguiente[i]?.activo
+    ) {
       return false;
     }
   }
 
   return true;
-}
-
-function normalizarMapaDistritosPorOrganizacion(raw) {
-  if (!raw || typeof raw !== 'object') {
-    return {};
-  }
-
-  return Object.entries(raw).reduce((acc, [orgId, distritoValor]) => {
-    const idNormalizado = Number(orgId);
-    if (!Number.isInteger(idNormalizado) || idNormalizado <= 0) {
-      return acc;
-    }
-
-    const distrito = normalizarCodigoDistrito(distritoValor);
-    if (!distrito) {
-      return acc;
-    }
-
-    acc[idNormalizado] = distrito;
-    return acc;
-  }, {});
-}
-
-function leerCatalogosStorage() {
-  const cache = parsearJsonStorage(CATALOGO_STORAGE_KEY, {});
-  return {
-    campos: normalizarOpcionesCatalogo(cache?.campos, 'campo'),
-    distritos: normalizarOpcionesCatalogo(cache?.distritos, 'distrito')
-  };
-}
-
-function leerDistritosPorOrganizacionStorage() {
-  const cache = parsearJsonStorage(DISTRITOS_ORG_STORAGE_KEY, {});
-  return normalizarMapaDistritosPorOrganizacion(cache);
 }
 
 function fusionarOpcionesCatalogo(base, extra, tipo) {
@@ -277,7 +201,7 @@ function fusionarOpcionesCatalogo(base, extra, tipo) {
   ], tipo);
 }
 
-function obtenerCodigoDistritoOrganizacion(organizacion, distritosPorOrganizacion = {}) {
+function obtenerCodigoDistritoOrganizacion(organizacion) {
   if (!organizacion || typeof organizacion !== 'object') {
     return '';
   }
@@ -292,11 +216,6 @@ function obtenerCodigoDistritoOrganizacion(organizacion, distritosPorOrganizacio
     return distritoApi;
   }
 
-  const orgId = Number(organizacion?.id);
-  if (Number.isInteger(orgId) && orgId > 0) {
-    return normalizarCodigoDistrito(distritosPorOrganizacion[orgId] || '');
-  }
-
   return '';
 }
 
@@ -309,10 +228,10 @@ function extraerOpcionesCampoDesdeOrganizaciones(organizaciones) {
     .filter((item) => normalizarCodigoCampo(item.valor) && normalizarTextoCorto(item.etiqueta));
 }
 
-function extraerOpcionesDistritoDesdeOrganizaciones(organizaciones, distritosPorOrganizacion = {}) {
+function extraerOpcionesDistritoDesdeOrganizaciones(organizaciones) {
   return (Array.isArray(organizaciones) ? organizaciones : [])
     .map((item) => {
-      const valor = obtenerCodigoDistritoOrganizacion(item, distritosPorOrganizacion);
+      const valor = obtenerCodigoDistritoOrganizacion(item);
       return {
         valor,
         etiqueta: item?.distrito_nombre || valor
@@ -321,9 +240,9 @@ function extraerOpcionesDistritoDesdeOrganizaciones(organizaciones, distritosPor
     .filter((item) => item.valor);
 }
 
-function enriquecerOrganizacion(organizacion, mapaCampos, mapaDistritos, distritosPorOrganizacion = {}) {
+function enriquecerOrganizacion(organizacion, mapaCampos, mapaDistritos) {
   const campoCodigo = normalizarCodigoCampo(organizacion?.campo || '');
-  const distritoCodigo = obtenerCodigoDistritoOrganizacion(organizacion, distritosPorOrganizacion);
+  const distritoCodigo = obtenerCodigoDistritoOrganizacion(organizacion);
 
   return {
     ...organizacion,
@@ -630,17 +549,8 @@ export function useSuperadminOrganizaciones() {
   const [organizacionTablaSeleccionadaId, setOrganizacionTablaSeleccionadaId] = useState(null);
   const [ultimaEditada, setUltimaEditada] = useState(null);
   const [filtrosTabla, setFiltrosTabla] = useState(FILTROS_TABLA_INICIALES);
-  const [camposOpciones, setCamposOpciones] = useState(() => {
-    const cache = leerCatalogosStorage();
-    return fusionarOpcionesCatalogo(CAMPOS_IA_OPCIONES, cache.campos, 'campo');
-  });
-  const [distritosOpciones, setDistritosOpciones] = useState(() => {
-    const cache = leerCatalogosStorage();
-    return fusionarOpcionesCatalogo(DISTRITOS_IA_OPCIONES_BASE, cache.distritos, 'distrito');
-  });
-  const [distritosPorOrganizacion, setDistritosPorOrganizacion] = useState(() => (
-    leerDistritosPorOrganizacionStorage()
-  ));
+  const [camposOpciones, setCamposOpciones] = useState([]);
+  const [distritosOpciones, setDistritosOpciones] = useState([]);
 
   const cargarOrganizaciones = useCallback(async () => {
     setCargandoLista(true);
@@ -665,20 +575,29 @@ export function useSuperadminOrganizaciones() {
     }
   }, []);
 
+  const cargarCatalogos = useCallback(async ({ mostrarError = true } = {}) => {
+    try {
+      const [resCampos, resDistritos] = await Promise.all([
+        superadminApi.listarCampos(),
+        superadminApi.listarDistritos()
+      ]);
+
+      const itemsCampos = Array.isArray(resCampos?.datos?.items) ? resCampos.datos.items : [];
+      const itemsDistritos = Array.isArray(resDistritos?.datos?.items) ? resDistritos.datos.items : [];
+
+      setCamposOpciones(normalizarOpcionesCatalogo(itemsCampos, 'campo'));
+      setDistritosOpciones(normalizarOpcionesCatalogo(itemsDistritos, 'distrito'));
+    } catch (error) {
+      if (mostrarError) {
+        notificarError(error?.mensaje || 'No se pudo cargar el catalogo de campos y distritos.');
+      }
+    }
+  }, []);
+
   useEffect(() => {
+    cargarCatalogos({ mostrarError: false });
     cargarOrganizaciones();
-  }, [cargarOrganizaciones]);
-
-  useEffect(() => {
-    guardarJsonStorage(CATALOGO_STORAGE_KEY, {
-      campos: camposOpciones,
-      distritos: distritosOpciones
-    });
-  }, [camposOpciones, distritosOpciones]);
-
-  useEffect(() => {
-    guardarJsonStorage(DISTRITOS_ORG_STORAGE_KEY, distritosPorOrganizacion);
-  }, [distritosPorOrganizacion]);
+  }, [cargarCatalogos, cargarOrganizaciones]);
 
   useEffect(() => {
     const camposDesdeOrganizaciones = extraerOpcionesCampoDesdeOrganizaciones(organizaciones);
@@ -689,17 +608,14 @@ export function useSuperadminOrganizaciones() {
       });
     }
 
-    const distritosDesdeOrganizaciones = extraerOpcionesDistritoDesdeOrganizaciones(
-      organizaciones,
-      distritosPorOrganizacion
-    );
+    const distritosDesdeOrganizaciones = extraerOpcionesDistritoDesdeOrganizaciones(organizaciones);
     if (distritosDesdeOrganizaciones.length > 0) {
       setDistritosOpciones((prev) => {
         const next = fusionarOpcionesCatalogo(distritosDesdeOrganizaciones, prev, 'distrito');
         return sonOpcionesIguales(prev, next) ? prev : next;
       });
     }
-  }, [organizaciones, distritosPorOrganizacion]);
+  }, [organizaciones]);
 
   const mapaCampos = useMemo(() => {
     return new Map(camposOpciones.map((item) => [item.valor, item.etiqueta]));
@@ -711,30 +627,37 @@ export function useSuperadminOrganizaciones() {
 
   const organizacionesEnriquecidas = useMemo(() => {
     return organizaciones.map((item) => (
-      enriquecerOrganizacion(item, mapaCampos, mapaDistritos, distritosPorOrganizacion)
+      enriquecerOrganizacion(item, mapaCampos, mapaDistritos)
     ));
-  }, [organizaciones, mapaCampos, mapaDistritos, distritosPorOrganizacion]);
+  }, [organizaciones, mapaCampos, mapaDistritos]);
 
   const camposBackendValidos = useMemo(() => {
-    const codigos = new Set(
-      CAMPOS_IA_OPCIONES
+    return new Set(
+      camposOpciones
+        .filter((item) => item?.activo !== false)
         .map((item) => normalizarCodigoCampo(item?.valor))
         .filter(Boolean)
     );
-
-    organizaciones.forEach((item) => {
-      const codigo = normalizarCodigoCampo(item?.campo || item?.campo_codigo || '');
-      if (codigo) {
-        codigos.add(codigo);
-      }
-    });
-
-    return codigos;
-  }, [organizaciones]);
+  }, [camposOpciones]);
 
   const camposOpcionesRegistrables = useMemo(() => {
-    return camposOpciones.filter((item) => camposBackendValidos.has(item.valor));
+    return camposOpciones.filter((item) => item?.activo !== false && camposBackendValidos.has(item.valor));
   }, [camposOpciones, camposBackendValidos]);
+
+  const distritosBackendValidos = useMemo(() => {
+    return new Set(
+      distritosOpciones
+        .filter((item) => item?.activo !== false)
+        .map((item) => normalizarCodigoDistrito(item?.valor))
+        .filter(Boolean)
+    );
+  }, [distritosOpciones]);
+
+  const distritosOpcionesRegistrables = useMemo(() => {
+    return distritosOpciones.filter((item) => (
+      item?.activo !== false && distritosBackendValidos.has(item.valor)
+    ));
+  }, [distritosOpciones, distritosBackendValidos]);
 
   const opcionesAnioFiltro = useMemo(() => {
     const years = new Set();
@@ -1113,6 +1036,13 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
+    if (!distritosBackendValidos.has(normalizarCodigoDistrito(formulario.distrito))) {
+      const mensaje = 'El distrito seleccionado no existe o está inactivo en el servidor.';
+      setErrores((prev) => ({ ...prev, distrito: mensaje }));
+      notificarError(mensaje);
+      return false;
+    }
+
     if (existeDuplicadoNombreEnCampoTipo(organizacionesEnriquecidas, {
       campo: formulario.campo,
       tipo: formulario.tipo_organizacion,
@@ -1141,15 +1071,6 @@ export function useSuperadminOrganizaciones() {
 
       if (res?.exito) {
         const organizacionCreada = res?.datos?.organizacion || null;
-        const organizacionIdCreada = Number(organizacionCreada?.id);
-        const distritoCreado = normalizarCodigoDistrito(sanitizado.distrito);
-        if (Number.isInteger(organizacionIdCreada) && organizacionIdCreada > 0 && distritoCreado) {
-          setDistritosPorOrganizacion((prev) => ({
-            ...prev,
-            [organizacionIdCreada]: distritoCreado
-          }));
-        }
-
         setUltimaCreada(organizacionCreada);
         notificarExito(res.mensaje || 'Organización creada correctamente.');
         limpiarFormulario();
@@ -1165,7 +1086,14 @@ export function useSuperadminOrganizaciones() {
     } finally {
       setGuardando(false);
     }
-  }, [formulario, organizacionesEnriquecidas, camposBackendValidos, limpiarFormulario, cargarOrganizaciones]);
+  }, [
+    formulario,
+    organizacionesEnriquecidas,
+    camposBackendValidos,
+    distritosBackendValidos,
+    limpiarFormulario,
+    cargarOrganizaciones
+  ]);
 
   const crearAdminTemporal = useCallback(async () => {
     const validacion = validarFormularioAdminTemporal(formularioAdminTemporal);
@@ -1241,6 +1169,13 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
+    if (!distritosBackendValidos.has(normalizarCodigoDistrito(formularioEdicion.distrito))) {
+      const mensaje = 'El distrito seleccionado no existe o está inactivo en el servidor.';
+      setErroresEdicion((prev) => ({ ...prev, distrito: mensaje }));
+      notificarError(mensaje);
+      return false;
+    }
+
     const organizacionActual = buscarOrganizacionPorId(organizacionesEnriquecidas, organizacionId);
     if (organizacionActual && existeDuplicadoNombreEnCampoTipo(organizacionesEnriquecidas, {
       campo: String(organizacionActual.campo || ''),
@@ -1270,14 +1205,6 @@ export function useSuperadminOrganizaciones() {
       const res = await superadminApi.actualizarOrganizacion(organizacionId, payload);
       if (res?.exito) {
         const organizacionActualizada = res?.datos?.organizacion || null;
-        const distritoEditado = normalizarCodigoDistrito(sanitizado.distrito);
-        if (distritoEditado) {
-          setDistritosPorOrganizacion((prev) => ({
-            ...prev,
-            [organizacionId]: distritoEditado
-          }));
-        }
-
         setUltimaEditada(organizacionActualizada);
         notificarExito(res.mensaje || 'Organización actualizada correctamente.');
         cancelarEdicion();
@@ -1293,9 +1220,15 @@ export function useSuperadminOrganizaciones() {
     } finally {
       setGuardandoEdicion(false);
     }
-  }, [formularioEdicion, organizacionesEnriquecidas, cancelarEdicion, cargarOrganizaciones]);
+  }, [
+    formularioEdicion,
+    organizacionesEnriquecidas,
+    distritosBackendValidos,
+    cancelarEdicion,
+    cargarOrganizaciones
+  ]);
 
-  const crearCampoCatalogo = useCallback((codigoRaw, nombreRaw) => {
+  const crearCampoCatalogo = useCallback(async (codigoRaw, nombreRaw) => {
     const codigo = normalizarCodigoCampo(codigoRaw);
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
 
@@ -1314,18 +1247,28 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    setCamposOpciones((prev) => (
-      fusionarOpcionesCatalogo(prev, [{ valor: codigo, etiqueta }], 'campo')
-    ));
-    if (camposBackendValidos.has(codigo)) {
-      notificarExito('Campo agregado correctamente.');
-    } else {
-      notificarExito('Campo agregado al catálogo local. Para crear instancia, el campo debe existir en backend.');
-    }
-    return true;
-  }, [camposOpciones, camposBackendValidos]);
+    try {
+      const res = await superadminApi.crearCampo({
+        codigo,
+        nombre: etiqueta,
+        activo: true
+      });
 
-  const actualizarCampoCatalogo = useCallback((codigoRaw, nombreRaw) => {
+      if (res?.exito) {
+        await Promise.all([cargarCatalogos(), cargarOrganizaciones()]);
+        notificarExito(res?.mensaje || 'Campo agregado correctamente.');
+        return true;
+      }
+
+      notificarError(res?.mensaje || 'No se pudo agregar el campo.');
+      return false;
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo agregar el campo.');
+      return false;
+    }
+  }, [camposOpciones, cargarCatalogos, cargarOrganizaciones]);
+
+  const actualizarCampoCatalogo = useCallback(async (codigoRaw, nombreRaw) => {
     const codigo = normalizarCodigoCampo(codigoRaw);
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
 
@@ -1345,18 +1288,23 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    setCamposOpciones((prev) => {
-      const next = prev.map((item) => (
-        item.valor === codigo ? { ...item, etiqueta } : item
-      ));
-      return normalizarOpcionesCatalogo(next, 'campo');
-    });
+    try {
+      const res = await superadminApi.actualizarCampo(codigo, { nombre: etiqueta });
+      if (res?.exito) {
+        await Promise.all([cargarCatalogos(), cargarOrganizaciones()]);
+        notificarExito(res?.mensaje || 'Nombre de campo actualizado.');
+        return true;
+      }
 
-    notificarExito('Nombre de campo actualizado.');
-    return true;
-  }, [camposOpciones]);
+      notificarError(res?.mensaje || 'No se pudo actualizar el campo.');
+      return false;
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo actualizar el campo.');
+      return false;
+    }
+  }, [camposOpciones, cargarCatalogos, cargarOrganizaciones]);
 
-  const eliminarCampoCatalogo = useCallback((codigoRaw) => {
+  const eliminarCampoCatalogo = useCallback(async (codigoRaw) => {
     const codigo = normalizarCodigoCampo(codigoRaw);
     if (!codigo) {
       notificarError('Campo inválido.');
@@ -1369,47 +1317,54 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    if (camposBackendValidos.has(codigo)) {
-      notificarError('No se puede borrar un campo existente en backend. Solo puede editar su nombre.');
+    try {
+      const res = await superadminApi.eliminarCampo(codigo);
+      if (res?.exito) {
+        await Promise.all([cargarCatalogos(), cargarOrganizaciones()]);
+        setFormulario((prev) => (prev.campo === codigo ? { ...prev, campo: '' } : prev));
+        setFiltrosTabla((prev) => (prev.campo === codigo ? { ...prev, campo: 'TODOS' } : prev));
+        setFiltrosAdminTemporal((prev) => (prev.campo === codigo ? { ...prev, campo: 'TODOS' } : prev));
+        notificarExito(res?.mensaje || 'Campo eliminado correctamente.');
+        return true;
+      }
+
+      notificarError(res?.mensaje || 'No se pudo eliminar el campo.');
+      return false;
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo eliminar el campo.');
       return false;
     }
+  }, [camposOpciones, cargarCatalogos, cargarOrganizaciones]);
 
-    const enUso = organizacionesEnriquecidas.some((item) => normalizarCodigoCampo(item?.campo) === codigo);
-    if (enUso) {
-      notificarError('No se puede borrar el campo porque ya está en uso por organizaciones.');
-      return false;
-    }
-
-    setCamposOpciones((prev) => prev.filter((item) => item.valor !== codigo));
-    setFormulario((prev) => (prev.campo === codigo ? { ...prev, campo: '' } : prev));
-    setFiltrosTabla((prev) => (prev.campo === codigo ? { ...prev, campo: 'TODOS' } : prev));
-    setFiltrosAdminTemporal((prev) => (prev.campo === codigo ? { ...prev, campo: 'TODOS' } : prev));
-    notificarExito('Campo eliminado del catálogo local.');
-    return true;
-  }, [camposOpciones, camposBackendValidos, organizacionesEnriquecidas]);
-
-  const crearDistritoCatalogo = useCallback((nombreRaw) => {
+  const crearDistritoCatalogo = useCallback(async (nombreRaw) => {
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
     if (etiqueta.length < 3) {
       notificarError('El nombre del distrito debe tener al menos 3 caracteres.');
       return null;
     }
 
-    const codigosExistentes = new Set(distritosOpciones.map((item) => item.valor));
-    const codigo = generarCodigoDistrito(etiqueta, codigosExistentes);
-    if (!codigo) {
-      notificarError('No se pudo generar un código para el distrito.');
+    try {
+      const res = await superadminApi.crearDistrito({
+        nombre: etiqueta,
+        activo: true
+      });
+
+      if (!res?.exito) {
+        notificarError(res?.mensaje || 'No se pudo crear el distrito.');
+        return null;
+      }
+
+      await Promise.all([cargarCatalogos(), cargarOrganizaciones()]);
+      const codigoCreado = normalizarCodigoDistrito(res?.datos?.item?.codigo || '');
+      notificarExito(res?.mensaje || 'Distrito agregado correctamente.');
+      return codigoCreado || null;
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo crear el distrito.');
       return null;
     }
+  }, [cargarCatalogos, cargarOrganizaciones]);
 
-    setDistritosOpciones((prev) => (
-      fusionarOpcionesCatalogo(prev, [{ valor: codigo, etiqueta }], 'distrito')
-    ));
-    notificarExito('Distrito agregado correctamente.');
-    return codigo;
-  }, [distritosOpciones]);
-
-  const actualizarDistritoCatalogo = useCallback((codigoRaw, nombreRaw) => {
+  const actualizarDistritoCatalogo = useCallback(async (codigoRaw, nombreRaw) => {
     const codigo = normalizarCodigoDistrito(codigoRaw);
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
 
@@ -1429,18 +1384,23 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    setDistritosOpciones((prev) => {
-      const next = prev.map((item) => (
-        item.valor === codigo ? { ...item, etiqueta } : item
-      ));
-      return normalizarOpcionesCatalogo(next, 'distrito');
-    });
+    try {
+      const res = await superadminApi.actualizarDistrito(codigo, { nombre: etiqueta });
+      if (res?.exito) {
+        await Promise.all([cargarCatalogos(), cargarOrganizaciones()]);
+        notificarExito(res?.mensaje || 'Nombre de distrito actualizado.');
+        return true;
+      }
 
-    notificarExito('Nombre de distrito actualizado.');
-    return true;
-  }, [distritosOpciones]);
+      notificarError(res?.mensaje || 'No se pudo actualizar el distrito.');
+      return false;
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo actualizar el distrito.');
+      return false;
+    }
+  }, [distritosOpciones, cargarCatalogos, cargarOrganizaciones]);
 
-  const eliminarDistritoCatalogo = useCallback((codigoRaw) => {
+  const eliminarDistritoCatalogo = useCallback(async (codigoRaw) => {
     const codigo = normalizarCodigoDistrito(codigoRaw);
     if (!codigo) {
       notificarError('Distrito inválido.');
@@ -1453,23 +1413,24 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
-    const enUso = organizacionesEnriquecidas.some((item) => normalizarCodigoDistrito(item?.distrito) === codigo);
-    if (enUso) {
-      notificarError('No se puede borrar el distrito porque ya está en uso por organizaciones.');
+    try {
+      const res = await superadminApi.eliminarDistrito(codigo);
+      if (res?.exito) {
+        await Promise.all([cargarCatalogos(), cargarOrganizaciones()]);
+        setFormulario((prev) => (prev.distrito === codigo ? { ...prev, distrito: '' } : prev));
+        setFormularioEdicion((prev) => (prev.distrito === codigo ? { ...prev, distrito: '' } : prev));
+        setFiltrosTabla((prev) => (prev.distrito === codigo ? { ...prev, distrito: 'TODOS' } : prev));
+        notificarExito(res?.mensaje || 'Distrito eliminado correctamente.');
+        return true;
+      }
+
+      notificarError(res?.mensaje || 'No se pudo eliminar el distrito.');
+      return false;
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo eliminar el distrito.');
       return false;
     }
-
-    setDistritosOpciones((prev) => prev.filter((item) => item.valor !== codigo));
-    setFormulario((prev) => (prev.distrito === codigo ? { ...prev, distrito: '' } : prev));
-    setFormularioEdicion((prev) => (prev.distrito === codigo ? { ...prev, distrito: '' } : prev));
-    setFiltrosTabla((prev) => (prev.distrito === codigo ? { ...prev, distrito: 'TODOS' } : prev));
-    setDistritosPorOrganizacion((prev) => {
-      const entries = Object.entries(prev).filter(([, distrito]) => distrito !== codigo);
-      return Object.fromEntries(entries);
-    });
-    notificarExito('Distrito eliminado del catálogo local.');
-    return true;
-  }, [distritosOpciones, organizacionesEnriquecidas]);
+  }, [distritosOpciones, cargarCatalogos, cargarOrganizaciones]);
 
   return {
     formulario,
@@ -1498,6 +1459,7 @@ export function useSuperadminOrganizaciones() {
     camposOpciones,
     camposOpcionesRegistrables,
     distritosOpciones,
+    distritosOpcionesRegistrables,
     opcionesAnioFiltro,
     cambiarCampo,
     cambiarCampoAdminTemporal,

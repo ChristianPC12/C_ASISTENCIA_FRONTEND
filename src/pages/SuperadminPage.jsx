@@ -95,6 +95,7 @@ export default function SuperadminPage() {
     camposOpciones,
     camposOpcionesRegistrables,
     distritosOpciones,
+    distritosOpcionesRegistrables,
     opcionesAnioFiltro,
     cambiarCampo,
     cambiarCampoAdminTemporal,
@@ -192,30 +193,30 @@ export default function SuperadminPage() {
     setEdicionDistritos({});
   };
 
-  const manejarCrearCampo = (event) => {
+  const manejarCrearCampo = async (event) => {
     event.preventDefault();
-    const creado = crearCampoCatalogo(nuevoCampoCodigo, nuevoCampoNombre);
+    const creado = await crearCampoCatalogo(nuevoCampoCodigo, nuevoCampoNombre);
     if (creado) {
       setNuevoCampoCodigo('');
       setNuevoCampoNombre('');
     }
   };
 
-  const manejarCrearDistrito = (event) => {
+  const manejarCrearDistrito = async (event) => {
     event.preventDefault();
-    const codigoCreado = crearDistritoCatalogo(nuevoDistritoNombre);
+    const codigoCreado = await crearDistritoCatalogo(nuevoDistritoNombre);
     if (codigoCreado) {
       setNuevoDistritoNombre('');
     }
   };
 
-  const manejarGuardarEdicionCampo = (codigo) => {
+  const manejarGuardarEdicionCampo = async (codigo) => {
     const nombreEditado = edicionCampos[codigo];
     if (typeof nombreEditado !== 'string') {
       return;
     }
 
-    const actualizado = actualizarCampoCatalogo(codigo, nombreEditado);
+    const actualizado = await actualizarCampoCatalogo(codigo, nombreEditado);
     if (actualizado) {
       setEdicionCampos((prev) => {
         const copia = { ...prev };
@@ -225,13 +226,13 @@ export default function SuperadminPage() {
     }
   };
 
-  const manejarGuardarEdicionDistrito = (codigo) => {
+  const manejarGuardarEdicionDistrito = async (codigo) => {
     const nombreEditado = edicionDistritos[codigo];
     if (typeof nombreEditado !== 'string') {
       return;
     }
 
-    const actualizado = actualizarDistritoCatalogo(codigo, nombreEditado);
+    const actualizado = await actualizarDistritoCatalogo(codigo, nombreEditado);
     if (actualizado) {
       setEdicionDistritos((prev) => {
         const copia = { ...prev };
@@ -487,7 +488,7 @@ export default function SuperadminPage() {
                       disabled={guardando}
                     >
                       <option value="">Seleccione un distrito</option>
-                      {distritosOpciones.map((distrito) => (
+                      {distritosOpcionesRegistrables.map((distrito) => (
                         <option key={distrito.valor} value={distrito.valor}>
                           {distrito.etiqueta}
                         </option>
@@ -615,11 +616,6 @@ export default function SuperadminPage() {
                   </div>
                 </form>
 
-                <div className="alert alert-info py-2">
-                  Los campos nuevos se guardan en catálogo local. Para crear una instancia, el campo debe existir y
-                  estar activo en backend.
-                </div>
-
                 <div className="table-responsive superadmin-metricas-tabla-wrap">
                   <table className="table table-sm align-middle mb-0">
                     <thead>
@@ -654,7 +650,7 @@ export default function SuperadminPage() {
                                 <button
                                   type="button"
                                   className="btn btn-outline-primary btn-sm w-100"
-                                  onClick={() => manejarGuardarEdicionCampo(item.valor)}
+                                  onClick={() => { void manejarGuardarEdicionCampo(item.valor); }}
                                   disabled={!cambioPendiente}
                                 >
                                   Guardar
@@ -662,7 +658,7 @@ export default function SuperadminPage() {
                                 <button
                                   type="button"
                                   className="btn btn-outline-danger btn-sm w-100"
-                                  onClick={() => eliminarCampoCatalogo(item.valor)}
+                                  onClick={() => { void eliminarCampoCatalogo(item.valor); }}
                                 >
                                   Borrar
                                 </button>
@@ -746,7 +742,7 @@ export default function SuperadminPage() {
                                 <button
                                   type="button"
                                   className="btn btn-outline-primary btn-sm w-100"
-                                  onClick={() => manejarGuardarEdicionDistrito(item.valor)}
+                                  onClick={() => { void manejarGuardarEdicionDistrito(item.valor); }}
                                   disabled={!cambioPendiente}
                                 >
                                   Guardar
@@ -754,7 +750,7 @@ export default function SuperadminPage() {
                                 <button
                                   type="button"
                                   className="btn btn-outline-danger btn-sm w-100"
-                                  onClick={() => eliminarDistritoCatalogo(item.valor)}
+                                  onClick={() => { void eliminarDistritoCatalogo(item.valor); }}
                                 >
                                   Borrar
                                 </button>
@@ -967,7 +963,7 @@ export default function SuperadminPage() {
                     disabled={guardandoEdicion}
                   >
                     <option value="">Seleccione un distrito</option>
-                    {distritosOpciones.map((distrito) => (
+                    {distritosOpcionesRegistrables.map((distrito) => (
                       <option key={distrito.valor} value={distrito.valor}>
                         {distrito.etiqueta}
                       </option>
