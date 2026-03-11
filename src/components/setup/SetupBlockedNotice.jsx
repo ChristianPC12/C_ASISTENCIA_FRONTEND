@@ -22,7 +22,7 @@ function traducirFaltante(item) {
 }
 
 export default function SetupBlockedNotice({ modulo = 'Este modulo' }) {
-  const { esAdmin } = useAuth();
+  const { esAdmin, esAdminTemporal, diasRestantesPassword } = useAuth();
   const { faltantes = FALLBACK_FALTANTES, error } = useSetupStatus();
 
   return (
@@ -33,6 +33,16 @@ export default function SetupBlockedNotice({ modulo = 'Este modulo' }) {
           <p className="text-muted mb-3">
             Tu organizacion aun no completa la configuracion inicial. Cuando se finalice el setup, este modulo se habilita automaticamente.
           </p>
+
+          {esAdmin && (
+            <div className="alert alert-warning" role="alert">
+              <strong>Importante:</strong>{' '}
+              {esAdminTemporal && Number.isInteger(diasRestantesPassword)
+                ? `tu cuenta ADMIN temporal vence en ${Math.max(diasRestantesPassword, 0)} dia(s). `
+                : 'la cuenta ADMIN temporal tiene una vigencia maxima de 5 dias desde su creacion. '}
+              Debes completar la configuracion inicial antes del vencimiento para evitar bloqueo operativo.
+            </div>
+          )}
 
           {Array.isArray(faltantes) && faltantes.length > 0 && (
             <div className="alert alert-warning" role="alert">

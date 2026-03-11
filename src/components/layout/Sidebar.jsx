@@ -4,6 +4,9 @@ import { ROLES } from '../../config/constants';
 import { useSetupStatus } from '../../hooks/useSetupStatus';
 import { useAuth } from '../../hooks/useAuth';
 import {
+  EVENT_ADMIN_ABRIR_CULTOS,
+  EVENT_ADMIN_ABRIR_METRICAS,
+  EVENT_ADMIN_ABRIR_PROCEDENCIAS,
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
@@ -36,8 +39,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const toggleMenu = () => setAbierto(!abierto);
   const cerrarMenu = () => setAbierto(false);
+  const esAdmin = usuario?.rol === ROLES.ADMIN;
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
+  const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
 
   const abrirPanelNuevaInstancia = () => {
     window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA));
@@ -49,6 +54,18 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirPanelGestionDistritos = () => {
     window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS));
+  };
+
+  const abrirPanelCultos = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_CULTOS));
+  };
+
+  const abrirPanelMetricas = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_METRICAS));
+  };
+
+  const abrirPanelProcedencias = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_PROCEDENCIAS));
   };
 
   let enlaces = [];
@@ -194,6 +211,40 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 >
                   <i className="bi bi-plus-lg" aria-hidden="true"></i>
                   <span className="visually-hidden">Crear nueva instancia</span>
+                </button>
+              </>
+            )}
+            {enPantallaAdministrador && (
+              <>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn"
+                  onClick={abrirPanelCultos}
+                  aria-label="Cultos de la instancia"
+                  title="Cultos de la instancia"
+                >
+                  <i className="bi bi-calendar-week" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Cultos</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn"
+                  onClick={abrirPanelMetricas}
+                  aria-label="Metricas del formulario"
+                  title="Metricas del formulario"
+                >
+                  <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Metricas</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn"
+                  onClick={abrirPanelProcedencias}
+                  aria-label="Procedencias"
+                  title="Procedencias"
+                >
+                  <i className="bi bi-people" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Procedencias</span>
                 </button>
               </>
             )}
