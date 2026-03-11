@@ -91,10 +91,9 @@ export default function SuperadminPage() {
     guardando,
     guardandoAdminTemporal,
     guardandoEdicion,
-    ultimaCreada,
-    ultimaEditada,
     filtrosTabla,
     camposOpciones,
+    camposOpcionesRegistrables,
     distritosOpciones,
     opcionesAnioFiltro,
     cambiarCampo,
@@ -112,8 +111,10 @@ export default function SuperadminPage() {
     actualizarOrganizacion,
     crearCampoCatalogo,
     actualizarCampoCatalogo,
+    eliminarCampoCatalogo,
     crearDistritoCatalogo,
     actualizarDistritoCatalogo,
+    eliminarDistritoCatalogo,
     limpiarFormulario,
     limpiarFormularioAdminTemporal,
     cancelarEdicion,
@@ -467,7 +468,7 @@ export default function SuperadminPage() {
                       disabled={guardando}
                     >
                       <option value="">Seleccione un campo</option>
-                      {camposOpciones.map((campo) => (
+                      {camposOpcionesRegistrables.map((campo) => (
                         <option key={campo.valor} value={campo.valor}>
                           {campo.etiqueta}
                         </option>
@@ -614,13 +615,18 @@ export default function SuperadminPage() {
                   </div>
                 </form>
 
+                <div className="alert alert-info py-2">
+                  Los campos nuevos se guardan en catálogo local. Para crear una instancia, el campo debe existir y
+                  estar activo en backend.
+                </div>
+
                 <div className="table-responsive superadmin-metricas-tabla-wrap">
                   <table className="table table-sm align-middle mb-0">
                     <thead>
                       <tr>
                         <th style={{ width: '140px' }}>Código</th>
                         <th>Nombre</th>
-                        <th style={{ width: '120px' }}>Accion</th>
+                        <th style={{ width: '210px' }}>Acción</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -644,14 +650,23 @@ export default function SuperadminPage() {
                               />
                             </td>
                             <td>
-                              <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm w-100"
-                                onClick={() => manejarGuardarEdicionCampo(item.valor)}
-                                disabled={!cambioPendiente}
-                              >
-                                Guardar
-                              </button>
+                              <div className="d-flex gap-2">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-primary btn-sm w-100"
+                                  onClick={() => manejarGuardarEdicionCampo(item.valor)}
+                                  disabled={!cambioPendiente}
+                                >
+                                  Guardar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm w-100"
+                                  onClick={() => eliminarCampoCatalogo(item.valor)}
+                                >
+                                  Borrar
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -703,7 +718,7 @@ export default function SuperadminPage() {
                       <tr>
                         <th style={{ width: '180px' }}>Código</th>
                         <th>Nombre</th>
-                        <th style={{ width: '120px' }}>Accion</th>
+                        <th style={{ width: '210px' }}>Acción</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -727,14 +742,23 @@ export default function SuperadminPage() {
                               />
                             </td>
                             <td>
-                              <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm w-100"
-                                onClick={() => manejarGuardarEdicionDistrito(item.valor)}
-                                disabled={!cambioPendiente}
-                              >
-                                Guardar
-                              </button>
+                              <div className="d-flex gap-2">
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-primary btn-sm w-100"
+                                  onClick={() => manejarGuardarEdicionDistrito(item.valor)}
+                                  disabled={!cambioPendiente}
+                                >
+                                  Guardar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm w-100"
+                                  onClick={() => eliminarDistritoCatalogo(item.valor)}
+                                >
+                                  Borrar
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -743,12 +767,6 @@ export default function SuperadminPage() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
-
-          {ultimaCreada && (
-            <div className="alert alert-success border-0 shadow-sm" role="alert">
-              Instancia creada: <strong>{ultimaCreada.nombre_organizacion}</strong>
             </div>
           )}
 
@@ -913,12 +931,6 @@ export default function SuperadminPage() {
           )}
 
         </>
-      )}
-
-      {ultimaEditada && (
-        <div className="alert alert-success border-0 shadow-sm" role="alert">
-          Organización actualizada: <strong>{ultimaEditada.nombre_organizacion}</strong>
-        </div>
       )}
 
       {formularioEdicion.id && (

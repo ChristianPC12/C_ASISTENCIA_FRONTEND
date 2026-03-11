@@ -715,6 +715,27 @@ export function useSuperadminOrganizaciones() {
     ));
   }, [organizaciones, mapaCampos, mapaDistritos, distritosPorOrganizacion]);
 
+  const camposBackendValidos = useMemo(() => {
+    const codigos = new Set(
+      CAMPOS_IA_OPCIONES
+        .map((item) => normalizarCodigoCampo(item?.valor))
+        .filter(Boolean)
+    );
+
+    organizaciones.forEach((item) => {
+      const codigo = normalizarCodigoCampo(item?.campo || item?.campo_codigo || '');
+      if (codigo) {
+        codigos.add(codigo);
+      }
+    });
+
+    return codigos;
+  }, [organizaciones]);
+
+  const camposOpcionesRegistrables = useMemo(() => {
+    return camposOpciones.filter((item) => camposBackendValidos.has(item.valor));
+  }, [camposOpciones, camposBackendValidos]);
+
   const opcionesAnioFiltro = useMemo(() => {
     const years = new Set();
     organizacionesEnriquecidas.forEach((item) => {
@@ -1085,6 +1106,13 @@ export function useSuperadminOrganizaciones() {
       return false;
     }
 
+    if (!camposBackendValidos.has(normalizarCodigoCampo(formulario.campo))) {
+      const mensaje = 'El campo seleccionado no existe o está inactivo en el servidor.';
+      setErrores((prev) => ({ ...prev, campo: mensaje }));
+      notificarError(mensaje);
+      return false;
+    }
+
     if (existeDuplicadoNombreEnCampoTipo(organizacionesEnriquecidas, {
       campo: formulario.campo,
       tipo: formulario.tipo_organizacion,
@@ -1137,7 +1165,7 @@ export function useSuperadminOrganizaciones() {
     } finally {
       setGuardando(false);
     }
-  }, [formulario, organizacionesEnriquecidas, limpiarFormulario, cargarOrganizaciones]);
+  }, [formulario, organizacionesEnriquecidas, camposBackendValidos, limpiarFormulario, cargarOrganizaciones]);
 
   const crearAdminTemporal = useCallback(async () => {
     const validacion = validarFormularioAdminTemporal(formularioAdminTemporal);
@@ -1272,7 +1300,7 @@ export function useSuperadminOrganizaciones() {
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
 
     if (!codigo || !CAMPO_CODIGO_REGEX.test(codigo)) {
-      notificarError('El codigo del campo debe tener 2 a 10 caracteres alfanumericos.');
+      notificarError('El código del campo debe tener 2 a 10 caracteres alfanuméricos.');
       return false;
     }
 
@@ -1282,23 +1310,27 @@ export function useSuperadminOrganizaciones() {
     }
 
     if (camposOpciones.some((item) => item.valor === codigo)) {
-      notificarError('Ese codigo de campo ya existe.');
+      notificarError('Ese código de campo ya existe.');
       return false;
     }
 
     setCamposOpciones((prev) => (
       fusionarOpcionesCatalogo(prev, [{ valor: codigo, etiqueta }], 'campo')
     ));
-    notificarExito('Campo agregado correctamente.');
+    if (camposBackendValidos.has(codigo)) {
+      notificarExito('Campo agregado correctamente.');
+    } else {
+      notificarExito('Campo agregado al catálogo local. Para crear instancia, el campo debe existir en backend.');
+    }
     return true;
-  }, [camposOpciones]);
+  }, [camposOpciones, camposBackendValidos]);
 
   const actualizarCampoCatalogo = useCallback((codigoRaw, nombreRaw) => {
     const codigo = normalizarCodigoCampo(codigoRaw);
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
 
     if (!codigo) {
-      notificarError('Campo invalido.');
+      notificarError('Campo inválido.');
       return false;
     }
 
@@ -1309,7 +1341,7 @@ export function useSuperadminOrganizaciones() {
 
     const existe = camposOpciones.some((item) => item.valor === codigo);
     if (!existe) {
-      notificarError('No se encontro el campo a editar.');
+      notificarError('No se encontró el campo a editar.');
       return false;
     }
 
@@ -1324,6 +1356,38 @@ export function useSuperadminOrganizaciones() {
     return true;
   }, [camposOpciones]);
 
+  const eliminarCampoCatalogo = useCallback((codigoRaw) => {
+    const codigo = normalizarCodigoCampo(codigoRaw);
+    if (!codigo) {
+      notificarError('Campo inválido.');
+      return false;
+    }
+
+    const existe = camposOpciones.some((item) => item.valor === codigo);
+    if (!existe) {
+      notificarError('No se encontró el campo a eliminar.');
+      return false;
+    }
+
+    if (camposBackendValidos.has(codigo)) {
+      notificarError('No se puede borrar un campo existente en backend. Solo puede editar su nombre.');
+      return false;
+    }
+
+    const enUso = organizacionesEnriquecidas.some((item) => normalizarCodigoCampo(item?.campo) === codigo);
+    if (enUso) {
+      notificarError('No se puede borrar el campo porque ya está en uso por organizaciones.');
+      return false;
+    }
+
+    setCamposOpciones((prev) => prev.filter((item) => item.valor !== codigo));
+    setFormulario((prev) => (prev.campo === codigo ? { ...prev, campo: '' } : prev));
+    setFiltrosTabla((prev) => (prev.campo === codigo ? { ...prev, campo: 'TODOS' } : prev));
+    setFiltrosAdminTemporal((prev) => (prev.campo === codigo ? { ...prev, campo: 'TODOS' } : prev));
+    notificarExito('Campo eliminado del catálogo local.');
+    return true;
+  }, [camposOpciones, camposBackendValidos, organizacionesEnriquecidas]);
+
   const crearDistritoCatalogo = useCallback((nombreRaw) => {
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
     if (etiqueta.length < 3) {
@@ -1334,7 +1398,7 @@ export function useSuperadminOrganizaciones() {
     const codigosExistentes = new Set(distritosOpciones.map((item) => item.valor));
     const codigo = generarCodigoDistrito(etiqueta, codigosExistentes);
     if (!codigo) {
-      notificarError('No se pudo generar un codigo para el distrito.');
+      notificarError('No se pudo generar un código para el distrito.');
       return null;
     }
 
@@ -1350,7 +1414,7 @@ export function useSuperadminOrganizaciones() {
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
 
     if (!codigo) {
-      notificarError('Distrito invalido.');
+      notificarError('Distrito inválido.');
       return false;
     }
 
@@ -1361,7 +1425,7 @@ export function useSuperadminOrganizaciones() {
 
     const existe = distritosOpciones.some((item) => item.valor === codigo);
     if (!existe) {
-      notificarError('No se encontro el distrito a editar.');
+      notificarError('No se encontró el distrito a editar.');
       return false;
     }
 
@@ -1375,6 +1439,37 @@ export function useSuperadminOrganizaciones() {
     notificarExito('Nombre de distrito actualizado.');
     return true;
   }, [distritosOpciones]);
+
+  const eliminarDistritoCatalogo = useCallback((codigoRaw) => {
+    const codigo = normalizarCodigoDistrito(codigoRaw);
+    if (!codigo) {
+      notificarError('Distrito inválido.');
+      return false;
+    }
+
+    const existe = distritosOpciones.some((item) => item.valor === codigo);
+    if (!existe) {
+      notificarError('No se encontró el distrito a eliminar.');
+      return false;
+    }
+
+    const enUso = organizacionesEnriquecidas.some((item) => normalizarCodigoDistrito(item?.distrito) === codigo);
+    if (enUso) {
+      notificarError('No se puede borrar el distrito porque ya está en uso por organizaciones.');
+      return false;
+    }
+
+    setDistritosOpciones((prev) => prev.filter((item) => item.valor !== codigo));
+    setFormulario((prev) => (prev.distrito === codigo ? { ...prev, distrito: '' } : prev));
+    setFormularioEdicion((prev) => (prev.distrito === codigo ? { ...prev, distrito: '' } : prev));
+    setFiltrosTabla((prev) => (prev.distrito === codigo ? { ...prev, distrito: 'TODOS' } : prev));
+    setDistritosPorOrganizacion((prev) => {
+      const entries = Object.entries(prev).filter(([, distrito]) => distrito !== codigo);
+      return Object.fromEntries(entries);
+    });
+    notificarExito('Distrito eliminado del catálogo local.');
+    return true;
+  }, [distritosOpciones, organizacionesEnriquecidas]);
 
   return {
     formulario,
@@ -1401,6 +1496,7 @@ export function useSuperadminOrganizaciones() {
     ultimaEditada,
     filtrosTabla,
     camposOpciones,
+    camposOpcionesRegistrables,
     distritosOpciones,
     opcionesAnioFiltro,
     cambiarCampo,
@@ -1420,8 +1516,10 @@ export function useSuperadminOrganizaciones() {
     actualizarOrganizacion,
     crearCampoCatalogo,
     actualizarCampoCatalogo,
+    eliminarCampoCatalogo,
     crearDistritoCatalogo,
     actualizarDistritoCatalogo,
+    eliminarDistritoCatalogo,
     limpiarFormulario,
     limpiarFormularioAdminTemporal,
     cancelarEdicion,
