@@ -51,6 +51,43 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
   2. Mantener legible la regla sin competir con inputs/tabla.
   3. Si la regla no cambia, no usar formato de alerta prominente.
 
+### E6) Cierre de panel sin manejo de cambios no guardados
+
+- Que paso: al cerrar paneles se mantenian cambios locales sin confirmar, dando sensacion de "guardado automatico".
+- Impacto: confusion funcional y riesgo de decisiones erradas del usuario.
+- Regla preventiva:
+  1. Si hay cambios pendientes, al cerrar panel solicitar confirmacion de descarte.
+  2. Si se confirma descarte, restaurar snapshot base del panel.
+  3. Si se cancela descarte, mantener panel abierto sin alterar datos.
+
+### E7) Botones de guardado visibles sin cambios pendientes
+
+- Que paso: se mostraban botones `Guardar` aun cuando no habia modificaciones.
+- Impacto: ruido visual y acciones sin valor.
+- Regla preventiva:
+  1. Mantener firma/base por seccion (`cultos`, `metricas`, `procedencias`).
+  2. Mostrar `Guardar` solo cuando `tieneCambiosX === true`.
+  3. Agregar boton `Limpiar` para restaurar cambios locales de inmediato (sin confirmacion).
+
+### E8) Inconsistencia ortografica en labels y mensajes
+
+- Que paso: textos visibles mezclaban ortografia sin acentos en terminos clave.
+- Impacto: menor calidad percibida y experiencia menos profesional.
+- Regla preventiva:
+  1. Revisar ortografia y acentuacion de labels finales antes de cerrar ticket.
+  2. Priorizar consistencia en terminos repetidos (`Métricas`, `configuración`, `revisión`, etc.).
+  3. Evitar introducir variantes distintas del mismo termino en una misma pantalla.
+
+### E9) Barrido obligatorio de tildes y letra ñ
+
+- Que paso: quedaron textos funcionalmente correctos, pero con faltantes de tildes o sin `ñ`.
+- Impacto: baja calidad editorial y retrabajo en iteraciones cortas.
+- Regla preventiva:
+  1. Antes de entregar, hacer barrido de copy en pantalla, toasts y mensajes de confirmacion.
+  2. Verificar explicitamente tildes (`áéíóú`) y uso correcto de `ñ` en palabras que lo requieren.
+  3. Corregir tambien labels de botones, titulos de columnas y mensajes de estados vacios.
+  4. No cerrar ticket sin este barrido cuando se haya tocado texto UI.
+
 ## Protocolo reutilizable para nuevos modulos
 
 1. Discovery breve
@@ -65,6 +102,7 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 3. Implementacion en orden
 - Estructura visual.
 - Estados de apertura/cierre.
+- Manejo de cambios pendientes (dirty-state + descarte/restauracion).
 - Pulido responsive (desktop y movil).
 - Ajustes de copy y jerarquia visual.
 
@@ -85,4 +123,8 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 - [ ] Sin bloques informativos que estorben flujo.
 - [ ] Uso comodo en telefono (scroll controlado).
 - [ ] Mensajes importantes cortos y accionables.
+- [ ] Botones Guardar solo visibles con cambios pendientes.
+- [ ] Cierre de panel no conserva cambios sin confirmacion.
+- [ ] Ortografia de labels validada en UI final.
+- [ ] Barrido final de tildes y letra ñ ejecutado en textos visibles.
 - [ ] Lint/build/react-doctor ejecutados.

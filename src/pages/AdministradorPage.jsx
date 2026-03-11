@@ -6,6 +6,7 @@ import {
   EVENT_ADMIN_ABRIR_METRICAS,
   EVENT_ADMIN_ABRIR_PROCEDENCIAS
 } from '../config/events';
+import { confirmar } from '../utils/notify';
 
 const VISTA_RESUMEN = 'RESUMEN';
 const VISTA_CULTOS = 'CULTOS';
@@ -27,11 +28,11 @@ function traducirFaltante(item) {
     case 'procedencias_minimas':
       return 'Definir al menos una procedencia';
     case 'procedencias_maximas':
-      return 'Reducir procedencias a maximo 10';
+      return 'Reducir procedencias a máximo 10';
     case 'metricas':
-      return 'Habilitar al menos una metrica';
+      return 'Habilitar al menos una métrica';
     case 'dependencias_metricas':
-      return 'Corregir dependencias entre metricas';
+      return 'Corregir dependencias entre métricas';
     default:
       return item;
   }
@@ -89,6 +90,12 @@ export default function AdministradorPage() {
     guardandoProcedencias,
     guardandoMetricas,
     finalizando,
+    tieneCambiosCultos,
+    tieneCambiosProcedencias,
+    tieneCambiosMetricas,
+    restaurarCultos,
+    restaurarProcedencias,
+    restaurarMetricas,
     resumen,
     DIA_OPCIONES,
     cambiarCulto,
@@ -118,8 +125,6 @@ export default function AdministradorPage() {
   const metricasHabilitadas = metricas.filter((item) => item.habilitado).length;
   const procedenciasActivas = procedencias.filter((item) => item.activo).length;
 
-  const cerrarPanelActivo = () => setVistaActiva(VISTA_RESUMEN);
-
   useEffect(() => {
     const manejarAbrirCultos = () => setVistaActiva(VISTA_CULTOS);
     const manejarAbrirMetricas = () => setVistaActiva(VISTA_METRICAS);
@@ -140,6 +145,79 @@ export default function AdministradorPage() {
   const mostrarCultos = vistaActiva === VISTA_CULTOS;
   const mostrarMetricas = vistaActiva === VISTA_METRICAS;
   const mostrarProcedencias = vistaActiva === VISTA_PROCEDENCIAS;
+  const mensajeEncabezado = setupCompleto
+    ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
+    : 'Complete la configuración inicial para habilitar registro, reportes, estadísticas y usuarios.';
+  const textoBotonPrincipal = setupCompleto
+    ? 'Editar setup'
+    : (finalizando ? 'Finalizando...' : 'Finalizar setup inicial');
+
+  const manejarAccionPrincipalSetup = async () => {
+    if (setupCompleto) {
+      setVistaActiva(VISTA_CULTOS);
+      return;
+    }
+    await finalizarSetup();
+  };
+
+  const manejarEliminarCulto = async (index) => {
+    if (cultos.length <= 1) {
+      return;
+    }
+    const confirmado = await confirmar(
+      '¿Desea eliminar este culto? Si ya existen registros asociados, el sistema podría rechazar el cambio al guardar.'
+    );
+    if (!confirmado) {
+      return;
+    }
+    eliminarCulto(index);
+  };
+
+  const manejarEliminarMetrica = async (index) => {
+    if (metricas.length <= 1) {
+      return;
+    }
+    const confirmado = await confirmar(
+      '¿Desea eliminar esta métrica? Esta acción puede afectar reportes y comparaciones configuradas.'
+    );
+    if (!confirmado) {
+      return;
+    }
+    eliminarMetrica(index);
+  };
+
+  const manejarEliminarProcedencia = async (index) => {
+    if (procedencias.length <= 1) {
+      return;
+    }
+    const confirmado = await confirmar(
+      '¿Desea eliminar esta procedencia? Si ya existen registros asociados, el sistema puede rechazar el cambio al guardar.'
+    );
+    if (!confirmado) {
+      return;
+    }
+    eliminarProcedencia(index);
+  };
+
+  const manejarCerrarPanelConDescartar = async (etiqueta, tieneCambios, restaurarFn) => {
+    if (tieneCambios) {
+      const confirmado = await confirmar(
+        `Tiene cambios sin guardar en ${etiqueta}. ¿Desea descartarlos y cerrar?`
+      );
+      if (!confirmado) {
+        return;
+      }
+      restaurarFn();
+    }
+    setVistaActiva(VISTA_RESUMEN);
+  };
+
+  const manejarLimpiarPanel = (tieneCambios, restaurarFn) => {
+    if (!tieneCambios) {
+      return;
+    }
+    restaurarFn();
+  };
 
   return (
     <div className="container-fluid py-4">
@@ -149,7 +227,7 @@ export default function AdministradorPage() {
             <div className="card-body">
               <div className="mb-3">
                 <p className="text-muted mb-0">
-                  Complete la configuracion inicial para habilitar registro, reportes, estadisticas y usuarios.
+                  {mensajeEncabezado}
                 </p>
               </div>
 
@@ -158,7 +236,7 @@ export default function AdministradorPage() {
                   <div className="alert alert-iasd mb-0">
                     <strong>Estado actual:</strong> {resumen.estado_setup}
                     {resumen.setup_completado_en ? ` | completado en ${resumen.setup_completado_en}` : ''}
-                    {resumen.ultima_revision_en ? ` | ultima revision ${resumen.ultima_revision_en}` : ''}
+                    {resumen.ultima_revision_en ? ` | última revisión ${resumen.ultima_revision_en}` : ''}
                   </div>
                 </div>
                 <div className="col-12 col-lg-4">
@@ -166,11 +244,11 @@ export default function AdministradorPage() {
                     <BadgeEstado completo={setupCompleto} />
                     <button
                       type="button"
-                      className="btn btn-success w-100"
-                      onClick={finalizarSetup}
-                      disabled={finalizando}
+                      className={`btn w-100 ${setupCompleto ? 'btn-primary' : 'btn-success'}`}
+                      onClick={manejarAccionPrincipalSetup}
+                      disabled={!setupCompleto && finalizando}
                     >
-                      {finalizando ? 'Finalizando...' : 'Finalizar setup inicial'}
+                      {textoBotonPrincipal}
                     </button>
                   </div>
                 </div>
@@ -180,8 +258,8 @@ export default function AdministradorPage() {
                 <div className="alert alert-warning mt-3 mb-0">
                   <strong>Cuenta ADMIN temporal:</strong>{' '}
                   {Number.isInteger(diasRestantes)
-                    ? `dispones de ${diasRestantes} dia(s) restantes para completar el setup inicial.`
-                    : 'debe completarse el setup inicial dentro de los 5 dias posteriores a la creacion del usuario.'}
+                    ? `dispone de ${diasRestantes} día(s) restantes para completar el setup inicial.`
+                    : 'debe completarse el setup inicial dentro de los 5 días posteriores a la creación del usuario.'}
                 </div>
               )}
             </div>
@@ -197,7 +275,7 @@ export default function AdministradorPage() {
             </div>
             <div className="col-12 col-md-4">
               <EstadoBloqueCard
-                titulo="Metricas del formulario"
+                titulo="Métricas del formulario"
                 detalle={`${metricasHabilitadas} habilitada(s) de ${metricas.length} configurada(s)`}
                 completo={estadoBloques.metricas}
               />
@@ -223,8 +301,8 @@ export default function AdministradorPage() {
           )}
 
           <div className="alert alert-secondary mb-0">
-            Use los botones de la esquina superior derecha para abrir cultos, metricas o procedencias. Solo se
-            muestra un formulario a la vez para reducir scroll y mejorar uso en telefono.
+            Use los botones de la esquina superior derecha para abrir cultos, métricas o procedencias. Solo se
+            muestra un formulario a la vez para reducir scroll y mejorar uso en teléfono.
           </div>
         </>
       )}
@@ -240,7 +318,20 @@ export default function AdministradorPage() {
               <button type="button" className="btn btn-light btn-sm" onClick={agregarCulto}>
                 Agregar culto
               </button>
-              <BotonCerrarPanel onClick={cerrarPanelActivo} label="Cerrar panel de cultos" />
+              <button
+                type="button"
+                className="btn btn-outline-light btn-sm"
+                onClick={() => manejarLimpiarPanel(tieneCambiosCultos, restaurarCultos)}
+                disabled={!tieneCambiosCultos}
+              >
+                Limpiar
+              </button>
+              <BotonCerrarPanel
+                onClick={() => {
+                  void manejarCerrarPanelConDescartar('cultos', tieneCambiosCultos, restaurarCultos);
+                }}
+                label="Cerrar panel de cultos"
+              />
             </div>
           </div>
           <div className="card-body">
@@ -250,13 +341,11 @@ export default function AdministradorPage() {
               <table className="table table-sm align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>Codigo</th>
                     <th>Nombre</th>
-                    <th>Dia</th>
+                    <th>Día</th>
                     <th>Hora</th>
-                    <th>Orden</th>
                     <th>Activo</th>
-                    <th></th>
+                    <th className="text-center admin-col-acciones">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -264,13 +353,6 @@ export default function AdministradorPage() {
                     const filaErrores = erroresCultos[`fila_${index}`] || {};
                     return (
                       <tr key={item.ui_id}>
-                        <td>
-                          <input
-                            className={`form-control form-control-sm ${filaErrores.codigo ? 'is-invalid' : ''}`}
-                            value={item.codigo}
-                            onChange={(event) => cambiarCulto(index, 'codigo', event.target.value)}
-                          />
-                        </td>
                         <td>
                           <input
                             className={`form-control form-control-sm ${filaErrores.nombre ? 'is-invalid' : ''}`}
@@ -297,16 +379,6 @@ export default function AdministradorPage() {
                             onChange={(event) => cambiarCulto(index, 'hora_inicio', event.target.value)}
                           />
                         </td>
-                        <td>
-                          <input
-                            type="number"
-                            className={`form-control form-control-sm ${filaErrores.orden ? 'is-invalid' : ''}`}
-                            value={item.orden}
-                            min={1}
-                            max={99}
-                            onChange={(event) => cambiarCulto(index, 'orden', event.target.value)}
-                          />
-                        </td>
                         <td className="text-center">
                           <input
                             type="checkbox"
@@ -315,14 +387,16 @@ export default function AdministradorPage() {
                             onChange={(event) => cambiarCulto(index, 'activo', event.target.checked)}
                           />
                         </td>
-                        <td className="text-end">
+                        <td className="text-center admin-col-acciones">
                           <button
                             type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => eliminarCulto(index)}
+                            className="btn btn-outline-danger btn-sm admin-table-icon-btn"
+                            onClick={() => { void manejarEliminarCulto(index); }}
                             disabled={cultos.length <= 1}
+                            title="Eliminar culto"
+                            aria-label="Eliminar culto"
                           >
-                            Eliminar
+                            <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
                         </td>
                       </tr>
@@ -332,16 +406,18 @@ export default function AdministradorPage() {
               </table>
             </div>
 
-            <div className="d-flex justify-content-end mt-3">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={guardarCultos}
-                disabled={guardandoCultos}
-              >
-                {guardandoCultos ? 'Guardando...' : 'Guardar cultos'}
-              </button>
-            </div>
+            {tieneCambiosCultos && (
+              <div className="d-flex justify-content-end mt-3">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={guardarCultos}
+                  disabled={guardandoCultos}
+                >
+                  {guardandoCultos ? 'Guardando...' : 'Guardar cultos'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -350,14 +426,27 @@ export default function AdministradorPage() {
         <div className="card shadow-sm mb-4 admin-setup-panel">
           <div className="card-header d-flex justify-content-between align-items-center gap-2">
             <div className="d-flex align-items-center gap-2">
-              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Metricas del formulario</h5>
+              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Métricas del formulario</h5>
               <span className="badge text-bg-light">{metricas.length}</span>
             </div>
             <div className="d-flex align-items-center gap-2">
               <button type="button" className="btn btn-light btn-sm" onClick={agregarMetrica}>
-                Agregar metrica
+                Agregar métrica
               </button>
-              <BotonCerrarPanel onClick={cerrarPanelActivo} label="Cerrar panel de metricas" />
+              <button
+                type="button"
+                className="btn btn-outline-light btn-sm"
+                onClick={() => manejarLimpiarPanel(tieneCambiosMetricas, restaurarMetricas)}
+                disabled={!tieneCambiosMetricas}
+              >
+                Limpiar
+              </button>
+              <BotonCerrarPanel
+                onClick={() => {
+                  void manejarCerrarPanelConDescartar('métricas', tieneCambiosMetricas, restaurarMetricas);
+                }}
+                label="Cerrar panel de métricas"
+              />
             </div>
           </div>
           <div className="card-body">
@@ -383,7 +472,7 @@ export default function AdministradorPage() {
                     <th>Orden</th>
                     <th>Habilitado</th>
                     <th>Obligatorio</th>
-                    <th></th>
+                    <th className="text-center admin-col-acciones">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -449,14 +538,16 @@ export default function AdministradorPage() {
                             onChange={(event) => cambiarMetrica(index, 'obligatorio', event.target.checked)}
                           />
                         </td>
-                        <td className="text-end">
+                        <td className="text-center admin-col-acciones">
                           <button
                             type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => eliminarMetrica(index)}
+                            className="btn btn-outline-danger btn-sm admin-table-icon-btn"
+                            onClick={() => { void manejarEliminarMetrica(index); }}
                             disabled={metricas.length <= 1}
+                            title="Eliminar métrica"
+                            aria-label="Eliminar métrica"
                           >
-                            Eliminar
+                            <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
                         </td>
                       </tr>
@@ -466,16 +557,18 @@ export default function AdministradorPage() {
               </table>
             </div>
 
-            <div className="d-flex justify-content-end mt-3">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={guardarMetricas}
-                disabled={guardandoMetricas}
-              >
-                {guardandoMetricas ? 'Guardando...' : 'Guardar metricas'}
-              </button>
-            </div>
+            {tieneCambiosMetricas && (
+              <div className="d-flex justify-content-end mt-3">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={guardarMetricas}
+                  disabled={guardandoMetricas}
+                >
+                  {guardandoMetricas ? 'Guardando...' : 'Guardar métricas'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -496,7 +589,24 @@ export default function AdministradorPage() {
               >
                 Agregar procedencia
               </button>
-              <BotonCerrarPanel onClick={cerrarPanelActivo} label="Cerrar panel de procedencias" />
+              <button
+                type="button"
+                className="btn btn-outline-light btn-sm"
+                onClick={() => manejarLimpiarPanel(tieneCambiosProcedencias, restaurarProcedencias)}
+                disabled={!tieneCambiosProcedencias}
+              >
+                Limpiar
+              </button>
+              <BotonCerrarPanel
+                onClick={() => {
+                  void manejarCerrarPanelConDescartar(
+                    'procedencias',
+                    tieneCambiosProcedencias,
+                    restaurarProcedencias
+                  );
+                }}
+                label="Cerrar panel de procedencias"
+              />
             </div>
           </div>
           <div className="card-body">
@@ -509,7 +619,7 @@ export default function AdministradorPage() {
                     <th>Nombre</th>
                     <th>Orden</th>
                     <th>Activo</th>
-                    <th></th>
+                    <th className="text-center admin-col-acciones">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -542,14 +652,16 @@ export default function AdministradorPage() {
                             onChange={(event) => cambiarProcedencia(index, 'activo', event.target.checked)}
                           />
                         </td>
-                        <td className="text-end">
+                        <td className="text-center admin-col-acciones">
                           <button
                             type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => eliminarProcedencia(index)}
+                            className="btn btn-outline-danger btn-sm admin-table-icon-btn"
+                            onClick={() => { void manejarEliminarProcedencia(index); }}
                             disabled={procedencias.length <= 1}
+                            title="Eliminar procedencia"
+                            aria-label="Eliminar procedencia"
                           >
-                            Eliminar
+                            <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
                         </td>
                       </tr>
@@ -559,16 +671,18 @@ export default function AdministradorPage() {
               </table>
             </div>
 
-            <div className="d-flex justify-content-end mt-3">
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={guardarProcedencias}
-                disabled={guardandoProcedencias}
-              >
-                {guardandoProcedencias ? 'Guardando...' : 'Guardar procedencias'}
-              </button>
-            </div>
+            {tieneCambiosProcedencias && (
+              <div className="d-flex justify-content-end mt-3">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={guardarProcedencias}
+                  disabled={guardandoProcedencias}
+                >
+                  {guardandoProcedencias ? 'Guardando...' : 'Guardar procedencias'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

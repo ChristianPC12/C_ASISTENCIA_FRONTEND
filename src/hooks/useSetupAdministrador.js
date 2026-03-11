@@ -5,20 +5,21 @@ import { useSetupStatus } from './useSetupStatus';
 import { METRICAS_FALLBACK, normalizarMetricasConfig } from '../utils/metricasConfig';
 
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
+const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
 const DIA_OPCIONES = [
   { valor: 1, etiqueta: 'Domingo' },
   { valor: 2, etiqueta: 'Lunes' },
   { valor: 3, etiqueta: 'Martes' },
-  { valor: 4, etiqueta: 'Miercoles' },
+  { valor: 4, etiqueta: 'Miércoles' },
   { valor: 5, etiqueta: 'Jueves' },
   { valor: 6, etiqueta: 'Viernes' },
-  { valor: 7, etiqueta: 'Sabado' }
+  { valor: 7, etiqueta: 'Sábado' }
 ];
 
 const CULTOS_DEFAULT = [
-  { codigo: 'SABADO', nombre: 'Culto Sabado', dia_semana: 7, hora_inicio: '09:00', activo: true, orden: 1 },
+  { codigo: 'SABADO', nombre: 'Culto Sábado', dia_semana: 7, hora_inicio: '09:00', activo: true, orden: 1 },
   { codigo: 'DOMINGO', nombre: 'Culto Domingo', dia_semana: 1, hora_inicio: '18:30', activo: true, orden: 2 },
-  { codigo: 'MIERCOLES', nombre: 'Culto Miercoles', dia_semana: 4, hora_inicio: '18:30', activo: true, orden: 3 }
+  { codigo: 'MIERCOLES', nombre: 'Culto Miércoles', dia_semana: 4, hora_inicio: '18:30', activo: true, orden: 3 }
 ];
 
 const PROCEDENCIAS_DEFAULT = [
@@ -52,7 +53,7 @@ function toBool(valor) {
   if (typeof valor === 'boolean') return valor;
   if (typeof valor === 'number') return valor === 1;
   if (typeof valor === 'string') {
-    return ['1', 'true', 'on', 'yes', 'si'].includes(valor.trim().toLowerCase());
+    return ['1', 'true', 'on', 'yes', 'si', 'sí'].includes(valor.trim().toLowerCase());
   }
   return false;
 }
@@ -67,6 +68,101 @@ function formatearHora(hora) {
   if (!valor) return '';
   if (/^\d{2}:\d{2}:\d{2}$/.test(valor)) return valor.slice(0, 5);
   return valor;
+}
+
+function clonarLista(lista = []) {
+  return (Array.isArray(lista) ? lista : []).map((item) => ({ ...item }));
+}
+
+function normalizarTextoCodigo(valor) {
+  const limpio = String(valor || '')
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/_{2,}/g, '_');
+
+  return limpio.slice(0, 30);
+}
+
+function generarCodigoCulto(item, index, codigosUsados) {
+  const codigoExistente = normalizarTextoCodigo(item?.codigo);
+  const baseNombre = normalizarTextoCodigo(item?.nombre);
+  const dia = toInt(item?.dia_semana, 0);
+  const diaToken = dia >= 1 && dia <= 7 ? `D${dia}` : '';
+
+  let candidato = codigoExistente;
+  if (!candidato) {
+    const base = baseNombre || `CULTO_${index + 1}`;
+    candidato = diaToken ? `${base}_${diaToken}` : base;
+    candidato = candidato.slice(0, 30);
+  }
+
+  if (!candidato || candidato.length < 2) {
+    candidato = `C${index + 1}`;
+  }
+
+  let unico = candidato;
+  let secuencia = 2;
+  while (codigosUsados.has(unico)) {
+    const sufijo = `_${secuencia}`;
+    const maxBase = Math.max(1, 30 - sufijo.length);
+    unico = `${candidato.slice(0, maxBase)}${sufijo}`;
+    secuencia += 1;
+  }
+  codigosUsados.add(unico);
+  return unico;
+}
+
+function prepararCultosParaGuardar(cultos) {
+  const codigosUsados = new Set();
+  return (Array.isArray(cultos) ? cultos : []).map((item, index) => ({
+    ...item,
+    codigo: generarCodigoCulto(item, index, codigosUsados),
+    nombre: String(item?.nombre || '').trim(),
+    dia_semana: toInt(item?.dia_semana, 1),
+    hora_inicio: formatearHora(item?.hora_inicio),
+    activo: !!item?.activo,
+    orden: index + 1
+  }));
+}
+
+function firmarCultos(cultos) {
+  return JSON.stringify(
+    prepararCultosParaGuardar(cultos).map((item) => ({
+      codigo: item.codigo,
+      nombre: item.nombre,
+      dia_semana: item.dia_semana,
+      hora_inicio: item.hora_inicio,
+      activo: item.activo,
+      orden: item.orden
+    }))
+  );
+}
+
+function firmarProcedencias(procedencias) {
+  return JSON.stringify(
+    (Array.isArray(procedencias) ? procedencias : []).map((item) => ({
+      nombre: String(item?.nombre || '').trim(),
+      activo: !!item?.activo,
+      orden: toInt(item?.orden, 0)
+    }))
+  );
+}
+
+function firmarMetricas(metricas) {
+  return JSON.stringify(
+    (Array.isArray(metricas) ? metricas : []).map((item) => ({
+      clave: String(item?.clave || ''),
+      etiqueta: String(item?.etiqueta || '').trim(),
+      habilitado: !!item?.habilitado,
+      obligatorio: !!item?.obligatorio,
+      depende_de_clave: item?.depende_de_clave || '',
+      regla_dependencia: item?.regla_dependencia || '',
+      orden: toInt(item?.orden, 0)
+    }))
+  );
 }
 
 function normalizarCultos(cultosRaw) {
@@ -124,9 +220,9 @@ function validarCultos(cultos) {
     const filaErrores = {};
 
     if (!/^[A-Z0-9_]{2,30}$/.test(culto.codigo || '')) {
-      filaErrores.codigo = 'Codigo invalido (A-Z, 0-9 y guion bajo).';
+      filaErrores.codigo = 'Código inválido (A-Z, 0-9 y guion bajo).';
     } else if (codigos.has(culto.codigo)) {
-      filaErrores.codigo = 'Codigo duplicado.';
+      filaErrores.codigo = 'Código duplicado.';
     } else {
       codigos.add(culto.codigo);
     }
@@ -136,15 +232,15 @@ function validarCultos(cultos) {
     }
 
     if (!Number.isInteger(culto.dia_semana) || culto.dia_semana < 1 || culto.dia_semana > 7) {
-      filaErrores.dia_semana = 'Dia invalido.';
+      filaErrores.dia_semana = 'Día inválido.';
     }
 
     if (!/^\d{2}:\d{2}$/.test(culto.hora_inicio || '')) {
-      filaErrores.hora_inicio = 'Formato de hora invalido (HH:MM).';
+      filaErrores.hora_inicio = 'Formato de hora inválido (HH:MM).';
     }
 
     if (!Number.isInteger(culto.orden) || culto.orden < 1 || culto.orden > 99) {
-      filaErrores.orden = 'Orden invalido (1-99).';
+      filaErrores.orden = 'Orden inválido (1-99).';
     } else if (ordenes.has(culto.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -179,7 +275,7 @@ function validarProcedencias(procedencias) {
     const nombreClave = nombre.toLowerCase();
 
     if (nombre.length < 2 || nombre.length > 80) {
-      filaErrores.nombre = 'Nombre invalido (2-80).';
+      filaErrores.nombre = 'Nombre inválido (2-80).';
     } else if (nombres.has(nombreClave)) {
       filaErrores.nombre = 'Nombre duplicado.';
     } else {
@@ -187,7 +283,7 @@ function validarProcedencias(procedencias) {
     }
 
     if (!Number.isInteger(item.orden) || item.orden < 1 || item.orden > 99) {
-      filaErrores.orden = 'Orden invalido (1-99).';
+      filaErrores.orden = 'Orden inválido (1-99).';
     } else if (ordenes.has(item.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -211,7 +307,7 @@ function validarMetricas(metricas) {
   let despues = null;
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
-    return { general: 'Debe configurar al menos una metrica.' };
+    return { general: 'Debe configurar al menos una métrica.' };
   }
 
   metricas.forEach((item, idx) => {
@@ -219,7 +315,7 @@ function validarMetricas(metricas) {
     const filaErrores = {};
 
     if (!/^[a-z0-9_]{2,80}$/.test(item.clave || '')) {
-      filaErrores.clave = 'Clave invalida (a-z, 0-9 y guion bajo).';
+      filaErrores.clave = 'Clave inválida (a-z, 0-9 y guion bajo).';
     } else if (claves.has(item.clave)) {
       filaErrores.clave = 'Clave duplicada.';
     } else {
@@ -231,7 +327,7 @@ function validarMetricas(metricas) {
     }
 
     if (!Number.isInteger(item.orden) || item.orden < 1 || item.orden > 999) {
-      filaErrores.orden = 'Orden invalido (1-999).';
+      filaErrores.orden = 'Orden inválido (1-999).';
     } else if (ordenes.has(item.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -251,11 +347,11 @@ function validarMetricas(metricas) {
   });
 
   if (habilitadas < 1) {
-    errores.general = 'Debe dejar al menos una metrica habilitada.';
+    errores.general = 'Debe dejar al menos una métrica habilitada.';
   }
 
   if ((antes && !despues) || (!antes && despues)) {
-    errores.general = 'Puntualidad requiere ambas metricas: antes y despues.';
+    errores.general = 'Puntualidad requiere ambas métricas: antes y después.';
   }
 
   if (antes && despues) {
@@ -287,11 +383,31 @@ export function useSetupAdministrador() {
   const [guardandoProcedencias, setGuardandoProcedencias] = useState(false);
   const [guardandoMetricas, setGuardandoMetricas] = useState(false);
   const [finalizando, setFinalizando] = useState(false);
+  const [cultosBase, setCultosBase] = useState(() => normalizarCultos(CULTOS_DEFAULT));
+  const [procedenciasBase, setProcedenciasBase] = useState(
+    () => normalizarProcedencias(PROCEDENCIAS_DEFAULT)
+  );
+  const [metricasBase, setMetricasBase] = useState(() => normalizarMetricas(METRICAS_FALLBACK));
+  const [firmaCultosBase, setFirmaCultosBase] = useState(() => firmarCultos(CULTOS_DEFAULT));
+  const [firmaProcedenciasBase, setFirmaProcedenciasBase] = useState(
+    () => firmarProcedencias(PROCEDENCIAS_DEFAULT)
+  );
+  const [firmaMetricasBase, setFirmaMetricasBase] = useState(() => firmarMetricas(METRICAS_FALLBACK));
 
   useEffect(() => {
-    setCultos(normalizarCultos(detalle?.configuracion?.cultos));
-    setProcedencias(normalizarProcedencias(detalle?.configuracion?.procedencias));
-    setMetricas(normalizarMetricas(detalle?.configuracion?.metricas));
+    const cultosNormalizados = normalizarCultos(detalle?.configuracion?.cultos);
+    const procedenciasNormalizadas = normalizarProcedencias(detalle?.configuracion?.procedencias);
+    const metricasNormalizadas = normalizarMetricas(detalle?.configuracion?.metricas);
+
+    setCultosBase(cultosNormalizados);
+    setProcedenciasBase(procedenciasNormalizadas);
+    setMetricasBase(metricasNormalizadas);
+    setCultos(clonarLista(cultosNormalizados));
+    setProcedencias(clonarLista(procedenciasNormalizadas));
+    setMetricas(clonarLista(metricasNormalizadas));
+    setFirmaCultosBase(firmarCultos(cultosNormalizados));
+    setFirmaProcedenciasBase(firmarProcedencias(procedenciasNormalizadas));
+    setFirmaMetricasBase(firmarMetricas(metricasNormalizadas));
   }, [detalle]);
 
   const cambiarCulto = useCallback((index, campo, valor) => {
@@ -395,7 +511,7 @@ export function useSetupAdministrador() {
       {
         ui_id: generarUiId('metrica'),
         clave: `metrica_nueva_${prev.length + 1}`,
-        etiqueta: 'Nueva metrica',
+        etiqueta: 'Nueva métrica',
         habilitado: true,
         obligatorio: false,
         depende_de_clave: '',
@@ -410,17 +526,18 @@ export function useSetupAdministrador() {
   }, []);
 
   const guardarCultos = useCallback(async () => {
-    const validacion = validarCultos(cultos);
+    const cultosPreparados = prepararCultosParaGuardar(cultos);
+    const validacion = validarCultos(cultosPreparados);
     setErroresCultos(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuracion de cultos.');
+      notificarError(validacion.general || 'Revise la configuración de cultos.');
       return false;
     }
 
     setGuardandoCultos(true);
     try {
       const payload = {
-        cultos: cultos.map((item) => ({
+        cultos: cultosPreparados.map((item) => ({
           codigo: item.codigo,
           nombre: item.nombre.trim(),
           dia_semana: item.dia_semana,
@@ -431,6 +548,9 @@ export function useSetupAdministrador() {
       };
       const res = await setupApi.guardarCultos(payload);
       if (res?.exito && res?.datos) {
+        setCultos(cultosPreparados);
+        setCultosBase(clonarLista(cultosPreparados));
+        setFirmaCultosBase(firmarCultos(cultosPreparados));
         aplicarDetalleSetup(res.datos);
         setErroresCultos({});
         notificarExito(res.mensaje || 'Cultos guardados correctamente.');
@@ -450,7 +570,7 @@ export function useSetupAdministrador() {
     const validacion = validarProcedencias(procedencias);
     setErroresProcedencias(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuracion de procedencias.');
+      notificarError(validacion.general || 'Revise la configuración de procedencias.');
       return false;
     }
 
@@ -465,6 +585,8 @@ export function useSetupAdministrador() {
       };
       const res = await setupApi.guardarProcedencias(payload);
       if (res?.exito && res?.datos) {
+        setProcedenciasBase(clonarLista(procedencias));
+        setFirmaProcedenciasBase(firmarProcedencias(procedencias));
         aplicarDetalleSetup(res.datos);
         setErroresProcedencias({});
         notificarExito(res.mensaje || 'Procedencias guardadas correctamente.');
@@ -484,7 +606,7 @@ export function useSetupAdministrador() {
     const validacion = validarMetricas(metricas);
     setErroresMetricas(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuracion de metricas.');
+      notificarError(validacion.general || 'Revise la configuración de métricas.');
       return false;
     }
 
@@ -503,15 +625,17 @@ export function useSetupAdministrador() {
       };
       const res = await setupApi.guardarMetricas(payload);
       if (res?.exito && res?.datos) {
+        setMetricasBase(clonarLista(metricas));
+        setFirmaMetricasBase(firmarMetricas(metricas));
         aplicarDetalleSetup(res.datos);
         setErroresMetricas({});
-        notificarExito(res.mensaje || 'Metricas guardadas correctamente.');
+        notificarExito(res.mensaje || 'Métricas guardadas correctamente.');
         return true;
       }
-      notificarError(res?.mensaje || 'No se pudieron guardar las metricas.');
+      notificarError(res?.mensaje || 'No se pudieron guardar las métricas.');
       return false;
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudieron guardar las metricas.');
+      notificarError(error?.mensaje || 'No se pudieron guardar las métricas.');
       return false;
     } finally {
       setGuardandoMetricas(false);
@@ -546,6 +670,34 @@ export function useSetupAdministrador() {
     faltantes: Array.isArray(faltantes) ? faltantes : []
   }), [detalle, faltantes]);
 
+  const tieneCambiosCultos = useMemo(
+    () => firmarCultos(cultos) !== firmaCultosBase,
+    [cultos, firmaCultosBase]
+  );
+  const tieneCambiosProcedencias = useMemo(
+    () => firmarProcedencias(procedencias) !== firmaProcedenciasBase,
+    [procedencias, firmaProcedenciasBase]
+  );
+  const tieneCambiosMetricas = useMemo(
+    () => firmarMetricas(metricas) !== firmaMetricasBase,
+    [metricas, firmaMetricasBase]
+  );
+
+  const restaurarCultos = useCallback(() => {
+    setCultos(clonarLista(cultosBase));
+    setErroresCultos({});
+  }, [cultosBase]);
+
+  const restaurarProcedencias = useCallback(() => {
+    setProcedencias(clonarLista(procedenciasBase));
+    setErroresProcedencias({});
+  }, [procedenciasBase]);
+
+  const restaurarMetricas = useCallback(() => {
+    setMetricas(clonarLista(metricasBase));
+    setErroresMetricas({});
+  }, [metricasBase]);
+
   return {
     cultos,
     procedencias,
@@ -557,6 +709,12 @@ export function useSetupAdministrador() {
     guardandoProcedencias,
     guardandoMetricas,
     finalizando,
+    tieneCambiosCultos,
+    tieneCambiosProcedencias,
+    tieneCambiosMetricas,
+    restaurarCultos,
+    restaurarProcedencias,
+    restaurarMetricas,
     resumen,
     DIA_OPCIONES,
     cambiarCulto,

@@ -11,17 +11,17 @@ function traducirFaltante(item) {
     case 'procedencias_minimas':
       return 'Definir al menos una procedencia';
     case 'procedencias_maximas':
-      return 'Reducir procedencias a maximo 10';
+      return 'Reducir procedencias a máximo 10';
     case 'metricas':
-      return 'Habilitar al menos una metrica';
+      return 'Habilitar al menos una métrica';
     case 'dependencias_metricas':
-      return 'Corregir dependencias entre metricas';
+      return 'Corregir dependencias entre métricas';
     default:
       return item;
   }
 }
 
-export default function SetupBlockedNotice({ modulo = 'Este modulo' }) {
+export default function SetupBlockedNotice({ modulo = 'Este módulo' }) {
   const { esAdmin, esAdminTemporal, diasRestantesPassword } = useAuth();
   const { faltantes = FALLBACK_FALTANTES, error } = useSetupStatus();
 
@@ -31,16 +31,16 @@ export default function SetupBlockedNotice({ modulo = 'Este modulo' }) {
         <div className="card-body">
           <h2 className="h4 mb-3">{modulo} bloqueado temporalmente</h2>
           <p className="text-muted mb-3">
-            Tu organizacion aun no completa la configuracion inicial. Cuando se finalice el setup, este modulo se habilita automaticamente.
+            Tu organización aún no completa la configuración inicial. Cuando se finalice el setup, este módulo se habilita automáticamente.
           </p>
 
           {esAdmin && (
             <div className="alert alert-warning" role="alert">
               <strong>Importante:</strong>{' '}
               {esAdminTemporal && Number.isInteger(diasRestantesPassword)
-                ? `tu cuenta ADMIN temporal vence en ${Math.max(diasRestantesPassword, 0)} dia(s). `
-                : 'la cuenta ADMIN temporal tiene una vigencia maxima de 5 dias desde su creacion. '}
-              Debes completar la configuracion inicial antes del vencimiento para evitar bloqueo operativo.
+                ? `tu cuenta ADMIN temporal vence en ${Math.max(diasRestantesPassword, 0)} día(s). `
+                : 'la cuenta ADMIN temporal tiene una vigencia máxima de 5 días desde su creación. '}
+              Debes completar la configuración inicial antes del vencimiento para evitar bloqueo operativo.
             </div>
           )}
 
@@ -63,11 +63,11 @@ export default function SetupBlockedNotice({ modulo = 'Este modulo' }) {
 
           {esAdmin ? (
             <Link to="/administrador" className="btn btn-primary">
-              Ir a configuracion inicial
+              Ir a configuración inicial
             </Link>
           ) : (
             <div className="alert alert-secondary mb-0" role="alert">
-              Solicite al usuario ADMIN completar el modulo <strong>Administrador</strong> para desbloquear la operacion.
+              Solicite al usuario ADMIN completar el módulo <strong>Administrador</strong> para desbloquear la operación.
             </div>
           )}
         </div>

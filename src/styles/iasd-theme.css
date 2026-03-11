@@ -401,6 +401,20 @@ a:hover {
   border-radius: 0.3rem;
 }
 
+.admin-col-acciones {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.admin-table-icon-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Fila clickeable */
 .fila-registro {
   transition: background-color 0.15s;

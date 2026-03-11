@@ -230,11 +230,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   type="button"
                   className="sidebar-topbar-metric-btn"
                   onClick={abrirPanelMetricas}
-                  aria-label="Metricas del formulario"
-                  title="Metricas del formulario"
+                  aria-label="Métricas del formulario"
+                  title="Métricas del formulario"
                 >
                   <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Metricas</span>
+                  <span className="d-none d-md-inline">Métricas</span>
                 </button>
                 <button
                   type="button"
