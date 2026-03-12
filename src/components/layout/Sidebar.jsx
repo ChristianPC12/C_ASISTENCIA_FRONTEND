@@ -275,11 +275,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   type="button"
                   className={claseBotonTopbarAdmin('CATEGORIAS_METRICAS')}
                   onClick={abrirPanelCategoriasMetricas}
-                  aria-label="Categorías de métricas"
-                  title="Categorías de métricas"
+                  aria-label="Información"
+                  title="Información"
                 >
                   <i className="bi bi-journal-text" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Categorías</span>
+                  <span className="d-none d-md-inline">Información</span>
                 </button>
                 <button
                   type="button"

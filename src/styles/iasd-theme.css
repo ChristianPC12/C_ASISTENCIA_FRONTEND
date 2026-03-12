@@ -546,6 +546,70 @@ a:hover {
   color: var(--iasd-azul);
 }
 
+.admin-info-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgba(0, 51, 102, 0.18);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.04) 0%, #ffffff 100%);
+}
+
+.admin-info-arrow-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.admin-info-switch-title {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--iasd-azul);
+  font-weight: 700;
+  text-align: center;
+}
+
+.admin-info-tab-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-info-tab-btn {
+  border: 1px solid rgba(0, 51, 102, 0.2);
+  background: #ffffff;
+  color: var(--iasd-azul);
+  border-radius: 999px;
+  min-height: 34px;
+  padding: 0.36rem 0.88rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-info-tab-btn:hover,
+.admin-info-tab-btn:focus-visible,
+.admin-info-tab-btn.is-active {
+  background: var(--iasd-azul);
+  color: #ffffff;
+  border-color: var(--iasd-azul);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.16);
+  outline: none;
+}
+
 .admin-reglas-card {
   border: 1px solid rgba(0, 51, 102, 0.15);
   border-left: 3px solid var(--iasd-azul);
@@ -702,6 +766,15 @@ a:hover {
   .admin-usuarios-resumen-item.is-action .btn {
     width: 100%;
   }
+
+  .admin-info-switch {
+    padding: 0.5rem 0.58rem;
+    gap: 0.55rem;
+  }
+
+  .admin-info-tab-btn {
+    flex: 1 1 calc(50% - 0.55rem);
+  }
 }
 
 @media (max-width: 576px) {
@@ -710,6 +783,10 @@ a:hover {
   }
 
   .admin-usuarios-switch-btn {
+    flex: 1 1 100%;
+  }
+
+  .admin-info-tab-btn {
     flex: 1 1 100%;
   }
 }

@@ -2,6 +2,8 @@
 import { useSetupAdministrador } from '../hooks/useSetupAdministrador';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIAS_METRICA_OPCIONES } from '../utils/metricasConfig';
+import InfoCategoriasMetricas from '../components/administrador/InfoCategoriasMetricas';
+import InfoRolesUsuarios from '../components/administrador/InfoRolesUsuarios';
 import UsuarioPage from './UsuarioPage';
 import {
   EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS,
@@ -34,6 +36,29 @@ const DESCRIPCIONES_CATEGORIA_METRICA = {
   observaciones: 'Campos descriptivos para notas y observaciones del registro.',
   adicionales: 'Métricas opcionales para necesidades específicas de una iglesia o grupo.'
 };
+
+const ACCESO_ROLES_PRELIMINAR = [
+  {
+    rol: 'Administrador',
+    estado: 'En definición',
+    detalle: 'Acceso operativo amplio. Alcance final pendiente según módulos restantes.'
+  },
+  {
+    rol: 'Secretario/a',
+    estado: 'En definición',
+    detalle: 'Accesos orientados a registro y seguimiento. Permisos finales pendientes.'
+  },
+  {
+    rol: 'Ministerio personal',
+    estado: 'En definición',
+    detalle: 'Espacio reservado para reglas futuras de visitas y consolidación.'
+  }
+];
+
+const INFO_SECCIONES = [
+  { id: 'METRICAS', etiqueta: 'Métricas', icono: 'bi-journal-text' },
+  { id: 'ROLES', etiqueta: 'Roles por usuario', icono: 'bi-shield-check' }
+];
 
 function BadgeEstado({ completo }) {
   return (
@@ -136,6 +161,7 @@ export default function AdministradorPage() {
   } = useSetupAdministrador();
 
   const [vistaActiva, setVistaActiva] = useState(VISTA_RESUMEN);
+  const [infoSeccionActiva, setInfoSeccionActiva] = useState(INFO_SECCIONES[0].id);
   const metricaPendienteFocusRef = useRef(null);
   const metricaInputRefs = useRef(new Map());
   const estadoSetupNormalizado = String(resumen.estado_setup || '').toUpperCase();
@@ -333,6 +359,16 @@ export default function AdministradorPage() {
     restaurarFn();
   };
 
+  const indiceInfoActivo = INFO_SECCIONES.findIndex((item) => item.id === infoSeccionActiva);
+  const metaInfoActiva = INFO_SECCIONES[indiceInfoActivo >= 0 ? indiceInfoActivo : 0];
+
+  const navegarInfo = (direccion) => {
+    const total = INFO_SECCIONES.length;
+    const base = indiceInfoActivo >= 0 ? indiceInfoActivo : 0;
+    const siguiente = (base + direccion + total) % total;
+    setInfoSeccionActiva(INFO_SECCIONES[siguiente].id);
+  };
+
   return (
     <div className="container-fluid py-4">
       {mostrarResumen && (
@@ -416,7 +452,7 @@ export default function AdministradorPage() {
 
           <div className="alert alert-secondary mb-0 admin-setup-help">
             <div>
-              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias, categorías y usuarios.
+              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias, información y usuarios.
               Solo se muestra un panel a la vez para reducir scroll y mejorar uso en teléfono.
             </div>
             <div className="admin-quick-links">
@@ -447,10 +483,13 @@ export default function AdministradorPage() {
               <button
                 type="button"
                 className="admin-quick-link-btn"
-                onClick={() => { void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS); }}
+                onClick={() => {
+                  setInfoSeccionActiva('METRICAS');
+                  void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS);
+                }}
               >
                 <i className="bi bi-journal-text" aria-hidden="true"></i>
-                Ir a Categorías
+                Ir a Información
               </button>
               <button
                 type="button"
@@ -618,9 +657,12 @@ export default function AdministradorPage() {
                 <button
                   type="button"
                   className="btn btn-link btn-sm p-0 align-baseline"
-                  onClick={() => { void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS); }}
+                  onClick={() => {
+                    setInfoSeccionActiva('METRICAS');
+                    void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS);
+                  }}
                 >
-                  Categorías
+                  Información
                 </button>
                 .
                 <div className="small text-muted mt-1">
@@ -748,30 +790,65 @@ export default function AdministradorPage() {
       {mostrarCategoriasMetricas && (
         <div className="card shadow-sm mb-4 admin-setup-panel">
           <div className="card-header d-flex justify-content-between align-items-center gap-2">
-            <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Categorías de métricas</h5>
+            <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Información</h5>
             <BotonCerrarPanel
               onClick={() => setVistaActiva(VISTA_RESUMEN)}
-              label="Cerrar panel de categorías de métricas"
+              label="Cerrar panel de información"
             />
           </div>
           <div className="card-body">
-            <p className="text-muted small mb-3">
-              Estas categorías organizan el formulario de Nuevo registro y ayudan a ubicar cada métrica en su sección correcta.
-            </p>
-            <div className="row g-3">
-              {CATEGORIAS_METRICA_OPCIONES.map((opcion) => (
-                <div className="col-12 col-md-6 col-xl-4" key={opcion.valor}>
-                  <div className="card h-100 admin-categoria-card">
-                    <div className="card-body">
-                      <h6 className="mb-2">{opcion.etiqueta}</h6>
-                      <p className="small text-muted mb-0">
-                        {DESCRIPCIONES_CATEGORIA_METRICA[opcion.valor]}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            <div className="admin-info-switch mb-3">
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
+                onClick={() => navegarInfo(-1)}
+                aria-label="Ir a la información anterior"
+                title="Anterior"
+              >
+                <i className="bi bi-chevron-left" aria-hidden="true"></i>
+              </button>
+
+              <div className="admin-info-switch-title">
+                <span className="badge text-bg-secondary">{indiceInfoActivo + 1}/{INFO_SECCIONES.length}</span>
+                <span>
+                  <i className={`bi ${metaInfoActiva.icono} me-2`} aria-hidden="true"></i>
+                  {metaInfoActiva.etiqueta}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
+                onClick={() => navegarInfo(1)}
+                aria-label="Ir a la siguiente información"
+                title="Siguiente"
+              >
+                <i className="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <div className="admin-info-tab-list mb-3">
+              {INFO_SECCIONES.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`admin-info-tab-btn ${infoSeccionActiva === item.id ? 'is-active' : ''}`}
+                  onClick={() => setInfoSeccionActiva(item.id)}
+                >
+                  <i className={`bi ${item.icono}`} aria-hidden="true"></i>
+                  {item.etiqueta}
+                </button>
               ))}
             </div>
+
+            {infoSeccionActiva === 'METRICAS' ? (
+              <InfoCategoriasMetricas
+                categorias={CATEGORIAS_METRICA_OPCIONES}
+                descripciones={DESCRIPCIONES_CATEGORIA_METRICA}
+              />
+            ) : (
+              <InfoRolesUsuarios roles={ACCESO_ROLES_PRELIMINAR} />
+            )}
           </div>
         </div>
       )}
