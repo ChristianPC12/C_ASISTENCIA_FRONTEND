@@ -1,20 +1,21 @@
 export default function UsuarioCuposCard({
   cuposRoles,
   resumen,
-  cargando,
-  guardando,
-  onCambiarCupo,
-  onGuardar
+  cargando
 }) {
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header d-flex justify-content-between align-items-center">
-        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Cupos por rol</h5>
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Roles y cupos del sistema</h5>
         <span className="badge bg-light text-dark">
           {resumen?.usuarios_contabilizados || 0}/{resumen?.cupos_totales || 0}
         </span>
       </div>
       <div className="card-body">
+        <div className="alert alert-iasd py-2 small mb-3">
+          Los cupos máximos por rol están definidos por el sistema y no son editables por usuarios.
+        </div>
+
         {cargando && (
           <div className="text-muted">Cargando cupos...</div>
         )}
@@ -32,7 +33,7 @@ export default function UsuarioCuposCard({
                   <th className="text-center">Consumo actual</th>
                   <th className="text-center">Cupo máximo</th>
                   <th className="text-center">Disponibles</th>
-                  <th className="text-center">Activo</th>
+                  <th className="text-center">Estado</th>
                 </tr>
               </thead>
               <tbody>
@@ -45,26 +46,14 @@ export default function UsuarioCuposCard({
                       )}
                     </td>
                     <td className="text-center">{item.consumo_actual}</td>
-                    <td className="text-center" style={{ maxWidth: 120 }}>
-                      <input
-                        type="number"
-                        min={0}
-                        max={999}
-                        className="form-control form-control-sm text-center"
-                        value={item.cupo_maximo}
-                        disabled={guardando}
-                        onChange={(event) => onCambiarCupo(item.rol_nombre, 'cupo_maximo', event.target.value)}
-                      />
+                    <td className="text-center">
+                      <span className="badge text-bg-primary">{item.cupo_maximo}</span>
                     </td>
                     <td className="text-center">{item.disponibles}</td>
                     <td className="text-center">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={!!item.activo}
-                        disabled={guardando}
-                        onChange={(event) => onCambiarCupo(item.rol_nombre, 'activo', event.target.checked)}
-                      />
+                      <span className={`badge ${item.activo ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                        {item.activo ? 'Activo' : 'Inactivo'}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -72,17 +61,6 @@ export default function UsuarioCuposCard({
             </table>
           </div>
         )}
-
-        <div className="d-flex justify-content-end mt-3">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onGuardar}
-            disabled={guardando || cargando || cuposRoles.length === 0}
-          >
-            {guardando ? 'Guardando cupos...' : 'Guardar cupos'}
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { EVENT_SETUP_REQUIRED } from './events';
 const AUTH_REDIRECT_MESSAGE_KEY = 'auth_redirect_message';
 const DEVICE_ID_STORAGE_KEY = 'auth_device_id';
 const DEVICE_ID_REGEX = /^[A-Za-z0-9._:-]{8,120}$/;
+const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
 
 function generarDeviceId() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -26,6 +27,23 @@ function obtenerDeviceId() {
   } catch {
     return '';
   }
+}
+
+function resolverMensajeSesion401(mensajeServidor) {
+  const mensajeBase = (typeof mensajeServidor === 'string' && mensajeServidor.trim() !== '')
+    ? mensajeServidor.trim()
+    : 'Tu sesión expiró o ya no es válida. Inicia sesión nuevamente.';
+
+  const normalizado = mensajeBase
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toLowerCase();
+
+  if (normalizado.includes('token invalido') || normalizado.includes('token revocado')) {
+    return 'Su contraseña fue cambiada por un administrador. Inicie sesión nuevamente.';
+  }
+
+  return mensajeBase;
 }
 
 const ApiCliente = axios.create({
@@ -65,13 +83,10 @@ ApiCliente.interceptors.response.use(
         }
       }
 
-      // Si el backend responde con 401, limpiar sesion y redirigir al login
-      // (excepto si es la propia peticion de login, para mostrar el mensaje de error)
+      // Si el backend responde con 401, limpiar sesión y redirigir al login
+      // (excepto si es la propia petición de login, para mostrar el mensaje de error)
       if (error.response.status === 401 && !error.config.url?.includes('/auth/login')) {
-        const mensajeServidor = error.response.data?.mensaje;
-        const mensajeSesion = (typeof mensajeServidor === 'string' && mensajeServidor.trim() !== '')
-          ? mensajeServidor
-          : 'Tu sesion expiro o ya no es valida. Inicia sesion nuevamente.';
+        const mensajeSesion = resolverMensajeSesion401(error.response.data?.mensaje);
 
         // Evitar cascada de toasts en rojo cuando varias peticiones fallan en paralelo.
         window.__suppressErrorToasts = true;

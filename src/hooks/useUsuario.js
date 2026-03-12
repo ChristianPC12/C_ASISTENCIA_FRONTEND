@@ -10,11 +10,55 @@ const ROL_ID_TO_NOMBRE = {
   2: 'SECRETARIO'
 };
 
+const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
+const CUPOS_FIJOS_SISTEMA = {
+  ADMIN: 4,
+  SECRETARIO: 2,
+  MINISTERIO_PERSONAL: 2,
+  MINISTERIO_PERSONALES: 2,
+  MINISTERIOS_PERSONALES: 2
+};
+
+function normalizarRolNombre(rolNombre) {
+  return String(rolNombre || '')
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function resolverCupoMaximoSistema(rolNombre, fallback = 0) {
+  const rolNormalizado = normalizarRolNombre(rolNombre);
+  if (Object.prototype.hasOwnProperty.call(CUPOS_FIJOS_SISTEMA, rolNormalizado)) {
+    return CUPOS_FIJOS_SISTEMA[rolNormalizado];
+  }
+  const numero = Number(fallback);
+  return Number.isFinite(numero) ? Math.max(0, Math.trunc(numero)) : 0;
+}
+
+function normalizarMensajeServidor(mensaje) {
+  const texto = String(mensaje || '').trim();
+  if (!texto) return '';
+
+  const normalizado = texto
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toLowerCase();
+
+  if (normalizado.includes('reactivar un usuario inactivo') && normalizado.includes('contrasena')) {
+    return 'Para reactivar un usuario inactivo se requiere cambiar su contraseña.';
+  }
+
+  return texto.replace(/contrasena/gi, 'contraseña');
+}
+
 function mensajeCupoHumano(mensajeBackend) {
-  if (!mensajeBackend) {
+  const detalle = normalizarMensajeServidor(mensajeBackend);
+  if (!detalle) {
     return 'No hay cupo disponible para ese rol en esta organización.';
   }
-  return `No se pudo completar la acción por política de cupos: ${mensajeBackend}`;
+  return `No se pudo completar la acción por política de cupos: ${detalle}`;
 }
 
 function esErrorDeCupo(errorOrMessage) {
@@ -26,8 +70,64 @@ function esErrorDeCupo(errorOrMessage) {
   return codigo === 'CUPOS_EXCEEDED' || mensaje.includes('cupo');
 }
 
+function aplicarPoliticaCupos(roles = []) {
+  return (Array.isArray(roles) ? roles : []).map((item) => {
+    const cupoMaximo = resolverCupoMaximoSistema(item?.rol_nombre, item?.cupo_maximo);
+    const consumoActual = Number(item?.consumo_actual || 0);
+    const consumo = Number.isFinite(consumoActual) ? Math.max(0, Math.trunc(consumoActual)) : 0;
+
+    return {
+      ...item,
+      cupo_maximo: cupoMaximo,
+      consumo_actual: consumo,
+      disponibles: Math.max(cupoMaximo - consumo, 0),
+      excedido: consumo > cupoMaximo
+    };
+  });
+}
+
+function construirResumenCupos(resumenBackend, roles) {
+  const lista = Array.isArray(roles) ? roles : [];
+  const usuariosContabilizados = lista.reduce((acc, item) => acc + Number(item?.consumo_actual || 0), 0);
+  const cuposTotales = lista.reduce((acc, item) => {
+    if (item?.activo === false) return acc;
+    return acc + Number(item?.cupo_maximo || 0);
+  }, 0);
+
+  return {
+    ...(resumenBackend && typeof resumenBackend === 'object' ? resumenBackend : {}),
+    usuarios_contabilizados: usuariosContabilizados,
+    cupos_totales: cuposTotales
+  };
+}
+
+function requiereSincronizarCupos(rolesBackend, rolesSistema) {
+  const backend = Array.isArray(rolesBackend) ? rolesBackend : [];
+  const sistema = Array.isArray(rolesSistema) ? rolesSistema : [];
+  const backendPorRol = new Map(
+    backend.map((item) => [normalizarRolNombre(item?.rol_nombre), Number(item?.cupo_maximo || 0)])
+  );
+
+  return sistema.some((item) => {
+    const clave = normalizarRolNombre(item?.rol_nombre);
+    const cupoSistema = Number(item?.cupo_maximo || 0);
+    const cupoBackend = backendPorRol.get(clave);
+    return cupoBackend !== cupoSistema;
+  });
+}
+
+function construirPayloadCupos(roles) {
+  return {
+    cupos: (Array.isArray(roles) ? roles : []).map((item) => ({
+      rol_nombre: item.rol_nombre,
+      cupo_maximo: Number(item.cupo_maximo || 0),
+      activo: !!item.activo
+    }))
+  };
+}
+
 /**
- * Hook para CRUD de usuarios y politica de cupos por rol (solo ADMIN)
+ * Hook para CRUD de usuarios y política de cupos por rol (solo ADMIN).
  */
 export function useUsuario() {
   const [usuarios, setUsuarios] = useState([]);
@@ -38,7 +138,6 @@ export function useUsuario() {
   const [cuposRoles, setCuposRoles] = useState([]);
   const [resumenCupos, setResumenCupos] = useState(null);
   const [cargandoCupos, setCargandoCupos] = useState(false);
-  const [guardandoCupos, setGuardandoCupos] = useState(false);
 
   const cargarUsuarios = useCallback(async () => {
     setCargando(true);
@@ -60,13 +159,31 @@ export function useUsuario() {
     try {
       const res = await usuarioApi.obtenerCupos();
       if (res?.exito) {
-        setCuposRoles(res?.datos?.roles || []);
-        setResumenCupos(res?.datos?.resumen || null);
+        const rolesBackend = res?.datos?.roles || [];
+        const rolesSistema = aplicarPoliticaCupos(rolesBackend);
+        const resumenSistema = construirResumenCupos(res?.datos?.resumen, rolesSistema);
+
+        setCuposRoles(rolesSistema);
+        setResumenCupos(resumenSistema);
+
+        if (requiereSincronizarCupos(rolesBackend, rolesSistema)) {
+          try {
+            const sync = await usuarioApi.actualizarCupos(construirPayloadCupos(rolesSistema));
+            if (sync?.exito) {
+              const rolesSync = aplicarPoliticaCupos(sync?.datos?.roles || rolesSistema);
+              setCuposRoles(rolesSync);
+              setResumenCupos(construirResumenCupos(sync?.datos?.resumen, rolesSync));
+            }
+          } catch {
+            // Silencioso: la UI sigue mostrando política del sistema.
+          }
+        }
       }
     } catch (error) {
       setCuposRoles([]);
       setResumenCupos(null);
-      notificarError(error?.mensaje || 'No se pudieron cargar los cupos por rol.');
+      const mensaje = normalizarMensajeServidor(error?.mensaje);
+      notificarError(mensaje || 'No se pudieron cargar los cupos por rol.');
     } finally {
       setCargandoCupos(false);
     }
@@ -93,11 +210,12 @@ export function useUsuario() {
   }, []);
 
   const manejarErrorGuardarUsuario = useCallback((error) => {
+    const mensajeServidor = normalizarMensajeServidor(error?.mensaje);
     if (esErrorDeCupo(error)) {
-      notificarError(mensajeCupoHumano(error?.mensaje));
+      notificarError(mensajeCupoHumano(mensajeServidor));
       return;
     }
-    notificarError(error?.mensaje || 'Error al guardar el usuario.');
+    notificarError(mensajeServidor || 'Error al guardar el usuario.');
   }, []);
 
   const guardar = useCallback(async () => {
@@ -172,72 +290,23 @@ export function useUsuario() {
         await Promise.all([cargarUsuarios(), cargarCupos()]);
         return true;
       }
-      notificarError(res.mensaje || 'Error al desactivar.');
+      notificarError(normalizarMensajeServidor(res.mensaje) || 'Error al desactivar.');
       return false;
     } catch (error) {
-      const mensaje = error?.mensaje || 'Error al desactivar el usuario.';
-      notificarError(mensaje);
+      const mensaje = normalizarMensajeServidor(error?.mensaje);
+      notificarError(mensaje || 'Error al desactivar el usuario.');
       return false;
     } finally {
       setCargando(false);
     }
   }, [cargarUsuarios, cargarCupos]);
 
-  const cambiarCupoRol = useCallback((rolNombre, campo, valor) => {
-    setCuposRoles((prev) => prev.map((item) => {
-      if (item.rol_nombre !== rolNombre) return item;
-      if (campo === 'activo') {
-        return { ...item, activo: !!valor };
-      }
-      if (campo === 'cupo_maximo') {
-        const numero = Number(valor);
-        return { ...item, cupo_maximo: Number.isFinite(numero) ? Math.max(0, Math.trunc(numero)) : item.cupo_maximo };
-      }
-      return { ...item, [campo]: valor };
-    }));
-  }, []);
-
-  const guardarCupos = useCallback(async () => {
-    setGuardandoCupos(true);
-    try {
-      const payload = {
-        cupos: cuposRoles.map((item) => ({
-          rol_nombre: item.rol_nombre,
-          cupo_maximo: Number(item.cupo_maximo || 0),
-          activo: !!item.activo
-        }))
-      };
-
-      const res = await usuarioApi.actualizarCupos(payload);
-      if (res?.exito) {
-        setCuposRoles(res?.datos?.roles || []);
-        setResumenCupos(res?.datos?.resumen || null);
-        notificarExito(res.mensaje || 'Cupos actualizados correctamente.');
-        return true;
-      }
-
-      if (esErrorDeCupo(res)) {
-        notificarError(mensajeCupoHumano(res?.mensaje));
-      } else {
-        notificarError(res?.mensaje || 'No se pudieron actualizar los cupos.');
-      }
-      return false;
-    } catch (error) {
-      if (esErrorDeCupo(error)) {
-        notificarError(mensajeCupoHumano(error?.mensaje));
-      } else {
-        notificarError(error?.mensaje || 'No se pudieron actualizar los cupos.');
-      }
-      return false;
-    } finally {
-      setGuardandoCupos(false);
-    }
-  }, [cuposRoles]);
-
   const cupoRolSeleccionado = useMemo(() => {
     const rolNombre = ROL_ID_TO_NOMBRE[Number(formulario.rol_id)];
     if (!rolNombre) return null;
-    return cuposRoles.find((item) => item.rol_nombre === rolNombre) || null;
+
+    const clave = normalizarRolNombre(rolNombre);
+    return cuposRoles.find((item) => normalizarRolNombre(item?.rol_nombre) === clave) || null;
   }, [formulario.rol_id, cuposRoles]);
 
   return {
@@ -249,16 +318,12 @@ export function useUsuario() {
     cuposRoles,
     resumenCupos,
     cargandoCupos,
-    guardandoCupos,
     cupoRolSeleccionado,
     cambiarCampo,
     guardar,
     editar,
     eliminar,
     limpiarFormulario,
-    cambiarCupoRol,
-    guardarCupos,
     recargarCupos: cargarCupos
   };
 }
-

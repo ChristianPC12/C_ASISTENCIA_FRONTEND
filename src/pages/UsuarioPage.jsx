@@ -27,7 +27,7 @@ const OPCIONES_USUARIO = [
 ];
 
 /**
- * Modulo de usuarios (solo ADMIN).
+ * Módulo de usuarios (solo ADMIN).
  * - modo="pagina": se usa como ruta independiente (compatibilidad).
  * - modo="panel": se usa dentro de Administrador.
  */
@@ -42,15 +42,12 @@ export default function UsuarioPage({ modo = 'pagina' }) {
     cuposRoles,
     resumenCupos,
     cargandoCupos,
-    guardandoCupos,
     cupoRolSeleccionado,
     cambiarCampo,
     guardar,
     editar,
     eliminar,
-    limpiarFormulario,
-    cambiarCupoRol,
-    guardarCupos
+    limpiarFormulario
   } = useUsuario();
 
   const [seccionActiva, setSeccionActiva] = useState(SECCION_USUARIOS);
@@ -146,9 +143,6 @@ export default function UsuarioPage({ modo = 'pagina' }) {
           cuposRoles={cuposRoles}
           resumen={resumenCupos}
           cargando={cargandoCupos}
-          guardando={guardandoCupos}
-          onCambiarCupo={cambiarCupoRol}
-          onGuardar={guardarCupos}
         />
       )}
     </div>
