@@ -22,6 +22,13 @@ const METRICAS_FIJAS_MAP = new Map(
     }
   ])
 );
+const ETIQUETA_METRICA_BASE = {
+  llegaron_antes_hora: 'Llegaron antes de la hora',
+  llegaron_despues_hora: 'Llegaron después de la hora',
+  total_asistentes: 'Total de asistentes',
+  ninos: 'Niños',
+  jovenes: 'Jóvenes'
+};
 
 const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
 const DIA_OPCIONES = [
@@ -102,6 +109,37 @@ function normalizarTextoCodigo(valor) {
     .replace(/_{2,}/g, '_');
 
   return limpio.slice(0, 30);
+}
+
+function normalizarMensajeMetricasUsuarioFinal(mensajeRaw) {
+  const mensaje = String(mensajeRaw || '').trim();
+  if (!mensaje) return '';
+
+  const normalizado = mensaje
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toLowerCase();
+
+  const clavesFaltantes = [];
+  const regex = /metrica_base_faltante:([a-z0-9_]+)/g;
+  let match = regex.exec(normalizado);
+  while (match) {
+    clavesFaltantes.push(match[1]);
+    match = regex.exec(normalizado);
+  }
+
+  if (clavesFaltantes.length > 0) {
+    const etiquetas = Array.from(new Set(clavesFaltantes)).map(
+      (clave) => ETIQUETA_METRICA_BASE[clave] || clave.replace(/_/g, ' ')
+    );
+    return `Faltan métricas base obligatorias: ${etiquetas.join(', ')}. Abra el panel de Métricas y guarde para restaurarlas.`;
+  }
+
+  if (normalizado.includes('configuracion de metricas invalida')) {
+    return 'La configuración de métricas es inválida. Revise el panel de Métricas y guarde nuevamente.';
+  }
+
+  return mensaje;
 }
 
 function normalizarClaveMetrica(valor) {
@@ -820,10 +858,14 @@ export function useSetupAdministrador() {
         notificarExito(res.mensaje || 'Métricas guardadas correctamente.');
         return true;
       }
-      notificarError(res?.mensaje || 'No se pudieron guardar las métricas.');
+      notificarError(
+        normalizarMensajeMetricasUsuarioFinal(res?.mensaje) || 'No se pudieron guardar las métricas.'
+      );
       return false;
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudieron guardar las métricas.');
+      notificarError(
+        normalizarMensajeMetricasUsuarioFinal(error?.mensaje) || 'No se pudieron guardar las métricas.'
+      );
       return false;
     } finally {
       setGuardandoMetricas(false);
@@ -920,4 +962,3 @@ export function useSetupAdministrador() {
     finalizarSetup
   };
 }
-

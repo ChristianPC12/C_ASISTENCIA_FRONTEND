@@ -101,31 +101,60 @@ export const METRICAS_FALLBACK = [
   { clave: 'observaciones', etiqueta: 'Observaciones', categoria: 'observaciones', habilitado: true, obligatorio: false }
 ];
 
-export function normalizarMetricasConfig(metricasRaw) {
-  const listaBase = Array.isArray(metricasRaw) && metricasRaw.length > 0
-    ? metricasRaw
-    : METRICAS_FALLBACK;
+function normalizarListaMetricas(listaRaw) {
+  const salida = [];
+  const clavesVistas = new Set();
 
-  return listaBase
-    .map((item, index) => {
+  (Array.isArray(listaRaw) ? listaRaw : [])
+    .forEach((item) => {
       const clave = normalizarTexto(item?.clave, '').toLowerCase();
-      if (!clave) return null;
+      if (!clave || clavesVistas.has(clave)) return;
 
       const etiqueta = normalizarTexto(item?.etiqueta, clave);
       const categoria = normalizarCategoria(item?.categoria, clave);
 
-      return {
+      salida.push({
         clave,
         etiqueta,
         categoria,
         habilitado: toBool(item?.habilitado ?? true),
         obligatorio: toBool(item?.obligatorio ?? false),
         tipo: tipoMetricaPorClave(clave),
-        seccion: categoria,
-        posicion: index + 1
-      };
-    })
-    .filter(Boolean);
+        seccion: categoria
+      });
+
+      clavesVistas.add(clave);
+    });
+
+  return salida;
+}
+
+export function normalizarMetricasConfig(metricasRaw) {
+  const entradaNormalizada = normalizarListaMetricas(metricasRaw);
+  const fallbackNormalizada = normalizarListaMetricas(METRICAS_FALLBACK);
+
+  if (entradaNormalizada.length === 0) {
+    return fallbackNormalizada.map((item, index) => ({
+      ...item,
+      posicion: index + 1
+    }));
+  }
+
+  const entradaPorClave = new Map(entradaNormalizada.map((item) => [item.clave, item]));
+  const clavesFallback = new Set(fallbackNormalizada.map((item) => item.clave));
+
+  const resultado = fallbackNormalizada.map((base) => entradaPorClave.get(base.clave) || base);
+
+  entradaNormalizada.forEach((item) => {
+    if (!clavesFallback.has(item.clave)) {
+      resultado.push(item);
+    }
+  });
+
+  return resultado.map((item, index) => ({
+    ...item,
+    posicion: index + 1
+  }));
 }
 
 export function obtenerMetricasActivas(metricasRaw) {

@@ -13,9 +13,9 @@ function traducirFaltante(item) {
     case 'procedencias_maximas':
       return 'Reducir procedencias a máximo 10';
     case 'metricas':
-      return 'Habilitar al menos una métrica';
+      return 'Debe habilitar al menos una métrica en el panel de Métricas.';
     case 'dependencias_metricas':
-      return 'Corregir dependencias entre métricas';
+      return 'Faltan métricas base obligatorias. Abra Métricas y guarde para restaurarlas.';
     default:
       return item;
   }
@@ -31,7 +31,8 @@ export default function SetupBlockedNotice({ modulo = 'Este módulo' }) {
         <div className="card-body">
           <h2 className="h4 mb-3">{modulo} bloqueado temporalmente</h2>
           <p className="text-muted mb-3">
-            Tu organización aún no completa la configuración inicial. Cuando se finalice el setup, este módulo se habilita automáticamente.
+            Tu organización aún no completa la configuración inicial. Cuando se finalice el setup,
+            este módulo se habilita automáticamente.
           </p>
 
           {esAdmin && (

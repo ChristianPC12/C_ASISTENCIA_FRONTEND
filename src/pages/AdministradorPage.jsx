@@ -77,9 +77,9 @@ function traducirFaltante(item) {
     case 'procedencias_maximas':
       return 'Reducir procedencias a máximo 10';
     case 'metricas':
-      return 'Habilitar al menos una métrica';
+      return 'Debe habilitar al menos una métrica en el panel de Métricas.';
     case 'dependencias_metricas':
-      return 'Corregir configuración base de métricas';
+      return 'Faltan métricas base obligatorias. Abra Métricas y guarde para restaurarlas.';
     default:
       return item;
   }

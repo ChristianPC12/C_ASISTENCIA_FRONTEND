@@ -254,6 +254,16 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   2. Evitar defaults que fuerzan bloqueo (`true`) cuando el backend no envía el campo.
   3. Mantener la misma regla de `setupCompleto` en hooks de estado y en la vista de administrador.
 
+### E28) Mensajes técnicos expuestos al usuario final
+
+- Qué pasó: se mostraron mensajes internos como `metrica_base_faltante:*` y textos genéricos ambiguos en pendientes.
+- Impacto: el usuario final no entiende el problema ni qué acción debe realizar.
+- Regla preventiva:
+  1. Nunca exponer códigos internos o claves técnicas en toasts/alertas visibles.
+  2. Todo mensaje de error debe incluir acción concreta en lenguaje simple (qué pasó + qué hacer ahora).
+  3. Si el backend envía mensajes técnicos, mapearlos en frontend a copy amigable antes de notificar.
+  4. Priorizar mensajes cortos y orientados a resultado (ejemplo: abrir panel X y guardar).
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -312,4 +322,5 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] Paneles complejos (ej. usuarios) con subopciones internas por tarea.
 - [ ] Archivos UI guardados en UTF-8 y sin patrones mojibake (`MÃ`, `Ã`, `Â`).
 - [ ] Estado de setup validado con normalización booleana consistente (`bloqueada_operacion`).
+- [ ] Mensajes de error/notificación en lenguaje de usuario final (sin claves técnicas).
 - [ ] Lint/build/react-doctor ejecutados.
