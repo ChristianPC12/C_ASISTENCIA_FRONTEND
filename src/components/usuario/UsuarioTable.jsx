@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tabla de listado de usuarios
  * Props:
  *  - usuarios: array de usuarios
@@ -145,3 +145,4 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
     </div>
   );
 }
+

@@ -79,7 +79,7 @@ export default function UsuarioPage({ modo = 'pagina' }) {
     <div className={esPanel ? 'admin-usuarios-shell' : 'container-fluid py-4'}>
       {!esPanel && (
         <p className="text-muted small mb-3">
-          Administre usuarios, roles y cupos desde este modulo.
+          Administre usuarios, roles y cupos desde este módulo.
         </p>
       )}
 

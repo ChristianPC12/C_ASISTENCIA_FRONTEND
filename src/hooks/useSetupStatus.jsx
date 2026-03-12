@@ -46,9 +46,20 @@ function writeCache(orgId, detalle) {
   }
 }
 
+function toBool(valor) {
+  if (typeof valor === 'boolean') return valor;
+  if (typeof valor === 'number') return valor === 1;
+  if (typeof valor === 'string') {
+    const texto = valor.trim().toLowerCase();
+    if (['1', 'true', 'on', 'yes', 'si', 'sí'].includes(texto)) return true;
+    if (['0', 'false', 'off', 'no'].includes(texto)) return false;
+  }
+  return false;
+}
+
 function resolverEstadoDesdeDetalle(detalle) {
   const estadoSetup = String(detalle?.estado_setup || '').toUpperCase();
-  const bloqueada = Boolean(detalle?.bloqueada_operacion);
+  const bloqueada = toBool(detalle?.bloqueada_operacion);
   const completo = estadoSetup === 'COMPLETO' && !bloqueada;
   return {
     estado: completo ? 'completo' : 'pendiente',

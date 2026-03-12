@@ -21,7 +21,7 @@ function RouteFallback() {
   return (
     <div className="container-fluid py-4">
       <div className="alert alert-light mb-0" role="status">
-        Cargando modulo...
+        Cargando módulo...
       </div>
     </div>
   );

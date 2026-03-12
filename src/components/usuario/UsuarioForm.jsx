@@ -1,4 +1,4 @@
-import { ROL_OPCIONES } from '../../config/constants';
+﻿import { ROL_OPCIONES } from '../../config/constants';
 
 /**
  * Formulario de crear/editar usuario
@@ -184,3 +184,4 @@ export default function UsuarioForm({
     </div>
   );
 }
+

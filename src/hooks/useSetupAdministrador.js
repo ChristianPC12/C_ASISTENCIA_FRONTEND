@@ -852,7 +852,7 @@ export function useSetupAdministrador() {
 
   const resumen = useMemo(() => ({
     estado_setup: detalle?.estado_setup || 'PENDIENTE',
-    bloqueada_operacion: Boolean(detalle?.bloqueada_operacion ?? true),
+    bloqueada_operacion: toBool(detalle?.bloqueada_operacion),
     setup_completado_en: detalle?.setup_completado_en || null,
     ultima_revision_en: detalle?.ultima_revision_en || null,
     faltantes: Array.isArray(faltantes) ? faltantes : []
@@ -920,3 +920,4 @@ export function useSetupAdministrador() {
     finalizarSetup
   };
 }
+

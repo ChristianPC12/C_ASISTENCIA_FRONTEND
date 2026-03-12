@@ -20,7 +20,7 @@ export default function UsuarioCuposCard({
         )}
 
         {!cargando && cuposRoles.length === 0 && (
-          <div className="text-muted">No hay configuracion de cupos disponible.</div>
+          <div className="text-muted">No hay configuración de cupos disponible.</div>
         )}
 
         {!cargando && cuposRoles.length > 0 && (
@@ -30,7 +30,7 @@ export default function UsuarioCuposCard({
                 <tr>
                   <th>Rol</th>
                   <th className="text-center">Consumo actual</th>
-                  <th className="text-center">Cupo maximo</th>
+                  <th className="text-center">Cupo máximo</th>
                   <th className="text-center">Disponibles</th>
                   <th className="text-center">Activo</th>
                 </tr>

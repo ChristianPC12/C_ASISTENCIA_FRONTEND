@@ -8,11 +8,11 @@ const EMPTY_ROLES = [];
 const EMPTY_LABEL = '';
 
 /**
- * Wrapper que redirige al login si no hay sesion
+ * Wrapper que redirige al login si no hay sesión
  * Props:
- *  - children: contenido a renderizar si hay sesion
+ *  - children: contenido a renderizar si hay sesión
  *  - rolesPermitidos?: arreglo de roles autorizados para esta ruta
- *  - requiereSetupInicial?: bloquea modulo si setup aun no esta completo
+ *  - requiereSetupInicial?: bloquea módulo si setup aún no está completo
  *  - nombreModulo?: texto a mostrar en aviso de bloqueo
  */
 export default function ProtectedRoute({
@@ -45,7 +45,7 @@ export default function ProtectedRoute({
           <div className="card shadow-sm border-0">
             <div className="card-body d-flex align-items-center gap-3">
               <div className="spinner-border spinner-iasd" role="status" />
-              <span>Validando configuracion inicial de la organizacion...</span>
+              <span>Validando configuración inicial de la organización...</span>
             </div>
           </div>
         </div>
@@ -53,7 +53,7 @@ export default function ProtectedRoute({
     }
 
     if (requiereSetup) {
-      return <SetupBlockedNotice modulo={nombreModulo || 'Modulo operativo'} />;
+      return <SetupBlockedNotice modulo={nombreModulo || 'Módulo operativo'} />;
     }
   }
 

@@ -12,9 +12,9 @@ const ROL_ID_TO_NOMBRE = {
 
 function mensajeCupoHumano(mensajeBackend) {
   if (!mensajeBackend) {
-    return 'No hay cupo disponible para ese rol en esta organizacion.';
+    return 'No hay cupo disponible para ese rol en esta organización.';
   }
-  return `No se pudo completar la accion por politica de cupos: ${mensajeBackend}`;
+  return `No se pudo completar la acción por política de cupos: ${mensajeBackend}`;
 }
 
 function esErrorDeCupo(errorOrMessage) {
@@ -86,6 +86,12 @@ export function useUsuario() {
     });
   }, []);
 
+  const limpiarFormulario = useCallback(() => {
+    setFormulario({ ...USUARIO_FORM_INICIAL });
+    setEditandoId(null);
+    setErrores({});
+  }, []);
+
   const manejarErrorGuardarUsuario = useCallback((error) => {
     if (esErrorDeCupo(error)) {
       notificarError(mensajeCupoHumano(error?.mensaje));
@@ -137,7 +143,7 @@ export function useUsuario() {
     } finally {
       setCargando(false);
     }
-  }, [formulario, editandoId, manejarErrorGuardarUsuario, cargarUsuarios, cargarCupos]);
+  }, [formulario, editandoId, manejarErrorGuardarUsuario, cargarUsuarios, cargarCupos, limpiarFormulario]);
 
   const editar = useCallback((usuario) => {
     setFormulario({
@@ -176,12 +182,6 @@ export function useUsuario() {
       setCargando(false);
     }
   }, [cargarUsuarios, cargarCupos]);
-
-  const limpiarFormulario = useCallback(() => {
-    setFormulario({ ...USUARIO_FORM_INICIAL });
-    setEditandoId(null);
-    setErrores({});
-  }, []);
 
   const cambiarCupoRol = useCallback((rolNombre, campo, valor) => {
     setCuposRoles((prev) => prev.map((item) => {
@@ -261,3 +261,4 @@ export function useUsuario() {
     recargarCupos: cargarCupos
   };
 }
+

@@ -25,14 +25,14 @@ const CATEGORIAS_METRICA_OPCIONES_MANUALES = CATEGORIAS_METRICA_OPCIONES.filter(
 );
 
 const DESCRIPCIONES_CATEGORIA_METRICA = {
-  informacion_culto: 'Datos de control del culto, por ejemplo llegadas antes y despuÃ©s de la hora.',
-  composicion_asistentes: 'ComposiciÃ³n demogrÃ¡fica de asistentes, como niÃ±os y jÃ³venes.',
+  informacion_culto: 'Datos de control del culto, por ejemplo llegadas antes y después de la hora.',
+  composicion_asistentes: 'Composición demográfica de asistentes, como niños y jóvenes.',
   procedencia: 'Conteos por zona de procedencia para medir origen de asistentes.',
-  visitas: 'MÃ©tricas de visitas y nombres de visitas por procedencia.',
-  permanencia: 'MÃ©tricas relacionadas con permanencia durante el culto.',
-  total_asistentes: 'MÃ©trica total de asistentes, calculada segÃºn reglas del sistema.',
+  visitas: 'Métricas de visitas y nombres de visitas por procedencia.',
+  permanencia: 'Métricas relacionadas con permanencia durante el culto.',
+  total_asistentes: 'Métrica total de asistentes, calculada según reglas del sistema.',
   observaciones: 'Campos descriptivos para notas y observaciones del registro.',
-  adicionales: 'MÃ©tricas opcionales para necesidades especÃ­ficas de una iglesia o grupo.'
+  adicionales: 'Métricas opcionales para necesidades específicas de una iglesia o grupo.'
 };
 
 function BadgeEstado({ completo }) {
@@ -50,11 +50,11 @@ function traducirFaltante(item) {
     case 'procedencias_minimas':
       return 'Definir al menos una procedencia';
     case 'procedencias_maximas':
-      return 'Reducir procedencias a mÃ¡ximo 10';
+      return 'Reducir procedencias a máximo 10';
     case 'metricas':
-      return 'Habilitar al menos una mÃ©trica';
+      return 'Habilitar al menos una métrica';
     case 'dependencias_metricas':
-      return 'Corregir configuraciÃ³n base de mÃ©tricas';
+      return 'Corregir configuración base de métricas';
     default:
       return item;
   }
@@ -138,7 +138,8 @@ export default function AdministradorPage() {
   const [vistaActiva, setVistaActiva] = useState(VISTA_RESUMEN);
   const metricaPendienteFocusRef = useRef(null);
   const metricaInputRefs = useRef(new Map());
-  const setupCompleto = resumen.estado_setup === 'COMPLETO' && !resumen.bloqueada_operacion;
+  const estadoSetupNormalizado = String(resumen.estado_setup || '').toUpperCase();
+  const setupCompleto = estadoSetupNormalizado === 'COMPLETO' && !Boolean(resumen.bloqueada_operacion);
   const faltantes = useMemo(
     () => (Array.isArray(resumen.faltantes) ? resumen.faltantes : []),
     [resumen.faltantes]
@@ -178,7 +179,7 @@ export default function AdministradorPage() {
       restaurarFn = restaurarCultos;
     } else if (vistaActiva === VISTA_METRICAS) {
       tieneCambios = tieneCambiosMetricas;
-      etiqueta = 'mÃ©tricas';
+      etiqueta = 'métricas';
       restaurarFn = restaurarMetricas;
     } else if (vistaActiva === VISTA_PROCEDENCIAS) {
       tieneCambios = tieneCambiosProcedencias;
@@ -188,7 +189,7 @@ export default function AdministradorPage() {
 
     if (tieneCambios && restaurarFn) {
       const confirmado = await confirmar(
-        `Tiene cambios sin guardar en ${etiqueta}. Â¿Desea descartarlos y cerrar?`
+        `Tiene cambios sin guardar en ${etiqueta}. ¿Desea descartarlos y cerrar?`
       );
       if (!confirmado) {
         return;
@@ -259,8 +260,8 @@ export default function AdministradorPage() {
   const mostrarCategoriasMetricas = vistaActiva === VISTA_CATEGORIAS_METRICAS;
   const mostrarUsuarios = vistaActiva === VISTA_USUARIOS;
   const mensajeEncabezado = setupCompleto
-    ? 'ConfiguraciÃ³n inicial completada. Ya puede registrar asistencia, ver reportes/estadÃ­sticas y crear usuarios; tambiÃ©n puede editar el setup cuando lo necesite.'
-    : 'Complete la configuraciÃ³n inicial para habilitar registro, reportes, estadÃ­sticas y usuarios.';
+    ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
+    : 'Complete la configuración inicial para habilitar registro, reportes, estadísticas y usuarios.';
   const textoBotonPrincipal = setupCompleto
     ? 'Editar setup'
     : (finalizando ? 'Finalizando...' : 'Finalizar setup inicial');
@@ -278,7 +279,7 @@ export default function AdministradorPage() {
       return;
     }
     const confirmado = await confirmar(
-      'Â¿Desea eliminar este culto? Si ya existen registros asociados, el sistema podrÃ­a rechazar el cambio al guardar.'
+      '¿Desea eliminar este culto? Si ya existen registros asociados, el sistema podría rechazar el cambio al guardar.'
     );
     if (!confirmado) {
       return;
@@ -291,7 +292,7 @@ export default function AdministradorPage() {
       return;
     }
     const confirmado = await confirmar(
-      'Â¿Desea eliminar esta mÃ©trica? Esta acciÃ³n puede afectar reportes y comparaciones configuradas.'
+      '¿Desea eliminar esta métrica? Esta acción puede afectar reportes y comparaciones configuradas.'
     );
     if (!confirmado) {
       return;
@@ -304,7 +305,7 @@ export default function AdministradorPage() {
       return;
     }
     const confirmado = await confirmar(
-      'Â¿Desea eliminar esta procedencia? Si ya existen registros asociados, el sistema puede rechazar el cambio al guardar.'
+      '¿Desea eliminar esta procedencia? Si ya existen registros asociados, el sistema puede rechazar el cambio al guardar.'
     );
     if (!confirmado) {
       return;
@@ -315,7 +316,7 @@ export default function AdministradorPage() {
   const manejarCerrarPanelConDescartar = async (etiqueta, tieneCambios, restaurarFn) => {
     if (tieneCambios) {
       const confirmado = await confirmar(
-        `Tiene cambios sin guardar en ${etiqueta}. Â¿Desea descartarlos y cerrar?`
+        `Tiene cambios sin guardar en ${etiqueta}. ¿Desea descartarlos y cerrar?`
       );
       if (!confirmado) {
         return;
@@ -349,7 +350,7 @@ export default function AdministradorPage() {
                   <div className="alert alert-iasd mb-0">
                     <strong>Estado actual:</strong> {resumen.estado_setup}
                     {resumen.setup_completado_en ? ` | completado en ${resumen.setup_completado_en}` : ''}
-                    {resumen.ultima_revision_en ? ` | Ãºltima revisiÃ³n ${resumen.ultima_revision_en}` : ''}
+                    {resumen.ultima_revision_en ? ` | última revisión ${resumen.ultima_revision_en}` : ''}
                   </div>
                 </div>
                 <div className="col-12 col-lg-4">
@@ -371,8 +372,8 @@ export default function AdministradorPage() {
                 <div className="alert alert-warning mt-3 mb-0">
                   <strong>Cuenta ADMIN temporal:</strong>{' '}
                   {Number.isInteger(diasRestantes)
-                    ? `dispone de ${diasRestantes} dÃ­a(s) restantes para completar el setup inicial.`
-                    : 'debe completarse el setup inicial dentro de los 5 dÃ­as posteriores a la creaciÃ³n del usuario.'}
+                    ? `dispone de ${diasRestantes} día(s) restantes para completar el setup inicial.`
+                    : 'debe completarse el setup inicial dentro de los 5 días posteriores a la creación del usuario.'}
                 </div>
               )}
             </div>
@@ -388,7 +389,7 @@ export default function AdministradorPage() {
             </div>
             <div className="col-12 col-md-4">
               <EstadoBloqueCard
-                titulo="MÃ©tricas del formulario"
+                titulo="Métricas del formulario"
                 detalle={`${metricasHabilitadas} habilitada(s) de ${metricas.length} configurada(s)`}
                 completo={estadoBloques.metricas}
               />
@@ -499,7 +500,7 @@ export default function AdministradorPage() {
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>DÃ­a</th>
+                    <th>Día</th>
                     <th>Hora</th>
                     <th>Activo</th>
                     <th className="text-center admin-col-acciones">Acciones</th>
@@ -584,12 +585,12 @@ export default function AdministradorPage() {
         <div className="card shadow-sm mb-4 admin-setup-panel">
           <div className="card-header d-flex justify-content-between align-items-center gap-2">
             <div className="d-flex align-items-center gap-2">
-              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>MÃ©tricas del formulario</h5>
+              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Métricas del formulario</h5>
               <span className="badge text-bg-light">{metricas.length}</span>
             </div>
             <div className="d-flex align-items-center gap-2">
               <button type="button" className="btn btn-light btn-sm" onClick={manejarAgregarMetrica}>
-                Agregar mÃ©trica
+                Agregar métrica
               </button>
               <button
                 type="button"
@@ -601,9 +602,9 @@ export default function AdministradorPage() {
               </button>
               <BotonCerrarPanel
                 onClick={() => {
-                  void manejarCerrarPanelConDescartar('mÃ©tricas', tieneCambiosMetricas, restaurarMetricas);
+                  void manejarCerrarPanelConDescartar('métricas', tieneCambiosMetricas, restaurarMetricas);
                 }}
-                label="Cerrar panel de mÃ©tricas"
+                label="Cerrar panel de métricas"
               />
             </div>
           </div>
@@ -611,19 +612,19 @@ export default function AdministradorPage() {
             <div className="admin-metricas-note mb-3">
               <i className="bi bi-info-circle-fill" aria-hidden="true"></i>
               <div>
-                Las mÃ©tricas base se validan automÃ¡ticamente por el sistema. Para mÃ©tricas nuevas, seleccione la
-                categorÃ­a correspondiente y revise
+                Las métricas base se validan automáticamente por el sistema. Para métricas nuevas, seleccione la
+                categoría correspondiente y revise
                 {' '}
                 <button
                   type="button"
                   className="btn btn-link btn-sm p-0 align-baseline"
                   onClick={() => { void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS); }}
                 >
-                  CategorÃ­as
+                  Categorías
                 </button>
                 .
                 <div className="small text-muted mt-1">
-                  Procedencia y Visitas se generan automÃ¡ticamente al guardar una procedencia
+                  Procedencia y Visitas se generan automáticamente al guardar una procedencia
                   (cantidad de visitas y nombres de visitas).
                   {' '}
                   <button
@@ -641,8 +642,8 @@ export default function AdministradorPage() {
               <table className="table table-sm align-middle mb-0">
                 <thead>
                   <tr>
-                    <th>MÃ©trica</th>
-                    <th>CategorÃ­a</th>
+                    <th>Métrica</th>
+                    <th>Categoría</th>
                     <th>Habilitado</th>
                     <th>Obligatorio</th>
                     <th className="text-center admin-col-acciones">Acciones</th>
@@ -665,7 +666,7 @@ export default function AdministradorPage() {
                               ref={(node) => registrarInputMetricaRef(item.ui_id, node)}
                               className={`form-control form-control-sm ${filaErrores.etiqueta ? 'is-invalid' : ''}`}
                               value={item.etiqueta}
-                              placeholder="Nueva mÃ©trica"
+                              placeholder="Nueva métrica"
                               onChange={(event) => cambiarMetrica(index, 'etiqueta', event.target.value)}
                               disabled={item.es_fija}
                             />
@@ -715,8 +716,8 @@ export default function AdministradorPage() {
                             className="btn btn-outline-danger btn-sm admin-table-icon-btn"
                             onClick={() => { void manejarEliminarMetrica(index); }}
                             disabled={metricas.length <= 1 || item.es_fija}
-                            title={item.es_fija ? 'MÃ©trica base (no eliminable)' : 'Eliminar mÃ©trica'}
-                            aria-label={item.es_fija ? 'MÃ©trica base no eliminable' : 'Eliminar mÃ©trica'}
+                            title={item.es_fija ? 'Métrica base (no eliminable)' : 'Eliminar métrica'}
+                            aria-label={item.es_fija ? 'Métrica base no eliminable' : 'Eliminar métrica'}
                           >
                             <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
@@ -736,7 +737,7 @@ export default function AdministradorPage() {
                   onClick={guardarMetricas}
                   disabled={guardandoMetricas}
                 >
-                  {guardandoMetricas ? 'Guardando...' : 'Guardar mÃ©tricas'}
+                  {guardandoMetricas ? 'Guardando...' : 'Guardar métricas'}
                 </button>
               </div>
             )}
@@ -747,15 +748,15 @@ export default function AdministradorPage() {
       {mostrarCategoriasMetricas && (
         <div className="card shadow-sm mb-4 admin-setup-panel">
           <div className="card-header d-flex justify-content-between align-items-center gap-2">
-            <h5 className="mb-0" style={{ color: '#FFFFFF' }}>CategorÃ­as de mÃ©tricas</h5>
+            <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Categorías de métricas</h5>
             <BotonCerrarPanel
               onClick={() => setVistaActiva(VISTA_RESUMEN)}
-              label="Cerrar panel de categorÃ­as de mÃ©tricas"
+              label="Cerrar panel de categorías de métricas"
             />
           </div>
           <div className="card-body">
             <p className="text-muted small mb-3">
-              Estas categorÃ­as organizan el formulario de Nuevo registro y ayudan a ubicar cada mÃ©trica en su secciÃ³n correcta.
+              Estas categorías organizan el formulario de Nuevo registro y ayudan a ubicar cada métrica en su sección correcta.
             </p>
             <div className="row g-3">
               {CATEGORIAS_METRICA_OPCIONES.map((opcion) => (
@@ -895,4 +896,3 @@ export default function AdministradorPage() {
     </div>
   );
 }
-

@@ -110,7 +110,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
         : []),
       { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
       { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
-      { ruta: '/estadisticas', etiqueta: 'EstadÃ­sticas', icono: 'bi-bar-chart-line' },
+      { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
       { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
       { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' }
     ];
@@ -129,7 +129,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           }}
           role="button"
           tabIndex={0}
-          aria-label="Cerrar menÃº lateral"
+          aria-label="Cerrar menú lateral"
         ></div>
       )}
 
@@ -144,10 +144,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           />
           <div className="sidebar-marca">
             <span className="sidebar-marca-titulo">Iglesia Adventista</span>
-            <span className="sidebar-marca-subtitulo">del SÃ©ptimo DÃ­a</span>
+            <span className="sidebar-marca-subtitulo">del Séptimo Día</span>
           </div>
           {/* Boton cerrar en mobile */}
-          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menÃº">
+          <button className="sidebar-cerrar" onClick={cerrarMenu} aria-label="Cerrar menú">
             &times;
           </button>
         </div>
@@ -185,7 +185,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn"
             onClick={onCerrarSesion}
           >
-            Cerrar sesiÃ³n
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -194,14 +194,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
         <header className="sidebar-topbar">
-          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menÃº">
+          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
             <span></span>
             <span></span>
             <span></span>
           </button>
           <span className="sidebar-topbar-titulo">
             {enlaces.find((e) => esRutaActiva(e.ruta))?.etiqueta || (
-              esSuperadmin ? 'SuperadministraciÃ³n' : 'Iglesia Adventista'
+              esSuperadmin ? 'Superadministración' : 'Iglesia Adventista'
             )}
           </span>
           <div className="sidebar-topbar-acciones">
@@ -255,11 +255,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   type="button"
                   className={claseBotonTopbarAdmin('METRICAS')}
                   onClick={abrirPanelMetricas}
-                  aria-label="MÃ©tricas del formulario"
-                  title="MÃ©tricas del formulario"
+                  aria-label="Métricas del formulario"
+                  title="Métricas del formulario"
                 >
                   <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">MÃ©tricas</span>
+                  <span className="d-none d-md-inline">Métricas</span>
                 </button>
                 <button
                   type="button"
@@ -275,11 +275,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   type="button"
                   className={claseBotonTopbarAdmin('CATEGORIAS_METRICAS')}
                   onClick={abrirPanelCategoriasMetricas}
-                  aria-label="CategorÃ­as de mÃ©tricas"
-                  title="CategorÃ­as de mÃ©tricas"
+                  aria-label="Categorías de métricas"
+                  title="Categorías de métricas"
                 >
                   <i className="bi bi-journal-text" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">CategorÃ­as</span>
+                  <span className="d-none d-md-inline">Categorías</span>
                 </button>
                 <button
                   type="button"
@@ -301,11 +301,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               type="button"
               className="sidebar-topbar-logout"
               onClick={onCerrarSesion}
-              aria-label="Cerrar sesiÃ³n"
-              title="Cerrar sesiÃ³n"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
             >
               <i className="bi bi-box-arrow-right" aria-hidden="true"></i>
-              <span className="visually-hidden">Cerrar sesiÃ³n</span>
+              <span className="visually-hidden">Cerrar sesión</span>
             </button>
           </div>
         </header>
@@ -316,7 +316,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <div className="container-fluid pt-3">
               <div className="alert alert-warning mb-0">
                 <strong>Cuenta temporal:</strong> este acceso ADMIN vence en{' '}
-                <strong>{diasRestantesPassword ?? 0}</strong> dÃ­a(s). Coordine con superadministraciÃ³n para actualizar credenciales antes del vencimiento.
+                <strong>{diasRestantesPassword ?? 0}</strong> día(s). Coordine con superadministración para actualizar credenciales antes del vencimiento.
               </div>
             </div>
           )}
@@ -326,4 +326,5 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     </div>
   );
 }
+
 

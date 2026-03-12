@@ -236,6 +236,24 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   2. Definir vista inicial explícita (por defecto `Usuarios del sistema`).
   3. Al editar desde tabla, cambiar automáticamente a la opción de formulario.
 
+### E26) Regresión de codificación y ortografía (mojibake)
+
+- Qué pasó: reaparecieron textos dañados (`MÃ©trica`, `configuraciÃ³n`, `Â¿`), además de faltantes de tildes.
+- Impacto: deterioro visual inmediato y pérdida de confianza del usuario.
+- Regla preventiva:
+  1. Guardar siempre archivos UI en UTF-8.
+  2. Antes de cerrar ticket, barrer cadenas visibles con búsqueda de patrones dañados (`MÃ`, `Ã`, `Â`).
+  3. Corregir copy visible (botones, alertas, placeholders, confirmaciones y toasts) en la misma iteración.
+
+### E27) Cálculo inconsistente de estado de setup
+
+- Qué pasó: el frontend evaluó `bloqueada_operacion` con defaults/casts inconsistentes, dejando el setup en pendiente aun estando completo.
+- Impacto: CTA y mensaje principal incorrectos, y acciones que no abren el panel esperado.
+- Regla preventiva:
+  1. Normalizar booleanos de backend (`0/1`, `true/false`, strings) con helper único.
+  2. Evitar defaults que fuerzan bloqueo (`true`) cuando el backend no envía el campo.
+  3. Mantener la misma regla de `setupCompleto` en hooks de estado y en la vista de administrador.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -292,4 +310,6 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] En resumen/notas, links directos funcionales para abrir paneles relacionados.
 - [ ] Funciones exclusivas de ADMIN centralizadas en topbar/paneles de `/administrador`.
 - [ ] Paneles complejos (ej. usuarios) con subopciones internas por tarea.
+- [ ] Archivos UI guardados en UTF-8 y sin patrones mojibake (`MÃ`, `Ã`, `Â`).
+- [ ] Estado de setup validado con normalización booleana consistente (`bloqueada_operacion`).
 - [ ] Lint/build/react-doctor ejecutados.
