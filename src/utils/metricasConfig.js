@@ -85,20 +85,20 @@ export function inferirCategoriaPorClave(clave) {
 }
 
 export const METRICAS_FALLBACK = [
-  { clave: 'llegaron_antes_hora', etiqueta: 'Llegaron antes de la hora', categoria: 'informacion_culto', habilitado: true, obligatorio: true },
-  { clave: 'llegaron_despues_hora', etiqueta: 'Llegaron después de la hora', categoria: 'informacion_culto', habilitado: true, obligatorio: true },
-  { clave: 'ninos', etiqueta: 'Niños', categoria: 'composicion_asistentes', habilitado: true, obligatorio: true },
-  { clave: 'jovenes', etiqueta: 'Jóvenes', categoria: 'composicion_asistentes', habilitado: true, obligatorio: true },
-  { clave: 'total_asistentes', etiqueta: 'Total de asistentes', categoria: 'total_asistentes', habilitado: true, obligatorio: true },
-  { clave: 'proc_barrio', etiqueta: 'Procedencia del barrio', categoria: 'procedencia', habilitado: true, obligatorio: true },
-  { clave: 'proc_guayabo', etiqueta: 'Procedencia de Guayabo', categoria: 'procedencia', habilitado: true, obligatorio: true },
-  { clave: 'visitas_barrio', etiqueta: 'Visitas de barrio', categoria: 'visitas', habilitado: true, obligatorio: false },
-  { clave: 'nombres_visitas_barrio', etiqueta: 'Nombres visitas de barrio', categoria: 'visitas', habilitado: true, obligatorio: false },
-  { clave: 'visitas_guayabo', etiqueta: 'Visitas de Guayabo', categoria: 'visitas', habilitado: true, obligatorio: false },
-  { clave: 'nombres_visitas_guayabo', etiqueta: 'Nombres visitas de Guayabo', categoria: 'visitas', habilitado: true, obligatorio: false },
-  { clave: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar', categoria: 'permanencia', habilitado: true, obligatorio: true },
-  { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron todo', categoria: 'permanencia', habilitado: true, obligatorio: true },
-  { clave: 'observaciones', etiqueta: 'Observaciones', categoria: 'observaciones', habilitado: true, obligatorio: false }
+  { clave: 'llegaron_antes_hora', etiqueta: 'Llegaron antes de la hora', categoria: 'informacion_culto', habilitado: false, obligatorio: false },
+  { clave: 'llegaron_despues_hora', etiqueta: 'Llegaron después de la hora', categoria: 'informacion_culto', habilitado: false, obligatorio: false },
+  { clave: 'ninos', etiqueta: 'Niños', categoria: 'composicion_asistentes', habilitado: false, obligatorio: false },
+  { clave: 'jovenes', etiqueta: 'Jóvenes', categoria: 'composicion_asistentes', habilitado: false, obligatorio: false },
+  { clave: 'total_asistentes', etiqueta: 'Total de asistentes', categoria: 'total_asistentes', habilitado: false, obligatorio: false },
+  { clave: 'proc_barrio', etiqueta: 'Procedencia del barrio', categoria: 'procedencia', habilitado: false, obligatorio: false },
+  { clave: 'proc_guayabo', etiqueta: 'Procedencia de Guayabo', categoria: 'procedencia', habilitado: false, obligatorio: false },
+  { clave: 'visitas_barrio', etiqueta: 'Visitas del barrio', categoria: 'visitas', habilitado: false, obligatorio: false },
+  { clave: 'nombres_visitas_barrio', etiqueta: 'Nombres de visitas del barrio', categoria: 'visitas', habilitado: false, obligatorio: false },
+  { clave: 'visitas_guayabo', etiqueta: 'Visitas de Guayabo', categoria: 'visitas', habilitado: false, obligatorio: false },
+  { clave: 'nombres_visitas_guayabo', etiqueta: 'Nombres de visitas de Guayabo', categoria: 'visitas', habilitado: false, obligatorio: false },
+  { clave: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar', categoria: 'permanencia', habilitado: false, obligatorio: false },
+  { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron todo', categoria: 'permanencia', habilitado: false, obligatorio: false },
+  { clave: 'observaciones', etiqueta: 'Observaciones', categoria: 'observaciones', habilitado: false, obligatorio: false }
 ];
 
 function normalizarListaMetricas(listaRaw) {

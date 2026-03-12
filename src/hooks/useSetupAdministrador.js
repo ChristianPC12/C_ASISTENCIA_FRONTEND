@@ -42,14 +42,14 @@ const DIA_OPCIONES = [
 ];
 
 const CULTOS_DEFAULT = [
-  { codigo: 'SABADO', nombre: 'Culto Sábado', dia_semana: 7, hora_inicio: '09:00', activo: true, orden: 1 },
-  { codigo: 'DOMINGO', nombre: 'Culto Domingo', dia_semana: 1, hora_inicio: '18:30', activo: true, orden: 2 },
-  { codigo: 'MIERCOLES', nombre: 'Culto Miércoles', dia_semana: 4, hora_inicio: '18:30', activo: true, orden: 3 }
+  { codigo: 'SABADO', nombre: 'Culto Sábado', dia_semana: 7, hora_inicio: '09:00', activo: false, orden: 1 },
+  { codigo: 'DOMINGO', nombre: 'Culto Domingo', dia_semana: 1, hora_inicio: '18:30', activo: false, orden: 2 },
+  { codigo: 'MIERCOLES', nombre: 'Culto Miércoles', dia_semana: 4, hora_inicio: '18:30', activo: false, orden: 3 }
 ];
 
 const PROCEDENCIAS_DEFAULT = [
-  { nombre: 'Barrio', activo: true, orden: 1 },
-  { nombre: 'Guayabo', activo: true, orden: 2 }
+  { nombre: 'Barrio', activo: false, orden: 1 },
+  { nombre: 'Guayabo', activo: false, orden: 2 }
 ];
 
 let setupRowSeq = 0;
@@ -129,10 +129,11 @@ function normalizarMensajeMetricasUsuarioFinal(mensajeRaw) {
   }
 
   if (clavesFaltantes.length > 0) {
-    const etiquetas = Array.from(new Set(clavesFaltantes)).map(
-      (clave) => ETIQUETA_METRICA_BASE[clave] || clave.replace(/_/g, ' ')
-    );
-    return `Faltan métricas base obligatorias: ${etiquetas.join(', ')}. Abra el panel de Métricas y guarde para restaurarlas.`;
+    const etiquetas = Array.from(new Set(clavesFaltantes))
+      .map((clave) => ETIQUETA_METRICA_BASE[clave] || clave.replace(/_/g, ' '));
+    if (etiquetas.length > 0) {
+      return 'La configuración de métricas es inválida. Revise las métricas base y guarde nuevamente.';
+    }
   }
 
   if (normalizado.includes('configuracion de metricas invalida')) {
@@ -151,6 +152,66 @@ function normalizarClaveMetrica(valor) {
     .replace(/_{2,}/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 80);
+}
+
+function slugProcedenciaDesdeNombre(valor) {
+  return String(valor || '')
+    .trim()
+    .normalize('NFD')
+    .replace(NORMALIZE_REGEX, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40);
+}
+
+function slugProcedenciaDesdeClaveMetrica(claveRaw) {
+  const clave = normalizarClaveMetrica(claveRaw);
+  if (clave.startsWith('proc_')) return clave.slice(5);
+  if (clave.startsWith('visitas_')) return clave.slice(8);
+  if (clave.startsWith('nombres_visitas_')) return clave.slice(16);
+  return '';
+}
+
+function sincronizarGrupoMetricasProcedencia(listaMetricas, slugProcedencia, habilitado) {
+  if (!slugProcedencia) return listaMetricas;
+
+  const clavesObjetivo = new Set([
+    `proc_${slugProcedencia}`,
+    `visitas_${slugProcedencia}`,
+    `nombres_visitas_${slugProcedencia}`
+  ]);
+
+  return listaMetricas.map((item) => {
+    const clave = normalizarClaveMetrica(item?.clave);
+    if (!clavesObjetivo.has(clave)) {
+      return item;
+    }
+
+    const obligatorio = habilitado && clave.startsWith('proc_');
+    return {
+      ...item,
+      habilitado,
+      obligatorio,
+      obligatorio_previo: obligatorio
+    };
+  });
+}
+
+function sincronizarProcedenciasPorSlug(listaProcedencias, slugProcedencia, activo) {
+  if (!slugProcedencia) return listaProcedencias;
+
+  return reordenarProcedencias(listaProcedencias.map((item) => {
+    const slugItem = slugProcedenciaDesdeNombre(item?.nombre);
+    if (slugItem !== slugProcedencia) {
+      return item;
+    }
+    return {
+      ...item,
+      activo: !!activo
+    };
+  }));
 }
 
 function normalizarCategoriaMetrica(categoria, clave = '') {
@@ -330,7 +391,7 @@ function normalizarCultos(cultosRaw) {
       nombre: String(item?.nombre || '').trim(),
       dia_semana: toInt(item?.dia_semana, 1),
       hora_inicio: formatearHora(item?.hora_inicio),
-      activo: toBool(item?.activo ?? true),
+      activo: toBool(item?.activo ?? false),
       orden: toInt(item?.orden, idx + 1)
     }))
     .filter((item) => item.codigo || item.nombre);
@@ -343,7 +404,7 @@ function normalizarProcedencias(procedenciasRaw) {
   return reordenarProcedencias(lista.map((item, idx) => ({
     ui_id: resolverUiId(item, 'procedencia', ['procedencia_id', 'id']),
     nombre: String(item?.nombre || '').trim(),
-    activo: toBool(item?.activo ?? true),
+    activo: toBool(item?.activo ?? false),
     orden: toInt(item?.orden, idx + 1)
   })));
 }
@@ -617,11 +678,23 @@ export function useSetupAdministrador() {
   }, []);
 
   const cambiarProcedencia = useCallback((index, campo, valor) => {
-    setProcedencias((prev) => reordenarProcedencias(prev.map((item, idx) => {
-      if (idx !== index) return item;
-      if (campo === 'activo') return { ...item, activo: !!valor };
-      return { ...item, [campo]: valor };
-    })));
+    setProcedencias((prev) => {
+      const actualizado = reordenarProcedencias(prev.map((item, idx) => {
+        if (idx !== index) return item;
+        if (campo === 'activo') return { ...item, activo: !!valor };
+        return { ...item, [campo]: valor };
+      }));
+
+      if (campo === 'activo') {
+        const procedenciaActual = actualizado[index];
+        const slug = slugProcedenciaDesdeNombre(procedenciaActual?.nombre);
+        if (slug) {
+          setMetricas((prevMetricas) => sincronizarGrupoMetricasProcedencia(prevMetricas, slug, !!valor));
+        }
+      }
+
+      return actualizado;
+    });
   }, []);
 
   const agregarProcedencia = useCallback(() => {
@@ -715,6 +788,22 @@ export function useSetupAdministrador() {
           }
           return item;
         });
+      }
+
+      if (metricaEditada && campo === 'habilitado') {
+        const slugProcedencia = slugProcedenciaDesdeClaveMetrica(metricaEditada.clave);
+        if (slugProcedencia) {
+          actualizado = sincronizarGrupoMetricasProcedencia(
+            actualizado,
+            slugProcedencia,
+            !!metricaEditada.habilitado
+          );
+          setProcedencias((prevProcedencias) => sincronizarProcedenciasPorSlug(
+            prevProcedencias,
+            slugProcedencia,
+            !!metricaEditada.habilitado
+          ));
+        }
       }
 
       return actualizado.map((item) => (
@@ -830,6 +919,9 @@ export function useSetupAdministrador() {
 
   const guardarMetricas = useCallback(async () => {
     const metricasPreparadas = prepararMetricasParaGuardar(metricas);
+    const procedenciasPreparadas = prepararProcedenciasParaGuardar(procedencias);
+    const requiereSincronizarProcedencias =
+      firmarProcedencias(procedenciasPreparadas) !== firmaProcedenciasBase;
     const validacion = validarMetricas(metricasPreparadas);
     setErroresMetricas(validacion);
     if (Object.keys(validacion).length > 0) {
@@ -850,10 +942,33 @@ export function useSetupAdministrador() {
       };
       const res = await setupApi.guardarMetricas(payload);
       if (res?.exito && res?.datos) {
+        let detalleActualizado = res.datos;
+
+        if (requiereSincronizarProcedencias) {
+          const payloadProcedencias = {
+            procedencias: procedenciasPreparadas.map((item) => ({
+              nombre: item.nombre.trim(),
+              activo: !!item.activo,
+              orden: item.orden
+            }))
+          };
+
+          const resProcedencias = await setupApi.guardarProcedencias(payloadProcedencias);
+          if (!(resProcedencias?.exito && resProcedencias?.datos)) {
+            notificarError(resProcedencias?.mensaje || 'No se pudieron sincronizar las procedencias.');
+            return false;
+          }
+
+          detalleActualizado = resProcedencias.datos;
+          setProcedencias(clonarLista(procedenciasPreparadas));
+          setProcedenciasBase(clonarLista(procedenciasPreparadas));
+          setFirmaProcedenciasBase(firmarProcedencias(procedenciasPreparadas));
+        }
+
         setMetricas(clonarLista(metricasPreparadas));
         setMetricasBase(clonarLista(metricasPreparadas));
         setFirmaMetricasBase(firmarMetricas(metricasPreparadas));
-        aplicarDetalleSetup(res.datos);
+        aplicarDetalleSetup(detalleActualizado);
         setErroresMetricas({});
         notificarExito(res.mensaje || 'Métricas guardadas correctamente.');
         return true;
@@ -870,7 +985,7 @@ export function useSetupAdministrador() {
     } finally {
       setGuardandoMetricas(false);
     }
-  }, [metricas, aplicarDetalleSetup]);
+  }, [metricas, procedencias, firmaProcedenciasBase, aplicarDetalleSetup]);
 
   const finalizarSetup = useCallback(async () => {
     setFinalizando(true);

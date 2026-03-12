@@ -1318,6 +1318,14 @@ a:hover {
 .sidebar-usuario-info  { display: flex; flex-direction: column; gap: 4px; }
 .sidebar-usuario-nombre { font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-usuario-rol   { align-self: flex-start; font-size: 0.65rem; }
+.sidebar-tenant-info {
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.9);
+  display: grid;
+  gap: 0.15rem;
+  line-height: 1.2;
+}
 
 .sidebar-contenido {
   flex: 1;
@@ -1346,7 +1354,23 @@ a:hover {
 }
 .sidebar-topbar-titulo  { font-size: 1.1rem; font-weight: 600; color: var(--iasd-azul); margin-left: 0.5rem; }
 .sidebar-topbar-acciones { margin-left: auto; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; }
-.sidebar-topbar-usuario { display: flex; align-items: center; font-size: 0.85rem; color: var(--iasd-texto-sec); }
+.sidebar-topbar-usuario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-size: 0.85rem;
+  color: var(--iasd-texto-sec);
+}
+.sidebar-topbar-usuario-main { display: inline-flex; align-items: center; }
+.sidebar-topbar-tenant {
+  display: grid;
+  gap: 0.1rem;
+  font-size: 0.68rem;
+  line-height: 1.15;
+  color: var(--iasd-texto-sec);
+  text-align: right;
+}
 .sidebar-topbar-metric-btn {
   height: 32px;
   border: 1px solid var(--iasd-borde);

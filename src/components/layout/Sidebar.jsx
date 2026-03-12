@@ -27,7 +27,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [adminVistaActiva, setAdminVistaActiva] = useState('RESUMEN');
   const location = useLocation();
   const { requiereSetup } = useSetupStatus();
-  const { esAdminTemporal, diasRestantesPassword } = useAuth();
+  const { tenant, esAdminTemporal, diasRestantesPassword } = useAuth();
 
   /* Bloquear scroll del body cuando el sidebar esta abierto (mobile) */
   useEffect(() => {
@@ -47,6 +47,17 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
+  const tenantSesion = tenant || usuario?.tenant || {};
+  const campoSesion = String(
+    tenantSesion?.campo_nombre || tenantSesion?.campo || usuario?.campo_nombre || usuario?.campo || ''
+  ).trim();
+  const distritoSesion = String(
+    tenantSesion?.distrito_nombre || tenantSesion?.distrito || usuario?.distrito_nombre || usuario?.distrito || ''
+  ).trim();
+  const organizacionSesion = String(
+    tenantSesion?.nombre_organizacion || usuario?.nombre_organizacion || ''
+  ).trim();
+  const mostrarDatosTenant = !esSuperadmin && (campoSesion || distritoSesion || organizacionSesion);
 
   useEffect(() => {
     const manejarVistaActivaAdmin = (event) => {
@@ -180,6 +191,13 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           <div className="sidebar-usuario-info">
             <span className="sidebar-usuario-nombre">{usuario?.nombre_completo}</span>
             <span className="badge bg-secondary sidebar-usuario-rol">{usuario?.rol}</span>
+            {mostrarDatosTenant && (
+              <div className="sidebar-tenant-info">
+                <span>Campo: <strong>{campoSesion || '-'}</strong></span>
+                <span>Distrito: <strong>{distritoSesion || '-'}</strong></span>
+                <span>Iglesia/Grupo: <strong>{organizacionSesion || '-'}</strong></span>
+              </div>
+            )}
           </div>
           <button
             className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn"
@@ -281,21 +299,32 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-journal-text" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Información</span>
                 </button>
-                <button
-                  type="button"
-                  className={claseBotonTopbarAdmin('USUARIOS')}
-                  onClick={abrirPanelUsuarios}
-                  aria-label="Usuarios"
-                  title="Usuarios"
-                >
-                  <i className="bi bi-person-gear" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Usuarios</span>
-                </button>
+                {!requiereSetup && (
+                  <button
+                    type="button"
+                    className={claseBotonTopbarAdmin('USUARIOS')}
+                    onClick={abrirPanelUsuarios}
+                    aria-label="Usuarios"
+                    title="Usuarios"
+                  >
+                    <i className="bi bi-person-gear" aria-hidden="true"></i>
+                    <span className="d-none d-md-inline">Usuarios</span>
+                  </button>
+                )}
               </>
             )}
             <div className="sidebar-topbar-usuario d-none d-md-flex">
-              <span>{usuario?.nombre_completo}</span>
-              <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
+              <div className="sidebar-topbar-usuario-main">
+                <span>{usuario?.nombre_completo}</span>
+                <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
+              </div>
+              {mostrarDatosTenant && (
+                <div className="sidebar-topbar-tenant">
+                  <span>Campo: <strong>{campoSesion || '-'}</strong></span>
+                  <span>Distrito: <strong>{distritoSesion || '-'}</strong></span>
+                  <span>Iglesia/Grupo: <strong>{organizacionSesion || '-'}</strong></span>
+                </div>
+              )}
             </div>
             <button
               type="button"

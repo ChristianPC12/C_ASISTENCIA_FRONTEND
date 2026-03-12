@@ -79,17 +79,23 @@ function traducirFaltante(item) {
     case 'metricas':
       return 'Debe habilitar al menos una métrica en el panel de Métricas.';
     case 'dependencias_metricas':
-      return 'Faltan métricas base obligatorias. Abra Métricas y guarde para restaurarlas.';
+      return null;
     default:
       return item;
   }
+}
+
+function obtenerFaltantesVisibles(faltantes = []) {
+  return (Array.isArray(faltantes) ? faltantes : [])
+    .map((item) => traducirFaltante(item))
+    .filter((item) => typeof item === 'string' && item.trim() !== '');
 }
 
 function resolverEstadoBloques(faltantes = []) {
   const lista = new Set(Array.isArray(faltantes) ? faltantes : []);
   return {
     cultos: !lista.has('cultos'),
-    metricas: !lista.has('metricas') && !lista.has('dependencias_metricas'),
+    metricas: !lista.has('metricas'),
     procedencias: !lista.has('procedencias_minimas') && !lista.has('procedencias_maximas')
   };
 }
@@ -170,6 +176,7 @@ export default function AdministradorPage() {
     () => (Array.isArray(resumen.faltantes) ? resumen.faltantes : []),
     [resumen.faltantes]
   );
+  const faltantesVisibles = useMemo(() => obtenerFaltantesVisibles(faltantes), [faltantes]);
   const estadoBloques = useMemo(() => resolverEstadoBloques(faltantes), [faltantes]);
   const diasRestantes = Number.isInteger(diasRestantesPassword) ? Math.max(diasRestantesPassword, 0) : null;
   const cultosActivos = cultos.filter((item) => item.activo).length;
@@ -191,6 +198,10 @@ export default function AdministradorPage() {
   }, [agregarMetrica]);
 
   const abrirVistaDesdeTopbar = useCallback(async (nuevaVista) => {
+    if (nuevaVista === VISTA_USUARIOS && !setupCompleto) {
+      return;
+    }
+
     if (vistaActiva === nuevaVista) {
       return;
     }
@@ -225,6 +236,7 @@ export default function AdministradorPage() {
 
     setVistaActiva(nuevaVista);
   }, [
+    setupCompleto,
     vistaActiva,
     tieneCambiosCultos,
     tieneCambiosMetricas,
@@ -284,7 +296,7 @@ export default function AdministradorPage() {
   const mostrarMetricas = vistaActiva === VISTA_METRICAS;
   const mostrarProcedencias = vistaActiva === VISTA_PROCEDENCIAS;
   const mostrarCategoriasMetricas = vistaActiva === VISTA_CATEGORIAS_METRICAS;
-  const mostrarUsuarios = vistaActiva === VISTA_USUARIOS;
+  const mostrarUsuarios = setupCompleto && vistaActiva === VISTA_USUARIOS;
   const mensajeEncabezado = setupCompleto
     ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
     : 'Complete la configuración inicial para habilitar registro, reportes, estadísticas y usuarios.';
@@ -439,12 +451,12 @@ export default function AdministradorPage() {
             </div>
           </div>
 
-          {faltantes.length > 0 && (
+          {faltantesVisibles.length > 0 && (
             <div className="alert alert-warning">
               <strong className="d-block mb-2">Pendientes por completar:</strong>
               <ul className="mb-0">
-                {faltantes.map((item) => (
-                  <li key={item}>{traducirFaltante(item)}</li>
+                {faltantesVisibles.map((item) => (
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>
@@ -452,7 +464,8 @@ export default function AdministradorPage() {
 
           <div className="alert alert-secondary mb-0 admin-setup-help">
             <div>
-              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias, información y usuarios.
+              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias e información
+              {setupCompleto ? ', y usuarios.' : '.'}
               Solo se muestra un panel a la vez para reducir scroll y mejorar uso en teléfono.
             </div>
             <div className="admin-quick-links">
@@ -491,14 +504,16 @@ export default function AdministradorPage() {
                 <i className="bi bi-journal-text" aria-hidden="true"></i>
                 Ir a Información
               </button>
-              <button
-                type="button"
-                className="admin-quick-link-btn"
-                onClick={() => { void abrirVistaDesdeTopbar(VISTA_USUARIOS); }}
-              >
-                <i className="bi bi-person-gear" aria-hidden="true"></i>
-                Ir a Usuarios
-              </button>
+              {setupCompleto && (
+                <button
+                  type="button"
+                  className="admin-quick-link-btn"
+                  onClick={() => { void abrirVistaDesdeTopbar(VISTA_USUARIOS); }}
+                >
+                  <i className="bi bi-person-gear" aria-hidden="true"></i>
+                  Ir a Usuarios
+                </button>
+              )}
             </div>
           </div>
         </>

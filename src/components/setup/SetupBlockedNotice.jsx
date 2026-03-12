@@ -15,15 +15,22 @@ function traducirFaltante(item) {
     case 'metricas':
       return 'Debe habilitar al menos una métrica en el panel de Métricas.';
     case 'dependencias_metricas':
-      return 'Faltan métricas base obligatorias. Abra Métricas y guarde para restaurarlas.';
+      return null;
     default:
       return item;
   }
 }
 
+function obtenerFaltantesVisibles(faltantes = []) {
+  return (Array.isArray(faltantes) ? faltantes : [])
+    .map((item) => traducirFaltante(item))
+    .filter((item) => typeof item === 'string' && item.trim() !== '');
+}
+
 export default function SetupBlockedNotice({ modulo = 'Este módulo' }) {
   const { esAdmin, esAdminTemporal, diasRestantesPassword } = useAuth();
   const { faltantes = FALLBACK_FALTANTES, error } = useSetupStatus();
+  const faltantesVisibles = obtenerFaltantesVisibles(faltantes);
 
   return (
     <div className="container-fluid py-4">
@@ -45,12 +52,12 @@ export default function SetupBlockedNotice({ modulo = 'Este módulo' }) {
             </div>
           )}
 
-          {Array.isArray(faltantes) && faltantes.length > 0 && (
+          {faltantesVisibles.length > 0 && (
             <div className="alert alert-warning" role="alert">
               <strong className="d-block mb-2">Pendientes por completar:</strong>
               <ul className="mb-0">
-                {faltantes.map((item) => (
-                  <li key={item}>{traducirFaltante(item)}</li>
+                {faltantesVisibles.map((item) => (
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>
