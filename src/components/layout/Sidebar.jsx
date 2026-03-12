@@ -8,6 +8,7 @@ import {
   EVENT_ADMIN_ABRIR_CULTOS,
   EVENT_ADMIN_ABRIR_METRICAS,
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
+  EVENT_ADMIN_VISTA_ACTIVA,
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
@@ -22,6 +23,7 @@ import {
  */
 export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [abierto, setAbierto] = useState(false);
+  const [adminVistaActiva, setAdminVistaActiva] = useState('RESUMEN');
   const location = useLocation();
   const { requiereSetup } = useSetupStatus();
   const { esAdminTemporal, diasRestantesPassword } = useAuth();
@@ -44,6 +46,23 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
+
+  useEffect(() => {
+    const manejarVistaActivaAdmin = (event) => {
+      const vista = String(event?.detail?.vista || 'RESUMEN');
+      setAdminVistaActiva(vista);
+    };
+
+    window.addEventListener(EVENT_ADMIN_VISTA_ACTIVA, manejarVistaActivaAdmin);
+    return () => {
+      window.removeEventListener(EVENT_ADMIN_VISTA_ACTIVA, manejarVistaActivaAdmin);
+    };
+  }, []);
+
+  const adminVistaTopbar = enPantallaAdministrador ? adminVistaActiva : 'RESUMEN';
+  const claseBotonTopbarAdmin = (vista) => (
+    `sidebar-topbar-metric-btn ${adminVistaTopbar === vista ? 'is-active' : ''}`
+  );
 
   const abrirPanelNuevaInstancia = () => {
     window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA));
@@ -223,7 +242,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               <>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn"
+                  className={claseBotonTopbarAdmin('CULTOS')}
                   onClick={abrirPanelCultos}
                   aria-label="Cultos de la instancia"
                   title="Cultos de la instancia"
@@ -233,7 +252,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 </button>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn"
+                  className={claseBotonTopbarAdmin('METRICAS')}
                   onClick={abrirPanelMetricas}
                   aria-label="Métricas del formulario"
                   title="Métricas del formulario"
@@ -243,7 +262,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 </button>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn"
+                  className={claseBotonTopbarAdmin('PROCEDENCIAS')}
                   onClick={abrirPanelProcedencias}
                   aria-label="Procedencias"
                   title="Procedencias"
@@ -253,7 +272,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 </button>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn"
+                  className={claseBotonTopbarAdmin('CATEGORIAS_METRICAS')}
                   onClick={abrirPanelCategoriasMetricas}
                   aria-label="Categorías de métricas"
                   title="Categorías de métricas"

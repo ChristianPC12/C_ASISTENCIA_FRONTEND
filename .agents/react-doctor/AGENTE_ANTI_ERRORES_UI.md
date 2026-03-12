@@ -182,6 +182,42 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   2. Al leer métricas legacy, reconstruir `categoria` desde marcador; si falta, inferir por `clave`.
   3. Mantener este comportamiento compatible hasta completar migración física de base de datos.
 
+### E20) Categorías automáticas expuestas como opción manual
+
+- Qué pasó: se permitió crear métricas nuevas en categorías `procedencia` y `visitas` aunque esas métricas ya se generan al guardar procedencias.
+- Impacto: duplicidad de métricas, ruido de configuración y riesgo de inconsistencias.
+- Regla preventiva:
+  1. En el selector de categoría para métricas nuevas, ocultar `procedencia` y `visitas`.
+  2. Si una métrica ya pertenece a `procedencia` o `visitas` por generación automática, mostrar la categoría y bloquear su edición manual.
+  3. Reforzar la nota UI indicando que cantidad y nombres de visitas se crean desde `Procedencias`.
+
+### E21) Cantidad de visitas sin correspondencia de nombres
+
+- Qué pasó: el usuario podía registrar `visitas = N` sin ingresar exactamente N nombres.
+- Impacto: datos incompletos y dificultad para seguimiento de visitas.
+- Regla preventiva:
+  1. Validar que `nombres_visitas_*` use separador por coma y que la cantidad de nombres coincida con `visitas_*`.
+  2. Guiar con `placeholder` claro en el campo de nombres (ejemplo: `Nombre 1, Nombre 2, Nombre 3`) sin agregar texto extra debajo.
+  3. Mantener mensaje de error explícito cuando la cantidad no coincide.
+
+### E22) Topbar sin estado activo visible
+
+- Qué pasó: en administrador no quedaba claro qué panel del topbar estaba abierto.
+- Impacto: navegación confusa y retrabajo al alternar entre paneles.
+- Regla preventiva:
+  1. Sincronizar `vistaActiva` del módulo con el topbar mediante evento global (`admin:vista-activa`).
+  2. Aplicar estilo activo (background + contraste) al botón correspondiente del topbar.
+  3. Limpiar estado activo al salir de la ruta de administrador.
+
+### E23) Falta de accesos directos entre paneles relacionados
+
+- Qué pasó: el usuario debía depender solo del topbar para moverse a paneles vinculados.
+- Impacto: más clics y menor descubribilidad de flujo.
+- Regla preventiva:
+  1. En tarjetas/notas de resumen, agregar links directos para abrir paneles clave.
+  2. En notas de dependencia (ej. métricas ↔ procedencias), incluir acción `Ir a ...` contextual.
+  3. Mantener estos links dentro del mismo flujo de confirmación de cambios pendientes.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -232,4 +268,8 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] No duplicar mensajes globales (toast + `alert-danger`) en el mismo evento.
 - [ ] Verificar propagación de setup en módulos operativos (cultos, métricas, procedencias).
 - [ ] En esquema legacy, confirmar que la categoría de métricas nuevas persiste correctamente.
+- [ ] Categorías automáticas (`procedencia`, `visitas`) no disponibles para métricas nuevas y visibles bloqueadas cuando las genera el sistema.
+- [ ] En visitas, validar coincidencia entre cantidad y nombres separados por coma.
+- [ ] En topbar de administrador, botón activo resaltado según panel abierto.
+- [ ] En resumen/notas, links directos funcionales para abrir paneles relacionados.
 - [ ] Lint/build/react-doctor ejecutados.

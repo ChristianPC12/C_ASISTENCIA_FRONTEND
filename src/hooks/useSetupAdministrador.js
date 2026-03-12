@@ -12,6 +12,7 @@ import {
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
 const CLAVE_TOTAL_ASISTENTES = 'total_asistentes';
 const CATEGORIAS_VALIDAS = new Set(CATEGORIAS_METRICA_OPCIONES.map((item) => item.valor));
+const CATEGORIAS_AUTOMATICAS = new Set(['procedencia', 'visitas']);
 const METRICAS_FIJAS_MAP = new Map(
   METRICAS_FALLBACK.map((item) => [
     String(item?.clave || '').trim().toLowerCase(),
@@ -120,6 +121,10 @@ function normalizarCategoriaMetrica(categoria, clave = '') {
     return valor;
   }
   return inferirCategoriaPorClave(clave);
+}
+
+function esCategoriaAutomaticaMetrica(categoria, clave = '') {
+  return CATEGORIAS_AUTOMATICAS.has(normalizarCategoriaMetrica(categoria, clave));
 }
 
 function construirClaveMetricaUnica(base, clavesUsadas, fallback = 'metrica') {
@@ -307,19 +312,25 @@ function normalizarProcedencias(procedenciasRaw) {
 
 function normalizarMetricas(metricasRaw) {
   const base = normalizarMetricasConfig(metricasRaw?.length ? metricasRaw : METRICAS_FALLBACK);
-  return base.map((item) => ({
-    ...item,
-    ui_id: resolverUiId(item, 'metrica', ['metrica_id', 'id']),
-    clave: normalizarClaveMetrica(item.clave),
-    etiqueta: obtenerDefinicionMetricaFija(item.clave)?.etiqueta || item.etiqueta,
-    categoria: normalizarCategoriaMetrica(
-      obtenerDefinicionMetricaFija(item.clave)?.categoria || item.categoria,
+  return base.map((item) => {
+    const definicionFija = obtenerDefinicionMetricaFija(item.clave);
+    const esFija = Boolean(definicionFija);
+    const categoriaBase = normalizarCategoriaMetrica(
+      definicionFija?.categoria || item.categoria,
       item.clave
-    ),
-    habilitado: item.habilitado,
-    obligatorio: item.obligatorio,
-    es_fija: Boolean(obtenerDefinicionMetricaFija(item.clave))
-  }));
+    );
+
+    return {
+      ...item,
+      ui_id: resolverUiId(item, 'metrica', ['metrica_id', 'id']),
+      clave: normalizarClaveMetrica(item.clave),
+      etiqueta: definicionFija?.etiqueta || item.etiqueta,
+      categoria: categoriaBase,
+      habilitado: item.habilitado,
+      obligatorio: item.obligatorio,
+      es_fija: esFija
+    };
+  });
 }
 
 function validarCultos(cultos) {
@@ -626,9 +637,18 @@ export function useSetupAdministrador() {
         }
 
         if (campo === 'categoria') {
+          if (esCategoriaAutomaticaMetrica(item?.categoria, item?.clave)) {
+            return item;
+          }
+
+          const categoriaNormalizada = normalizarCategoriaMetrica(valor, item.clave);
+          if (esCategoriaAutomaticaMetrica(categoriaNormalizada, item?.clave)) {
+            return item;
+          }
+
           return {
             ...item,
-            categoria: normalizarCategoriaMetrica(valor, item.clave)
+            categoria: categoriaNormalizada
           };
         }
 

@@ -20,6 +20,8 @@ function campoTexto({
   cargando,
   onCambiarCampo
 }) {
+  const esNombresVisitas = metrica.clave.startsWith('nombres_visitas_');
+
   if (metrica.clave === 'observaciones') {
     return (
       <div className="col-12" key={metrica.clave}>
@@ -58,7 +60,7 @@ function campoTexto({
         className={`form-control ${errores[metrica.clave] ? 'is-invalid' : ''}`}
         value={formulario.metricas?.[metrica.clave] ?? ''}
         onChange={(event) => onCambiarCampo(metrica.clave, event.target.value)}
-        placeholder={metrica.etiqueta}
+        placeholder={esNombresVisitas ? 'Nombre 1, Nombre 2, Nombre 3' : metrica.etiqueta}
         disabled={cargando}
       />
       {errores[metrica.clave] && (

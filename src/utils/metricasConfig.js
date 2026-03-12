@@ -214,6 +214,14 @@ export function obtenerParPuntualidad(metricasActivas) {
   return { antes, despues };
 }
 
+function contarNombresPorComa(valor = '') {
+  return String(valor || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .length;
+}
+
 export function validarDependenciasMetricas(metricasActivas, metricasFormulario) {
   const errores = {};
 
@@ -265,17 +273,28 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
     errores.total_asistentes = 'Total de asistentes requiere métricas de puntualidad habilitadas.';
   }
 
-  const visitasBarrio = Number(metricasFormulario?.visitas_barrio ?? 0);
-  const nombresBarrio = String(metricasFormulario?.nombres_visitas_barrio ?? '').trim();
-  if ((Number.isFinite(visitasBarrio) ? visitasBarrio : 0) > 0 && porClave.nombres_visitas_barrio && nombresBarrio === '') {
-    errores.nombres_visitas_barrio = 'Debe indicar nombres cuando hay visitas de barrio.';
-  }
+  Object.keys(porClave)
+    .filter((clave) => clave.startsWith('visitas_'))
+    .forEach((claveVisitas) => {
+      const claveNombres = `nombres_${claveVisitas}`;
+      if (!porClave[claveNombres]) return;
 
-  const visitasGuayabo = Number(metricasFormulario?.visitas_guayabo ?? 0);
-  const nombresGuayabo = String(metricasFormulario?.nombres_visitas_guayabo ?? '').trim();
-  if ((Number.isFinite(visitasGuayabo) ? visitasGuayabo : 0) > 0 && porClave.nombres_visitas_guayabo && nombresGuayabo === '') {
-    errores.nombres_visitas_guayabo = 'Debe indicar nombres cuando hay visitas de Guayabo.';
-  }
+      const visitasRaw = Number(metricasFormulario?.[claveVisitas] ?? 0);
+      const cantidadVisitas = Number.isFinite(visitasRaw) ? Math.max(0, Math.trunc(visitasRaw)) : 0;
+      if (cantidadVisitas <= 0) return;
+
+      const nombresTexto = String(metricasFormulario?.[claveNombres] ?? '').trim();
+      const cantidadNombres = contarNombresPorComa(nombresTexto);
+
+      if (cantidadNombres === 0) {
+        errores[claveNombres] = `Debe indicar ${cantidadVisitas} nombre(s) separados por coma.`;
+        return;
+      }
+
+      if (cantidadNombres !== cantidadVisitas) {
+        errores[claveNombres] = `Debe indicar ${cantidadVisitas} nombre(s) separados por coma (actual: ${cantidadNombres}).`;
+      }
+    });
 
   return errores;
 }
