@@ -1,4 +1,3 @@
-import { CULTO_DIA_SEMANA } from '../../config/constants';
 import SelectorFecha from './SelectorFecha';
 import { ETIQUETAS_SECCION, agruparMetricasPorSeccion, obtenerParPuntualidad } from '../../utils/metricasConfig';
 
@@ -139,8 +138,21 @@ export default function AsistenciaForm({
   };
 
   const cultoSeleccionado = cultos.find((c) => String(c.id) === String(formulario.culto_id));
-  const diaPermitido = cultoSeleccionado ? CULTO_DIA_SEMANA[cultoSeleccionado.codigo] : null;
-  const NOMBRES_DIA = { 0: 'domingo', 3: 'miercoles', 6: 'sabado' };
+  const aDiaJs = (diaMysql) => {
+    const dia = Number(diaMysql);
+    if (!Number.isInteger(dia) || dia < 1 || dia > 7) return null;
+    return dia === 1 ? 0 : dia - 1;
+  };
+  const diaPermitido = cultoSeleccionado ? aDiaJs(cultoSeleccionado.dia_semana) : null;
+  const NOMBRES_DIA = {
+    0: 'domingo',
+    1: 'lunes',
+    2: 'martes',
+    3: 'miercoles',
+    4: 'jueves',
+    5: 'viernes',
+    6: 'sabado'
+  };
 
   const manejarCambioCulto = (e) => {
     const nuevoCultoId = e.target.value;
@@ -148,7 +160,7 @@ export default function AsistenciaForm({
     if (formulario.fecha && nuevoCultoId) {
       const nuevoCulto = cultos.find((c) => String(c.id) === String(nuevoCultoId));
       if (nuevoCulto) {
-        const diaReq = CULTO_DIA_SEMANA[nuevoCulto.codigo];
+        const diaReq = aDiaJs(nuevoCulto.dia_semana);
         const [anio, mes, dia] = formulario.fecha.split('-').map(Number);
         const fecha = new Date(anio, mes - 1, dia);
         if (diaReq !== null && diaReq !== undefined && fecha.getDay() !== diaReq) {

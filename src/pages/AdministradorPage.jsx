@@ -3,6 +3,7 @@ import { useSetupAdministrador } from '../hooks/useSetupAdministrador';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIAS_METRICA_OPCIONES } from '../utils/metricasConfig';
 import {
+  EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS,
   EVENT_ADMIN_ABRIR_CULTOS,
   EVENT_ADMIN_ABRIR_METRICAS,
   EVENT_ADMIN_ABRIR_PROCEDENCIAS
@@ -13,6 +14,18 @@ const VISTA_RESUMEN = 'RESUMEN';
 const VISTA_CULTOS = 'CULTOS';
 const VISTA_METRICAS = 'METRICAS';
 const VISTA_PROCEDENCIAS = 'PROCEDENCIAS';
+const VISTA_CATEGORIAS_METRICAS = 'CATEGORIAS_METRICAS';
+
+const DESCRIPCIONES_CATEGORIA_METRICA = {
+  informacion_culto: 'Datos de control del culto, por ejemplo llegadas antes y después de la hora.',
+  composicion_asistentes: 'Composición demográfica de asistentes, como niños y jóvenes.',
+  procedencia: 'Conteos por zona de procedencia para medir origen de asistentes.',
+  visitas: 'Métricas de visitas y nombres de visitas por procedencia.',
+  permanencia: 'Métricas relacionadas con permanencia durante el culto.',
+  total_asistentes: 'Métrica total de asistentes, calculada según reglas del sistema.',
+  observaciones: 'Campos descriptivos para notas y observaciones del registro.',
+  adicionales: 'Métricas opcionales para necesidades específicas de una iglesia o grupo.'
+};
 
 function BadgeEstado({ completo }) {
   return (
@@ -172,15 +185,18 @@ export default function AdministradorPage() {
     const manejarAbrirCultos = () => abrirVistaDesdeTopbar(VISTA_CULTOS);
     const manejarAbrirMetricas = () => abrirVistaDesdeTopbar(VISTA_METRICAS);
     const manejarAbrirProcedencias = () => abrirVistaDesdeTopbar(VISTA_PROCEDENCIAS);
+    const manejarAbrirCategorias = () => abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS);
 
     window.addEventListener(EVENT_ADMIN_ABRIR_CULTOS, manejarAbrirCultos);
     window.addEventListener(EVENT_ADMIN_ABRIR_METRICAS, manejarAbrirMetricas);
     window.addEventListener(EVENT_ADMIN_ABRIR_PROCEDENCIAS, manejarAbrirProcedencias);
+    window.addEventListener(EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS, manejarAbrirCategorias);
 
     return () => {
       window.removeEventListener(EVENT_ADMIN_ABRIR_CULTOS, manejarAbrirCultos);
       window.removeEventListener(EVENT_ADMIN_ABRIR_METRICAS, manejarAbrirMetricas);
       window.removeEventListener(EVENT_ADMIN_ABRIR_PROCEDENCIAS, manejarAbrirProcedencias);
+      window.removeEventListener(EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS, manejarAbrirCategorias);
     };
   }, [abrirVistaDesdeTopbar]);
 
@@ -203,6 +219,7 @@ export default function AdministradorPage() {
   const mostrarCultos = vistaActiva === VISTA_CULTOS;
   const mostrarMetricas = vistaActiva === VISTA_METRICAS;
   const mostrarProcedencias = vistaActiva === VISTA_PROCEDENCIAS;
+  const mostrarCategoriasMetricas = vistaActiva === VISTA_CATEGORIAS_METRICAS;
   const mensajeEncabezado = setupCompleto
     ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
     : 'Complete la configuración inicial para habilitar registro, reportes, estadísticas y usuarios.';
@@ -359,7 +376,7 @@ export default function AdministradorPage() {
           )}
 
           <div className="alert alert-secondary mb-0">
-            Use los botones de la esquina superior derecha para abrir cultos, métricas y procedencias.
+            Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias y categorías.
             Solo se muestra un panel a la vez para reducir scroll y mejorar uso en teléfono.
           </div>
         </>
@@ -513,7 +530,16 @@ export default function AdministradorPage() {
               <i className="bi bi-info-circle-fill" aria-hidden="true"></i>
               <span>
                 Las métricas base se validan automáticamente por el sistema. Para métricas nuevas, seleccione la
-                categoría correspondiente.
+                categoría correspondiente y revise
+                {' '}
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 align-baseline"
+                  onClick={() => abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS)}
+                >
+                  Categorías
+                </button>
+                .
               </span>
             </div>
 
@@ -614,6 +640,37 @@ export default function AdministradorPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {mostrarCategoriasMetricas && (
+        <div className="card shadow-sm mb-4 admin-setup-panel">
+          <div className="card-header d-flex justify-content-between align-items-center gap-2">
+            <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Categorías de métricas</h5>
+            <BotonCerrarPanel
+              onClick={() => setVistaActiva(VISTA_RESUMEN)}
+              label="Cerrar panel de categorías de métricas"
+            />
+          </div>
+          <div className="card-body">
+            <p className="text-muted small mb-3">
+              Estas categorías organizan el formulario de Nuevo registro y ayudan a ubicar cada métrica en su sección correcta.
+            </p>
+            <div className="row g-3">
+              {CATEGORIAS_METRICA_OPCIONES.map((opcion) => (
+                <div className="col-12 col-md-6 col-xl-4" key={opcion.valor}>
+                  <div className="card h-100 admin-categoria-card">
+                    <div className="card-body">
+                      <h6 className="mb-2">{opcion.etiqueta}</h6>
+                      <p className="small text-muted mb-0">
+                        {DESCRIPCIONES_CATEGORIA_METRICA[opcion.valor]}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

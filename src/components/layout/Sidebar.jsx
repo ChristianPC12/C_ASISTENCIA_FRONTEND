@@ -4,6 +4,7 @@ import { ROLES } from '../../config/constants';
 import { useSetupStatus } from '../../hooks/useSetupStatus';
 import { useAuth } from '../../hooks/useAuth';
 import {
+  EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS,
   EVENT_ADMIN_ABRIR_CULTOS,
   EVENT_ADMIN_ABRIR_METRICAS,
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
@@ -66,6 +67,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirPanelProcedencias = () => {
     window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_PROCEDENCIAS));
+  };
+
+  const abrirPanelCategoriasMetricas = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS));
   };
 
   let enlaces = [];
@@ -245,6 +250,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 >
                   <i className="bi bi-people" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Procedencias</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn"
+                  onClick={abrirPanelCategoriasMetricas}
+                  aria-label="Categorías de métricas"
+                  title="Categorías de métricas"
+                >
+                  <i className="bi bi-journal-text" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Categorías</span>
                 </button>
               </>
             )}

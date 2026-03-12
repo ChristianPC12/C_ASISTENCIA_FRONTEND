@@ -163,6 +163,25 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   2. Evitar `alert alert-danger` para mensajes generales cuando ya exista toast equivalente.
   3. Mantener solo feedback inline de campo (`invalid-feedback`) cuando aplique por input puntual.
 
+### E18) Setup sin propagación real a módulos operativos
+
+- Qué pasó: cambios en cultos/métricas/procedencias del setup no se reflejaban correctamente en `Nuevo registro` ni en filtros por culto.
+- Impacto: el administrador configuraba datos, pero el resto de módulos seguía usando valores estáticos/legacy.
+- Regla preventiva:
+  1. La fuente de verdad para cultos del tenant debe ser `setup` (no catálogo estático global).
+  2. Al resolver culto por `codigo` en backend, priorizar coincidencia en setup del tenant; solo usar fallback legacy si no existe setup para ese tenant.
+  3. Cambios de procedencias deben sincronizar métricas derivadas (`proc_*`, `visitas_*`, `nombres_visitas_*`) para que aparezcan en `Nuevo registro`.
+  4. Cualquier cambio en setup debe validarse cruzado: `Administrador` -> `Nuevo registro` -> filtros/reportes.
+
+### E19) Persistencia de categoría en esquema legacy de métricas
+
+- Qué pasó: al no existir columna `categoria`, la categoría de métricas nuevas podía perderse y volver a `adicionales`.
+- Impacto: clasificación inconsistente y mala organización del formulario por secciones.
+- Regla preventiva:
+  1. Si el esquema no tiene columna `categoria`, serializarla en un campo legacy controlado (`CAT:<categoria>`).
+  2. Al leer métricas legacy, reconstruir `categoria` desde marcador; si falta, inferir por `clave`.
+  3. Mantener este comportamiento compatible hasta completar migración física de base de datos.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -211,4 +230,6 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] Si el usuario vuelve al estado inicial, `Guardar` desaparece.
 - [ ] Reglas de alto impacto con destacado visual.
 - [ ] No duplicar mensajes globales (toast + `alert-danger`) en el mismo evento.
+- [ ] Verificar propagación de setup en módulos operativos (cultos, métricas, procedencias).
+- [ ] En esquema legacy, confirmar que la categoría de métricas nuevas persiste correctamente.
 - [ ] Lint/build/react-doctor ejecutados.

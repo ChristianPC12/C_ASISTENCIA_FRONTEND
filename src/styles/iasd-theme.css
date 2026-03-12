@@ -418,6 +418,16 @@ a:hover {
   margin-top: 0.05rem;
 }
 
+.admin-categoria-card {
+  border: 1px solid rgba(0, 51, 102, 0.18);
+  border-left: 3px solid var(--iasd-azul);
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.04) 0%, #ffffff 100%);
+}
+
+.admin-categoria-card h6 {
+  color: var(--iasd-azul);
+}
+
 .admin-reglas-card {
   border: 1px solid rgba(0, 51, 102, 0.15);
   border-left: 3px solid var(--iasd-azul);
