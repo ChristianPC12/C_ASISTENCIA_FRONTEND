@@ -401,6 +401,58 @@ a:hover {
   border-radius: 0.3rem;
 }
 
+.admin-metricas-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(0, 51, 102, 0.2);
+  border-radius: 0.5rem;
+  background: rgba(0, 51, 102, 0.04);
+  color: var(--iasd-texto);
+  font-size: 0.82rem;
+}
+
+.admin-metricas-note i {
+  color: var(--iasd-azul);
+  margin-top: 0.05rem;
+}
+
+.admin-reglas-card {
+  border: 1px solid rgba(0, 51, 102, 0.15);
+  border-left: 3px solid var(--iasd-azul);
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.04) 0%, #ffffff 100%);
+}
+
+.admin-reglas-list {
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-regla-opcional {
+  list-style: none;
+  margin-left: -1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(0, 51, 102, 0.25);
+  border-left: 3px solid var(--iasd-azul);
+  border-radius: 0.55rem;
+  background: linear-gradient(90deg, rgba(0, 51, 102, 0.08) 0%, rgba(0, 51, 102, 0.03) 100%);
+}
+
+.admin-regla-opcional i {
+  color: var(--iasd-azul);
+  margin-top: 0.08rem;
+}
+
+.admin-metrica-meta {
+  font-size: 0.82rem;
+  color: var(--iasd-texto-sec);
+}
+
 .admin-col-acciones {
   width: 1%;
   white-space: nowrap;

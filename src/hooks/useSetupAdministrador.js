@@ -5,6 +5,20 @@ import { useSetupStatus } from './useSetupStatus';
 import { METRICAS_FALLBACK, normalizarMetricasConfig } from '../utils/metricasConfig';
 
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
+const REGLA_SI_MAYOR_CERO = 'SI_MAYOR_CERO';
+const REGLA_AMBOS_O_NINGUNO = 'AMBOS_O_NINGUNO';
+const REGLAS_DEPENDENCIA_VALIDAS = new Set([REGLA_SI_MAYOR_CERO, REGLA_AMBOS_O_NINGUNO]);
+const METRICAS_FIJAS_MAP = new Map(
+  METRICAS_FALLBACK.map((item) => [
+    String(item?.clave || '').trim().toLowerCase(),
+    {
+      etiqueta: String(item?.etiqueta || '').trim(),
+      depende_de_clave: String(item?.depende_de_clave || '').trim().toLowerCase(),
+      regla_dependencia: String(item?.regla_dependencia || '').trim().toUpperCase()
+    }
+  ])
+);
+
 const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
 const DIA_OPCIONES = [
   { valor: 1, etiqueta: 'Domingo' },
@@ -86,6 +100,51 @@ function normalizarTextoCodigo(valor) {
   return limpio.slice(0, 30);
 }
 
+function normalizarClaveMetrica(valor) {
+  return String(valor || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+}
+
+function construirClaveMetricaUnica(base, clavesUsadas, fallback = 'metrica') {
+  let candidata = normalizarClaveMetrica(base) || normalizarClaveMetrica(fallback) || 'metrica';
+  if (!clavesUsadas.has(candidata)) {
+    clavesUsadas.add(candidata);
+    return candidata;
+  }
+
+  let secuencia = 2;
+  while (clavesUsadas.has(`${candidata}_${secuencia}`)) {
+    secuencia += 1;
+  }
+  const unica = `${candidata}_${secuencia}`.slice(0, 80);
+  clavesUsadas.add(unica);
+  return unica;
+}
+
+function obtenerDefinicionMetricaFija(clave) {
+  return METRICAS_FIJAS_MAP.get(normalizarClaveMetrica(clave)) || null;
+}
+
+function obtenerSiguienteClaveMetrica(metricas = []) {
+  const usadas = new Set((Array.isArray(metricas) ? metricas : [])
+    .map((item) => normalizarClaveMetrica(item?.clave))
+    .filter(Boolean));
+
+  let intento = (Array.isArray(metricas) ? metricas.length : 0) + 1;
+  let candidata = `metrica_nueva_${intento}`;
+  while (usadas.has(candidata)) {
+    intento += 1;
+    candidata = `metrica_nueva_${intento}`;
+  }
+  return candidata;
+}
+
 function generarCodigoCulto(item, index, codigosUsados) {
   const codigoExistente = normalizarTextoCodigo(item?.codigo);
   const baseNombre = normalizarTextoCodigo(item?.nombre);
@@ -141,9 +200,25 @@ function firmarCultos(cultos) {
   );
 }
 
+function reordenarProcedencias(procedencias) {
+  return (Array.isArray(procedencias) ? procedencias : []).map((item, index) => ({
+    ...item,
+    orden: index + 1
+  }));
+}
+
+function prepararProcedenciasParaGuardar(procedencias) {
+  return reordenarProcedencias(procedencias).map((item) => ({
+    ...item,
+    nombre: String(item?.nombre || '').trim(),
+    activo: !!item?.activo,
+    orden: toInt(item?.orden, 0)
+  }));
+}
+
 function firmarProcedencias(procedencias) {
   return JSON.stringify(
-    (Array.isArray(procedencias) ? procedencias : []).map((item) => ({
+    prepararProcedenciasParaGuardar(procedencias).map((item) => ({
       nombre: String(item?.nombre || '').trim(),
       activo: !!item?.activo,
       orden: toInt(item?.orden, 0)
@@ -151,16 +226,61 @@ function firmarProcedencias(procedencias) {
   );
 }
 
+function prepararMetricasParaGuardar(metricas) {
+  const clavesUsadas = new Set();
+
+  return (Array.isArray(metricas) ? metricas : []).map((item, index) => {
+    const claveBase = normalizarClaveMetrica(item?.clave);
+    const etiquetaIngresada = String(item?.etiqueta || '').trim();
+    const clave =
+      construirClaveMetricaUnica(claveBase || etiquetaIngresada, clavesUsadas, `metrica_${index + 1}`);
+    const fija = obtenerDefinicionMetricaFija(clave);
+
+    const depende = fija
+      ? normalizarClaveMetrica(fija.depende_de_clave)
+      : normalizarClaveMetrica(item?.depende_de_clave);
+    let regla = fija
+      ? String(fija.regla_dependencia || '').trim().toUpperCase()
+      : String(item?.regla_dependencia || '').trim().toUpperCase();
+
+    if (!depende) {
+      regla = '';
+    } else if (!regla) {
+      regla = REGLA_SI_MAYOR_CERO;
+    }
+
+    if (regla && !REGLAS_DEPENDENCIA_VALIDAS.has(regla)) {
+      regla = '';
+    }
+
+    const habilitado = !!item?.habilitado;
+    const obligatorio = habilitado ? !!item?.obligatorio : false;
+
+    return {
+      ...item,
+      clave,
+      etiqueta: fija ? fija.etiqueta : etiquetaIngresada,
+      habilitado,
+      obligatorio,
+      depende_de_clave: depende || '',
+      regla_dependencia: regla || '',
+      orden: index + 1,
+      es_fija: Boolean(fija || item?.es_fija)
+    };
+  });
+}
+
 function firmarMetricas(metricas) {
   return JSON.stringify(
-    (Array.isArray(metricas) ? metricas : []).map((item) => ({
+    prepararMetricasParaGuardar(metricas).map((item) => ({
       clave: String(item?.clave || ''),
       etiqueta: String(item?.etiqueta || '').trim(),
       habilitado: !!item?.habilitado,
       obligatorio: !!item?.obligatorio,
       depende_de_clave: item?.depende_de_clave || '',
       regla_dependencia: item?.regla_dependencia || '',
-      orden: toInt(item?.orden, 0)
+      orden: toInt(item?.orden, 0),
+      es_fija: !!item?.es_fija
     }))
   );
 }
@@ -184,25 +304,27 @@ function normalizarProcedencias(procedenciasRaw) {
   const lista = Array.isArray(procedenciasRaw) && procedenciasRaw.length > 0
     ? procedenciasRaw
     : PROCEDENCIAS_DEFAULT;
-  return lista.map((item, idx) => ({
+  return reordenarProcedencias(lista.map((item, idx) => ({
     ui_id: resolverUiId(item, 'procedencia', ['procedencia_id', 'id']),
     nombre: String(item?.nombre || '').trim(),
     activo: toBool(item?.activo ?? true),
     orden: toInt(item?.orden, idx + 1)
-  }));
+  })));
 }
 
 function normalizarMetricas(metricasRaw) {
   const base = normalizarMetricasConfig(metricasRaw?.length ? metricasRaw : METRICAS_FALLBACK);
   return base.map((item, idx) => ({
+    ...item,
     ui_id: resolverUiId(item, 'metrica', ['metrica_id', 'id']),
-    clave: item.clave,
-    etiqueta: item.etiqueta,
+    clave: normalizarClaveMetrica(item.clave),
+    etiqueta: obtenerDefinicionMetricaFija(item.clave)?.etiqueta || item.etiqueta,
     habilitado: item.habilitado,
     obligatorio: item.obligatorio,
-    depende_de_clave: item.depende_de_clave || '',
-    regla_dependencia: item.regla_dependencia || '',
-    orden: toInt(item.orden, (idx + 1) * 10)
+    depende_de_clave: obtenerDefinicionMetricaFija(item.clave)?.depende_de_clave || item.depende_de_clave || '',
+    regla_dependencia: obtenerDefinicionMetricaFija(item.clave)?.regla_dependencia || item.regla_dependencia || '',
+    orden: toInt(item.orden, idx + 1),
+    es_fija: Boolean(obtenerDefinicionMetricaFija(item.clave))
   }));
 }
 
@@ -227,8 +349,9 @@ function validarCultos(cultos) {
       codigos.add(culto.codigo);
     }
 
-    if ((culto.nombre || '').length < 3) {
-      filaErrores.nombre = 'El nombre debe tener al menos 3 caracteres.';
+    const largoNombreCulto = String(culto.nombre || '').trim().length;
+    if (largoNombreCulto < 3 || largoNombreCulto > 20) {
+      filaErrores.nombre = 'El nombre debe tener entre 3 y 20 caracteres.';
     }
 
     if (!Number.isInteger(culto.dia_semana) || culto.dia_semana < 1 || culto.dia_semana > 7) {
@@ -301,7 +424,7 @@ function validarProcedencias(procedencias) {
 function validarMetricas(metricas) {
   const errores = {};
   const claves = new Set();
-  const ordenes = new Set();
+  const metricasPorClave = {};
   let habilitadas = 0;
   let antes = null;
   let despues = null;
@@ -313,37 +436,63 @@ function validarMetricas(metricas) {
   metricas.forEach((item, idx) => {
     const key = `fila_${idx}`;
     const filaErrores = {};
+    const claveNormalizada = normalizarClaveMetrica(item?.clave);
+    const dependeDe = normalizarClaveMetrica(item?.depende_de_clave);
+    const regla = String(item?.regla_dependencia || '').trim().toUpperCase();
 
-    if (!/^[a-z0-9_]{2,80}$/.test(item.clave || '')) {
+    if (!/^[a-z0-9_]{2,80}$/.test(claveNormalizada)) {
       filaErrores.clave = 'Clave inválida (a-z, 0-9 y guion bajo).';
-    } else if (claves.has(item.clave)) {
+    } else if (claves.has(claveNormalizada)) {
       filaErrores.clave = 'Clave duplicada.';
     } else {
-      claves.add(item.clave);
+      claves.add(claveNormalizada);
     }
 
     if ((item.etiqueta || '').trim().length < 2) {
       filaErrores.etiqueta = 'Etiqueta muy corta.';
     }
 
-    if (!Number.isInteger(item.orden) || item.orden < 1 || item.orden > 999) {
-      filaErrores.orden = 'Orden inválido (1-999).';
-    } else if (ordenes.has(item.orden)) {
-      filaErrores.orden = 'Orden duplicado.';
-    } else {
-      ordenes.add(item.orden);
+    if (!item.habilitado && item.obligatorio) {
+      filaErrores.obligatorio = 'No puede ser obligatoria si está deshabilitada.';
+    }
+
+    if (dependeDe && !regla) {
+      filaErrores.regla_dependencia = 'Seleccione una regla de dependencia.';
+    }
+    if (!dependeDe && regla) {
+      filaErrores.regla_dependencia = 'No puede definir regla sin seleccionar dependencia.';
+    }
+    if (regla && !REGLAS_DEPENDENCIA_VALIDAS.has(regla)) {
+      filaErrores.regla_dependencia = 'Regla de dependencia no soportada.';
+    }
+    if (dependeDe && dependeDe === claveNormalizada) {
+      filaErrores.depende_de_clave = 'Una métrica no puede depender de sí misma.';
+    }
+
+    if (claveNormalizada) {
+      metricasPorClave[claveNormalizada] = { indice: idx, dependeDe };
     }
 
     if (item.habilitado) {
       habilitadas++;
     }
 
-    if (item.clave === CLAVES_PUNTUALIDAD[0]) antes = item;
-    if (item.clave === CLAVES_PUNTUALIDAD[1]) despues = item;
+    if (claveNormalizada === CLAVES_PUNTUALIDAD[0]) antes = item;
+    if (claveNormalizada === CLAVES_PUNTUALIDAD[1]) despues = item;
 
     if (Object.keys(filaErrores).length > 0) {
       errores[key] = filaErrores;
     }
+  });
+
+  Object.values(metricasPorClave).forEach((metrica) => {
+    if (!metrica.dependeDe) return;
+    if (metricasPorClave[metrica.dependeDe]) return;
+    const filaKey = `fila_${metrica.indice}`;
+    errores[filaKey] = {
+      ...(errores[filaKey] || {}),
+      depende_de_clave: 'La métrica seleccionada en dependencia no existe.'
+    };
   });
 
   if (habilitadas < 1) {
@@ -440,16 +589,15 @@ export function useSetupAdministrador() {
   }, []);
 
   const cambiarProcedencia = useCallback((index, campo, valor) => {
-    setProcedencias((prev) => prev.map((item, idx) => {
+    setProcedencias((prev) => reordenarProcedencias(prev.map((item, idx) => {
       if (idx !== index) return item;
       if (campo === 'activo') return { ...item, activo: !!valor };
-      if (campo === 'orden') return { ...item, orden: toInt(valor, item.orden) };
       return { ...item, [campo]: valor };
-    }));
+    })));
   }, []);
 
   const agregarProcedencia = useCallback(() => {
-    setProcedencias((prev) => ([
+    setProcedencias((prev) => reordenarProcedencias([
       ...prev,
       {
         ui_id: generarUiId('procedencia'),
@@ -461,68 +609,122 @@ export function useSetupAdministrador() {
   }, []);
 
   const eliminarProcedencia = useCallback((index) => {
-    setProcedencias((prev) => prev.filter((_, idx) => idx !== index));
+    setProcedencias((prev) => reordenarProcedencias(prev.filter((_, idx) => idx !== index)));
   }, []);
 
   const cambiarMetrica = useCallback((index, campo, valor) => {
     setMetricas((prev) => {
-      const actualizado = prev.map((item, idx) => {
+      let actualizado = prev.map((item, idx) => {
         if (idx !== index) return item;
+        const esFija = !!item.es_fija;
 
-        if (campo === 'habilitado' || campo === 'obligatorio') {
-          return { ...item, [campo]: !!valor };
-        }
-
-        if (campo === 'orden') {
-          return { ...item, orden: toInt(valor, item.orden) };
-        }
-
-        if (campo === 'clave') {
+        if (campo === 'habilitado') {
+          const habilitado = !!valor;
+          const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
           return {
             ...item,
-            clave: String(valor || '')
-              .toLowerCase()
-              .replace(/\s+/g, '_')
-              .replace(/[^a-z0-9_]/g, '')
+            habilitado,
+            obligatorio: habilitado ? obligatorioPrevio : false,
+            obligatorio_previo: obligatorioPrevio
           };
         }
 
-        return { ...item, [campo]: valor };
+        if (campo === 'obligatorio') {
+          const obligatorio = item.habilitado ? !!valor : false;
+          return {
+            ...item,
+            obligatorio,
+            obligatorio_previo: obligatorio
+          };
+        }
+
+        if (esFija) {
+          return item;
+        }
+
+        if (campo === 'etiqueta') {
+          return { ...item, etiqueta: String(valor || '') };
+        }
+
+        if (campo === 'depende_de_clave') {
+          const dependeDe = normalizarClaveMetrica(valor);
+          return {
+            ...item,
+            depende_de_clave: dependeDe,
+            regla_dependencia: dependeDe ? (item.regla_dependencia || REGLA_SI_MAYOR_CERO) : ''
+          };
+        }
+
+        if (campo === 'regla_dependencia') {
+          if (!item.depende_de_clave) {
+            return { ...item, regla_dependencia: '' };
+          }
+          const regla = String(valor || '').trim().toUpperCase();
+          return {
+            ...item,
+            regla_dependencia: REGLAS_DEPENDENCIA_VALIDAS.has(regla) ? regla : ''
+          };
+        }
+
+        return item;
       });
 
       const metricaEditada = actualizado[index];
-      if (!metricaEditada || !CLAVES_PUNTUALIDAD.includes(metricaEditada.clave)) {
-        return actualizado;
+      if (metricaEditada && CLAVES_PUNTUALIDAD.includes(metricaEditada.clave)) {
+        actualizado = actualizado.map((item, idx) => {
+          if (idx === index || !CLAVES_PUNTUALIDAD.includes(item.clave)) return item;
+          if (campo === 'habilitado') {
+            const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
+            return {
+              ...item,
+              habilitado: metricaEditada.habilitado,
+              obligatorio: metricaEditada.habilitado ? obligatorioPrevio : false,
+              obligatorio_previo: obligatorioPrevio
+            };
+          }
+          if (campo === 'obligatorio') {
+            return {
+              ...item,
+              obligatorio: metricaEditada.habilitado ? metricaEditada.obligatorio : false,
+              obligatorio_previo: metricaEditada.obligatorio
+            };
+          }
+          return item;
+        });
       }
 
-      return actualizado.map((item, idx) => {
-        if (idx === index || !CLAVES_PUNTUALIDAD.includes(item.clave)) return item;
-        if (campo === 'habilitado' || campo === 'obligatorio') {
-          return { ...item, [campo]: metricaEditada[campo] };
-        }
-        return item;
-      });
+      return actualizado.map((item) => (
+        !item.habilitado && item.obligatorio ? { ...item, obligatorio: false } : item
+      ));
     });
   }, []);
 
   const agregarMetrica = useCallback(() => {
+    const uiId = generarUiId('metrica');
     setMetricas((prev) => ([
       ...prev,
       {
-        ui_id: generarUiId('metrica'),
-        clave: `metrica_nueva_${prev.length + 1}`,
-        etiqueta: 'Nueva métrica',
+        ui_id: uiId,
+        clave: obtenerSiguienteClaveMetrica(prev),
+        etiqueta: '',
         habilitado: true,
         obligatorio: false,
         depende_de_clave: '',
         regla_dependencia: '',
-        orden: (prev.length + 1) * 10
+        orden: prev.length + 1,
+        es_fija: false
       }
     ]));
+    return uiId;
   }, []);
 
   const eliminarMetrica = useCallback((index) => {
-    setMetricas((prev) => prev.filter((_, idx) => idx !== index));
+    setMetricas((prev) => {
+      if (prev[index]?.es_fija) {
+        return prev;
+      }
+      return prev.filter((_, idx) => idx !== index);
+    });
   }, []);
 
   const guardarCultos = useCallback(async () => {
@@ -567,7 +769,8 @@ export function useSetupAdministrador() {
   }, [cultos, aplicarDetalleSetup]);
 
   const guardarProcedencias = useCallback(async () => {
-    const validacion = validarProcedencias(procedencias);
+    const procedenciasPreparadas = prepararProcedenciasParaGuardar(procedencias);
+    const validacion = validarProcedencias(procedenciasPreparadas);
     setErroresProcedencias(validacion);
     if (Object.keys(validacion).length > 0) {
       notificarError(validacion.general || 'Revise la configuración de procedencias.');
@@ -577,7 +780,7 @@ export function useSetupAdministrador() {
     setGuardandoProcedencias(true);
     try {
       const payload = {
-        procedencias: procedencias.map((item) => ({
+        procedencias: procedenciasPreparadas.map((item) => ({
           nombre: item.nombre.trim(),
           activo: !!item.activo,
           orden: item.orden
@@ -585,8 +788,9 @@ export function useSetupAdministrador() {
       };
       const res = await setupApi.guardarProcedencias(payload);
       if (res?.exito && res?.datos) {
-        setProcedenciasBase(clonarLista(procedencias));
-        setFirmaProcedenciasBase(firmarProcedencias(procedencias));
+        setProcedencias(clonarLista(procedenciasPreparadas));
+        setProcedenciasBase(clonarLista(procedenciasPreparadas));
+        setFirmaProcedenciasBase(firmarProcedencias(procedenciasPreparadas));
         aplicarDetalleSetup(res.datos);
         setErroresProcedencias({});
         notificarExito(res.mensaje || 'Procedencias guardadas correctamente.');
@@ -603,7 +807,8 @@ export function useSetupAdministrador() {
   }, [procedencias, aplicarDetalleSetup]);
 
   const guardarMetricas = useCallback(async () => {
-    const validacion = validarMetricas(metricas);
+    const metricasPreparadas = prepararMetricasParaGuardar(metricas);
+    const validacion = validarMetricas(metricasPreparadas);
     setErroresMetricas(validacion);
     if (Object.keys(validacion).length > 0) {
       notificarError(validacion.general || 'Revise la configuración de métricas.');
@@ -613,7 +818,7 @@ export function useSetupAdministrador() {
     setGuardandoMetricas(true);
     try {
       const payload = {
-        metricas: metricas.map((item) => ({
+        metricas: metricasPreparadas.map((item) => ({
           clave: item.clave,
           etiqueta: item.etiqueta.trim(),
           habilitado: !!item.habilitado,
@@ -625,8 +830,9 @@ export function useSetupAdministrador() {
       };
       const res = await setupApi.guardarMetricas(payload);
       if (res?.exito && res?.datos) {
-        setMetricasBase(clonarLista(metricas));
-        setFirmaMetricasBase(firmarMetricas(metricas));
+        setMetricas(clonarLista(metricasPreparadas));
+        setMetricasBase(clonarLista(metricasPreparadas));
+        setFirmaMetricasBase(firmarMetricas(metricasPreparadas));
         aplicarDetalleSetup(res.datos);
         setErroresMetricas({});
         notificarExito(res.mensaje || 'Métricas guardadas correctamente.');
