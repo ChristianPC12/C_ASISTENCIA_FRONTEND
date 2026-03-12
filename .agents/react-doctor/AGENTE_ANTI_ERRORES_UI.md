@@ -75,7 +75,7 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 - Impacto: menor calidad percibida y experiencia menos profesional.
 - Regla preventiva:
   1. Revisar ortografia y acentuacion de labels finales antes de cerrar ticket.
-  2. Priorizar consistencia en terminos repetidos (`Métricas`, `configuración`, `revisión`, etc.).
+  2. Priorizar consistencia en terminos repetidos (`Métricas`, `configuracion`, `revision`, etc.).
   3. Evitar introducir variantes distintas del mismo termino en una misma pantalla.
 
 ### E9) Barrido obligatorio de tildes y letra ñ
@@ -87,6 +87,63 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
   2. Verificar explicitamente tildes (`áéíóú`) y uso correcto de `ñ` en palabras que lo requieren.
   3. Corregir tambien labels de botones, titulos de columnas y mensajes de estados vacios.
   4. No cerrar ticket sin este barrido cuando se haya tocado texto UI.
+
+### E10) Limites de longitud no aplicados en campos clave
+
+- Que paso: campos visibles permitian mas caracteres de los esperados por UX.
+- Impacto: entradas largas, interfaz desordenada y validaciones tardias.
+- Regla preventiva:
+  1. Definir limite maximo por campo funcional antes de implementar.
+  2. Aplicar limite en dos capas: `maxLength` en input + validacion en hook/validator.
+  3. Para `Nombre de culto`, usar rango obligatorio de 3 a 20 caracteres.
+  4. Mantener mensaje de error explicito con el rango permitido.
+
+### E11) Exposicion de campos internos (`clave`, `orden`) al usuario final
+
+- Que paso: se mostraron campos tecnicos que no agregan valor funcional al administrador.
+- Impacto: confusion, riesgo de errores de configuracion y soporte innecesario.
+- Regla preventiva:
+  1. `clave` y `orden` deben manejarse en logica interna, no como input editable.
+  2. Generar/normalizar `clave` automaticamente al guardar.
+  3. Derivar `orden` por posicion visual de la lista.
+  4. Si hay dependencias, usar `select` controlado; nunca texto libre para claves internas.
+
+### E12) Falta de blindaje para metricas base del sistema
+
+- Que paso: metricas definidas como base quedaron expuestas a edicion/eliminacion.
+- Impacto: perdida de configuracion canonica y alto retrabajo para recomponerla.
+- Regla preventiva:
+  1. Toda metrica base debe marcarse como `es_fija`.
+  2. En metricas fijas, bloquear edicion estructural (`etiqueta`, `depende_de_clave`, `regla_dependencia`) y bloqueo total de eliminar.
+  3. Permitir unicamente `habilitado` y `obligatorio` en metricas fijas.
+  4. Si `habilitado=false`, forzar `obligatorio=false` en tiempo real y previo a persistir.
+
+### E13) Falta de foco contextual al crear filas nuevas
+
+- Que paso: al presionar `Agregar metrica`, el usuario debia buscar manualmente la nueva fila.
+- Impacto: friccion de uso, especialmente en movil con tablas largas.
+- Regla preventiva:
+  1. Toda accion `Agregar X` debe devolver identificador de la nueva fila (`ui_id`).
+  2. Al renderizar la fila, hacer `focus()` en el primer input editable.
+  3. Acompanarlo con `scrollIntoView({ block: 'center' })` para llevar al usuario al punto exacto.
+
+### E14) Guardar visible aun cuando el usuario vuelve al estado inicial
+
+- Que paso: en metricas, despues de interactuar y regresar al valor original, podia mantenerse visible `Guardar`.
+- Impacto: confusion sobre si hay cambios reales pendientes.
+- Regla preventiva:
+  1. La deteccion dirty debe basarse en firma normalizada, no en referencia de objetos.
+  2. Si una regla de negocio fuerza cambios derivados (`habilitado` -> `obligatorio`), debe conservar/restaurar estado previo para permitir volver al baseline.
+  3. Mostrar botones `Guardar` solo cuando la firma actual difiere de la base.
+
+### E15) Regla clave sin suficiente jerarquia visual
+
+- Que paso: una regla importante (metricas opcionales) no destacaba frente al resto del listado.
+- Impacto: riesgo de que el usuario interprete que crear metricas extra es obligatorio.
+- Regla preventiva:
+  1. Reglas de alto impacto deben llevar estilo destacado (fondo, borde lateral, icono).
+  2. Mantener copy breve y accionable.
+  3. Evitar que una regla critica quede visualmente igual al resto.
 
 ## Protocolo reutilizable para nuevos modulos
 
@@ -127,4 +184,12 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 - [ ] Cierre de panel no conserva cambios sin confirmacion.
 - [ ] Ortografia de labels validada en UI final.
 - [ ] Barrido final de tildes y letra ñ ejecutado en textos visibles.
+- [ ] Limites de longitud validados en UI y en logica.
+- [ ] `Clave` y `orden` no expuestos como input editable.
+- [ ] Dependencias de metricas con `select` (sin texto libre).
+- [ ] Metricas base protegidas contra edicion estructural y eliminacion.
+- [ ] `habilitado=false` fuerza `obligatorio=false`.
+- [ ] `Agregar` en tablas largas aplica foco y scroll al nuevo input.
+- [ ] Si el usuario vuelve al estado inicial, `Guardar` desaparece.
+- [ ] Reglas de alto impacto con destacado visual.
 - [ ] Lint/build/react-doctor ejecutados.
