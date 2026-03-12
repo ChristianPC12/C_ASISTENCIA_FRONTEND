@@ -4,12 +4,12 @@ import { ETIQUETAS_SECCION, agruparMetricasPorSeccion, obtenerParPuntualidad } f
 
 const FECHAS_REGISTRADAS_VACIAS = [];
 const SECCIONES_ORDEN = [
-  'puntualidad',
-  'composicion',
+  'informacion_culto',
+  'composicion_asistentes',
   'procedencia',
   'visitas',
   'permanencia',
-  'total',
+  'total_asistentes',
   'adicionales',
   'observaciones'
 ];
@@ -168,7 +168,7 @@ export default function AsistenciaForm({
       <div className="card-body">
         <form onSubmit={manejarEnvio}>
           <div className="seccion-form">
-            <h6>Informacion del culto</h6>
+            <h6>Información del culto</h6>
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="culto_id" className="form-label">

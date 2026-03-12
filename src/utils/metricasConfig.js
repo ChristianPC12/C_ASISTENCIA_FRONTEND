@@ -1,19 +1,49 @@
-const REGLA_AMBOS_O_NINGUNO = 'AMBOS_O_NINGUNO';
-const REGLA_SI_MAYOR_CERO = 'SI_MAYOR_CERO';
+﻿const CATEGORIAS_VALIDAS = [
+  'informacion_culto',
+  'composicion_asistentes',
+  'procedencia',
+  'visitas',
+  'permanencia',
+  'total_asistentes',
+  'observaciones',
+  'adicionales'
+];
+
+export const CATEGORIAS_METRICA_ORDEN = [
+  'informacion_culto',
+  'composicion_asistentes',
+  'procedencia',
+  'visitas',
+  'permanencia',
+  'total_asistentes',
+  'adicionales',
+  'observaciones'
+];
+
+export const ETIQUETAS_SECCION = {
+  informacion_culto: 'Información del culto',
+  composicion_asistentes: 'Composición de asistentes',
+  procedencia: 'Procedencia',
+  visitas: 'Visitas',
+  permanencia: 'Permanencia',
+  total_asistentes: 'Total de asistentes',
+  observaciones: 'Observaciones',
+  adicionales: 'Métricas adicionales'
+};
+
+export const CATEGORIAS_METRICA_OPCIONES = CATEGORIAS_METRICA_ORDEN.map((valor) => ({
+  valor,
+  etiqueta: ETIQUETAS_SECCION[valor] || valor
+}));
 
 function toBool(valor) {
   if (typeof valor === 'boolean') return valor;
   if (typeof valor === 'number') return valor === 1;
   if (typeof valor === 'string') {
     const normalizado = valor.trim().toLowerCase();
-    return ['1', 'true', 'on', 'yes', 'si'].includes(normalizado);
+    return ['1', 'true', 'on', 'yes', 'si', 'sí'].includes(normalizado);
   }
   return false;
-}
-
-function toInt(valor, fallback = 0) {
-  const numero = Number(valor);
-  return Number.isFinite(numero) ? Math.trunc(numero) : fallback;
 }
 
 function normalizarTexto(valor, fallback = '') {
@@ -22,38 +52,14 @@ function normalizarTexto(valor, fallback = '') {
   return limpio || fallback;
 }
 
-export const METRICAS_FALLBACK = [
-  { clave: 'llegaron_antes_hora', etiqueta: 'Llegaron antes de la hora', habilitado: true, obligatorio: true, orden: 10 },
-  { clave: 'llegaron_despues_hora', etiqueta: 'Llegaron despues de la hora', habilitado: true, obligatorio: true, orden: 20 },
-  { clave: 'ninos', etiqueta: 'Ninos', habilitado: true, obligatorio: true, orden: 30 },
-  { clave: 'jovenes', etiqueta: 'Jovenes', habilitado: true, obligatorio: true, orden: 40 },
-  { clave: 'total_asistentes', etiqueta: 'Total de asistentes', habilitado: true, obligatorio: true, orden: 50 },
-  { clave: 'proc_barrio', etiqueta: 'Procedencia Barrio', habilitado: true, obligatorio: true, orden: 60 },
-  { clave: 'proc_guayabo', etiqueta: 'Procedencia Guayabo', habilitado: true, obligatorio: true, orden: 70 },
-  { clave: 'visitas_barrio', etiqueta: 'Visitas Barrio', habilitado: true, obligatorio: false, orden: 80 },
-  {
-    clave: 'nombres_visitas_barrio',
-    etiqueta: 'Nombres visitas Barrio',
-    habilitado: true,
-    obligatorio: false,
-    depende_de_clave: 'visitas_barrio',
-    regla_dependencia: REGLA_SI_MAYOR_CERO,
-    orden: 90
-  },
-  { clave: 'visitas_guayabo', etiqueta: 'Visitas Guayabo', habilitado: true, obligatorio: false, orden: 100 },
-  {
-    clave: 'nombres_visitas_guayabo',
-    etiqueta: 'Nombres visitas Guayabo',
-    habilitado: true,
-    obligatorio: false,
-    depende_de_clave: 'visitas_guayabo',
-    regla_dependencia: REGLA_SI_MAYOR_CERO,
-    orden: 110
-  },
-  { clave: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar', habilitado: true, obligatorio: true, orden: 120 },
-  { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron todo', habilitado: true, obligatorio: true, orden: 130 },
-  { clave: 'observaciones', etiqueta: 'Observaciones', habilitado: true, obligatorio: false, orden: 140 }
-];
+function normalizarCategoria(categoriaRaw, clave = '') {
+  const categoria = normalizarTexto(categoriaRaw, '').toLowerCase();
+  if (CATEGORIAS_VALIDAS.includes(categoria)) {
+    return categoria;
+  }
+
+  return inferirCategoriaPorClave(clave);
+}
 
 export function tipoMetricaPorClave(clave) {
   const key = normalizarTexto(clave).toLowerCase();
@@ -64,29 +70,36 @@ export function tipoMetricaPorClave(clave) {
   return 'numero';
 }
 
-export function seccionMetricaPorClave(clave) {
+export function inferirCategoriaPorClave(clave) {
   const key = normalizarTexto(clave).toLowerCase();
 
-  if (key === 'llegaron_antes_hora' || key === 'llegaron_despues_hora') return 'puntualidad';
-  if (key === 'ninos' || key === 'jovenes') return 'composicion';
-  if (key === 'total_asistentes') return 'total';
+  if (key === 'llegaron_antes_hora' || key === 'llegaron_despues_hora') return 'informacion_culto';
+  if (key === 'ninos' || key === 'jovenes') return 'composicion_asistentes';
+  if (key === 'total_asistentes') return 'total_asistentes';
   if (key.startsWith('proc_')) return 'procedencia';
   if (key.startsWith('visitas_') || key.startsWith('nombres_visitas_')) return 'visitas';
   if (key === 'retiros_antes_terminar' || key === 'se_quedaron_todo') return 'permanencia';
   if (key === 'observaciones') return 'observaciones';
+
   return 'adicionales';
 }
 
-export const ETIQUETAS_SECCION = {
-  puntualidad: 'Puntualidad',
-  composicion: 'Composicion de asistentes',
-  total: 'Total de asistentes',
-  procedencia: 'Procedencia',
-  visitas: 'Visitas',
-  permanencia: 'Permanencia',
-  observaciones: 'Observaciones',
-  adicionales: 'Metricas adicionales'
-};
+export const METRICAS_FALLBACK = [
+  { clave: 'llegaron_antes_hora', etiqueta: 'Llegaron antes de la hora', categoria: 'informacion_culto', habilitado: true, obligatorio: true },
+  { clave: 'llegaron_despues_hora', etiqueta: 'Llegaron después de la hora', categoria: 'informacion_culto', habilitado: true, obligatorio: true },
+  { clave: 'ninos', etiqueta: 'Niños', categoria: 'composicion_asistentes', habilitado: true, obligatorio: true },
+  { clave: 'jovenes', etiqueta: 'Jóvenes', categoria: 'composicion_asistentes', habilitado: true, obligatorio: true },
+  { clave: 'total_asistentes', etiqueta: 'Total de asistentes', categoria: 'total_asistentes', habilitado: true, obligatorio: true },
+  { clave: 'proc_barrio', etiqueta: 'Procedencia del barrio', categoria: 'procedencia', habilitado: true, obligatorio: true },
+  { clave: 'proc_guayabo', etiqueta: 'Procedencia de Guayabo', categoria: 'procedencia', habilitado: true, obligatorio: true },
+  { clave: 'visitas_barrio', etiqueta: 'Visitas de barrio', categoria: 'visitas', habilitado: true, obligatorio: false },
+  { clave: 'nombres_visitas_barrio', etiqueta: 'Nombres visitas de barrio', categoria: 'visitas', habilitado: true, obligatorio: false },
+  { clave: 'visitas_guayabo', etiqueta: 'Visitas de Guayabo', categoria: 'visitas', habilitado: true, obligatorio: false },
+  { clave: 'nombres_visitas_guayabo', etiqueta: 'Nombres visitas de Guayabo', categoria: 'visitas', habilitado: true, obligatorio: false },
+  { clave: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar', categoria: 'permanencia', habilitado: true, obligatorio: true },
+  { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron todo', categoria: 'permanencia', habilitado: true, obligatorio: true },
+  { clave: 'observaciones', etiqueta: 'Observaciones', categoria: 'observaciones', habilitado: true, obligatorio: false }
+];
 
 export function normalizarMetricasConfig(metricasRaw) {
   const listaBase = Array.isArray(metricasRaw) && metricasRaw.length > 0
@@ -99,23 +112,20 @@ export function normalizarMetricasConfig(metricasRaw) {
       if (!clave) return null;
 
       const etiqueta = normalizarTexto(item?.etiqueta, clave);
-      const dependeDeClave = normalizarTexto(item?.depende_de_clave, '').toLowerCase() || null;
-      const reglaDependencia = normalizarTexto(item?.regla_dependencia, '').toUpperCase() || null;
+      const categoria = normalizarCategoria(item?.categoria, clave);
 
       return {
         clave,
         etiqueta,
+        categoria,
         habilitado: toBool(item?.habilitado ?? true),
         obligatorio: toBool(item?.obligatorio ?? false),
-        depende_de_clave: dependeDeClave,
-        regla_dependencia: reglaDependencia,
-        orden: toInt(item?.orden, (index + 1) * 10),
         tipo: tipoMetricaPorClave(clave),
-        seccion: seccionMetricaPorClave(clave)
+        seccion: categoria,
+        posicion: index + 1
       };
     })
-    .filter(Boolean)
-    .sort((a, b) => a.orden - b.orden || a.clave.localeCompare(b.clave));
+    .filter(Boolean);
 }
 
 export function obtenerMetricasActivas(metricasRaw) {
@@ -123,16 +133,10 @@ export function obtenerMetricasActivas(metricasRaw) {
 }
 
 export function agruparMetricasPorSeccion(metricasActivas) {
-  const grupos = {
-    puntualidad: [],
-    composicion: [],
-    procedencia: [],
-    visitas: [],
-    permanencia: [],
-    total: [],
-    adicionales: [],
-    observaciones: []
-  };
+  const grupos = CATEGORIAS_METRICA_ORDEN.reduce((acc, categoria) => {
+    acc[categoria] = [];
+    return acc;
+  }, {});
 
   metricasActivas.forEach((metrica) => {
     const seccion = metrica.seccion || 'adicionales';
@@ -230,33 +234,48 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
     if (metrica.tipo === 'numero' && !vacio) {
       const numero = Number(valor);
       if (!Number.isFinite(numero) || numero < 0) {
-        errores[metrica.clave] = `${metrica.etiqueta} debe ser un numero valido (>= 0).`;
+        errores[metrica.clave] = `${metrica.etiqueta} debe ser un número válido (>= 0).`;
       }
     }
   });
 
-  metricasActivas.forEach((metrica) => {
-    if (!metrica.depende_de_clave || !metrica.regla_dependencia) return;
+  const existeAntes = !!porClave.llegaron_antes_hora;
+  const existeDespues = !!porClave.llegaron_despues_hora;
+  const existeTotal = !!porClave.total_asistentes;
 
-    const padre = porClave[metrica.depende_de_clave];
-    if (!padre) return;
+  if (existeAntes !== existeDespues) {
+    errores.llegaron_antes_hora = 'Las métricas de puntualidad deben estar ambas habilitadas.';
+    errores.llegaron_despues_hora = 'Las métricas de puntualidad deben estar ambas habilitadas.';
+  }
 
-    const valorPadre = metricasFormulario?.[padre.clave];
-    const valorHijo = metricasFormulario?.[metrica.clave];
-    const padreVacio = valorPadre === '' || valorPadre === null || valorPadre === undefined;
-    const hijoVacio = valorHijo === '' || valorHijo === null || valorHijo === undefined;
+  if (existeAntes && existeDespues) {
+    const antes = Number(metricasFormulario?.llegaron_antes_hora ?? 0);
+    const despues = Number(metricasFormulario?.llegaron_despues_hora ?? 0);
+    const suma = (Number.isFinite(antes) ? Math.max(0, Math.trunc(antes)) : 0)
+      + (Number.isFinite(despues) ? Math.max(0, Math.trunc(despues)) : 0);
 
-    if (metrica.regla_dependencia === REGLA_SI_MAYOR_CERO) {
-      const numeroPadre = Number(valorPadre || 0);
-      if (Number.isFinite(numeroPadre) && numeroPadre > 0 && hijoVacio) {
-        errores[metrica.clave] = `${metrica.etiqueta} es obligatorio cuando ${padre.etiqueta} es mayor a cero.`;
+    if (existeTotal) {
+      const total = Number(metricasFormulario?.total_asistentes ?? 0);
+      const totalNorm = Number.isFinite(total) ? Math.max(0, Math.trunc(total)) : 0;
+      if (totalNorm !== suma) {
+        errores.total_asistentes = 'Total de asistentes debe ser igual a antes + después de la hora.';
       }
     }
+  } else if (existeTotal) {
+    errores.total_asistentes = 'Total de asistentes requiere métricas de puntualidad habilitadas.';
+  }
 
-    if (metrica.regla_dependencia === REGLA_AMBOS_O_NINGUNO && padreVacio !== hijoVacio) {
-      errores[metrica.clave] = `${padre.etiqueta} y ${metrica.etiqueta} deben completarse ambos o ninguno.`;
-    }
-  });
+  const visitasBarrio = Number(metricasFormulario?.visitas_barrio ?? 0);
+  const nombresBarrio = String(metricasFormulario?.nombres_visitas_barrio ?? '').trim();
+  if ((Number.isFinite(visitasBarrio) ? visitasBarrio : 0) > 0 && porClave.nombres_visitas_barrio && nombresBarrio === '') {
+    errores.nombres_visitas_barrio = 'Debe indicar nombres cuando hay visitas de barrio.';
+  }
+
+  const visitasGuayabo = Number(metricasFormulario?.visitas_guayabo ?? 0);
+  const nombresGuayabo = String(metricasFormulario?.nombres_visitas_guayabo ?? '').trim();
+  if ((Number.isFinite(visitasGuayabo) ? visitasGuayabo : 0) > 0 && porClave.nombres_visitas_guayabo && nombresGuayabo === '') {
+    errores.nombres_visitas_guayabo = 'Debe indicar nombres cuando hay visitas de Guayabo.';
+  }
 
   return errores;
 }

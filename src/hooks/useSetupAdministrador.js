@@ -2,19 +2,22 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import setupApi from '../api/setupApi';
 import { notificarError, notificarExito } from '../utils/notify';
 import { useSetupStatus } from './useSetupStatus';
-import { METRICAS_FALLBACK, normalizarMetricasConfig } from '../utils/metricasConfig';
+import {
+  CATEGORIAS_METRICA_OPCIONES,
+  inferirCategoriaPorClave,
+  METRICAS_FALLBACK,
+  normalizarMetricasConfig
+} from '../utils/metricasConfig';
 
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
-const REGLA_SI_MAYOR_CERO = 'SI_MAYOR_CERO';
-const REGLA_AMBOS_O_NINGUNO = 'AMBOS_O_NINGUNO';
-const REGLAS_DEPENDENCIA_VALIDAS = new Set([REGLA_SI_MAYOR_CERO, REGLA_AMBOS_O_NINGUNO]);
+const CLAVE_TOTAL_ASISTENTES = 'total_asistentes';
+const CATEGORIAS_VALIDAS = new Set(CATEGORIAS_METRICA_OPCIONES.map((item) => item.valor));
 const METRICAS_FIJAS_MAP = new Map(
   METRICAS_FALLBACK.map((item) => [
     String(item?.clave || '').trim().toLowerCase(),
     {
       etiqueta: String(item?.etiqueta || '').trim(),
-      depende_de_clave: String(item?.depende_de_clave || '').trim().toLowerCase(),
-      regla_dependencia: String(item?.regla_dependencia || '').trim().toUpperCase()
+      categoria: String(item?.categoria || '').trim().toLowerCase()
     }
   ])
 );
@@ -109,6 +112,14 @@ function normalizarClaveMetrica(valor) {
     .replace(/_{2,}/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 80);
+}
+
+function normalizarCategoriaMetrica(categoria, clave = '') {
+  const valor = String(categoria || '').trim().toLowerCase();
+  if (CATEGORIAS_VALIDAS.has(valor)) {
+    return valor;
+  }
+  return inferirCategoriaPorClave(clave);
 }
 
 function construirClaveMetricaUnica(base, clavesUsadas, fallback = 'metrica') {
@@ -236,35 +247,19 @@ function prepararMetricasParaGuardar(metricas) {
       construirClaveMetricaUnica(claveBase || etiquetaIngresada, clavesUsadas, `metrica_${index + 1}`);
     const fija = obtenerDefinicionMetricaFija(clave);
 
-    const depende = fija
-      ? normalizarClaveMetrica(fija.depende_de_clave)
-      : normalizarClaveMetrica(item?.depende_de_clave);
-    let regla = fija
-      ? String(fija.regla_dependencia || '').trim().toUpperCase()
-      : String(item?.regla_dependencia || '').trim().toUpperCase();
-
-    if (!depende) {
-      regla = '';
-    } else if (!regla) {
-      regla = REGLA_SI_MAYOR_CERO;
-    }
-
-    if (regla && !REGLAS_DEPENDENCIA_VALIDAS.has(regla)) {
-      regla = '';
-    }
-
     const habilitado = !!item?.habilitado;
     const obligatorio = habilitado ? !!item?.obligatorio : false;
+    const categoria = fija
+      ? normalizarCategoriaMetrica(fija.categoria, clave)
+      : normalizarCategoriaMetrica(item?.categoria, clave);
 
     return {
       ...item,
       clave,
       etiqueta: fija ? fija.etiqueta : etiquetaIngresada,
+      categoria,
       habilitado,
       obligatorio,
-      depende_de_clave: depende || '',
-      regla_dependencia: regla || '',
-      orden: index + 1,
       es_fija: Boolean(fija || item?.es_fija)
     };
   });
@@ -275,11 +270,9 @@ function firmarMetricas(metricas) {
     prepararMetricasParaGuardar(metricas).map((item) => ({
       clave: String(item?.clave || ''),
       etiqueta: String(item?.etiqueta || '').trim(),
+      categoria: normalizarCategoriaMetrica(item?.categoria, item?.clave),
       habilitado: !!item?.habilitado,
       obligatorio: !!item?.obligatorio,
-      depende_de_clave: item?.depende_de_clave || '',
-      regla_dependencia: item?.regla_dependencia || '',
-      orden: toInt(item?.orden, 0),
       es_fija: !!item?.es_fija
     }))
   );
@@ -314,16 +307,17 @@ function normalizarProcedencias(procedenciasRaw) {
 
 function normalizarMetricas(metricasRaw) {
   const base = normalizarMetricasConfig(metricasRaw?.length ? metricasRaw : METRICAS_FALLBACK);
-  return base.map((item, idx) => ({
+  return base.map((item) => ({
     ...item,
     ui_id: resolverUiId(item, 'metrica', ['metrica_id', 'id']),
     clave: normalizarClaveMetrica(item.clave),
     etiqueta: obtenerDefinicionMetricaFija(item.clave)?.etiqueta || item.etiqueta,
+    categoria: normalizarCategoriaMetrica(
+      obtenerDefinicionMetricaFija(item.clave)?.categoria || item.categoria,
+      item.clave
+    ),
     habilitado: item.habilitado,
     obligatorio: item.obligatorio,
-    depende_de_clave: obtenerDefinicionMetricaFija(item.clave)?.depende_de_clave || item.depende_de_clave || '',
-    regla_dependencia: obtenerDefinicionMetricaFija(item.clave)?.regla_dependencia || item.regla_dependencia || '',
-    orden: toInt(item.orden, idx + 1),
     es_fija: Boolean(obtenerDefinicionMetricaFija(item.clave))
   }));
 }
@@ -424,10 +418,10 @@ function validarProcedencias(procedencias) {
 function validarMetricas(metricas) {
   const errores = {};
   const claves = new Set();
-  const metricasPorClave = {};
   let habilitadas = 0;
   let antes = null;
   let despues = null;
+  let total = null;
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
     return { general: 'Debe configurar al menos una métrica.' };
@@ -437,8 +431,7 @@ function validarMetricas(metricas) {
     const key = `fila_${idx}`;
     const filaErrores = {};
     const claveNormalizada = normalizarClaveMetrica(item?.clave);
-    const dependeDe = normalizarClaveMetrica(item?.depende_de_clave);
-    const regla = String(item?.regla_dependencia || '').trim().toUpperCase();
+    const categoria = normalizarCategoriaMetrica(item?.categoria, claveNormalizada);
 
     if (!/^[a-z0-9_]{2,80}$/.test(claveNormalizada)) {
       filaErrores.clave = 'Clave inválida (a-z, 0-9 y guion bajo).';
@@ -456,21 +449,8 @@ function validarMetricas(metricas) {
       filaErrores.obligatorio = 'No puede ser obligatoria si está deshabilitada.';
     }
 
-    if (dependeDe && !regla) {
-      filaErrores.regla_dependencia = 'Seleccione una regla de dependencia.';
-    }
-    if (!dependeDe && regla) {
-      filaErrores.regla_dependencia = 'No puede definir regla sin seleccionar dependencia.';
-    }
-    if (regla && !REGLAS_DEPENDENCIA_VALIDAS.has(regla)) {
-      filaErrores.regla_dependencia = 'Regla de dependencia no soportada.';
-    }
-    if (dependeDe && dependeDe === claveNormalizada) {
-      filaErrores.depende_de_clave = 'Una métrica no puede depender de sí misma.';
-    }
-
-    if (claveNormalizada) {
-      metricasPorClave[claveNormalizada] = { indice: idx, dependeDe };
+    if (!CATEGORIAS_VALIDAS.has(categoria)) {
+      filaErrores.categoria = 'Seleccione una categoría válida.';
     }
 
     if (item.habilitado) {
@@ -479,20 +459,11 @@ function validarMetricas(metricas) {
 
     if (claveNormalizada === CLAVES_PUNTUALIDAD[0]) antes = item;
     if (claveNormalizada === CLAVES_PUNTUALIDAD[1]) despues = item;
+    if (claveNormalizada === CLAVE_TOTAL_ASISTENTES) total = item;
 
     if (Object.keys(filaErrores).length > 0) {
       errores[key] = filaErrores;
     }
-  });
-
-  Object.values(metricasPorClave).forEach((metrica) => {
-    if (!metrica.dependeDe) return;
-    if (metricasPorClave[metrica.dependeDe]) return;
-    const filaKey = `fila_${metrica.indice}`;
-    errores[filaKey] = {
-      ...(errores[filaKey] || {}),
-      depende_de_clave: 'La métrica seleccionada en dependencia no existe.'
-    };
   });
 
   if (habilitadas < 1) {
@@ -505,8 +476,16 @@ function validarMetricas(metricas) {
 
   if (antes && despues) {
     if (antes.habilitado !== despues.habilitado || antes.obligatorio !== despues.obligatorio) {
-      errores.general = 'Puntualidad (antes/despues) debe mantenerse ambos o ninguno.';
+      errores.general = 'Puntualidad (antes/después) debe mantenerse ambos o ninguno.';
     }
+
+    if (total && total.habilitado && (!antes.habilitado || !despues.habilitado)) {
+      errores.general = 'Total de asistentes requiere ambas métricas de puntualidad habilitadas.';
+    }
+  }
+
+  if (total && total.habilitado && (!antes || !despues)) {
+    errores.general = 'Total de asistentes requiere métricas de puntualidad habilitadas.';
   }
 
   return errores;
@@ -646,23 +625,10 @@ export function useSetupAdministrador() {
           return { ...item, etiqueta: String(valor || '') };
         }
 
-        if (campo === 'depende_de_clave') {
-          const dependeDe = normalizarClaveMetrica(valor);
+        if (campo === 'categoria') {
           return {
             ...item,
-            depende_de_clave: dependeDe,
-            regla_dependencia: dependeDe ? (item.regla_dependencia || REGLA_SI_MAYOR_CERO) : ''
-          };
-        }
-
-        if (campo === 'regla_dependencia') {
-          if (!item.depende_de_clave) {
-            return { ...item, regla_dependencia: '' };
-          }
-          const regla = String(valor || '').trim().toUpperCase();
-          return {
-            ...item,
-            regla_dependencia: REGLAS_DEPENDENCIA_VALIDAS.has(regla) ? regla : ''
+            categoria: normalizarCategoriaMetrica(valor, item.clave)
           };
         }
 
@@ -707,11 +673,9 @@ export function useSetupAdministrador() {
         ui_id: uiId,
         clave: obtenerSiguienteClaveMetrica(prev),
         etiqueta: '',
+        categoria: 'adicionales',
         habilitado: true,
         obligatorio: false,
-        depende_de_clave: '',
-        regla_dependencia: '',
-        orden: prev.length + 1,
         es_fija: false
       }
     ]));
@@ -821,11 +785,9 @@ export function useSetupAdministrador() {
         metricas: metricasPreparadas.map((item) => ({
           clave: item.clave,
           etiqueta: item.etiqueta.trim(),
+          categoria: normalizarCategoriaMetrica(item.categoria, item.clave),
           habilitado: !!item.habilitado,
-          obligatorio: !!item.obligatorio,
-          depende_de_clave: item.depende_de_clave || null,
-          regla_dependencia: item.regla_dependencia || null,
-          orden: item.orden
+          obligatorio: !!item.obligatorio
         }))
       };
       const res = await setupApi.guardarMetricas(payload);

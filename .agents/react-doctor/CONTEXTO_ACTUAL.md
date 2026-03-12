@@ -1,4 +1,4 @@
-# Contexto Actual Frontend (2026-03-11)
+# Contexto Actual Frontend (2026-03-12)
 
 ## Estado general vigente
 
@@ -64,11 +64,28 @@ Rutas activas:
 - F6: UI de cupos por rol + UX de excedentes cerrada.
 - F7: hardening frontend (admin temporal, 401/403/429, checklist salida) cerrado.
 
+## Ajustes recientes en Administrador (2026-03-12)
+
+- Setup de administrador reorganizado para UX movil/desktop con una sola vista activa por panel.
+- Topbar de admin simplificada: `Cultos`, `Metricas`, `Procedencias` (sin panel separado de reglas).
+- Cambio de panel con cambios locales pendientes restaura snapshot base (no persiste sin `Guardar`).
+- Boton `Limpiar` restablece estado local sin confirmacion adicional.
+- Botones `Guardar` visibles solo cuando existe diff real contra baseline por seccion.
+- Modelo de metricas migrado en UI a `categoria`:
+  - se elimina exposicion de `depende_de_clave`, `regla_dependencia`, `orden`;
+  - metricas base protegidas para evitar edicion estructural y eliminacion.
+- Reglas de consistencia permanecen en logica:
+  - `llegaron_antes_hora` / `llegaron_despues_hora` en par;
+  - `total_asistentes` coherente con puntualidad.
+- Copy del modulo administrador normalizado (tildes, `ñ`, textos de confirmacion y labels).
+- `Nombre de culto` limitado a 20 caracteres en UI y validado en hook.
+
 ## Validaciones tecnicas vigentes
 
 - `npm run build` -> OK.
 - `npx eslint src/pages/SuperadminPage.jsx` -> OK.
-- `react-doctor` (`--diff`, cambios actuales) -> 98/100 (warnings estructurales, sin bloqueos).
+- `npx eslint` sobre archivos modificados de administrador/setup -> OK.
+- `react-doctor` (`--diff`, cambios actuales) -> 99/100 (1 warning estructural, sin bloqueos).
 - Flujo runtime API comprobado:
   - `401` auth sin token.
   - `429` rate limit de login.

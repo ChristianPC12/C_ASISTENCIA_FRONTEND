@@ -1,7 +1,7 @@
 # Tickets de Escalabilidad Nacional (Frontend + Integracion)
 
 Fecha base: 2026-03-09  
-Ultima actualizacion: 2026-03-10  
+Ultima actualizacion: 2026-03-12  
 Estado global: F0..F7 cerradas en frontend, F8 pendiente (discovery futuro)
 
 ## Convenciones
@@ -103,7 +103,8 @@ Validaciones de cierre:
 - ADMIN/SECRETARIO no entran al modulo superadmin.
 - Modulos operativos se bloquean hasta setup completo.
 - Procedencias configurables por tenant (maximo 10).
-- Dependencias de metricas deben validarse (ej. puntualidad ambos o ninguno).
+- Metricas usan `categoria`; la UI no expone `depende_de_clave` ni `regla_dependencia`.
+- Reglas base de metricas se validan por logica de sistema (ej. puntualidad ambos o ninguno).
 - Cambio GRUPO -> IGLESIA edita la misma cuenta (sin duplicar tenant).
 - ADMIN temporal expira a 5 dias.
 
@@ -115,3 +116,14 @@ Validaciones de cierre:
 
 - `F8-T01` (discovery UX de modulos futuros nacionales).
 
+## Notas de pulido post-F7 (2026-03-12)
+
+- Sin reapertura de fases ni cambio de estados `[ ]/[~]/[x]`.
+- Refinamiento del modulo `Administrador`:
+  - una sola vista activa y cierre con descarte de cambios locales;
+  - `Guardar` visible solo si hay cambios reales;
+  - copy UI corregido (tildes, `ñ`, placeholders y confirmaciones).
+- Ajuste de contrato frontend para setup de metricas:
+  - uso de `categoria` en lugar de `depende_de_clave`/`regla_dependencia`/`orden`.
+- Documento de prevencion actualizado:
+  - `.agents/react-doctor/AGENTE_ANTI_ERRORES_UI.md`.

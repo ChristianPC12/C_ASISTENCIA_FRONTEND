@@ -1,15 +1,15 @@
-# Agente Anti Errores UI (2026-03-11)
+﻿# Agente Anti Errores UI (2026-03-11)
 
 ## Objetivo
 
-Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cuando el prompt se reutiliza entre pantallas.
+Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente cuando el prompt se reutiliza entre pantallas.
 
-## Errores cometidos y correccion aplicada
+## Errores cometidos y corrección aplicada
 
 ### E1) Contexto inicial mal resuelto por ruta
 
-- Que paso: al iniciar discovery se intento leer archivos desde una ruta padre incorrecta.
-- Impacto: perdida de tiempo inicial y riesgo de asumir contexto incompleto.
+- Qué pasó: al iniciar discovery se intentó leer archivos desde una ruta padre incorrecta.
+- Impacto: pérdida de tiempo inicial y riesgo de asumir contexto incompleto.
 - Regla preventiva:
   1. Validar `cwd` real con `Get-ChildItem`.
   2. Confirmar existencia de cada archivo solicitado antes de analizar contenido.
@@ -17,35 +17,35 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 
 ### E2) Exceso de formularios abiertos en una sola pantalla
 
-- Que paso: setup del administrador mostraba varios bloques pesados simultaneamente.
-- Impacto: exceso de scroll, peor experiencia en telefono.
+- Qué pasó: setup del administrador mostraba varios bloques pesados simultáneamente.
+- Impacto: exceso de scroll, peor experiencia en teléfono.
 - Regla preventiva:
-  1. Usar patron de "una accion visible por vez".
+  1. Usar patrón de "una acción visible por vez".
   2. Mover acciones de apertura a topbar contextual.
-  3. Cada panel debe tener cierre explicito y retorno a vista resumen.
+  3. Cada panel debe tener cierre explícito y retorno a vista resumen.
 
-### E3) Jerarquia visual poco eficiente
+### E3) Jerarquía visual poco eficiente
 
-- Que paso: textos y alertas largas competian con acciones principales.
-- Impacto: sensacion de ruido visual.
+- Qué pasó: textos y alertas largas competían con acciones principales.
+- Impacto: sensación de ruido visual.
 - Regla preventiva:
   1. Reducir bloques informativos a notas compactas.
-  2. Priorizar estado + accion principal en primer viewport.
-  3. Evitar repetir titulos si el contexto ya lo da la topbar.
+  2. Priorizar estado + acción principal en primer viewport.
+  3. Evitar repetir títulos si el contexto ya lo da la topbar.
 
-### E4) Alineacion de acciones incompleta
+### E4) Alineación de acciones incompleta
 
-- Que paso: badge y boton no quedaban alineados verticalmente con el bloque de estado.
+- Qué pasó: badge y botón no quedaban alineados verticalmente con el bloque de estado.
 - Impacto: desbalance visual en escritorio.
 - Regla preventiva:
   1. En layouts de dos columnas usar `align-items-stretch`.
   2. En columna de acciones usar `h-100` + `justify-content: space-between`.
-  3. Verificar alineacion superior e inferior antes de cerrar tarea.
+  3. Verificar alineación superior e inferior antes de cerrar tarea.
 
-### E5) Mensaje tecnico importante, pero invasivo
+### E5) Mensaje técnico importante, pero invasivo
 
-- Que paso: la regla de puntualidad se mostraba como alerta grande.
-- Impacto: ocupaba espacio util del formulario.
+- Qué pasó: la regla de puntualidad se mostraba como alerta grande.
+- Impacto: ocupaba espacio útil del formulario.
 - Regla preventiva:
   1. Convertir reglas fijas en "nota compacta" con icono.
   2. Mantener legible la regla sin competir con inputs/tabla.
@@ -53,117 +53,126 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 
 ### E6) Cierre de panel sin manejo de cambios no guardados
 
-- Que paso: al cerrar paneles se mantenian cambios locales sin confirmar, dando sensacion de "guardado automatico".
-- Impacto: confusion funcional y riesgo de decisiones erradas del usuario.
+- Qué pasó: al cerrar paneles se mantenían cambios locales sin confirmar, dando sensación de "guardado automático".
+- Impacto: confusión funcional y riesgo de decisiones erradas del usuario.
 - Regla preventiva:
-  1. Si hay cambios pendientes, al cerrar panel solicitar confirmacion de descarte.
+  1. Si hay cambios pendientes, al cerrar panel solicitar confirmación de descarte.
   2. Si se confirma descarte, restaurar snapshot base del panel.
   3. Si se cancela descarte, mantener panel abierto sin alterar datos.
 
 ### E7) Botones de guardado visibles sin cambios pendientes
 
-- Que paso: se mostraban botones `Guardar` aun cuando no habia modificaciones.
+- Qué pasó: se mostraban botones `Guardar` aun cuando no había modificaciones.
 - Impacto: ruido visual y acciones sin valor.
 - Regla preventiva:
-  1. Mantener firma/base por seccion (`cultos`, `metricas`, `procedencias`).
+  1. Mantener firma/base por sección (`cultos`, `metricas`, `procedencias`).
   2. Mostrar `Guardar` solo cuando `tieneCambiosX === true`.
-  3. Agregar boton `Limpiar` para restaurar cambios locales de inmediato (sin confirmacion).
+  3. Agregar botón `Limpiar` para restaurar cambios locales de inmediato (sin confirmación).
 
-### E8) Inconsistencia ortografica en labels y mensajes
+### E8) Inconsistencia ortográfica en labels y mensajes
 
-- Que paso: textos visibles mezclaban ortografia sin acentos en terminos clave.
+- Qué pasó: textos visibles mezclaban ortografía sin acentos en términos clave.
 - Impacto: menor calidad percibida y experiencia menos profesional.
 - Regla preventiva:
-  1. Revisar ortografia y acentuacion de labels finales antes de cerrar ticket.
-  2. Priorizar consistencia en terminos repetidos (`Métricas`, `configuracion`, `revision`, etc.).
-  3. Evitar introducir variantes distintas del mismo termino en una misma pantalla.
+  1. Revisar ortografía y acentuación de labels finales antes de cerrar ticket.
+  2. Priorizar consistencia en términos repetidos (`Métricas`, `configuración`, `revisión`, etc.).
+  3. Evitar introducir variantes distintas del mismo término en una misma pantalla.
 
 ### E9) Barrido obligatorio de tildes y letra ñ
 
-- Que paso: quedaron textos funcionalmente correctos, pero con faltantes de tildes o sin `ñ`.
+- Qué pasó: quedaron textos funcionalmente correctos, pero con faltantes de tildes o sin `ñ`.
 - Impacto: baja calidad editorial y retrabajo en iteraciones cortas.
 - Regla preventiva:
-  1. Antes de entregar, hacer barrido de copy en pantalla, toasts y mensajes de confirmacion.
-  2. Verificar explicitamente tildes (`áéíóú`) y uso correcto de `ñ` en palabras que lo requieren.
-  3. Corregir tambien labels de botones, titulos de columnas y mensajes de estados vacios.
+  1. Antes de entregar, hacer barrido de copy en pantalla, toasts y mensajes de confirmación.
+  2. Verificar explícitamente tildes (`áéíóú`) y uso correcto de `ñ` en palabras que lo requieren.
+  3. Corregir también labels de botones, títulos de columnas y mensajes de estados vacíos.
   4. No cerrar ticket sin este barrido cuando se haya tocado texto UI.
 
-### E10) Limites de longitud no aplicados en campos clave
+### E10) Límites de longitud no aplicados en campos clave
 
-- Que paso: campos visibles permitian mas caracteres de los esperados por UX.
-- Impacto: entradas largas, interfaz desordenada y validaciones tardias.
+- Qué pasó: campos visibles permitían más caracteres de los esperados por UX.
+- Impacto: entradas largas, interfaz desordenada y validaciones tardías.
 - Regla preventiva:
-  1. Definir limite maximo por campo funcional antes de implementar.
-  2. Aplicar limite en dos capas: `maxLength` en input + validacion en hook/validator.
+  1. Definir límite máximo por campo funcional antes de implementar.
+  2. Aplicar límite en dos capas: `maxLength` en input + validación en hook/validator.
   3. Para `Nombre de culto`, usar rango obligatorio de 3 a 20 caracteres.
-  4. Mantener mensaje de error explicito con el rango permitido.
+  4. Mantener mensaje de error explícito con el rango permitido.
 
-### E11) Exposicion de campos internos (`clave`, `orden`) al usuario final
+### E11) Exposición de campos internos (`clave`, `orden`) al usuario final
 
-- Que paso: se mostraron campos tecnicos que no agregan valor funcional al administrador.
-- Impacto: confusion, riesgo de errores de configuracion y soporte innecesario.
+- Qué pasó: se mostraron campos técnicos que no agregan valor funcional al administrador.
+- Impacto: confusión, riesgo de errores de configuración y soporte innecesario.
 - Regla preventiva:
-  1. `clave` y `orden` deben manejarse en logica interna, no como input editable.
-  2. Generar/normalizar `clave` automaticamente al guardar.
-  3. Derivar `orden` por posicion visual de la lista.
-  4. Si hay dependencias, usar `select` controlado; nunca texto libre para claves internas.
+  1. `clave` y `orden` deben manejarse en lógica interna, no como input editable.
+  2. Generar/normalizar `clave` automáticamente al guardar.
+  3. Derivar `orden` por posición visual de la lista cuando aplique.
+  4. No exponer campos técnicos de integridad cuando el sistema pueda resolverlos automáticamente.
 
-### E12) Falta de blindaje para metricas base del sistema
+### E12) Falta de blindaje para métricas base del sistema
 
-- Que paso: metricas definidas como base quedaron expuestas a edicion/eliminacion.
-- Impacto: perdida de configuracion canonica y alto retrabajo para recomponerla.
+- Qué pasó: métricas definidas como base quedaron expuestas a edición/eliminación.
+- Impacto: pérdida de configuración canónica y alto retrabajo para recomponerla.
 - Regla preventiva:
-  1. Toda metrica base debe marcarse como `es_fija`.
-  2. En metricas fijas, bloquear edicion estructural (`etiqueta`, `depende_de_clave`, `regla_dependencia`) y bloqueo total de eliminar.
-  3. Permitir unicamente `habilitado` y `obligatorio` en metricas fijas.
+  1. Toda métrica base debe marcarse como `es_fija`.
+  2. En métricas fijas, bloquear edición estructural (`etiqueta`, `categoria`) y bloqueo total de eliminar.
+  3. Permitir únicamente `habilitado` y `obligatorio` en métricas fijas.
   4. Si `habilitado=false`, forzar `obligatorio=false` en tiempo real y previo a persistir.
 
 ### E13) Falta de foco contextual al crear filas nuevas
 
-- Que paso: al presionar `Agregar metrica`, el usuario debia buscar manualmente la nueva fila.
-- Impacto: friccion de uso, especialmente en movil con tablas largas.
+- Qué pasó: al presionar `Agregar métrica`, el usuario debía buscar manualmente la nueva fila.
+- Impacto: fricción de uso, especialmente en móvil con tablas largas.
 - Regla preventiva:
-  1. Toda accion `Agregar X` debe devolver identificador de la nueva fila (`ui_id`).
+  1. Toda acción `Agregar X` debe devolver identificador de la nueva fila (`ui_id`).
   2. Al renderizar la fila, hacer `focus()` en el primer input editable.
-  3. Acompanarlo con `scrollIntoView({ block: 'center' })` para llevar al usuario al punto exacto.
+  3. Acompañarlo con `scrollIntoView({ block: 'center' })` para llevar al usuario al punto exacto.
 
 ### E14) Guardar visible aun cuando el usuario vuelve al estado inicial
 
-- Que paso: en metricas, despues de interactuar y regresar al valor original, podia mantenerse visible `Guardar`.
-- Impacto: confusion sobre si hay cambios reales pendientes.
+- Qué pasó: en métricas, después de interactuar y regresar al valor original, podía mantenerse visible `Guardar`.
+- Impacto: confusión sobre si hay cambios reales pendientes.
 - Regla preventiva:
-  1. La deteccion dirty debe basarse en firma normalizada, no en referencia de objetos.
+  1. La detección dirty debe basarse en firma normalizada, no en referencia de objetos.
   2. Si una regla de negocio fuerza cambios derivados (`habilitado` -> `obligatorio`), debe conservar/restaurar estado previo para permitir volver al baseline.
   3. Mostrar botones `Guardar` solo cuando la firma actual difiere de la base.
 
-### E15) Regla clave sin suficiente jerarquia visual
+### E15) Regla clave sin suficiente jerarquía visual
 
-- Que paso: una regla importante (metricas opcionales) no destacaba frente al resto del listado.
-- Impacto: riesgo de que el usuario interprete que crear metricas extra es obligatorio.
+- Qué pasó: una regla importante (métricas opcionales) no destacaba frente al resto del listado.
+- Impacto: riesgo de que el usuario interprete que crear métricas extra es obligatorio.
 - Regla preventiva:
   1. Reglas de alto impacto deben llevar estilo destacado (fondo, borde lateral, icono).
   2. Mantener copy breve y accionable.
-  3. Evitar que una regla critica quede visualmente igual al resto.
+  3. Evitar que una regla crítica quede visualmente igual al resto.
 
-## Protocolo reutilizable para nuevos modulos
+### E16) Mezclar modelo viejo de dependencias con modelo nuevo por categorías
+
+- Qué pasó: quedaron referencias a `depende_de_clave`/`regla_dependencia` después de migrar a `categoria`.
+- Impacto: validaciones inconsistentes, ruido en UI y errores de payload.
+- Regla preventiva:
+  1. Si la métrica usa `categoria`, eliminar en frontend/backend el uso operativo de `depende_de_clave`, `regla_dependencia` y `orden`.
+  2. Mantener coherencia end-to-end: DAO, validator, servicio, hook y tabla UI deben compartir el mismo contrato.
+  3. Para métricas base, la categoría esperada se valida por sistema; para métricas nuevas, se selecciona por `select`.
+
+## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
 - Identificar estado actual y componentes reales.
 - Confirmar restricciones de rol/setup/rutas.
 
-2. Definicion UI antes de tocar logica
+2. Definición UI antes de tocar lógica
 - Decidir vista predeterminada.
-- Definir acciones contextuales (topbar o seccion).
+- Definir acciones contextuales (topbar o sección).
 - Definir regla "una vista activa".
 
-3. Implementacion en orden
+3. Implementación en orden
 - Estructura visual.
 - Estados de apertura/cierre.
-- Manejo de cambios pendientes (dirty-state + descarte/restauracion).
-- Pulido responsive (desktop y movil).
-- Ajustes de copy y jerarquia visual.
+- Manejo de cambios pendientes (dirty-state + descarte/restauración).
+- Pulido responsive (desktop y móvil).
+- Ajustes de copy y jerarquía visual.
 
-4. Validacion minima obligatoria
+4. Validación mínima obligatoria
 - `npx eslint <archivos_modificados>`
 - `npm run build`
 - `npx -y react-doctor@latest . --verbose --diff`
@@ -173,21 +182,21 @@ Evitar repetir errores de ejecucion y de UX en modulos futuros, especialmente cu
 - Evitar introducir texto extra no solicitado.
 - Entregar cambios con ruta exacta de archivos.
 
-## Checklist rapido previo a entregar
+## Checklist rápido previo a entregar
 
 - [ ] Solo un formulario/panel visible.
 - [ ] Botones principales dentro del primer viewport.
 - [ ] Sin bloques informativos que estorben flujo.
-- [ ] Uso comodo en telefono (scroll controlado).
+- [ ] Uso cómodo en teléfono (scroll controlado).
 - [ ] Mensajes importantes cortos y accionables.
 - [ ] Botones Guardar solo visibles con cambios pendientes.
-- [ ] Cierre de panel no conserva cambios sin confirmacion.
-- [ ] Ortografia de labels validada en UI final.
+- [ ] Cierre de panel no conserva cambios sin confirmación.
+- [ ] Ortografía de labels validada en UI final.
 - [ ] Barrido final de tildes y letra ñ ejecutado en textos visibles.
-- [ ] Limites de longitud validados en UI y en logica.
+- [ ] Límites de longitud validados en UI y en lógica.
 - [ ] `Clave` y `orden` no expuestos como input editable.
-- [ ] Dependencias de metricas con `select` (sin texto libre).
-- [ ] Metricas base protegidas contra edicion estructural y eliminacion.
+- [ ] Métricas nuevas con `categoria` en `select` y sin exponer dependencias técnicas.
+- [ ] Métricas base protegidas contra edición estructural y eliminación.
 - [ ] `habilitado=false` fuerza `obligatorio=false`.
 - [ ] `Agregar` en tablas largas aplica foco y scroll al nuevo input.
 - [ ] Si el usuario vuelve al estado inicial, `Guardar` desaparece.

@@ -7,7 +7,6 @@ import {
   EVENT_ADMIN_ABRIR_CULTOS,
   EVENT_ADMIN_ABRIR_METRICAS,
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
-  EVENT_ADMIN_ABRIR_REGLAS_METRICAS,
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
@@ -67,10 +66,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirPanelProcedencias = () => {
     window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_PROCEDENCIAS));
-  };
-
-  const abrirPanelReglasMetricas = () => {
-    window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_REGLAS_METRICAS));
   };
 
   let enlaces = [];
@@ -250,16 +245,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 >
                   <i className="bi bi-people" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Procedencias</span>
-                </button>
-                <button
-                  type="button"
-                  className="sidebar-topbar-metric-btn"
-                  onClick={abrirPanelReglasMetricas}
-                  aria-label="Reglas de métricas"
-                  title="Reglas de métricas"
-                >
-                  <i className="bi bi-journal-check" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Reglas</span>
                 </button>
               </>
             )}
