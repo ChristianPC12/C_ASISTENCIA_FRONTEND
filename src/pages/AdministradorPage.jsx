@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSetupAdministrador } from '../hooks/useSetupAdministrador';
 import { useAuth } from '../hooks/useAuth';
-import { CATEGORIAS_METRICA_OPCIONES, ETIQUETAS_SECCION } from '../utils/metricasConfig';
+import { CATEGORIAS_METRICA_OPCIONES } from '../utils/metricasConfig';
 import {
   EVENT_ADMIN_ABRIR_CULTOS,
   EVENT_ADMIN_ABRIR_METRICAS,
@@ -509,8 +509,6 @@ export default function AdministradorPage() {
             </div>
           </div>
           <div className="card-body">
-            {erroresMetricas.general && <div className="alert alert-danger">{erroresMetricas.general}</div>}
-
             <div className="admin-metricas-note mb-3">
               <i className="bi bi-info-circle-fill" aria-hidden="true"></i>
               <span>
@@ -564,11 +562,6 @@ export default function AdministradorPage() {
                               </option>
                             ))}
                           </select>
-                          {item.es_fija && (
-                            <small className="text-muted d-block mt-1">
-                              {ETIQUETAS_SECCION[item.categoria] || item.categoria}
-                            </small>
-                          )}
                           {filaErrores.categoria && (
                             <div className="invalid-feedback d-block">{filaErrores.categoria}</div>
                           )}

@@ -154,6 +154,15 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   2. Mantener coherencia end-to-end: DAO, validator, servicio, hook y tabla UI deben compartir el mismo contrato.
   3. Para métricas base, la categoría esperada se valida por sistema; para métricas nuevas, se selecciona por `select`.
 
+### E17) Duplicar feedback de error (toast + alerta inline) en setup de administrador
+
+- Qué pasó: se mostraron errores globales de métricas como `alert alert-danger` además de notificación flotante.
+- Impacto: ruido visual y saturación del flujo en paneles compactos.
+- Regla preventiva:
+  1. En setup de administrador, errores globales de guardado/validación deben salir por notificación flotante.
+  2. Evitar `alert alert-danger` para mensajes generales cuando ya exista toast equivalente.
+  3. Mantener solo feedback inline de campo (`invalid-feedback`) cuando aplique por input puntual.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -201,4 +210,5 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] `Agregar` en tablas largas aplica foco y scroll al nuevo input.
 - [ ] Si el usuario vuelve al estado inicial, `Guardar` desaparece.
 - [ ] Reglas de alto impacto con destacado visual.
+- [ ] No duplicar mensajes globales (toast + `alert-danger`) en el mismo evento.
 - [ ] Lint/build/react-doctor ejecutados.

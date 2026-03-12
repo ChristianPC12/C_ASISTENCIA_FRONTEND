@@ -168,7 +168,6 @@ export default function AsistenciaForm({
       <div className="card-body">
         <form onSubmit={manejarEnvio}>
           <div className="seccion-form">
-            <h6>Información del culto</h6>
             <div className="row g-3">
               <div className="col-md-6">
                 <label htmlFor="culto_id" className="form-label">
