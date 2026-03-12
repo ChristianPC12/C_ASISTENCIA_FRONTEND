@@ -2,11 +2,13 @@
 import { useSetupAdministrador } from '../hooks/useSetupAdministrador';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIAS_METRICA_OPCIONES } from '../utils/metricasConfig';
+import UsuarioPage from './UsuarioPage';
 import {
   EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS,
   EVENT_ADMIN_ABRIR_CULTOS,
   EVENT_ADMIN_ABRIR_METRICAS,
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
+  EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA
 } from '../config/events';
 import { confirmar } from '../utils/notify';
@@ -16,6 +18,7 @@ const VISTA_CULTOS = 'CULTOS';
 const VISTA_METRICAS = 'METRICAS';
 const VISTA_PROCEDENCIAS = 'PROCEDENCIAS';
 const VISTA_CATEGORIAS_METRICAS = 'CATEGORIAS_METRICAS';
+const VISTA_USUARIOS = 'USUARIOS';
 const CATEGORIAS_AUTOMATICAS = new Set(['procedencia', 'visitas']);
 const CATEGORIAS_METRICA_OPCIONES_MANUALES = CATEGORIAS_METRICA_OPCIONES.filter(
   (opcion) => !CATEGORIAS_AUTOMATICAS.has(opcion.valor)
@@ -209,17 +212,20 @@ export default function AdministradorPage() {
     const manejarAbrirMetricas = () => { void abrirVistaDesdeTopbar(VISTA_METRICAS); };
     const manejarAbrirProcedencias = () => { void abrirVistaDesdeTopbar(VISTA_PROCEDENCIAS); };
     const manejarAbrirCategorias = () => { void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS); };
+    const manejarAbrirUsuarios = () => { void abrirVistaDesdeTopbar(VISTA_USUARIOS); };
 
     window.addEventListener(EVENT_ADMIN_ABRIR_CULTOS, manejarAbrirCultos);
     window.addEventListener(EVENT_ADMIN_ABRIR_METRICAS, manejarAbrirMetricas);
     window.addEventListener(EVENT_ADMIN_ABRIR_PROCEDENCIAS, manejarAbrirProcedencias);
     window.addEventListener(EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS, manejarAbrirCategorias);
+    window.addEventListener(EVENT_ADMIN_ABRIR_USUARIOS, manejarAbrirUsuarios);
 
     return () => {
       window.removeEventListener(EVENT_ADMIN_ABRIR_CULTOS, manejarAbrirCultos);
       window.removeEventListener(EVENT_ADMIN_ABRIR_METRICAS, manejarAbrirMetricas);
       window.removeEventListener(EVENT_ADMIN_ABRIR_PROCEDENCIAS, manejarAbrirProcedencias);
       window.removeEventListener(EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS, manejarAbrirCategorias);
+      window.removeEventListener(EVENT_ADMIN_ABRIR_USUARIOS, manejarAbrirUsuarios);
     };
   }, [abrirVistaDesdeTopbar]);
 
@@ -251,6 +257,7 @@ export default function AdministradorPage() {
   const mostrarMetricas = vistaActiva === VISTA_METRICAS;
   const mostrarProcedencias = vistaActiva === VISTA_PROCEDENCIAS;
   const mostrarCategoriasMetricas = vistaActiva === VISTA_CATEGORIAS_METRICAS;
+  const mostrarUsuarios = vistaActiva === VISTA_USUARIOS;
   const mensajeEncabezado = setupCompleto
     ? 'ConfiguraciÃ³n inicial completada. Ya puede registrar asistencia, ver reportes/estadÃ­sticas y crear usuarios; tambiÃ©n puede editar el setup cuando lo necesite.'
     : 'Complete la configuraciÃ³n inicial para habilitar registro, reportes, estadÃ­sticas y usuarios.';
@@ -406,39 +413,51 @@ export default function AdministradorPage() {
             </div>
           )}
 
-                    <div className="alert alert-secondary mb-0">
+          <div className="alert alert-secondary mb-0 admin-setup-help">
             <div>
-              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias y categorías.
+              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias, categorías y usuarios.
               Solo se muestra un panel a la vez para reducir scroll y mejorar uso en teléfono.
             </div>
-            <div className="d-flex flex-wrap gap-2 mt-2">
+            <div className="admin-quick-links">
               <button
                 type="button"
-                className="btn btn-link btn-sm p-0"
+                className="admin-quick-link-btn"
                 onClick={() => { void abrirVistaDesdeTopbar(VISTA_CULTOS); }}
               >
+                <i className="bi bi-calendar-week" aria-hidden="true"></i>
                 Ir a Cultos
               </button>
               <button
                 type="button"
-                className="btn btn-link btn-sm p-0"
+                className="admin-quick-link-btn"
                 onClick={() => { void abrirVistaDesdeTopbar(VISTA_METRICAS); }}
               >
+                <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
                 Ir a Métricas
               </button>
               <button
                 type="button"
-                className="btn btn-link btn-sm p-0"
+                className="admin-quick-link-btn"
                 onClick={() => { void abrirVistaDesdeTopbar(VISTA_PROCEDENCIAS); }}
               >
+                <i className="bi bi-people" aria-hidden="true"></i>
                 Ir a Procedencias
               </button>
               <button
                 type="button"
-                className="btn btn-link btn-sm p-0"
+                className="admin-quick-link-btn"
                 onClick={() => { void abrirVistaDesdeTopbar(VISTA_CATEGORIAS_METRICAS); }}
               >
+                <i className="bi bi-journal-text" aria-hidden="true"></i>
                 Ir a Categorías
+              </button>
+              <button
+                type="button"
+                className="admin-quick-link-btn"
+                onClick={() => { void abrirVistaDesdeTopbar(VISTA_USUARIOS); }}
+              >
+                <i className="bi bi-person-gear" aria-hidden="true"></i>
+                Ir a Usuarios
               </button>
             </div>
           </div>
@@ -752,6 +771,21 @@ export default function AdministradorPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarUsuarios && (
+        <div className="card shadow-sm mb-4 admin-setup-panel">
+          <div className="card-header d-flex justify-content-between align-items-center gap-2">
+            <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Usuarios</h5>
+            <BotonCerrarPanel
+              onClick={() => setVistaActiva(VISTA_RESUMEN)}
+              label="Cerrar panel de usuarios"
+            />
+          </div>
+          <div className="card-body">
+            <UsuarioPage modo="panel" />
           </div>
         </div>
       )}

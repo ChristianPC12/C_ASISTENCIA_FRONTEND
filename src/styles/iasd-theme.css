@@ -371,6 +371,124 @@ a:hover {
   justify-content: space-between;
 }
 
+.admin-setup-help {
+  border: 1px solid rgba(0, 51, 102, 0.16);
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.06) 0%, rgba(0, 51, 102, 0.02) 100%);
+}
+
+.admin-quick-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.admin-quick-link-btn {
+  border: 1px solid rgba(0, 51, 102, 0.22);
+  background: #ffffff;
+  color: var(--iasd-azul);
+  border-radius: 999px;
+  padding: 0.34rem 0.8rem;
+  min-height: 32px;
+  font-size: 0.79rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.36rem;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-quick-link-btn i {
+  font-size: 0.84rem;
+}
+
+.admin-quick-link-btn:hover,
+.admin-quick-link-btn:focus-visible {
+  background: var(--iasd-azul);
+  color: #ffffff;
+  border-color: var(--iasd-azul);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.16);
+  outline: none;
+}
+
+.admin-usuarios-shell {
+  width: 100%;
+}
+
+.admin-usuarios-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.admin-usuarios-switch-btn {
+  border: 1px solid rgba(0, 51, 102, 0.2);
+  background: #ffffff;
+  color: var(--iasd-azul);
+  border-radius: 999px;
+  min-height: 34px;
+  padding: 0.36rem 0.88rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.admin-usuarios-switch-btn i {
+  font-size: 0.86rem;
+}
+
+.admin-usuarios-switch-btn:hover,
+.admin-usuarios-switch-btn:focus-visible,
+.admin-usuarios-switch-btn.is-active {
+  background: var(--iasd-azul);
+  color: #ffffff;
+  border-color: var(--iasd-azul);
+  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.16);
+  outline: none;
+}
+
+.admin-usuarios-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.admin-usuarios-resumen-item {
+  border: 1px solid rgba(0, 51, 102, 0.16);
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.05) 0%, #ffffff 100%);
+  border-radius: 0.6rem;
+  min-height: 62px;
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.admin-usuarios-resumen-item.is-action {
+  align-items: flex-end;
+}
+
+.admin-usuarios-resumen-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--iasd-texto-sec);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-usuarios-resumen-value {
+  color: var(--iasd-azul);
+  font-size: 1.15rem;
+  line-height: 1.15;
+}
+
 .admin-setup-tabla-wrap-metricas {
   max-height: clamp(210px, 46vh, 500px);
 }
@@ -562,6 +680,37 @@ a:hover {
 
   .admin-setup-tabla-wrap-metricas {
     max-height: clamp(200px, 42vh, 380px);
+  }
+
+  .admin-quick-link-btn {
+    flex: 1 1 calc(50% - 0.55rem);
+  }
+
+  .admin-usuarios-switch-btn {
+    flex: 1 1 calc(50% - 0.6rem);
+  }
+
+  .admin-usuarios-resumen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-usuarios-resumen-item.is-action {
+    grid-column: 1 / -1;
+    align-items: stretch;
+  }
+
+  .admin-usuarios-resumen-item.is-action .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .admin-quick-link-btn {
+    flex: 1 1 100%;
+  }
+
+  .admin-usuarios-switch-btn {
+    flex: 1 1 100%;
   }
 }
 

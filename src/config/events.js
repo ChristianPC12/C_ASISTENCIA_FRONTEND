@@ -6,4 +6,5 @@ export const EVENT_ADMIN_ABRIR_CULTOS = 'admin:abrir-cultos';
 export const EVENT_ADMIN_ABRIR_METRICAS = 'admin:abrir-metricas';
 export const EVENT_ADMIN_ABRIR_PROCEDENCIAS = 'admin:abrir-procedencias';
 export const EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS = 'admin:abrir-categorias-metricas';
+export const EVENT_ADMIN_ABRIR_USUARIOS = 'admin:abrir-usuarios';
 export const EVENT_ADMIN_VISTA_ACTIVA = 'admin:vista-activa';

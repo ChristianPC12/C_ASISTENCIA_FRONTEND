@@ -218,6 +218,24 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   2. En notas de dependencia (ej. métricas ↔ procedencias), incluir acción `Ir a ...` contextual.
   3. Mantener estos links dentro del mismo flujo de confirmación de cambios pendientes.
 
+### E24) Módulos ADMIN dispersos fuera del flujo de administrador
+
+- Qué pasó: la gestión de usuarios vivía como pantalla separada, rompiendo el flujo central de configuración del administrador.
+- Impacto: navegación fragmentada y menor claridad de permisos (qué puede hacer solo ADMIN).
+- Regla preventiva:
+  1. Funciones exclusivas de ADMIN deben vivir en topbar/paneles de `Administrador` cuando formen parte del setup operativo.
+  2. Evitar duplicar accesos laterales para el mismo módulo si ya existe acceso contextual en topbar.
+  3. Si se conserva ruta legacy por compatibilidad, redirigir a `/administrador`.
+
+### E25) Submódulos sin estructura interna clara
+
+- Qué pasó: dentro de usuarios no había navegación por tareas (listar, crear, roles/cupos).
+- Impacto: más scroll y menor orientación del usuario.
+- Regla preventiva:
+  1. En paneles extensos usar selector de opciones interno (tabs/chips) por tarea.
+  2. Definir vista inicial explícita (por defecto `Usuarios del sistema`).
+  3. Al editar desde tabla, cambiar automáticamente a la opción de formulario.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -272,4 +290,6 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] En visitas, validar coincidencia entre cantidad y nombres separados por coma.
 - [ ] En topbar de administrador, botón activo resaltado según panel abierto.
 - [ ] En resumen/notas, links directos funcionales para abrir paneles relacionados.
+- [ ] Funciones exclusivas de ADMIN centralizadas en topbar/paneles de `/administrador`.
+- [ ] Paneles complejos (ej. usuarios) con subopciones internas por tarea.
 - [ ] Lint/build/react-doctor ejecutados.

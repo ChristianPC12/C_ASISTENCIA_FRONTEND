@@ -13,7 +13,6 @@ const RegistroPage = lazy(() => import('./pages/RegistroPage'));
 const RegistrosPage = lazy(() => import('./pages/RegistrosPage'));
 const EstadisticasPage = lazy(() => import('./pages/EstadisticasPage'));
 const ComparacionesPage = lazy(() => import('./pages/ComparacionesPage'));
-const UsuarioPage = lazy(() => import('./pages/UsuarioPage'));
 const PresentacionesPage = lazy(() => import('./pages/PresentacionesPage'));
 const SuperadminPage = lazy(() => import('./pages/SuperadminPage'));
 const AdministradorPage = lazy(() => import('./pages/AdministradorPage'));
@@ -155,7 +154,7 @@ function AppContent() {
             }
           />
 
-        {/* Usuarios (solo ADMIN) */}
+        {/* Usuarios se administra desde /administrador */}
           <Route
             path="/usuarios"
             element={
@@ -164,7 +163,7 @@ function AppContent() {
                 requiereSetupInicial
                 nombreModulo="Usuarios"
               >
-                <UsuarioPage />
+                <Navigate to="/administrador" replace />
               </ProtectedRoute>
             }
           />
