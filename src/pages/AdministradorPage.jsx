@@ -149,6 +149,9 @@ export default function AdministradorPage() {
     tieneCambiosCultos,
     tieneCambiosProcedencias,
     tieneCambiosMetricas,
+    metricasAdicionalesCount,
+    maxMetricasAdicionales,
+    puedeAgregarMetrica,
     restaurarCultos,
     restaurarProcedencias,
     restaurarMetricas,
@@ -668,9 +671,22 @@ export default function AdministradorPage() {
             <div className="d-flex align-items-center gap-2">
               <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Métricas del formulario</h5>
               <span className="badge text-bg-light">{metricas.length}</span>
+              <span className="badge text-bg-secondary">
+                Adicionales {metricasAdicionalesCount}/{maxMetricasAdicionales}
+              </span>
             </div>
             <div className="d-flex align-items-center gap-2">
-              <button type="button" className="btn btn-light btn-sm" onClick={manejarAgregarMetrica}>
+              <button
+                type="button"
+                className="btn btn-light btn-sm"
+                onClick={manejarAgregarMetrica}
+                disabled={!puedeAgregarMetrica}
+                title={
+                  !puedeAgregarMetrica
+                    ? `Límite alcanzado: máximo ${maxMetricasAdicionales} métricas adicionales.`
+                    : 'Agregar métrica'
+                }
+              >
                 Agregar métrica
               </button>
               <button
@@ -708,6 +724,9 @@ export default function AdministradorPage() {
                 </button>
                 .
                 <div className="small text-muted mt-1">
+                  Máximo de métricas adicionales manuales: {maxMetricasAdicionales}.
+                </div>
+                <div className="small text-muted">
                   Procedencia y Visitas se generan automáticamente al guardar una procedencia
                   (cantidad de visitas y nombres de visitas).
                   {' '}

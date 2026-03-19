@@ -11,6 +11,7 @@ import {
 
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
 const CLAVE_TOTAL_ASISTENTES = 'total_asistentes';
+const MAX_METRICAS_ADICIONALES = 7;
 const CATEGORIAS_VALIDAS = new Set(CATEGORIAS_METRICA_OPCIONES.map((item) => item.valor));
 const CATEGORIAS_AUTOMATICAS = new Set(['procedencia', 'visitas']);
 const METRICAS_FIJAS_MAP = new Map(
@@ -224,6 +225,30 @@ function normalizarCategoriaMetrica(categoria, clave = '') {
 
 function esCategoriaAutomaticaMetrica(categoria, clave = '') {
   return CATEGORIAS_AUTOMATICAS.has(normalizarCategoriaMetrica(categoria, clave));
+}
+
+function esMetricaAdicionalUsuario(item) {
+  if (!item || item.es_fija) {
+    return false;
+  }
+
+  const clave = normalizarClaveMetrica(item?.clave);
+  if (
+    clave.startsWith('proc_')
+    || clave.startsWith('visitas_')
+    || clave.startsWith('nombres_visitas_')
+  ) {
+    return false;
+  }
+
+  const categoria = normalizarCategoriaMetrica(item?.categoria, item?.clave);
+  return !CATEGORIAS_AUTOMATICAS.has(categoria);
+}
+
+function contarMetricasAdicionales(metricas = []) {
+  return (Array.isArray(metricas) ? metricas : []).reduce((acumulado, item) => (
+    acumulado + (esMetricaAdicionalUsuario(item) ? 1 : 0)
+  ), 0);
 }
 
 function construirClaveMetricaUnica(base, clavesUsadas, fallback = 'metrica') {
@@ -528,6 +553,7 @@ function validarProcedencias(procedencias) {
 function validarMetricas(metricas) {
   const errores = {};
   const claves = new Set();
+  const metricasAdicionales = contarMetricasAdicionales(metricas);
   let habilitadas = 0;
   let antes = null;
   let despues = null;
@@ -535,6 +561,10 @@ function validarMetricas(metricas) {
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
     return { general: 'Debe configurar al menos una métrica.' };
+  }
+
+  if (metricasAdicionales > MAX_METRICAS_ADICIONALES) {
+    return { general: `Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} métricas adicionales.` };
   }
 
   metricas.forEach((item, idx) => {
@@ -814,18 +844,33 @@ export function useSetupAdministrador() {
 
   const agregarMetrica = useCallback(() => {
     const uiId = generarUiId('metrica');
-    setMetricas((prev) => ([
-      ...prev,
-      {
-        ui_id: uiId,
-        clave: obtenerSiguienteClaveMetrica(prev),
-        etiqueta: '',
-        categoria: 'adicionales',
-        habilitado: true,
-        obligatorio: false,
-        es_fija: false
+    let limiteAlcanzado = false;
+    setMetricas((prev) => {
+      const adicionalesActuales = contarMetricasAdicionales(prev);
+      if (adicionalesActuales >= MAX_METRICAS_ADICIONALES) {
+        limiteAlcanzado = true;
+        return prev;
       }
-    ]));
+
+      return [
+        ...prev,
+        {
+          ui_id: uiId,
+          clave: obtenerSiguienteClaveMetrica(prev),
+          etiqueta: '',
+          categoria: 'adicionales',
+          habilitado: true,
+          obligatorio: false,
+          es_fija: false
+        }
+      ];
+    });
+
+    if (limiteAlcanzado) {
+      notificarError(`Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} métricas adicionales.`);
+      return null;
+    }
+
     return uiId;
   }, []);
 
@@ -1028,6 +1073,11 @@ export function useSetupAdministrador() {
     () => firmarMetricas(metricas) !== firmaMetricasBase,
     [metricas, firmaMetricasBase]
   );
+  const metricasAdicionalesCount = useMemo(
+    () => contarMetricasAdicionales(metricas),
+    [metricas]
+  );
+  const puedeAgregarMetrica = metricasAdicionalesCount < MAX_METRICAS_ADICIONALES;
 
   const restaurarCultos = useCallback(() => {
     setCultos(clonarLista(cultosBase));
@@ -1058,6 +1108,9 @@ export function useSetupAdministrador() {
     tieneCambiosCultos,
     tieneCambiosProcedencias,
     tieneCambiosMetricas,
+    metricasAdicionalesCount,
+    maxMetricasAdicionales: MAX_METRICAS_ADICIONALES,
+    puedeAgregarMetrica,
     restaurarCultos,
     restaurarProcedencias,
     restaurarMetricas,
