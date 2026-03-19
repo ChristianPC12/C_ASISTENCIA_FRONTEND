@@ -100,6 +100,27 @@ export function AuthProvider({ children }) {
     setAuthState((prev) => ({ ...prev, ...cambios }));
   }, []);
 
+  const hidratarSesionDesdeRespuestaMe = useCallback((datosMe) => {
+    if (!datosMe || typeof datosMe !== 'object') {
+      return false;
+    }
+
+    const tenantSesion = datosMe?.tenant || null;
+    localStorage.setItem('usuario', JSON.stringify(datosMe));
+    if (tenantSesion) {
+      localStorage.setItem('tenant', JSON.stringify(tenantSesion));
+    } else {
+      localStorage.removeItem('tenant');
+    }
+
+    actualizarAuth({
+      usuario: datosMe,
+      tenant: tenantSesion
+    });
+
+    return true;
+  }, [actualizarAuth]);
+
   const cerrarSesionLocal = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('usuario');
@@ -116,23 +137,28 @@ export function AuthProvider({ children }) {
   const verificarSesion = useCallback(async () => {
     try {
       const res = await authApi.me();
-      if (res.exito) {
-        const tenantSesion = res?.datos?.tenant || null;
-        localStorage.setItem('usuario', JSON.stringify(res.datos));
-        if (tenantSesion) {
-          localStorage.setItem('tenant', JSON.stringify(tenantSesion));
-        } else {
-          localStorage.removeItem('tenant');
-        }
-        actualizarAuth({
-          usuario: res.datos,
-          tenant: tenantSesion
-        });
+      if (res?.exito) {
+        return hidratarSesionDesdeRespuestaMe(res?.datos);
       }
+      cerrarSesionLocal();
+      return false;
     } catch {
       cerrarSesionLocal();
+      return false;
     }
-  }, [actualizarAuth, cerrarSesionLocal]);
+  }, [hidratarSesionDesdeRespuestaMe, cerrarSesionLocal]);
+
+  const refrescarSesion = useCallback(async () => {
+    try {
+      const res = await authApi.me();
+      if (res?.exito) {
+        return hidratarSesionDesdeRespuestaMe(res?.datos);
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }, [hidratarSesionDesdeRespuestaMe]);
 
   // Verificar si el token sigue valido al montar
   useEffect(() => {
@@ -228,7 +254,8 @@ export function AuthProvider({ children }) {
     esAdminTemporal,
     diasRestantesPassword,
     iniciarSesion,
-    cerrarSesion
+    cerrarSesion,
+    refrescarSesion
   };
 
   return (

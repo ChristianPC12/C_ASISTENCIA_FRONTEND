@@ -188,7 +188,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
         {/* Info del usuario y logout al fondo */}
         <div className="sidebar-footer">
-          <div className="sidebar-usuario-info">
+          <div className="sidebar-usuario-info sidebar-usuario-info-mobile">
             <span className="sidebar-usuario-nombre">{usuario?.nombre_completo}</span>
             <span className="badge bg-secondary sidebar-usuario-rol">{usuario?.rol}</span>
             {mostrarDatosTenant && (
@@ -217,11 +217,19 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             <span></span>
             <span></span>
           </button>
-          <span className="sidebar-topbar-titulo">
-            {enlaces.find((e) => esRutaActiva(e.ruta))?.etiqueta || (
-              esSuperadmin ? 'Superadministración' : 'Iglesia Adventista'
+          <div className="sidebar-topbar-usuario d-none d-md-flex">
+            <div className="sidebar-topbar-usuario-main">
+              <span>{usuario?.nombre_completo}</span>
+              <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
+            </div>
+            {mostrarDatosTenant && (
+              <div className="sidebar-topbar-tenant">
+                <span>Campo: <strong>{campoSesion || '-'}</strong></span>
+                <span>Distrito: <strong>{distritoSesion || '-'}</strong></span>
+                <span>Iglesia/Grupo: <strong>{organizacionSesion || '-'}</strong></span>
+              </div>
             )}
-          </span>
+          </div>
           <div className="sidebar-topbar-acciones">
             {enPantallaSuperadmin && (
               <>
@@ -311,19 +319,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 </button>
               </>
             )}
-            <div className="sidebar-topbar-usuario d-none d-md-flex">
-              <div className="sidebar-topbar-usuario-main">
-                <span>{usuario?.nombre_completo}</span>
-                <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
-              </div>
-              {mostrarDatosTenant && (
-                <div className="sidebar-topbar-tenant">
-                  <span>Campo: <strong>{campoSesion || '-'}</strong></span>
-                  <span>Distrito: <strong>{distritoSesion || '-'}</strong></span>
-                  <span>Iglesia/Grupo: <strong>{organizacionSesion || '-'}</strong></span>
-                </div>
-              )}
-            </div>
             <button
               type="button"
               className="sidebar-topbar-logout"

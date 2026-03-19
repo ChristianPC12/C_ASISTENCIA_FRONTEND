@@ -1,7 +1,9 @@
 import SelectorFecha from './SelectorFecha';
 import { ETIQUETAS_SECCION, agruparMetricasPorSeccion, obtenerParPuntualidad } from '../../utils/metricasConfig';
+import { OBSERVACIONES_MAX } from '../../validators/asistenciaValidator';
 
 const FECHAS_REGISTRADAS_VACIAS = [];
+const OBSERVACIONES_MAX_SALTOS = 3;
 const SECCIONES_ORDEN = [
   'informacion_culto',
   'composicion_asistentes',
@@ -12,6 +14,17 @@ const SECCIONES_ORDEN = [
   'adicionales',
   'observaciones'
 ];
+
+function limitarSaltosObservaciones(valor) {
+  const texto = String(valor ?? '').replace(/\r\n/g, '\n');
+  const lineas = texto.split('\n');
+
+  if (lineas.length <= OBSERVACIONES_MAX_SALTOS + 1) {
+    return texto;
+  }
+
+  return lineas.slice(0, OBSERVACIONES_MAX_SALTOS + 1).join('\n');
+}
 
 function campoTexto({
   metrica,
@@ -32,13 +45,13 @@ function campoTexto({
         <textarea
           id={metrica.clave}
           name={metrica.clave}
-          rows={3}
-          className={`form-control ${errores[metrica.clave] ? 'is-invalid' : ''}`}
+          rows={4}
+          className={`form-control asistencia-observaciones-textarea ${errores[metrica.clave] ? 'is-invalid' : ''}`}
           value={formulario.metricas?.[metrica.clave] ?? ''}
-          onChange={(event) => onCambiarCampo(metrica.clave, event.target.value)}
+          onChange={(event) => onCambiarCampo(metrica.clave, limitarSaltosObservaciones(event.target.value))}
           disabled={cargando}
           placeholder={metrica.etiqueta}
-          maxLength={1000}
+          maxLength={OBSERVACIONES_MAX}
         />
         {errores[metrica.clave] && (
           <div className="invalid-feedback d-block">{errores[metrica.clave]}</div>

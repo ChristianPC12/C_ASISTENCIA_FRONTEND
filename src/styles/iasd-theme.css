@@ -183,6 +183,14 @@ a:hover {
   font-size: 0.9rem;
 }
 
+.asistencia-observaciones-textarea {
+  min-height: 5.8rem;
+  max-height: 8.2rem;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
 /* ==============================================
    Tablas
    ============================================== */
@@ -1352,24 +1360,41 @@ a:hover {
   top: 0;
   z-index: 1000;
 }
-.sidebar-topbar-titulo  { font-size: 1.1rem; font-weight: 600; color: var(--iasd-azul); margin-left: 0.5rem; }
 .sidebar-topbar-acciones { margin-left: auto; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; }
 .sidebar-topbar-usuario {
+  margin-left: 0.7rem;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 0.1rem;
   font-size: 0.85rem;
   color: var(--iasd-texto-sec);
+  min-width: 0;
+  max-width: min(46vw, 560px);
 }
-.sidebar-topbar-usuario-main { display: inline-flex; align-items: center; }
+.sidebar-topbar-usuario-main {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.sidebar-topbar-usuario-main > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .sidebar-topbar-tenant {
   display: grid;
   gap: 0.1rem;
   font-size: 0.68rem;
   line-height: 1.15;
   color: var(--iasd-texto-sec);
-  text-align: right;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .sidebar-usuario-info-mobile {
+    display: none !important;
+  }
 }
 .sidebar-topbar-metric-btn {
   height: 32px;
@@ -1520,7 +1545,6 @@ a:hover {
   .sidebar-topbar {
     padding: 0.6rem 0.75rem;
   }
-  .sidebar-topbar-titulo { font-size: 0.95rem; margin-left: 0.35rem; }
   .sidebar-topbar-metric-btn {
     width: 32px;
     padding: 0;

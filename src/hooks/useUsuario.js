@@ -131,7 +131,7 @@ function construirPayloadCupos(roles) {
  * Hook para CRUD de usuarios y política de cupos por rol (solo ADMIN).
  */
 export function useUsuario() {
-  const { cerrarSesion } = useAuth();
+  const { cerrarSesion, usuario, refrescarSesion } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [formulario, setFormulario] = useState({ ...USUARIO_FORM_INICIAL });
   const [editandoId, setEditandoId] = useState(null);
@@ -255,6 +255,28 @@ export function useUsuario() {
           await cerrarSesion();
           return true;
         }
+
+        const edicionPropia = esEdicion && Number(editandoId) === Number(usuario?.id);
+        if (edicionPropia) {
+          const cambioSesionCritico = (
+            Boolean(formulario.password)
+            || String(formulario.usuario || '') !== String(usuario?.usuario || '')
+            || formulario.activo === false
+            || (
+              Number.isInteger(Number(formulario.rol_id))
+              && Number.isInteger(Number(usuario?.rol_id))
+              && Number(formulario.rol_id) !== Number(usuario?.rol_id)
+            )
+          );
+
+          if (cambioSesionCritico) {
+            await cerrarSesion();
+            return true;
+          }
+
+          await refrescarSesion();
+        }
+
         await Promise.all([cargarUsuarios(), cargarCupos()]);
         return true;
       }
@@ -267,7 +289,17 @@ export function useUsuario() {
     } finally {
       setCargando(false);
     }
-  }, [formulario, editandoId, manejarErrorGuardarUsuario, cargarUsuarios, cargarCupos, limpiarFormulario, cerrarSesion]);
+  }, [
+    formulario,
+    editandoId,
+    usuario,
+    refrescarSesion,
+    manejarErrorGuardarUsuario,
+    cargarUsuarios,
+    cargarCupos,
+    limpiarFormulario,
+    cerrarSesion
+  ]);
 
   const editar = useCallback((usuario) => {
     setFormulario({

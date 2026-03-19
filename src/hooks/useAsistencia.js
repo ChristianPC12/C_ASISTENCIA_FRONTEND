@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
-import { validarAsistencia } from '../validators/asistenciaValidator';
+import { OBSERVACIONES_MAX, validarAsistencia } from '../validators/asistenciaValidator';
 import { sanitizarObjeto, aEnteroPositivo } from '../utils/sanitizer';
 import { notificarExito, notificarError, confirmar } from '../utils/notify';
 import { ANIO_ACTUAL } from '../config/constants';
@@ -45,6 +45,20 @@ const normalizarFechaExacta = (valor) => {
   }
 
   return '';
+};
+
+const OBSERVACIONES_MAX_SALTOS = 3;
+
+const normalizarSaltosObservaciones = (valor) => {
+  const texto = String(valor ?? '').replace(/\r\n/g, '\n');
+  const textoConLimiteCaracteres = texto.slice(0, OBSERVACIONES_MAX);
+  const lineasConLimiteCaracteres = textoConLimiteCaracteres.split('\n');
+
+  if (lineasConLimiteCaracteres.length <= OBSERVACIONES_MAX_SALTOS + 1) {
+    return textoConLimiteCaracteres;
+  }
+
+  return lineasConLimiteCaracteres.slice(0, OBSERVACIONES_MAX_SALTOS + 1).join('\n');
 };
 
 const coincideTextoFecha = (fechaIso, textoBusqueda) => {
@@ -287,14 +301,19 @@ export function useAsistencia() {
   const prepararDatos = useCallback((datos) => {
     const sanitizados = sanitizarObjeto(datos);
     const metricasPayload = normalizarPayloadMetricas(metricasActivas, sanitizados.metricas || {});
+    const observacionesNormalizadas = typeof metricasPayload.observaciones === 'string'
+      ? normalizarSaltosObservaciones(metricasPayload.observaciones)
+      : null;
+
+    if (observacionesNormalizadas !== null) {
+      metricasPayload.observaciones = observacionesNormalizadas;
+    }
 
     return {
       culto_id: aEnteroPositivo(sanitizados.culto_id),
       fecha: sanitizados.fecha,
       metricas: metricasPayload,
-      observaciones: typeof metricasPayload.observaciones === 'string'
-        ? metricasPayload.observaciones
-        : null
+      observaciones: observacionesNormalizadas
     };
   }, [metricasActivas]);
 

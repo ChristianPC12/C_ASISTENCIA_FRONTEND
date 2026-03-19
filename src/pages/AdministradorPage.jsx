@@ -173,6 +173,7 @@ export default function AdministradorPage() {
   const [infoSeccionActiva, setInfoSeccionActiva] = useState(INFO_SECCIONES[0].id);
   const metricaPendienteFocusRef = useRef(null);
   const metricaInputRefs = useRef(new Map());
+  const autoFinalizacionSolicitadaRef = useRef(false);
   const estadoSetupNormalizado = String(resumen.estado_setup || '').toUpperCase();
   const setupCompleto = estadoSetupNormalizado === 'COMPLETO' && !Boolean(resumen.bloqueada_operacion);
   const faltantes = useMemo(
@@ -301,17 +302,31 @@ export default function AdministradorPage() {
   const mensajeEncabezado = setupCompleto
     ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
     : 'Complete la configuración inicial para habilitar registro, reportes y estadísticas. Debe crear al menos un administrador definitivo.';
-  const textoBotonPrincipal = setupCompleto
-    ? 'Editar setup'
-    : (finalizando ? 'Finalizando...' : 'Finalizar setup inicial');
+  const textoBotonEditarSetup = 'Editar setup';
 
-  const manejarAccionPrincipalSetup = async () => {
+  useEffect(() => {
     if (setupCompleto) {
-      setVistaActiva(VISTA_CULTOS);
+      autoFinalizacionSolicitadaRef.current = false;
       return;
     }
-    await finalizarSetup();
-  };
+
+    if (faltantes.length > 0) {
+      autoFinalizacionSolicitadaRef.current = false;
+      return;
+    }
+
+    if (finalizando || autoFinalizacionSolicitadaRef.current) {
+      return;
+    }
+
+    autoFinalizacionSolicitadaRef.current = true;
+    void (async () => {
+      const ok = await finalizarSetup();
+      if (!ok) {
+        autoFinalizacionSolicitadaRef.current = false;
+      }
+    })();
+  }, [setupCompleto, faltantes, finalizando, finalizarSetup]);
 
   const manejarEliminarCulto = async (index) => {
     if (cultos.length <= 1) {
@@ -405,14 +420,21 @@ export default function AdministradorPage() {
                 <div className="col-12 col-lg-4">
                   <div className="d-flex flex-column gap-2 h-100 admin-setup-side-actions">
                     <BadgeEstado completo={setupCompleto} />
-                    <button
-                      type="button"
-                      className={`btn w-100 ${setupCompleto ? 'btn-primary' : 'btn-success'}`}
-                      onClick={manejarAccionPrincipalSetup}
-                      disabled={!setupCompleto && finalizando}
-                    >
-                      {textoBotonPrincipal}
-                    </button>
+                    {setupCompleto ? (
+                      <button
+                        type="button"
+                        className="btn btn-primary w-100"
+                        onClick={() => setVistaActiva(VISTA_CULTOS)}
+                      >
+                        {textoBotonEditarSetup}
+                      </button>
+                    ) : (
+                      <div className="small text-muted text-center">
+                        {finalizando
+                          ? 'Finalizando setup automáticamente...'
+                          : 'El setup se finalizará automáticamente al completar todos los requisitos.'}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
