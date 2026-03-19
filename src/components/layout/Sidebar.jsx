@@ -299,18 +299,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-journal-text" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Información</span>
                 </button>
-                {!requiereSetup && (
-                  <button
-                    type="button"
-                    className={claseBotonTopbarAdmin('USUARIOS')}
-                    onClick={abrirPanelUsuarios}
-                    aria-label="Usuarios"
-                    title="Usuarios"
-                  >
-                    <i className="bi bi-person-gear" aria-hidden="true"></i>
-                    <span className="d-none d-md-inline">Usuarios</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className={claseBotonTopbarAdmin('USUARIOS')}
+                  onClick={abrirPanelUsuarios}
+                  aria-label="Usuarios"
+                  title="Usuarios"
+                >
+                  <i className="bi bi-person-gear" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Usuarios</span>
+                </button>
               </>
             )}
             <div className="sidebar-topbar-usuario d-none d-md-flex">

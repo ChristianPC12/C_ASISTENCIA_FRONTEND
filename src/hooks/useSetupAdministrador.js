@@ -1012,6 +1012,7 @@ export function useSetupAdministrador() {
     bloqueada_operacion: toBool(detalle?.bloqueada_operacion),
     setup_completado_en: detalle?.setup_completado_en || null,
     ultima_revision_en: detalle?.ultima_revision_en || null,
+    admins_definitivos_activos: Number(detalle?.resumen?.admins_definitivos_activos || 0),
     faltantes: Array.isArray(faltantes) ? faltantes : []
   }), [detalle, faltantes]);
 

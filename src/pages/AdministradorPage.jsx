@@ -78,6 +78,8 @@ function traducirFaltante(item) {
       return 'Reducir procedencias a máximo 10';
     case 'metricas':
       return 'Debe habilitar al menos una métrica en el panel de Métricas.';
+    case 'admin_definitivo':
+      return 'Crear al menos un usuario administrador definitivo.';
     case 'dependencias_metricas':
       return null;
     default:
@@ -96,7 +98,8 @@ function resolverEstadoBloques(faltantes = []) {
   return {
     cultos: !lista.has('cultos'),
     metricas: !lista.has('metricas'),
-    procedencias: !lista.has('procedencias_minimas') && !lista.has('procedencias_maximas')
+    procedencias: !lista.has('procedencias_minimas') && !lista.has('procedencias_maximas'),
+    usuarios: !lista.has('admin_definitivo')
   };
 }
 
@@ -182,6 +185,9 @@ export default function AdministradorPage() {
   const cultosActivos = cultos.filter((item) => item.activo).length;
   const metricasHabilitadas = metricas.filter((item) => item.habilitado).length;
   const procedenciasActivas = procedencias.filter((item) => item.activo).length;
+  const adminsDefinitivosActivos = Number.isFinite(Number(resumen.admins_definitivos_activos))
+    ? Number(resumen.admins_definitivos_activos)
+    : 0;
   const registrarInputMetricaRef = useCallback((uiId, node) => {
     if (!uiId) return;
     if (node) {
@@ -198,10 +204,6 @@ export default function AdministradorPage() {
   }, [agregarMetrica]);
 
   const abrirVistaDesdeTopbar = useCallback(async (nuevaVista) => {
-    if (nuevaVista === VISTA_USUARIOS && !setupCompleto) {
-      return;
-    }
-
     if (vistaActiva === nuevaVista) {
       return;
     }
@@ -236,7 +238,6 @@ export default function AdministradorPage() {
 
     setVistaActiva(nuevaVista);
   }, [
-    setupCompleto,
     vistaActiva,
     tieneCambiosCultos,
     tieneCambiosMetricas,
@@ -296,10 +297,10 @@ export default function AdministradorPage() {
   const mostrarMetricas = vistaActiva === VISTA_METRICAS;
   const mostrarProcedencias = vistaActiva === VISTA_PROCEDENCIAS;
   const mostrarCategoriasMetricas = vistaActiva === VISTA_CATEGORIAS_METRICAS;
-  const mostrarUsuarios = setupCompleto && vistaActiva === VISTA_USUARIOS;
+  const mostrarUsuarios = vistaActiva === VISTA_USUARIOS;
   const mensajeEncabezado = setupCompleto
     ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
-    : 'Complete la configuración inicial para habilitar registro, reportes, estadísticas y usuarios.';
+    : 'Complete la configuración inicial para habilitar registro, reportes y estadísticas. Debe crear al menos un administrador definitivo.';
   const textoBotonPrincipal = setupCompleto
     ? 'Editar setup'
     : (finalizando ? 'Finalizando...' : 'Finalizar setup inicial');
@@ -428,25 +429,32 @@ export default function AdministradorPage() {
           </div>
 
           <div className="row g-3 mb-3">
-            <div className="col-12 col-md-4">
+            <div className="col-12 col-md-6 col-lg-3">
               <EstadoBloqueCard
                 titulo="Cultos de la instancia"
                 detalle={`${cultosActivos} activo(s) de ${cultos.length} configurado(s)`}
                 completo={estadoBloques.cultos}
               />
             </div>
-            <div className="col-12 col-md-4">
+            <div className="col-12 col-md-6 col-lg-3">
               <EstadoBloqueCard
                 titulo="Métricas del formulario"
                 detalle={`${metricasHabilitadas} habilitada(s) de ${metricas.length} configurada(s)`}
                 completo={estadoBloques.metricas}
               />
             </div>
-            <div className="col-12 col-md-4">
+            <div className="col-12 col-md-6 col-lg-3">
               <EstadoBloqueCard
                 titulo="Procedencias (1 a 10)"
                 detalle={`${procedenciasActivas} activa(s) de ${procedencias.length} configurada(s)`}
                 completo={estadoBloques.procedencias}
+              />
+            </div>
+            <div className="col-12 col-md-6 col-lg-3">
+              <EstadoBloqueCard
+                titulo="Usuarios administradores"
+                detalle={`${adminsDefinitivosActivos} administrador(es) definitivo(s) activo(s)`}
+                completo={estadoBloques.usuarios}
               />
             </div>
           </div>
@@ -464,8 +472,7 @@ export default function AdministradorPage() {
 
           <div className="alert alert-secondary mb-0 admin-setup-help">
             <div>
-              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias e información
-              {setupCompleto ? ', y usuarios.' : '.'}
+              Use los botones de la esquina superior derecha para abrir cultos, métricas, procedencias, información y usuarios.
               Solo se muestra un panel a la vez para reducir scroll y mejorar uso en teléfono.
             </div>
             <div className="admin-quick-links">
@@ -504,16 +511,14 @@ export default function AdministradorPage() {
                 <i className="bi bi-journal-text" aria-hidden="true"></i>
                 Ir a Información
               </button>
-              {setupCompleto && (
-                <button
-                  type="button"
-                  className="admin-quick-link-btn"
-                  onClick={() => { void abrirVistaDesdeTopbar(VISTA_USUARIOS); }}
-                >
-                  <i className="bi bi-person-gear" aria-hidden="true"></i>
-                  Ir a Usuarios
-                </button>
-              )}
+              <button
+                type="button"
+                className="admin-quick-link-btn"
+                onClick={() => { void abrirVistaDesdeTopbar(VISTA_USUARIOS); }}
+              >
+                <i className="bi bi-person-gear" aria-hidden="true"></i>
+                Ir a Usuarios
+              </button>
             </div>
           </div>
         </>

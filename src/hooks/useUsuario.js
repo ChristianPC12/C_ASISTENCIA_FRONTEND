@@ -4,6 +4,7 @@ import { validarUsuario } from '../validators/usuarioValidator';
 import { sanitizarObjeto } from '../utils/sanitizer';
 import { notificarExito, notificarError, confirmar } from '../utils/notify';
 import { USUARIO_FORM_INICIAL } from '../config/constants';
+import { useAuth } from './useAuth';
 
 const ROL_ID_TO_NOMBRE = {
   1: 'ADMIN',
@@ -130,6 +131,7 @@ function construirPayloadCupos(roles) {
  * Hook para CRUD de usuarios y política de cupos por rol (solo ADMIN).
  */
 export function useUsuario() {
+  const { cerrarSesion } = useAuth();
   const [usuarios, setUsuarios] = useState([]);
   const [formulario, setFormulario] = useState({ ...USUARIO_FORM_INICIAL });
   const [editandoId, setEditandoId] = useState(null);
@@ -249,6 +251,10 @@ export function useUsuario() {
       if (res.exito) {
         notificarExito(res.mensaje);
         limpiarFormulario();
+        if (res?.datos?.forzar_reautenticacion) {
+          await cerrarSesion();
+          return true;
+        }
         await Promise.all([cargarUsuarios(), cargarCupos()]);
         return true;
       }
@@ -261,7 +267,7 @@ export function useUsuario() {
     } finally {
       setCargando(false);
     }
-  }, [formulario, editandoId, manejarErrorGuardarUsuario, cargarUsuarios, cargarCupos, limpiarFormulario]);
+  }, [formulario, editandoId, manejarErrorGuardarUsuario, cargarUsuarios, cargarCupos, limpiarFormulario, cerrarSesion]);
 
   const editar = useCallback((usuario) => {
     setFormulario({

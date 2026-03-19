@@ -19,23 +19,6 @@ function obtenerAnioRegistro(organizacion) {
   return '-';
 }
 
-function construirEstadoCorreoDetalle(detalleAdmin, organizacion) {
-  const correo = detalleAdmin?.correo;
-  if (correo && typeof correo === 'object') {
-    const enviado = !!correo.enviado;
-    const destino = String(correo.destino || '').trim();
-    const detalle = String(correo.detalle || '').trim();
-    return `${enviado ? 'Enviado' : 'No enviado'}${destino ? ` (${destino})` : ''}${detalle ? ` - ${detalle}` : ''}`;
-  }
-
-  const correoContacto = String(organizacion?.correo_contacto || '').trim();
-  if (correoContacto) {
-    return `No enviado (${correoContacto})`;
-  }
-
-  return 'No enviado';
-}
-
 function obtenerConfigEstadoAdmin(estadoAdmin) {
   switch (estadoAdmin) {
     case 'ADMIN_ACTIVO':
@@ -1231,9 +1214,6 @@ export default function SuperadminPage() {
                       const detalleFila = filaSeleccionada
                         ? detalleAdminTemporalSeleccionado?.admin_temporal || null
                         : null;
-                      const estadoCorreoFila = filaSeleccionada
-                        ? construirEstadoCorreoDetalle(detalleAdminTemporalSeleccionado, item)
-                        : 'No enviado';
 
                       return (
                         <Fragment key={item.id}>
@@ -1324,9 +1304,6 @@ export default function SuperadminPage() {
                                       </div>
                                       <div>
                                         Expira en: <strong>{formatearFechaDetalle(detalleFila.expira_en)}</strong>
-                                      </div>
-                                      <div>
-                                        Correo: <strong>{estadoCorreoFila}</strong>
                                       </div>
                                     </div>
                                   ) : (

@@ -14,6 +14,8 @@ function traducirFaltante(item) {
       return 'Reducir procedencias a máximo 10';
     case 'metricas':
       return 'Debe habilitar al menos una métrica en el panel de Métricas.';
+    case 'admin_definitivo':
+      return 'Crear al menos un usuario administrador definitivo.';
     case 'dependencias_metricas':
       return null;
     default:

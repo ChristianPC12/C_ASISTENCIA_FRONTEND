@@ -355,8 +355,27 @@ function obtenerFechaExpiracionAdmin(organizacion, detalleCache = null) {
     return fechaDesdeCache;
   }
 
-  const fechaDesdeOrganizacion = String(organizacion?.admin_password_expira_en || '').trim();
+  const fechaDesdeOrganizacion = String(
+    organizacion?.admin_temporal_expira_en
+    || organizacion?.admin_password_expira_en
+    || ''
+  ).trim();
   return fechaDesdeOrganizacion || null;
+}
+
+function obtenerUsuarioAdminTemporal(organizacion, detalleCache = null) {
+  const usuarioCache = String(detalleCache?.admin_temporal?.usuario || '').trim();
+  if (usuarioCache) {
+    return usuarioCache;
+  }
+
+  const usuarioDesdeOrganizacion = String(
+    organizacion?.admin_usuario_temporal
+    || organizacion?.admin_usuario_activo
+    || ''
+  ).trim();
+
+  return usuarioDesdeOrganizacion || null;
 }
 
 function tieneRegistroAdminTemporal(organizacion, detalleCache = null) {
@@ -364,13 +383,11 @@ function tieneRegistroAdminTemporal(organizacion, detalleCache = null) {
     return false;
   }
 
-  const usuarioCache = String(detalleCache?.admin_temporal?.usuario || '').trim();
-  const usuarioActivo = String(organizacion?.admin_usuario_activo || '').trim();
+  const usuarioTemporal = obtenerUsuarioAdminTemporal(organizacion, detalleCache);
   const fechaExpiracion = obtenerFechaExpiracionAdmin(organizacion, detalleCache);
 
-  return usuarioCache.length > 0
-    || usuarioActivo.length > 0
-    || esValorBooleanoVerdadero(organizacion?.tiene_admin_activo)
+  return !!usuarioTemporal
+    || esValorBooleanoVerdadero(organizacion?.tiene_admin_temporal_registrado)
     || !!fechaExpiracion;
 }
 
@@ -388,12 +405,15 @@ function resolverEstadoAdminOrganizacion(organizacion, detalleCache = null) {
     return 'SIN_ADMIN';
   }
 
-  if (adminTemporalExpirado(organizacion, detalleCache)) {
-    return 'ADMIN_EXPIRADO';
+  const adminTemporalActivo = esValorBooleanoVerdadero(organizacion?.admin_temporal_activo)
+    && !adminTemporalExpirado(organizacion, detalleCache);
+
+  if (adminTemporalActivo) {
+    return 'ADMIN_ACTIVO';
   }
 
   if (tieneRegistroAdminTemporal(organizacion, detalleCache)) {
-    return 'ADMIN_ACTIVO';
+    return 'ADMIN_EXPIRADO';
   }
 
   return 'SIN_ADMIN';
@@ -404,12 +424,9 @@ function construirDetalleAdminDesdeOrganizacion(organizacion, detalleCache = nul
     return null;
   }
 
-  const usuarioCache = String(detalleCache?.admin_temporal?.usuario || '').trim();
-  const usuarioOrganizacion = String(organizacion.admin_usuario_activo || '').trim();
-
   return {
     admin_temporal: {
-      usuario: usuarioCache || usuarioOrganizacion || null,
+      usuario: obtenerUsuarioAdminTemporal(organizacion, detalleCache),
       password_temporal: null,
       expira_en: obtenerFechaExpiracionAdmin(organizacion, detalleCache)
     },
@@ -1135,9 +1152,12 @@ export function useSuperadminOrganizaciones() {
           return {
             ...item,
             tiene_admin_activo: true,
+            tiene_admin_temporal_registrado: true,
             admin_temporal_activo: true,
             admin_usuario_activo: adminTemporal.usuario || item.admin_usuario_activo || null,
-            admin_password_expira_en: adminTemporal.expira_en || item.admin_password_expira_en || null
+            admin_password_expira_en: adminTemporal.expira_en || item.admin_password_expira_en || null,
+            admin_usuario_temporal: adminTemporal.usuario || item.admin_usuario_temporal || null,
+            admin_temporal_expira_en: adminTemporal.expira_en || item.admin_temporal_expira_en || null
           };
         }));
         setOrganizacionTablaSeleccionadaId(organizacionId);
