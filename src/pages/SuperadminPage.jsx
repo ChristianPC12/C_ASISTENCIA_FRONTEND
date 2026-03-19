@@ -822,7 +822,7 @@ export default function SuperadminPage() {
                       <input
                         id="nombre_completo"
                         type="text"
-                        maxLength={30}
+                        maxLength={40}
                         className={`form-control ${erroresAdminTemporal.nombre_completo ? 'is-invalid' : ''}`}
                         placeholder="Nombre del administrador temporal"
                         value={formularioAdminTemporal.nombre_completo}
@@ -839,7 +839,7 @@ export default function SuperadminPage() {
                       <input
                         id="usuario_admin_temp"
                         type="text"
-                        maxLength={50}
+                        maxLength={20}
                         className={`form-control ${erroresAdminTemporal.usuario ? 'is-invalid' : ''}`}
                         placeholder="usuario.temporal"
                         value={formularioAdminTemporal.usuario}

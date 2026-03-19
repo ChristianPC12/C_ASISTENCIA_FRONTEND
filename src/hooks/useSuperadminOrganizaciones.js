@@ -6,8 +6,8 @@ import { notificarExito, notificarError } from '../utils/notify';
 const NOMBRE_ORGANIZACION_MIN = 5;
 const NOMBRE_ORGANIZACION_MAX = 30;
 const NOMBRE_ADMIN_MIN = 5;
-const NOMBRE_ADMIN_MAX = 30;
-const USUARIO_MAX = 50;
+const NOMBRE_ADMIN_MAX = 40;
+const USUARIO_MAX = 20;
 const CORREO_MAX = 30;
 const ANIO_MIN = 2000;
 const ANIO_MAX = 2100;
@@ -523,12 +523,12 @@ function validarFormularioAdminTemporal(formulario) {
 
   const nombreCompleto = (formulario.nombre_completo || '').trim();
   if (!esNombreValidoSinNumeros(nombreCompleto, NOMBRE_ADMIN_MIN, NOMBRE_ADMIN_MAX)) {
-    errores.nombre_completo = 'El nombre debe tener 5-30 caracteres válidos y no puede incluir números.';
+    errores.nombre_completo = `El nombre debe tener ${NOMBRE_ADMIN_MIN}-${NOMBRE_ADMIN_MAX} caracteres válidos y no puede incluir números.`;
   }
 
   const usuario = (formulario.usuario || '').trim().toLowerCase();
   if (usuario.length < 3 || usuario.length > USUARIO_MAX || !USUARIO_REGEX.test(usuario)) {
-    errores.usuario = 'El usuario debe tener 3-50 caracteres válidos (a-z, 0-9, . _ -).';
+    errores.usuario = `El usuario debe tener 3-${USUARIO_MAX} caracteres válidos (a-z, 0-9, . _ -).`;
   }
 
   const correoDestino = (formulario.correo_destino || '').trim();

@@ -271,16 +271,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 </button>
                 <button
                   type="button"
-                  className={claseBotonTopbarAdmin('METRICAS')}
-                  onClick={abrirPanelMetricas}
-                  aria-label="Métricas del formulario"
-                  title="Métricas del formulario"
-                >
-                  <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Métricas</span>
-                </button>
-                <button
-                  type="button"
                   className={claseBotonTopbarAdmin('PROCEDENCIAS')}
                   onClick={abrirPanelProcedencias}
                   aria-label="Procedencias"
@@ -288,6 +278,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 >
                   <i className="bi bi-people" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Procedencias</span>
+                </button>
+                <button
+                  type="button"
+                  className={claseBotonTopbarAdmin('METRICAS')}
+                  onClick={abrirPanelMetricas}
+                  aria-label="Métricas del formulario"
+                  title="Métricas del formulario"
+                >
+                  <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Métricas</span>
                 </button>
                 <button
                   type="button"

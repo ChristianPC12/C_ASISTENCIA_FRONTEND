@@ -438,16 +438,16 @@ export default function AdministradorPage() {
             </div>
             <div className="col-12 col-md-6 col-lg-3">
               <EstadoBloqueCard
-                titulo="Métricas del formulario"
-                detalle={`${metricasHabilitadas} habilitada(s) de ${metricas.length} configurada(s)`}
-                completo={estadoBloques.metricas}
+                titulo="Procedencias (1 a 10)"
+                detalle={`${procedenciasActivas} activa(s) de ${procedencias.length} configurada(s)`}
+                completo={estadoBloques.procedencias}
               />
             </div>
             <div className="col-12 col-md-6 col-lg-3">
               <EstadoBloqueCard
-                titulo="Procedencias (1 a 10)"
-                detalle={`${procedenciasActivas} activa(s) de ${procedencias.length} configurada(s)`}
-                completo={estadoBloques.procedencias}
+                titulo="Métricas del formulario"
+                detalle={`${metricasHabilitadas} habilitada(s) de ${metricas.length} configurada(s)`}
+                completo={estadoBloques.metricas}
               />
             </div>
             <div className="col-12 col-md-6 col-lg-3">
@@ -487,18 +487,18 @@ export default function AdministradorPage() {
               <button
                 type="button"
                 className="admin-quick-link-btn"
-                onClick={() => { void abrirVistaDesdeTopbar(VISTA_METRICAS); }}
-              >
-                <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
-                Ir a Métricas
-              </button>
-              <button
-                type="button"
-                className="admin-quick-link-btn"
                 onClick={() => { void abrirVistaDesdeTopbar(VISTA_PROCEDENCIAS); }}
               >
                 <i className="bi bi-people" aria-hidden="true"></i>
                 Ir a Procedencias
+              </button>
+              <button
+                type="button"
+                className="admin-quick-link-btn"
+                onClick={() => { void abrirVistaDesdeTopbar(VISTA_METRICAS); }}
+              >
+                <i className="bi bi-bar-chart-line" aria-hidden="true"></i>
+                Ir a Métricas
               </button>
               <button
                 type="button"
