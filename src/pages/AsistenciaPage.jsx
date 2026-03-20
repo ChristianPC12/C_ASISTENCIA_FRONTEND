@@ -13,6 +13,9 @@ export default function AsistenciaPage() {
     editandoId,
     cargando,
     errores,
+    metricasActivas,
+    clavePermanenciaAuto,
+    permanenciaAutoBloqueada,
     filtros,
     cambiarCampo,
     guardar,
@@ -33,6 +36,9 @@ export default function AsistenciaPage() {
         editandoId={editandoId}
         errores={errores}
         cargando={cargando}
+        metricasActivas={metricasActivas}
+        clavePermanenciaAuto={clavePermanenciaAuto}
+        permanenciaAutoBloqueada={permanenciaAutoBloqueada}
         onCambiarCampo={cambiarCampo}
         onGuardar={guardar}
         onLimpiar={limpiarFormulario}

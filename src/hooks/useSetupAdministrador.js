@@ -187,7 +187,7 @@ function sincronizarGrupoMetricasProcedencia(listaMetricas, slugProcedencia, hab
     `nombres_visitas_${slugProcedencia}`
   ]);
 
-  return listaMetricas.map((item) => {
+  const actualizada = listaMetricas.map((item) => {
     const clave = normalizarClaveMetrica(item?.clave);
     if (!clavesObjetivo.has(clave)) {
       return item;
@@ -199,6 +199,28 @@ function sincronizarGrupoMetricasProcedencia(listaMetricas, slugProcedencia, hab
       habilitado,
       obligatorio,
       obligatorio_previo: obligatorio
+    };
+  });
+
+  if (!habilitado) {
+    return actualizada;
+  }
+
+  return actualizada.map((item) => {
+    if (normalizarClaveMetrica(item?.clave) !== CLAVE_TOTAL_ASISTENTES) {
+      return item;
+    }
+
+    if (item.habilitado) {
+      return item;
+    }
+
+    const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
+    return {
+      ...item,
+      habilitado: true,
+      obligatorio: obligatorioPrevio,
+      obligatorio_previo: obligatorioPrevio
     };
   });
 }
@@ -565,6 +587,9 @@ function validarMetricasConfiguracion(metricas) {
   let total = null;
   let infoCultoHabilitadas = 0;
   let permanenciaHabilitadas = 0;
+  let composicionHabilitadas = 0;
+  let procedenciaHabilitadas = 0;
+  let visitasHabilitadas = 0;
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
     return { general: 'Debe configurar al menos una métrica.' };
@@ -604,6 +629,9 @@ function validarMetricasConfiguracion(metricas) {
       habilitadas += 1;
       if (categoria === CATEGORIA_INFO_CULTO) infoCultoHabilitadas += 1;
       if (categoria === CATEGORIA_PERMANENCIA) permanenciaHabilitadas += 1;
+      if (categoria === 'composicion_asistentes') composicionHabilitadas += 1;
+      if (categoria === 'procedencia') procedenciaHabilitadas += 1;
+      if (categoria === 'visitas') visitasHabilitadas += 1;
     }
 
     if (claveNormalizada === CLAVES_PUNTUALIDAD[0]) antes = item;
@@ -644,8 +672,14 @@ function validarMetricasConfiguracion(metricas) {
     }
   }
 
-  if ((infoCultoHabilitadas > 0 || permanenciaHabilitadas > 0) && (!total || !total.habilitado)) {
-    errores.general = 'Total de asistentes debe estar habilitado cuando hay métricas en Información del culto o Permanencia.';
+  if ((
+    infoCultoHabilitadas > 0
+    || permanenciaHabilitadas > 0
+    || composicionHabilitadas > 0
+    || procedenciaHabilitadas > 0
+    || visitasHabilitadas > 0
+  ) && (!total || !total.habilitado)) {
+    errores.general = 'Total de asistentes debe estar habilitado cuando hay métricas que dependen del total.';
   }
 
   return errores;
@@ -870,7 +904,13 @@ export function useSetupAdministrador() {
         );
         const requiereTotal =
           metricaEditada.habilitado
-          && [CATEGORIA_INFO_CULTO, CATEGORIA_PERMANENCIA].includes(categoriaMetrica);
+          && [
+            CATEGORIA_INFO_CULTO,
+            CATEGORIA_PERMANENCIA,
+            'composicion_asistentes',
+            'procedencia',
+            'visitas'
+          ].includes(categoriaMetrica);
 
         if (requiereTotal) {
           actualizado = actualizado.map((item) => {

@@ -373,6 +373,68 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
     }
   }
 
+  const metricasComposicion = obtenerMetricasNumericasPorSeccion(metricasActivas, 'composicion_asistentes');
+  const metricasProcedencia = obtenerMetricasNumericasPorSeccion(metricasActivas, 'procedencia');
+  const totalRawGlobal = metricasFormulario?.total_asistentes;
+  const totalVacioGlobal = esValorVacio(totalRawGlobal);
+  const totalNormGlobal = aNumeroNoNegativo(totalRawGlobal);
+
+  if (metricasComposicion.length > 0) {
+    const hayComposicionDigitada = metricasComposicion
+      .some((metrica) => !esValorVacio(metricasFormulario?.[metrica.clave]));
+
+    if (hayComposicionDigitada) {
+      if (!existeTotal) {
+        if (!errores.total_asistentes) {
+          errores.total_asistentes =
+            'Total de asistentes debe estar habilitado cuando se digitan métricas de Composición de asistentes.';
+        }
+      } else if (totalVacioGlobal) {
+        if (!errores.total_asistentes) {
+          errores.total_asistentes =
+            'Total de asistentes es obligatorio cuando se digitan métricas de Composición de asistentes.';
+        }
+      } else {
+        const sumaComposicion = metricasComposicion
+          .reduce((acumulado, metrica) => acumulado + aNumeroNoNegativo(metricasFormulario?.[metrica.clave]), 0);
+
+        if (sumaComposicion > totalNormGlobal) {
+          if (!errores.total_asistentes) {
+            errores.total_asistentes = 'La suma de Composición de asistentes no puede superar Total de asistentes.';
+          }
+        }
+      }
+    }
+  }
+
+  if (metricasProcedencia.length > 0) {
+    const hayProcedenciaDigitada = metricasProcedencia
+      .some((metrica) => !esValorVacio(metricasFormulario?.[metrica.clave]));
+
+    if (hayProcedenciaDigitada) {
+      if (!existeTotal) {
+        if (!errores.total_asistentes) {
+          errores.total_asistentes =
+            'Total de asistentes debe estar habilitado cuando se digitan métricas de Procedencia.';
+        }
+      } else if (totalVacioGlobal) {
+        if (!errores.total_asistentes) {
+          errores.total_asistentes =
+            'Total de asistentes es obligatorio cuando se digitan métricas de Procedencia.';
+        }
+      } else {
+        const sumaProcedencia = metricasProcedencia
+          .reduce((acumulado, metrica) => acumulado + aNumeroNoNegativo(metricasFormulario?.[metrica.clave]), 0);
+
+        if (sumaProcedencia > totalNormGlobal) {
+          if (!errores.total_asistentes) {
+            errores.total_asistentes = 'La suma de Procedencia no puede superar Total de asistentes.';
+          }
+        }
+      }
+    }
+  }
+
   Object.keys(porClave)
     .filter((clave) => clave.startsWith('visitas_'))
     .forEach((claveVisitas) => {
@@ -385,6 +447,15 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
 
       const nombresTexto = String(metricasFormulario?.[claveNombres] ?? '').trim();
       const cantidadNombres = contarNombresPorComa(nombresTexto);
+
+      const slug = claveVisitas.slice('visitas_'.length);
+      const claveProc = `proc_${slug}`;
+      if (porClave[claveProc]) {
+        const procNorm = aNumeroNoNegativo(metricasFormulario?.[claveProc]);
+        if (cantidadVisitas > procNorm && !errores[claveVisitas]) {
+          errores[claveVisitas] = 'Las visitas no pueden superar la procedencia indicada.';
+        }
+      }
 
       if (cantidadNombres === 0) {
         errores[claveNombres] = `Debe indicar ${cantidadVisitas} nombre(s) separados por coma.`;

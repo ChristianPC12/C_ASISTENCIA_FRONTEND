@@ -13,6 +13,8 @@ export default function RegistroPage() {
     errores,
     fechasRegistradas,
     metricasActivas,
+    clavePermanenciaAuto,
+    permanenciaAutoBloqueada,
     cambiarCampo,
     guardar,
     limpiarFormulario
@@ -28,6 +30,8 @@ export default function RegistroPage() {
         cargando={cargando}
         metricasActivas={metricasActivas}
         fechasRegistradas={fechasRegistradas}
+        clavePermanenciaAuto={clavePermanenciaAuto}
+        permanenciaAutoBloqueada={permanenciaAutoBloqueada}
         onCambiarCampo={cambiarCampo}
         onGuardar={guardar}
         onLimpiar={limpiarFormulario}

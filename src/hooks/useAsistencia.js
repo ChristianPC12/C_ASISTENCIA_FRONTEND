@@ -114,6 +114,11 @@ export function useAsistencia() {
     () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'permanencia'),
     [metricasActivas]
   );
+  const clavePermanenciaAuto = useMemo(() => {
+    if (metricasPermanencia.length < 2) return null;
+    const ultima = metricasPermanencia[metricasPermanencia.length - 1];
+    return ultima?.clave || null;
+  }, [metricasPermanencia]);
 
   const [registros, setRegistros] = useState([]);
   const [cultos, setCultos] = useState([]);
@@ -170,9 +175,64 @@ export function useAsistencia() {
     metricasInfoCulto
   ]);
 
-  // Si hay una única métrica de Permanencia faltante, la completa automáticamente con base en total_asistentes.
+  // Si no hay Información del culto, permitir derivar total desde Permanencia cuando el usuario complete todas.
   useEffect(() => {
-    if (!claveTotal || metricasPermanencia.length < 2) {
+    if (!claveTotal || metricasInfoCulto.length > 0 || metricasPermanencia.length < 1) {
+      return;
+    }
+
+    const totalRaw = formulario.metricas?.[claveTotal];
+    if (!esValorVacio(totalRaw)) return;
+
+    const tieneVacias = metricasPermanencia.some((item) => esValorVacio(formulario.metricas?.[item.clave]));
+    if (tieneVacias) return;
+
+    const sumaPermanencia = metricasPermanencia
+      .reduce((acumulado, item) => acumulado + aEnteroPositivo(formulario.metricas?.[item.clave]), 0);
+    if (sumaPermanencia <= 0) return;
+
+    setFormulario((prev) => {
+      const actual = String(prev.metricas?.[claveTotal] ?? '');
+      const nuevoTotal = String(sumaPermanencia);
+      if (actual === nuevoTotal) {
+        return prev;
+      }
+      return {
+        ...prev,
+        metricas: {
+          ...prev.metricas,
+          [claveTotal]: nuevoTotal
+        }
+      };
+    });
+  }, [
+    formulario.metricas,
+    claveTotal,
+    metricasInfoCulto,
+    metricasPermanencia
+  ]);
+
+  const permanenciaAutoBloqueada = useMemo(() => {
+    if (!claveTotal || !clavePermanenciaAuto || metricasPermanencia.length < 2) {
+      return false;
+    }
+
+    const totalRaw = formulario.metricas?.[claveTotal];
+    if (esValorVacio(totalRaw)) return false;
+
+    return metricasPermanencia
+      .filter((item) => item.clave !== clavePermanenciaAuto)
+      .every((item) => !esValorVacio(formulario.metricas?.[item.clave]));
+  }, [
+    formulario.metricas,
+    claveTotal,
+    clavePermanenciaAuto,
+    metricasPermanencia
+  ]);
+
+  // Calcular en tiempo real la última métrica de Permanencia (auto) para que la suma coincida con total_asistentes.
+  useEffect(() => {
+    if (!claveTotal || !clavePermanenciaAuto || metricasPermanencia.length < 2) {
       return;
     }
 
@@ -182,46 +242,50 @@ export function useAsistencia() {
     }
 
     const totalAsistentes = aEnteroPositivo(totalRaw);
-    const permanencia = metricasPermanencia.map((item) => {
-      const raw = formulario.metricas?.[item.clave];
-      return {
-        clave: item.clave,
-        vacio: esValorVacio(raw),
-        valor: aEnteroPositivo(raw)
-      };
-    });
-    const faltantes = permanencia.filter((item) => item.vacio);
-    if (faltantes.length !== 1) {
+    const otras = metricasPermanencia.filter((item) => item.clave !== clavePermanenciaAuto);
+    if (otras.length < 1) {
       return;
     }
 
-    const sumaConocida = permanencia
-      .filter((item) => !item.vacio)
-      .reduce((acumulado, item) => acumulado + item.valor, 0);
-
-    if (sumaConocida > totalAsistentes) {
+    const faltantesOtras = otras.some((item) => esValorVacio(formulario.metricas?.[item.clave]));
+    if (faltantesOtras) {
+      setFormulario((prev) => {
+        if ((prev.metricas?.[clavePermanenciaAuto] ?? '') === '') return prev;
+        return {
+          ...prev,
+          metricas: {
+            ...prev.metricas,
+            [clavePermanenciaAuto]: ''
+          }
+        };
+      });
       return;
     }
 
-    const claveFaltante = faltantes[0].clave;
-    const valorCalculado = String(Math.max(0, totalAsistentes - sumaConocida));
+    const sumaOtras = otras.reduce(
+      (acumulado, item) => acumulado + aEnteroPositivo(formulario.metricas?.[item.clave]),
+      0
+    );
+    const restante = totalAsistentes - sumaOtras;
+    const nuevoValor = restante >= 0 ? String(restante) : '';
 
     setFormulario((prev) => {
-      const actual = String(prev.metricas?.[claveFaltante] ?? '');
-      if (actual === valorCalculado) {
+      const actual = String(prev.metricas?.[clavePermanenciaAuto] ?? '');
+      if (actual === nuevoValor) {
         return prev;
       }
       return {
         ...prev,
         metricas: {
           ...prev.metricas,
-          [claveFaltante]: valorCalculado
+          [clavePermanenciaAuto]: nuevoValor
         }
       };
     });
   }, [
     formulario.metricas,
     claveTotal,
+    clavePermanenciaAuto,
     metricasPermanencia
   ]);
 
@@ -549,6 +613,8 @@ export function useAsistencia() {
     filtros,
     metricasActivas,
     mapaEtiquetasMetricas,
+    clavePermanenciaAuto,
+    permanenciaAutoBloqueada,
     cambiarCampo,
     guardar,
     editar,

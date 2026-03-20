@@ -93,10 +93,13 @@ function campoNumero({
   errores,
   cargando,
   onCambiarCampo,
-  totalAutoCalculado
+  totalAutoCalculado,
+  permanenciaAuto
 }) {
   const esTotal = metrica.clave === 'total_asistentes';
-  const soloLectura = esTotal && totalAutoCalculado;
+  const esPermanenciaAuto = Boolean(permanenciaAuto?.bloqueada)
+    && permanenciaAuto?.clave === metrica.clave;
+  const soloLectura = (esTotal && totalAutoCalculado) || esPermanenciaAuto;
 
   return (
     <div className={esTotal ? 'col-md-6' : 'col-md-6 col-lg-4'} key={metrica.clave}>
@@ -117,7 +120,11 @@ function campoNumero({
         readOnly={soloLectura}
       />
       {soloLectura && (
-        <small className="text-muted">Se calcula automáticamente desde Información del culto.</small>
+        <small className="text-muted">
+          {esTotal
+            ? 'Se calcula automáticamente desde Información del culto.'
+            : 'Se calcula automáticamente para completar Permanencia.'}
+        </small>
       )}
       {errores[metrica.clave] && (
         <div className="invalid-feedback">{errores[metrica.clave]}</div>
@@ -134,6 +141,8 @@ export default function AsistenciaForm({
   cargando,
   metricasActivas,
   fechasRegistradas = FECHAS_REGISTRADAS_VACIAS,
+  clavePermanenciaAuto = null,
+  permanenciaAutoBloqueada = false,
   onCambiarCampo,
   onGuardar,
   onLimpiar
@@ -141,6 +150,10 @@ export default function AsistenciaForm({
   const grupos = agruparMetricasPorSeccion(metricasActivas);
   const metricasInfoCulto = obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto');
   const totalAutoCalculado = metricasInfoCulto.length > 0;
+  const permanenciaAuto = {
+    clave: clavePermanenciaAuto,
+    bloqueada: permanenciaAutoBloqueada
+  };
 
   const formatearNombreCulto = (nombre = '', codigo = '') => {
     const valor = nombre || codigo || '';
@@ -266,7 +279,8 @@ export default function AsistenciaForm({
                         errores,
                         cargando,
                         onCambiarCampo,
-                        totalAutoCalculado
+                        totalAutoCalculado,
+                        permanenciaAuto
                       })
                   ))}
                 </div>
