@@ -1,5 +1,9 @@
 import SelectorFecha from './SelectorFecha';
-import { ETIQUETAS_SECCION, agruparMetricasPorSeccion, obtenerParPuntualidad } from '../../utils/metricasConfig';
+import {
+  ETIQUETAS_SECCION,
+  agruparMetricasPorSeccion,
+  obtenerMetricasNumericasPorSeccion
+} from '../../utils/metricasConfig';
 import { OBSERVACIONES_MAX } from '../../validators/asistenciaValidator';
 
 const FECHAS_REGISTRADAS_VACIAS = [];
@@ -113,7 +117,7 @@ function campoNumero({
         readOnly={soloLectura}
       />
       {soloLectura && (
-        <small className="text-muted">Se calcula automaticamente desde puntualidad.</small>
+        <small className="text-muted">Se calcula automáticamente desde Información del culto.</small>
       )}
       {errores[metrica.clave] && (
         <div className="invalid-feedback">{errores[metrica.clave]}</div>
@@ -135,8 +139,8 @@ export default function AsistenciaForm({
   onLimpiar
 }) {
   const grupos = agruparMetricasPorSeccion(metricasActivas);
-  const parPuntualidad = obtenerParPuntualidad(metricasActivas);
-  const totalAutoCalculado = !!(parPuntualidad.antes && parPuntualidad.despues);
+  const metricasInfoCulto = obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto');
+  const totalAutoCalculado = metricasInfoCulto.length > 0;
 
   const formatearNombreCulto = (nombre = '', codigo = '') => {
     const valor = nombre || codigo || '';

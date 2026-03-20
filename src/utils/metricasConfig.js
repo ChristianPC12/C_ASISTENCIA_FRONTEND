@@ -97,7 +97,7 @@ export const METRICAS_FALLBACK = [
   { clave: 'visitas_guayabo', etiqueta: 'Visitas de Guayabo', categoria: 'visitas', habilitado: false, obligatorio: false },
   { clave: 'nombres_visitas_guayabo', etiqueta: 'Nombres de visitas de Guayabo', categoria: 'visitas', habilitado: false, obligatorio: false },
   { clave: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar', categoria: 'permanencia', habilitado: false, obligatorio: false },
-  { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron todo', categoria: 'permanencia', habilitado: false, obligatorio: false },
+  { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron hasta el final', categoria: 'permanencia', habilitado: false, obligatorio: false },
   { clave: 'observaciones', etiqueta: 'Observaciones', categoria: 'observaciones', habilitado: false, obligatorio: false }
 ];
 
@@ -251,6 +251,21 @@ function contarNombresPorComa(valor = '') {
     .length;
 }
 
+function esValorVacio(valor) {
+  return valor === '' || valor === null || valor === undefined;
+}
+
+function aNumeroNoNegativo(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return 0;
+  return Math.max(0, Math.trunc(numero));
+}
+
+export function obtenerMetricasNumericasPorSeccion(metricasActivas, seccion) {
+  return (Array.isArray(metricasActivas) ? metricasActivas : [])
+    .filter((metrica) => (metrica.seccion || metrica.categoria) === seccion && metrica.tipo === 'numero');
+}
+
 export function validarDependenciasMetricas(metricasActivas, metricasFormulario) {
   const errores = {};
 
@@ -276,8 +291,12 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
     }
   });
 
+  const metricasInfoCulto = obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto');
+  const metricasPermanencia = obtenerMetricasNumericasPorSeccion(metricasActivas, 'permanencia');
   const existeAntes = !!porClave.llegaron_antes_hora;
   const existeDespues = !!porClave.llegaron_despues_hora;
+  const existeRetiros = !!porClave.retiros_antes_terminar;
+  const existeSeQuedaron = !!porClave.se_quedaron_todo;
   const existeTotal = !!porClave.total_asistentes;
 
   if (existeAntes !== existeDespues) {
@@ -285,21 +304,73 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
     errores.llegaron_despues_hora = 'Las métricas de puntualidad deben estar ambas habilitadas.';
   }
 
-  if (existeAntes && existeDespues) {
-    const antes = Number(metricasFormulario?.llegaron_antes_hora ?? 0);
-    const despues = Number(metricasFormulario?.llegaron_despues_hora ?? 0);
-    const suma = (Number.isFinite(antes) ? Math.max(0, Math.trunc(antes)) : 0)
-      + (Number.isFinite(despues) ? Math.max(0, Math.trunc(despues)) : 0);
+  if (existeRetiros !== existeSeQuedaron) {
+    errores.retiros_antes_terminar = 'Las métricas base de Permanencia deben mantenerse ambas habilitadas.';
+    errores.se_quedaron_todo = 'Las métricas base de Permanencia deben mantenerse ambas habilitadas.';
+  }
 
-    if (existeTotal) {
-      const total = Number(metricasFormulario?.total_asistentes ?? 0);
-      const totalNorm = Number.isFinite(total) ? Math.max(0, Math.trunc(total)) : 0;
-      if (totalNorm !== suma) {
-        errores.total_asistentes = 'Total de asistentes debe ser igual a antes + después de la hora.';
+  if (metricasInfoCulto.length > 0) {
+    if (!existeTotal) {
+      errores.total_asistentes = 'Total de asistentes debe estar habilitado cuando hay métricas de Información del culto.';
+    } else {
+      const totalRaw = metricasFormulario?.total_asistentes;
+      const totalVacio = esValorVacio(totalRaw);
+      const sumaInfoCulto = metricasInfoCulto
+        .reduce((acumulado, metrica) => acumulado + aNumeroNoNegativo(metricasFormulario?.[metrica.clave]), 0);
+      const hayInformacionDigitada = metricasInfoCulto
+        .some((metrica) => !esValorVacio(metricasFormulario?.[metrica.clave]));
+
+      if (hayInformacionDigitada || !totalVacio) {
+        if (totalVacio) {
+          errores.total_asistentes = 'Total de asistentes es obligatorio cuando se digitan métricas de Información del culto.';
+        } else if (aNumeroNoNegativo(totalRaw) !== sumaInfoCulto) {
+          errores.total_asistentes = 'Total de asistentes debe coincidir con la suma de Información del culto.';
+        }
       }
     }
-  } else if (existeTotal) {
-    errores.total_asistentes = 'Total de asistentes requiere métricas de puntualidad habilitadas.';
+  }
+
+  if (metricasPermanencia.length > 0) {
+    if (!existeTotal) {
+      errores.total_asistentes = 'Total de asistentes debe estar habilitado cuando hay métricas de Permanencia.';
+    } else {
+      const totalRaw = metricasFormulario?.total_asistentes;
+      const totalVacio = esValorVacio(totalRaw);
+      const totalNorm = aNumeroNoNegativo(totalRaw);
+      const valoresPermanencia = metricasPermanencia.map((metrica) => {
+        const raw = metricasFormulario?.[metrica.clave];
+        return {
+          clave: metrica.clave,
+          vacio: esValorVacio(raw),
+          valor: aNumeroNoNegativo(raw)
+        };
+      });
+      const faltantes = valoresPermanencia.filter((item) => item.vacio);
+      const sumaCompletas = valoresPermanencia
+        .filter((item) => !item.vacio)
+        .reduce((acumulado, item) => acumulado + item.valor, 0);
+
+      if (totalVacio) {
+        errores.total_asistentes = 'Total de asistentes es obligatorio cuando hay métricas de Permanencia.';
+      } else if (faltantes.length === 0) {
+        if (sumaCompletas !== totalNorm) {
+          errores.total_asistentes =
+            'La suma de Permanencia debe coincidir con Total de asistentes.';
+        }
+      } else if (faltantes.length === 1) {
+        if (sumaCompletas > totalNorm) {
+          errores[faltantes[0].clave] =
+            'La suma de Permanencia no puede superar Total de asistentes.';
+        }
+      } else {
+        const minimoCompletas = metricasPermanencia.length - 1;
+        const completas = metricasPermanencia.length - faltantes.length;
+        if (completas < minimoCompletas) {
+          errores[faltantes[0].clave] =
+            `Complete al menos ${minimoCompletas} métricas de Permanencia para calcular la restante.`;
+        }
+      }
+    }
   }
 
   Object.keys(porClave)

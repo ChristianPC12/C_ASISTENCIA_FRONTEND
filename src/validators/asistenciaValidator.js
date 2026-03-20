@@ -82,12 +82,6 @@ export function validarAsistencia(datos, opciones = {}) {
     errores.total_asistentes = 'El total de asistentes debe ser mayor o igual a ninos + jovenes.';
   }
 
-  const retiros = aEnteroPositivo(metricasFormulario?.retiros_antes_terminar);
-  const seQuedaron = aEnteroPositivo(metricasFormulario?.se_quedaron_todo);
-  if (total > 0 && retiros + seQuedaron > total) {
-    errores.se_quedaron_todo = 'Retiros + Se quedaron no puede superar el total de asistentes.';
-  }
-
   const ordenCampos = construirOrdenCampos(metricasActivas);
   const primerCampoError = ordenCampos.find((campo) => errores[campo]) || null;
 

@@ -10,8 +10,11 @@ import {
 } from '../utils/metricasConfig';
 
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
+const CLAVES_PERMANENCIA_BASE = ['retiros_antes_terminar', 'se_quedaron_todo'];
 const CLAVE_TOTAL_ASISTENTES = 'total_asistentes';
 const MAX_METRICAS_ADICIONALES = 7;
+const CATEGORIA_INFO_CULTO = 'informacion_culto';
+const CATEGORIA_PERMANENCIA = 'permanencia';
 const CATEGORIAS_VALIDAS = new Set(CATEGORIAS_METRICA_OPCIONES.map((item) => item.valor));
 const CATEGORIAS_AUTOMATICAS = new Set(['procedencia', 'visitas']);
 const METRICAS_FIJAS_MAP = new Map(
@@ -550,14 +553,18 @@ function validarProcedencias(procedencias) {
   return errores;
 }
 
-function validarMetricas(metricas) {
+function validarMetricasConfiguracion(metricas) {
   const errores = {};
   const claves = new Set();
   const metricasAdicionales = contarMetricasAdicionales(metricas);
   let habilitadas = 0;
   let antes = null;
   let despues = null;
+  let retiroAntesTerminar = null;
+  let seQuedaronTodo = null;
   let total = null;
+  let infoCultoHabilitadas = 0;
+  let permanenciaHabilitadas = 0;
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
     return { general: 'Debe configurar al menos una métrica.' };
@@ -594,11 +601,15 @@ function validarMetricas(metricas) {
     }
 
     if (item.habilitado) {
-      habilitadas++;
+      habilitadas += 1;
+      if (categoria === CATEGORIA_INFO_CULTO) infoCultoHabilitadas += 1;
+      if (categoria === CATEGORIA_PERMANENCIA) permanenciaHabilitadas += 1;
     }
 
     if (claveNormalizada === CLAVES_PUNTUALIDAD[0]) antes = item;
     if (claveNormalizada === CLAVES_PUNTUALIDAD[1]) despues = item;
+    if (claveNormalizada === CLAVES_PERMANENCIA_BASE[0]) retiroAntesTerminar = item;
+    if (claveNormalizada === CLAVES_PERMANENCIA_BASE[1]) seQuedaronTodo = item;
     if (claveNormalizada === CLAVE_TOTAL_ASISTENTES) total = item;
 
     if (Object.keys(filaErrores).length > 0) {
@@ -618,14 +629,23 @@ function validarMetricas(metricas) {
     if (antes.habilitado !== despues.habilitado || antes.obligatorio !== despues.obligatorio) {
       errores.general = 'Puntualidad (antes/después) debe mantenerse ambos o ninguno.';
     }
+  }
 
-    if (total && total.habilitado && (!antes.habilitado || !despues.habilitado)) {
-      errores.general = 'Total de asistentes requiere ambas métricas de puntualidad habilitadas.';
+  if ((retiroAntesTerminar && !seQuedaronTodo) || (!retiroAntesTerminar && seQuedaronTodo)) {
+    errores.general = 'Permanencia base requiere ambas métricas: retiros y se quedaron hasta el final.';
+  }
+
+  if (retiroAntesTerminar && seQuedaronTodo) {
+    if (
+      retiroAntesTerminar.habilitado !== seQuedaronTodo.habilitado
+      || retiroAntesTerminar.obligatorio !== seQuedaronTodo.obligatorio
+    ) {
+      errores.general = 'Permanencia base (retiros/se quedaron) debe mantenerse ambos o ninguno.';
     }
   }
 
-  if (total && total.habilitado && (!antes || !despues)) {
-    errores.general = 'Total de asistentes requiere métricas de puntualidad habilitadas.';
+  if ((infoCultoHabilitadas > 0 || permanenciaHabilitadas > 0) && (!total || !total.habilitado)) {
+    errores.general = 'Total de asistentes debe estar habilitado cuando hay métricas en Información del culto o Permanencia.';
   }
 
   return errores;
@@ -820,6 +840,59 @@ export function useSetupAdministrador() {
         });
       }
 
+      if (metricaEditada && CLAVES_PERMANENCIA_BASE.includes(metricaEditada.clave)) {
+        actualizado = actualizado.map((item, idx) => {
+          if (idx === index || !CLAVES_PERMANENCIA_BASE.includes(item.clave)) return item;
+          if (campo === 'habilitado') {
+            const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
+            return {
+              ...item,
+              habilitado: metricaEditada.habilitado,
+              obligatorio: metricaEditada.habilitado ? obligatorioPrevio : false,
+              obligatorio_previo: obligatorioPrevio
+            };
+          }
+          if (campo === 'obligatorio') {
+            return {
+              ...item,
+              obligatorio: metricaEditada.habilitado ? metricaEditada.obligatorio : false,
+              obligatorio_previo: metricaEditada.obligatorio
+            };
+          }
+          return item;
+        });
+      }
+
+      if (metricaEditada && (campo === 'habilitado' || campo === 'categoria')) {
+        const categoriaMetrica = normalizarCategoriaMetrica(
+          metricaEditada?.categoria,
+          metricaEditada?.clave
+        );
+        const requiereTotal =
+          metricaEditada.habilitado
+          && [CATEGORIA_INFO_CULTO, CATEGORIA_PERMANENCIA].includes(categoriaMetrica);
+
+        if (requiereTotal) {
+          actualizado = actualizado.map((item) => {
+            if (normalizarClaveMetrica(item?.clave) !== CLAVE_TOTAL_ASISTENTES) {
+              return item;
+            }
+
+            if (item.habilitado) {
+              return item;
+            }
+
+            const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
+            return {
+              ...item,
+              habilitado: true,
+              obligatorio: obligatorioPrevio,
+              obligatorio_previo: obligatorioPrevio
+            };
+          });
+        }
+      }
+
       if (metricaEditada && campo === 'habilitado') {
         const slugProcedencia = slugProcedenciaDesdeClaveMetrica(metricaEditada.clave);
         if (slugProcedencia) {
@@ -967,7 +1040,7 @@ export function useSetupAdministrador() {
     const procedenciasPreparadas = prepararProcedenciasParaGuardar(procedencias);
     const requiereSincronizarProcedencias =
       firmarProcedencias(procedenciasPreparadas) !== firmaProcedenciasBase;
-    const validacion = validarMetricas(metricasPreparadas);
+    const validacion = validarMetricasConfiguracion(metricasPreparadas);
     setErroresMetricas(validacion);
     if (Object.keys(validacion).length > 0) {
       notificarError(validacion.general || 'Revise la configuración de métricas.');

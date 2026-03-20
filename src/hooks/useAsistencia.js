@@ -12,7 +12,7 @@ import {
   obtenerClaveTotalAsistentes,
   obtenerMapaEtiquetasMetricas,
   obtenerMetricasActivas,
-  obtenerParPuntualidad
+  obtenerMetricasNumericasPorSeccion
 } from '../utils/metricasConfig';
 import { useSetupStatus } from './useSetupStatus';
 
@@ -48,6 +48,8 @@ const normalizarFechaExacta = (valor) => {
 };
 
 const OBSERVACIONES_MAX_SALTOS = 3;
+
+const esValorVacio = (valor) => valor === '' || valor === null || valor === undefined;
 
 const normalizarSaltosObservaciones = (valor) => {
   const texto = String(valor ?? '').replace(/\r\n/g, '\n');
@@ -104,8 +106,12 @@ export function useAsistencia() {
     () => obtenerClaveTotalAsistentes(metricasActivas),
     [metricasActivas]
   );
-  const parPuntualidad = useMemo(
-    () => obtenerParPuntualidad(metricasActivas),
+  const metricasInfoCulto = useMemo(
+    () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto'),
+    [metricasActivas]
+  );
+  const metricasPermanencia = useMemo(
+    () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'permanencia'),
     [metricasActivas]
   );
 
@@ -133,34 +139,17 @@ export function useAsistencia() {
     }));
   }, [metricasActivas]);
 
-  // Auto-calcular total_asistentes si existen metricas de puntualidad
+  // Auto-calcular total_asistentes si hay métricas activas en Información del culto.
   useEffect(() => {
-    if (!claveTotal || !parPuntualidad.antes || !parPuntualidad.despues) {
+    if (!claveTotal || metricasInfoCulto.length < 1) {
       return;
     }
 
-    const antesRaw = formulario.metricas?.[parPuntualidad.antes];
-    const despuesRaw = formulario.metricas?.[parPuntualidad.despues];
-    const antesVacio = antesRaw === '' || antesRaw === null || antesRaw === undefined;
-    const despuesVacio = despuesRaw === '' || despuesRaw === null || despuesRaw === undefined;
-
-    if (antesVacio && despuesVacio) {
-      setFormulario((prev) => {
-        if ((prev.metricas?.[claveTotal] ?? '') === '') return prev;
-        return {
-          ...prev,
-          metricas: {
-            ...prev.metricas,
-            [claveTotal]: ''
-          }
-        };
-      });
-      return;
-    }
-
-    const antes = aEnteroPositivo(antesRaw);
-    const despues = aEnteroPositivo(despuesRaw);
-    const nuevoTotal = String(antes + despues);
+    const valoresInfo = metricasInfoCulto.map((item) => formulario.metricas?.[item.clave]);
+    const todasVacias = valoresInfo.every((valor) => esValorVacio(valor));
+    const sumaInfoCulto = metricasInfoCulto
+      .reduce((acumulado, item) => acumulado + aEnteroPositivo(formulario.metricas?.[item.clave]), 0);
+    const nuevoTotal = todasVacias ? '' : String(sumaInfoCulto);
 
     setFormulario((prev) => {
       const actual = String(prev.metricas?.[claveTotal] ?? '');
@@ -178,8 +167,62 @@ export function useAsistencia() {
   }, [
     formulario.metricas,
     claveTotal,
-    parPuntualidad.antes,
-    parPuntualidad.despues
+    metricasInfoCulto
+  ]);
+
+  // Si hay una única métrica de Permanencia faltante, la completa automáticamente con base en total_asistentes.
+  useEffect(() => {
+    if (!claveTotal || metricasPermanencia.length < 2) {
+      return;
+    }
+
+    const totalRaw = formulario.metricas?.[claveTotal];
+    if (esValorVacio(totalRaw)) {
+      return;
+    }
+
+    const totalAsistentes = aEnteroPositivo(totalRaw);
+    const permanencia = metricasPermanencia.map((item) => {
+      const raw = formulario.metricas?.[item.clave];
+      return {
+        clave: item.clave,
+        vacio: esValorVacio(raw),
+        valor: aEnteroPositivo(raw)
+      };
+    });
+    const faltantes = permanencia.filter((item) => item.vacio);
+    if (faltantes.length !== 1) {
+      return;
+    }
+
+    const sumaConocida = permanencia
+      .filter((item) => !item.vacio)
+      .reduce((acumulado, item) => acumulado + item.valor, 0);
+
+    if (sumaConocida > totalAsistentes) {
+      return;
+    }
+
+    const claveFaltante = faltantes[0].clave;
+    const valorCalculado = String(Math.max(0, totalAsistentes - sumaConocida));
+
+    setFormulario((prev) => {
+      const actual = String(prev.metricas?.[claveFaltante] ?? '');
+      if (actual === valorCalculado) {
+        return prev;
+      }
+      return {
+        ...prev,
+        metricas: {
+          ...prev.metricas,
+          [claveFaltante]: valorCalculado
+        }
+      };
+    });
+  }, [
+    formulario.metricas,
+    claveTotal,
+    metricasPermanencia
   ]);
 
   // Cargar cultos al montar
