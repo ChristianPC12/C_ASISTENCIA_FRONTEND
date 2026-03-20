@@ -202,6 +202,8 @@ export default function AsistenciaForm({
     }
   };
 
+  const mostrarFormularioDetalle = Boolean(formulario.culto_id);
+
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header">
@@ -234,83 +236,97 @@ export default function AsistenciaForm({
                 </select>
                 {errores.culto_id && <div className="invalid-feedback">{errores.culto_id}</div>}
               </div>
-
-              <div className="col-md-6">
-                <label htmlFor="fecha" className="form-label">
-                  Fecha <span className="text-danger">*</span>
-                </label>
-                <SelectorFecha
-                  value={formulario.fecha}
-                  onChange={(valor) => onCambiarCampo('fecha', valor)}
-                  diaPermitido={diaPermitido}
-                  fechasDeshabilitadas={editandoId ? [] : fechasRegistradas}
-                  disabled={cargando || !formulario.culto_id}
-                  className={errores.fecha ? 'is-invalid' : ''}
-                  placeholder={!formulario.culto_id ? 'Seleccione un culto primero' : 'Seleccionar fecha'}
-                  nombreDia={NOMBRES_DIA[diaPermitido] || ''}
-                />
-                {errores.fecha && (
-                  <div className="invalid-feedback d-block">{errores.fecha}</div>
-                )}
-              </div>
             </div>
           </div>
 
-          {SECCIONES_ORDEN.map((seccion) => {
-            const metricas = grupos[seccion] || [];
-            if (metricas.length === 0) return null;
+          {!mostrarFormularioDetalle && (
+            <div className="small text-muted pt-1">
+              Seleccione un culto para habilitar la fecha y el resto del registro.
+            </div>
+          )}
 
-            return (
-              <div className="seccion-form" key={seccion}>
-                <h6>{ETIQUETAS_SECCION[seccion] || seccion}</h6>
+          {mostrarFormularioDetalle && (
+            <>
+              <div className="seccion-form">
                 <div className="row g-3">
-                  {metricas.map((metrica) => (
-                    metrica.tipo === 'texto'
-                      ? campoTexto({
-                        metrica,
-                        formulario,
-                        errores,
-                        cargando,
-                        onCambiarCampo
-                      })
-                      : campoNumero({
-                        metrica,
-                        formulario,
-                        errores,
-                        cargando,
-                        onCambiarCampo,
-                        totalAutoCalculado,
-                        permanenciaAuto
-                      })
-                  ))}
+                  <div className="col-md-6">
+                    <label htmlFor="fecha" className="form-label">
+                      Fecha <span className="text-danger">*</span>
+                    </label>
+                    <SelectorFecha
+                      value={formulario.fecha}
+                      onChange={(valor) => onCambiarCampo('fecha', valor)}
+                      diaPermitido={diaPermitido}
+                      fechasDeshabilitadas={editandoId ? [] : fechasRegistradas}
+                      disabled={cargando || !formulario.culto_id}
+                      className={errores.fecha ? 'is-invalid' : ''}
+                      placeholder="Seleccionar fecha"
+                      nombreDia={NOMBRES_DIA[diaPermitido] || ''}
+                    />
+                    {errores.fecha && (
+                      <div className="invalid-feedback d-block">{errores.fecha}</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            );
-          })}
 
-          <div className="d-flex gap-2 mt-3">
-            <button
-              type="submit"
-              className="btn btn-primary px-4"
-              disabled={cargando}
-            >
-              {cargando ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Guardando...
-                </>
-              ) : editandoId ? 'Actualizar' : 'Guardar'}
-            </button>
+              {SECCIONES_ORDEN.map((seccion) => {
+                const metricas = grupos[seccion] || [];
+                if (metricas.length === 0) return null;
 
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={onLimpiar}
-              disabled={cargando}
-            >
-              {editandoId ? 'Cancelar' : 'Limpiar'}
-            </button>
-          </div>
+                return (
+                  <div className="seccion-form" key={seccion}>
+                    <h6>{ETIQUETAS_SECCION[seccion] || seccion}</h6>
+                    <div className="row g-3">
+                      {metricas.map((metrica) => (
+                        metrica.tipo === 'texto'
+                          ? campoTexto({
+                            metrica,
+                            formulario,
+                            errores,
+                            cargando,
+                            onCambiarCampo
+                          })
+                          : campoNumero({
+                            metrica,
+                            formulario,
+                            errores,
+                            cargando,
+                            onCambiarCampo,
+                            totalAutoCalculado,
+                            permanenciaAuto
+                          })
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="d-flex gap-2 mt-3">
+                <button
+                  type="submit"
+                  className="btn btn-primary px-4"
+                  disabled={cargando}
+                >
+                  {cargando ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Guardando...
+                    </>
+                  ) : editandoId ? 'Actualizar' : 'Guardar'}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={onLimpiar}
+                  disabled={cargando}
+                >
+                  {editandoId ? 'Cancelar' : 'Limpiar'}
+                </button>
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>

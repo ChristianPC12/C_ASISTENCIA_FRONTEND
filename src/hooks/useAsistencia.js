@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { OBSERVACIONES_MAX, validarAsistencia } from '../validators/asistenciaValidator';
@@ -88,6 +88,127 @@ function crearFormularioVacio(metricasActivas) {
   };
 }
 
+function extraerValorCampoFormulario(datos, campo) {
+  if (!campo) return undefined;
+  if (campo === 'culto_id' || campo === 'fecha') {
+    return datos?.[campo];
+  }
+  return datos?.metricas?.[campo];
+}
+
+function esMensajeRequeridoSimple(mensaje = '') {
+  const normalizado = String(mensaje || '').trim().toLowerCase();
+  return normalizado === 'debe seleccionar un culto.'
+    || normalizado === 'la fecha es obligatoria.'
+    || normalizado.endsWith(' es obligatorio.');
+}
+
+function obtenerClavesRelacionadasTiempoReal({
+  campo,
+  metricasPorClave,
+  metricasInfoCulto,
+  metricasPermanencia,
+  claveTotal
+}) {
+  const relacionadas = new Set();
+  if (!campo) return relacionadas;
+
+  relacionadas.add(campo);
+
+  const metrica = metricasPorClave[campo];
+  const seccion = metrica?.seccion || metrica?.categoria || '';
+
+  if (campo === 'culto_id') {
+    relacionadas.add('fecha');
+    return relacionadas;
+  }
+
+  if (campo === 'fecha') {
+    relacionadas.add('culto_id');
+    return relacionadas;
+  }
+
+  if (
+    claveTotal
+    && ['informacion_culto', 'composicion_asistentes', 'procedencia', 'visitas', 'permanencia']
+      .includes(seccion)
+  ) {
+    relacionadas.add(claveTotal);
+  }
+
+  if (seccion === 'informacion_culto') {
+    metricasInfoCulto.forEach((item) => relacionadas.add(item.clave));
+  }
+
+  if (seccion === 'permanencia') {
+    metricasPermanencia.forEach((item) => relacionadas.add(item.clave));
+  }
+
+  if (campo.startsWith('proc_')) {
+    const slug = campo.slice('proc_'.length);
+    relacionadas.add(`visitas_${slug}`);
+    relacionadas.add(`nombres_visitas_${slug}`);
+  }
+
+  if (campo.startsWith('visitas_')) {
+    const slug = campo.slice('visitas_'.length);
+    relacionadas.add(`proc_${slug}`);
+    relacionadas.add(`nombres_visitas_${slug}`);
+  }
+
+  if (campo.startsWith('nombres_visitas_')) {
+    const slug = campo.slice('nombres_visitas_'.length);
+    relacionadas.add(`proc_${slug}`);
+    relacionadas.add(`visitas_${slug}`);
+  }
+
+  return relacionadas;
+}
+
+function filtrarErroresTiempoReal({
+  erroresValidacion,
+  datos,
+  tocados,
+  campoActual,
+  metricasPorClave,
+  metricasInfoCulto,
+  metricasPermanencia,
+  claveTotal
+}) {
+  const relacionadas = obtenerClavesRelacionadasTiempoReal({
+    campo: campoActual,
+    metricasPorClave,
+    metricasInfoCulto,
+    metricasPermanencia,
+    claveTotal
+  });
+
+  const erroresFiltrados = Object.entries(erroresValidacion).reduce((acc, [clave, mensaje]) => {
+    const tocado = Boolean(tocados?.[clave]);
+    const tieneValor = !esValorVacio(extraerValorCampoFormulario(datos, clave));
+    const relacionado = relacionadas.has(clave);
+
+    if (tocado || tieneValor || (relacionado && !esMensajeRequeridoSimple(mensaje))) {
+      acc[clave] = mensaje;
+    }
+
+    return acc;
+  }, {});
+
+  if (campoActual && !erroresFiltrados[campoActual]) {
+    const mensajeRelacionado = [...relacionadas]
+      .filter((clave) => clave !== campoActual)
+      .map((clave) => erroresValidacion[clave])
+      .find((mensaje) => mensaje && !esMensajeRequeridoSimple(mensaje));
+
+    if (mensajeRelacionado) {
+      erroresFiltrados[campoActual] = mensajeRelacionado;
+    }
+  }
+
+  return erroresFiltrados;
+}
+
 /**
  * Hook para CRUD de asistencia con metricas dinamicas por tenant
  */
@@ -100,6 +221,13 @@ export function useAsistencia() {
   );
   const mapaEtiquetasMetricas = useMemo(
     () => obtenerMapaEtiquetasMetricas(metricasActivas),
+    [metricasActivas]
+  );
+  const metricasPorClave = useMemo(
+    () => metricasActivas.reduce((acc, metrica) => {
+      acc[metrica.clave] = metrica;
+      return acc;
+    }, {}),
     [metricasActivas]
   );
   const claveTotal = useMemo(
@@ -126,7 +254,9 @@ export function useAsistencia() {
   const [editandoId, setEditandoId] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [errores, setErrores] = useState({});
+  const [camposTocados, setCamposTocados] = useState({});
   const [fechasRegistradas, setFechasRegistradas] = useState([]);
+  const ultimoCampoEditadoRef = useRef(null);
 
   // Filtros
   const [filtros, setFiltros] = useState({
@@ -143,6 +273,27 @@ export function useAsistencia() {
       metricas: construirFormularioMetricas(metricasActivas, prev.metricas)
     }));
   }, [metricasActivas]);
+
+  const validarTiempoReal = useCallback((datos, tocados, campoActual = null) => {
+    const validacion = validarAsistencia(datos, { metricasActivas });
+    const erroresFiltrados = filtrarErroresTiempoReal({
+      erroresValidacion: validacion.errores,
+      datos,
+      tocados,
+      campoActual,
+      metricasPorClave,
+      metricasInfoCulto,
+      metricasPermanencia,
+      claveTotal
+    });
+    setErrores(erroresFiltrados);
+  }, [
+    metricasActivas,
+    metricasPorClave,
+    metricasInfoCulto,
+    metricasPermanencia,
+    claveTotal
+  ]);
 
   // Auto-calcular total_asistentes si hay métricas activas en Información del culto.
   useEffect(() => {
@@ -385,7 +536,18 @@ export function useAsistencia() {
     cargarFechasRegistradas(formulario.culto_id);
   }, [formulario.culto_id, cultos, cargarFechasRegistradas]);
 
+  useEffect(() => {
+    if (Object.keys(camposTocados).length === 0) {
+      return;
+    }
+
+    validarTiempoReal(formulario, camposTocados, ultimoCampoEditadoRef.current);
+  }, [formulario, camposTocados, validarTiempoReal]);
+
   const cambiarCampo = useCallback((campo, valor) => {
+    ultimoCampoEditadoRef.current = campo;
+    setCamposTocados((prev) => ({ ...prev, [campo]: true }));
+
     if (campo === 'culto_id' || campo === 'fecha') {
       setFormulario((prev) => ({ ...prev, [campo]: valor }));
     } else {
@@ -397,12 +559,6 @@ export function useAsistencia() {
         }
       }));
     }
-
-    setErrores((prev) => {
-      const nuevos = { ...prev };
-      delete nuevos[campo];
-      return nuevos;
-    });
   }, []);
 
   const prepararDatos = useCallback((datos) => {
@@ -429,6 +585,13 @@ export function useAsistencia() {
     const validacion = validarAsistencia(formulario, { metricasActivas });
     if (!validacion.valido) {
       setErrores(validacion.errores);
+      setCamposTocados((prev) => {
+        const siguientes = { ...prev };
+        Object.keys(validacion.errores).forEach((campo) => {
+          siguientes[campo] = true;
+        });
+        return siguientes;
+      });
       if (validacion.primerCampoError) {
         setTimeout(() => {
           const el = document.getElementById(validacion.primerCampoError);
@@ -494,6 +657,8 @@ export function useAsistencia() {
     });
     setEditandoId(registro.id);
     setErrores({});
+    setCamposTocados({});
+    ultimoCampoEditadoRef.current = null;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [metricasActivas]);
 
@@ -596,6 +761,8 @@ export function useAsistencia() {
     setFormulario(crearFormularioVacio(metricasActivas));
     setEditandoId(null);
     setErrores({});
+    setCamposTocados({});
+    ultimoCampoEditadoRef.current = null;
   }, [metricasActivas]);
 
   const cambiarFiltro = useCallback((campo, valor) => {
