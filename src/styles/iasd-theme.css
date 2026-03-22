@@ -232,6 +232,15 @@ a:hover {
   border-radius: 0.85rem;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(0, 51, 102, 0.05);
+  max-height: min(58vh, 540px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.asistencia-seccion-card::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .asistencia-seccion-header {
@@ -240,6 +249,11 @@ a:hover {
   justify-content: space-between;
   gap: 0.8rem;
   margin-bottom: 0.95rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #ffffff;
+  padding-bottom: 0.65rem;
 }
 
 .asistencia-seccion-header h6 {
@@ -259,6 +273,26 @@ a:hover {
   min-height: 44px;
 }
 
+.asistencia-visitas-stack {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.asistencia-visitas-row {
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(0, 51, 102, 0.08);
+}
+
+.asistencia-visitas-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.asistencia-nombres-input {
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
 @media (max-width: 991px) {
   .asistencia-top-grid {
     grid-template-columns: 1fr;
@@ -266,6 +300,10 @@ a:hover {
 }
 
 @media (max-width: 576px) {
+  .asistencia-seccion-card {
+    max-height: min(50vh, 460px);
+  }
+
   .asistencia-seccion-header {
     flex-direction: column;
     align-items: flex-start;

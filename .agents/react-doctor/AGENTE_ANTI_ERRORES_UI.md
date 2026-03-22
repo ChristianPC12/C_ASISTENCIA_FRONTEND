@@ -284,6 +284,16 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   3. No propagar un error de una categoría a otra; cada campo debe recibir solo feedback de su propia regla.
   4. Si una entrada rompe una regla dura (`suma > total`, `visitas > procedencia`), bloquear el cambio antes de persistirlo en estado.
 
+### E31) Bloque de visitas mal agrupado y sin límite por nombre
+
+- Qué pasó: `Cantidad de visitas` y `Nombres de visitas` no se percibían como una misma unidad; además faltaba el límite por nombre.
+- Impacto: lectura más pesada, peor uso del espacio y riesgo de nombres excesivamente largos.
+- Regla preventiva:
+  1. En la categoría `Visitas`, renderizar `cantidad + nombres` como pareja visual en la misma fila cuando el ancho lo permita.
+  2. En móvil, apilar la pareja sin obligar al formulario completo a hacer scroll horizontal.
+  3. Mantener `Nombres de visitas` como input de una sola línea con scroll interno natural del input.
+  4. Aplicar límite de 20 caracteres por cada nombre separado por coma desde la captura, no solo al guardar.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -347,4 +357,6 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] Errores lógicos inmediatos usan toast `advertencia` + borde de campo, sin `invalid-feedback` invasivo.
 - [ ] Ninguna categoría muestra errores prestados de otra categoría.
 - [ ] Inputs numéricos cortos usan ancho compacto y no dominan el layout móvil.
+- [ ] En `Visitas`, cantidad y nombres se renderizan como pareja visual por procedencia.
+- [ ] Cada nombre en `Nombres de visitas` respeta límite de 20 caracteres separado por coma.
 - [ ] Lint/build/react-doctor ejecutados.

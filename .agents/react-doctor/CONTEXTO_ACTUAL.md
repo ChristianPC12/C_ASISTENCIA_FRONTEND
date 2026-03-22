@@ -87,6 +87,8 @@ Rutas activas:
   - `Culto` y `Fecha` quedan visibles como contexto fijo.
   - Las categorias activas se recorren una por vez con flechas izquierda/derecha.
 - Los inputs numericos se compactan mejor para reducir scroll y mejorar el uso en movil.
+- En `Visitas`, `cantidad` y `nombres` ahora se presentan como pareja visual por procedencia.
+- `Nombres de visitas` queda en una sola linea, con scroll interno del input y limite de 20 caracteres por nombre separado por coma.
 - Los errores logicos inmediatos migran a notificacion flotante tipo `advertencia` (amarillo), manteniendo solo resalte visual del campo.
 - Reglas duras de captura se bloquean antes de entrar al estado local:
   - composicion no puede superar total,

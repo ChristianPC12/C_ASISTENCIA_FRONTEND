@@ -48,6 +48,7 @@ const normalizarFechaExacta = (valor) => {
 };
 
 const OBSERVACIONES_MAX_SALTOS = 3;
+const NOMBRE_VISITA_MAX = 20;
 
 const esValorVacio = (valor) => valor === '' || valor === null || valor === undefined;
 
@@ -114,6 +115,27 @@ function normalizarValorNumericoEntrada(valor) {
   if (texto === '') return '';
   if (!/^\d+$/.test(texto)) return null;
   return String(Math.max(0, Math.trunc(Number(texto))));
+}
+
+function tieneNombreVisitaMayorAlLimite(valor) {
+  return String(valor ?? '')
+    .replace(/\r\n/g, '\n')
+    .split(',')
+    .some((parte) => parte.trim().length > NOMBRE_VISITA_MAX);
+}
+
+function normalizarNombresVisitasEntrada(valor) {
+  return String(valor ?? '')
+    .replace(/\r\n/g, ' ')
+    .replace(/\n/g, ' ')
+    .split(',')
+    .map((parte, index) => {
+      const limpio = index === 0
+        ? parte.replace(/\s+/g, ' ').trimStart()
+        : parte.replace(/\s+/g, ' ').trim();
+      return limpio.slice(0, NOMBRE_VISITA_MAX);
+    })
+    .join(', ');
 }
 
 function sumarMetricas(metricas, valores, excluirClaves = []) {
@@ -585,6 +607,22 @@ export function useAsistencia() {
 
     if (campo === 'culto_id' || campo === 'fecha') {
       setFormulario((prev) => ({ ...prev, [campo]: valor }));
+      return;
+    }
+
+    if (campo.startsWith('nombres_visitas_')) {
+      if (tieneNombreVisitaMayorAlLimite(valor)) {
+        mostrarAdvertencia('Cada nombre de visita admite hasta 20 caracteres.');
+      }
+
+      const valorNormalizado = normalizarNombresVisitasEntrada(valor);
+      setFormulario((prev) => ({
+        ...prev,
+        metricas: {
+          ...prev.metricas,
+          [campo]: valorNormalizado
+        }
+      }));
       return;
     }
 

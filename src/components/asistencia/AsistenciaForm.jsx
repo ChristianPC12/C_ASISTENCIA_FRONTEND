@@ -6,6 +6,7 @@ import {
   obtenerMetricasNumericasPorSeccion
 } from '../../utils/metricasConfig';
 import { OBSERVACIONES_MAX } from '../../validators/asistenciaValidator';
+import { notificarAdvertencia } from '../../utils/notify';
 
 const FECHAS_REGISTRADAS_VACIAS = [];
 const OBSERVACIONES_MAX_SALTOS = 3;
@@ -31,21 +32,65 @@ function limitarSaltosObservaciones(valor) {
   return lineas.slice(0, OBSERVACIONES_MAX_SALTOS + 1).join('\n');
 }
 
-function obtenerClaseCampo(metrica) {
+function seccionTieneDatos(metricas, formulario) {
+  return (Array.isArray(metricas) ? metricas : []).some((metrica) => {
+    const valor = formulario?.metricas?.[metrica.clave];
+    if (metrica.tipo === 'texto') {
+      return String(valor ?? '').trim() !== '';
+    }
+    return valor !== '' && valor !== null && valor !== undefined;
+  });
+}
+function obtenerClaseCampoBase(metrica) {
   if (metrica.clave === 'observaciones') return 'col-12';
   if (metrica.clave.startsWith('nombres_visitas_')) return 'col-12';
   if (metrica.tipo === 'texto') return 'col-12 col-lg-6';
-  if (metrica.clave === 'total_asistentes') return 'col-6 col-md-4';
   return 'col-6 col-md-4';
 }
 
-function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo }) {
+function agruparMetricasVisitas(metricas) {
+  const grupos = [];
+  const mapa = new Map();
+
+  metricas.forEach((metrica) => {
+    const clave = metrica.clave || '';
+    let slug = null;
+
+    if (clave.startsWith('visitas_')) {
+      slug = clave.slice('visitas_'.length);
+    } else if (clave.startsWith('nombres_visitas_')) {
+      slug = clave.slice('nombres_visitas_'.length);
+    }
+
+    if (!slug) {
+      grupos.push({ slug: clave || String(grupos.length), cantidad: null, nombres: null, extras: [metrica] });
+      return;
+    }
+
+    if (!mapa.has(slug)) {
+      const grupo = { slug, cantidad: null, nombres: null, extras: [] };
+      mapa.set(slug, grupo);
+      grupos.push(grupo);
+    }
+
+    const grupo = mapa.get(slug);
+    if (clave.startsWith('visitas_')) {
+      grupo.cantidad = metrica;
+    } else if (clave.startsWith('nombres_visitas_')) {
+      grupo.nombres = metrica;
+    }
+  });
+
+  return grupos;
+}
+
+function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo, claseColumna }) {
   const esNombresVisitas = metrica.clave.startsWith('nombres_visitas_');
-  const claseColumna = obtenerClaseCampo(metrica);
+  const clase = claseColumna || obtenerClaseCampoBase(metrica);
 
   if (metrica.clave === 'observaciones') {
     return (
-      <div className={claseColumna} key={metrica.clave}>
+      <div className={clase} key={metrica.clave}>
         <label htmlFor={metrica.clave} className="form-label">
           {metrica.etiqueta}
           {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
@@ -67,7 +112,7 @@ function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo }) 
   }
 
   return (
-    <div className={claseColumna} key={metrica.clave}>
+    <div className={clase} key={metrica.clave}>
       <label htmlFor={metrica.clave} className="form-label">
         {metrica.etiqueta}
         {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
@@ -76,12 +121,13 @@ function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo }) 
         type="text"
         id={metrica.clave}
         name={metrica.clave}
-        className={`form-control ${errores[metrica.clave] ? 'is-invalid' : ''}`}
+        className={`form-control ${esNombresVisitas ? 'asistencia-nombres-input ' : ''}${errores[metrica.clave] ? 'is-invalid' : ''}`.trim()}
         value={formulario.metricas?.[metrica.clave] ?? ''}
         onChange={(event) => onCambiarCampo(metrica.clave, event.target.value)}
         placeholder={esNombresVisitas ? 'Nombre 1, Nombre 2, Nombre 3' : metrica.etiqueta}
         disabled={cargando}
         aria-invalid={errores[metrica.clave] ? 'true' : 'false'}
+        spellCheck={false}
       />
     </div>
   );
@@ -94,15 +140,17 @@ function campoNumero({
   cargando,
   onCambiarCampo,
   totalAutoCalculado,
-  permanenciaAuto
+  permanenciaAuto,
+  claseColumna
 }) {
   const esTotal = metrica.clave === 'total_asistentes';
   const esPermanenciaAuto = Boolean(permanenciaAuto?.bloqueada)
     && permanenciaAuto?.clave === metrica.clave;
   const soloLectura = (esTotal && totalAutoCalculado) || esPermanenciaAuto;
+  const clase = claseColumna || obtenerClaseCampoBase(metrica);
 
   return (
-    <div className={obtenerClaseCampo(metrica)} key={metrica.clave}>
+    <div className={clase} key={metrica.clave}>
       <label htmlFor={metrica.clave} className="form-label">
         {metrica.etiqueta}
         {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
@@ -122,6 +170,39 @@ function campoNumero({
       />
     </div>
   );
+}
+
+function renderCampoMetrica({
+  metrica,
+  formulario,
+  errores,
+  cargando,
+  onCambiarCampo,
+  totalAutoCalculado,
+  permanenciaAuto,
+  claseColumna
+}) {
+  if (metrica.tipo === 'texto') {
+    return campoTexto({
+      metrica,
+      formulario,
+      errores,
+      cargando,
+      onCambiarCampo,
+      claseColumna
+    });
+  }
+
+  return campoNumero({
+    metrica,
+    formulario,
+    errores,
+    cargando,
+    onCambiarCampo,
+    totalAutoCalculado,
+    permanenciaAuto,
+    claseColumna
+  });
 }
 
 export default function AsistenciaForm({
@@ -155,18 +236,24 @@ export default function AsistenciaForm({
   const [seccionActiva, setSeccionActiva] = useState(seccionesVisibles[0] || null);
 
   useEffect(() => {
-    if (!formulario.culto_id) {
-      setSeccionActiva(seccionesVisibles[0] || null);
-      return;
-    }
+    const siguienteSeccion = (() => {
+      if (!formulario.culto_id) {
+        return seccionesVisibles[0] || null;
+      }
 
-    if (!seccionesVisibles.length) {
-      setSeccionActiva(null);
-      return;
-    }
+      if (!seccionesVisibles.length) {
+        return null;
+      }
 
-    if (!seccionesVisibles.includes(seccionActiva)) {
-      setSeccionActiva(seccionesVisibles[0]);
+      if (seccionesVisibles.includes(seccionActiva)) {
+        return seccionActiva;
+      }
+
+      return seccionesVisibles[0];
+    })();
+
+    if (siguienteSeccion !== seccionActiva) {
+      setSeccionActiva(siguienteSeccion);
     }
   }, [formulario.culto_id, seccionActiva, seccionesVisibles]);
 
@@ -220,9 +307,24 @@ export default function AsistenciaForm({
   const mostrarFormularioDetalle = Boolean(formulario.culto_id);
   const indiceSeccionActiva = seccionActiva ? seccionesVisibles.findIndex((item) => item === seccionActiva) : -1;
   const metricasSeccionActiva = seccionActiva ? grupos[seccionActiva] || [] : [];
+  const gruposVisitas = useMemo(
+    () => (seccionActiva === 'visitas' ? agruparMetricasVisitas(metricasSeccionActiva) : []),
+    [metricasSeccionActiva, seccionActiva]
+  );
+  const seccionActivaConDatos = useMemo(
+    () => seccionTieneDatos(metricasSeccionActiva, formulario),
+    [metricasSeccionActiva, formulario]
+  );
 
   const cambiarSeccion = (direccion) => {
     if (!seccionesVisibles.length) return;
+
+    if (direccion > 0 && metricasSeccionActiva.length > 0 && !seccionActivaConDatos) {
+      const nombreSeccion = ETIQUETAS_SECCION[seccionActiva] || 'esta categor\\u00EDa';
+      notificarAdvertencia(`Ingrese al menos un dato en ${nombreSeccion} antes de avanzar.`);
+      return;
+    }
+
     const indiceActual = indiceSeccionActiva >= 0 ? indiceSeccionActiva : 0;
     const siguiente = (indiceActual + direccion + seccionesVisibles.length) % seccionesVisibles.length;
     setSeccionActiva(seccionesVisibles[siguiente]);
@@ -230,11 +332,6 @@ export default function AsistenciaForm({
 
   return (
     <div className="card shadow-sm mb-4">
-      <div className="card-header">
-        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>
-          {editandoId ? 'Editar registro de asistencia' : 'Nuevo registro de asistencia'}
-        </h5>
-      </div>
       <div className="card-body">
         <form onSubmit={manejarEnvio}>
           <div className="asistencia-top-grid">
@@ -281,7 +378,7 @@ export default function AsistenciaForm({
 
           {!mostrarFormularioDetalle && (
             <div className="asistencia-empty-hint">
-              Seleccione un culto para habilitar la fecha y avanzar por categor�as.
+              Seleccione un culto para habilitar la fecha y avanzar por categorÃƒÂ­as.
             </div>
           )}
 
@@ -294,7 +391,7 @@ export default function AsistenciaForm({
                       type="button"
                       className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
                       onClick={() => cambiarSeccion(-1)}
-                      aria-label="Ir a la categor�a anterior"
+                      aria-label="Ir a la categorÃƒÂ­a anterior"
                       disabled={cargando || seccionesVisibles.length < 2}
                     >
                       <i className="bi bi-chevron-left"></i>
@@ -309,7 +406,7 @@ export default function AsistenciaForm({
                       type="button"
                       className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
                       onClick={() => cambiarSeccion(1)}
-                      aria-label="Ir a la categor�a siguiente"
+                      aria-label="Ir a la categorÃƒÂ­a siguiente"
                       disabled={cargando || seccionesVisibles.length < 2}
                     >
                       <i className="bi bi-chevron-right"></i>
@@ -323,34 +420,64 @@ export default function AsistenciaForm({
                         {metricasSeccionActiva.length} campo{metricasSeccionActiva.length === 1 ? '' : 's'}
                       </span>
                     </div>
-                    <div className="row g-3 asistencia-seccion-grid">
-                      {metricasSeccionActiva.map((metrica) => (
-                        metrica.tipo === 'texto'
-                          ? campoTexto({
-                            metrica,
-                            formulario,
-                            errores,
-                            cargando,
-                            onCambiarCampo
-                          })
-                          : campoNumero({
-                            metrica,
-                            formulario,
-                            errores,
-                            cargando,
-                            onCambiarCampo,
-                            totalAutoCalculado,
-                            permanenciaAuto
-                          })
-                      ))}
-                    </div>
+
+                    {seccionActiva === 'visitas' ? (
+                      <div className="asistencia-visitas-stack">
+                        {gruposVisitas.map((grupo) => (
+                          <div className="row g-3 align-items-start asistencia-visitas-row" key={grupo.slug}>
+                            {grupo.cantidad && renderCampoMetrica({
+                              metrica: grupo.cantidad,
+                              formulario,
+                              errores,
+                              cargando,
+                              onCambiarCampo,
+                              totalAutoCalculado,
+                              permanenciaAuto,
+                              claseColumna: 'col-12 col-md-4'
+                            })}
+                            {grupo.nombres && renderCampoMetrica({
+                              metrica: grupo.nombres,
+                              formulario,
+                              errores,
+                              cargando,
+                              onCambiarCampo,
+                              totalAutoCalculado,
+                              permanenciaAuto,
+                              claseColumna: 'col-12 col-md-8'
+                            })}
+                            {(grupo.extras || []).map((metrica) => renderCampoMetrica({
+                              metrica,
+                              formulario,
+                              errores,
+                              cargando,
+                              onCambiarCampo,
+                              totalAutoCalculado,
+                              permanenciaAuto,
+                              claseColumna: 'col-12'
+                            }))}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="row g-3 asistencia-seccion-grid">
+                        {metricasSeccionActiva.map((metrica) => renderCampoMetrica({
+                          metrica,
+                          formulario,
+                          errores,
+                          cargando,
+                          onCambiarCampo,
+                          totalAutoCalculado,
+                          permanenciaAuto
+                        }))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
               {!seccionActiva && (
                 <div className="asistencia-empty-hint">
-                  No hay categor�as activas para este registro.
+                  No hay categorÃƒÂ­as activas para este registro.
                 </div>
               )}
 
@@ -384,3 +511,4 @@ export default function AsistenciaForm({
     </div>
   );
 }
+

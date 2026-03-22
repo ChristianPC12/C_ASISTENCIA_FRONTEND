@@ -251,6 +251,14 @@ function contarNombresPorComa(valor = '') {
     .length;
 }
 
+function existeNombreMayorAlLimite(valor = '', limite = 20) {
+  return String(valor || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .some((item) => item.length > limite);
+}
+
 function esValorVacio(valor) {
   return valor === '' || valor === null || valor === undefined;
 }
@@ -459,6 +467,11 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
 
       if (cantidadNombres === 0) {
         errores[claveNombres] = `Debe indicar ${cantidadVisitas} nombre(s) separados por coma.`;
+        return;
+      }
+
+      if (existeNombreMayorAlLimite(nombresTexto)) {
+        errores[claveNombres] = 'Cada nombre de visita admite hasta 20 caracteres.';
         return;
       }
 
