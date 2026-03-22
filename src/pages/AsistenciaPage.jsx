@@ -13,6 +13,7 @@ export default function AsistenciaPage() {
     editandoId,
     cargando,
     errores,
+    fechasRegistradas,
     metricasActivas,
     clavePermanenciaAuto,
     permanenciaAutoBloqueada,
@@ -37,6 +38,7 @@ export default function AsistenciaPage() {
         errores={errores}
         cargando={cargando}
         metricasActivas={metricasActivas}
+        fechasRegistradas={fechasRegistradas}
         clavePermanenciaAuto={clavePermanenciaAuto}
         permanenciaAutoBloqueada={permanenciaAutoBloqueada}
         onCambiarCampo={cambiarCampo}

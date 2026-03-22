@@ -35,6 +35,14 @@ export function notificarInfo(mensaje) {
 }
 
 /**
+ * Muestra un toast de advertencia
+ * @param {string} mensaje
+ */
+export function notificarAdvertencia(mensaje) {
+  lanzarToast(mensaje, 'advertencia');
+}
+
+/**
  * Muestra un modal de confirmacion
  * @param {string} mensaje
  * @returns {Promise<boolean>}

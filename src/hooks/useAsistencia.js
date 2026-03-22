@@ -3,7 +3,7 @@ import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { OBSERVACIONES_MAX, validarAsistencia } from '../validators/asistenciaValidator';
 import { sanitizarObjeto, aEnteroPositivo } from '../utils/sanitizer';
-import { notificarExito, notificarError, confirmar } from '../utils/notify';
+import { notificarExito, notificarError, notificarAdvertencia, confirmar } from '../utils/notify';
 import { ANIO_ACTUAL } from '../config/constants';
 import {
   METRICAS_FALLBACK,
@@ -179,6 +179,7 @@ export function useAsistencia() {
   const [camposTocados, setCamposTocados] = useState({});
   const [fechasRegistradas, setFechasRegistradas] = useState([]);
   const ultimoCampoEditadoRef = useRef(null);
+  const ultimaAdvertenciaRef = useRef({ mensaje: '', tiempo: 0 });
 
   // Filtros
   const [filtros, setFiltros] = useState({
@@ -196,6 +197,20 @@ export function useAsistencia() {
     }));
   }, [metricasActivas]);
 
+  const mostrarAdvertencia = useCallback((mensaje) => {
+    const texto = String(mensaje || '').trim();
+    if (!texto) return;
+
+    const ahora = Date.now();
+    const ultima = ultimaAdvertenciaRef.current;
+    if (ultima.mensaje === texto && (ahora - ultima.tiempo) < 1200) {
+      return;
+    }
+
+    ultimaAdvertenciaRef.current = { mensaje: texto, tiempo: ahora };
+    notificarAdvertencia(texto);
+  }, []);
+
   const validarTiempoReal = useCallback((datos, tocados, campoActual = null) => {
     const validacion = validarAsistencia(datos, { metricasActivas });
     const erroresFiltrados = filtrarErroresTiempoReal({
@@ -204,7 +219,11 @@ export function useAsistencia() {
       tocados
     });
     setErrores(erroresFiltrados);
-  }, [metricasActivas]);
+
+    if (campoActual && erroresFiltrados[campoActual]) {
+      mostrarAdvertencia(erroresFiltrados[campoActual]);
+    }
+  }, [metricasActivas, mostrarAdvertencia]);
 
   // Auto-calcular total_asistentes si hay métricas activas en Información del culto.
   useEffect(() => {
@@ -575,6 +594,7 @@ export function useAsistencia() {
     }
 
     if (mensaje) {
+      mostrarAdvertencia(mensaje);
       setErrores((prev) => ({
         ...prev,
         [campo]: mensaje
@@ -615,6 +635,10 @@ export function useAsistencia() {
     const validacion = validarAsistencia(formulario, { metricasActivas });
     if (!validacion.valido) {
       setErrores(validacion.errores);
+      const primerMensaje = validacion.primerCampoError
+        ? validacion.errores?.[validacion.primerCampoError]
+        : Object.values(validacion.errores || {})[0];
+      mostrarAdvertencia(primerMensaje || 'Revise los datos del formulario.');
       setCamposTocados((prev) => {
         const siguientes = { ...prev };
         Object.keys(validacion.errores).forEach((campo) => {
@@ -673,6 +697,7 @@ export function useAsistencia() {
     formulario,
     metricasActivas,
     editandoId,
+    mostrarAdvertencia,
     prepararDatos,
     cargarRegistros,
     cargarFechasRegistradas

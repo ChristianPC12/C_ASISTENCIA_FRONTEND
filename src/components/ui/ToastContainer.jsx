@@ -19,9 +19,10 @@ export function lanzarToast(mensaje, tipo = 'exito') {
 }
 
 const ICONOS = {
-  exito:  'bi-check-circle-fill',
-  error:  'bi-exclamation-circle-fill',
-  info:   'bi-info-circle-fill',
+  exito: 'bi-check-circle-fill',
+  error: 'bi-exclamation-circle-fill',
+  info: 'bi-info-circle-fill',
+  advertencia: 'bi-exclamation-triangle-fill'
 };
 
 const DURACION = 3500;
@@ -33,39 +34,39 @@ export default function ToastContainer() {
     setToasts((prev) => [...prev, { ...toast, saliendo: false }]);
   }, []);
 
-  // Registrar dispatch al montar
+  const removerToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  const iniciarSalidaToast = useCallback((id) => {
+    setToasts((prev) =>
+      prev.map((toast) => (toast.id === id ? { ...toast, saliendo: true } : toast))
+    );
+
+    setTimeout(() => {
+      removerToast(id);
+    }, 300);
+  }, [removerToast]);
+
   useEffect(() => {
     registrarDispatchToast(agregar);
     return () => { agregarToastExterno = null; };
   }, [agregar]);
 
-  // Auto-remover tras la duración
   useEffect(() => {
     if (toasts.length === 0) return;
 
     const ultimo = toasts[toasts.length - 1];
     const timer = setTimeout(() => {
-      // Iniciar animación de salida
-      setToasts((prev) =>
-        prev.map((t) => (t.id === ultimo.id ? { ...t, saliendo: true } : t))
-      );
-      // Remover del DOM tras la animación
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== ultimo.id));
-      }, 300);
+      iniciarSalidaToast(ultimo.id);
     }, DURACION);
 
     return () => clearTimeout(timer);
-  }, [toasts]);
+  }, [toasts, iniciarSalidaToast]);
 
-  const cerrar = (id) => {
-    setToasts((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, saliendo: true } : t))
-    );
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 300);
-  };
+  const cerrar = useCallback((id) => {
+    iniciarSalidaToast(id);
+  }, [iniciarSalidaToast]);
 
   if (toasts.length === 0) return null;
 

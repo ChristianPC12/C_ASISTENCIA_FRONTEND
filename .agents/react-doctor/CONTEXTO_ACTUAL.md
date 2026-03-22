@@ -80,12 +80,27 @@ Rutas activas:
 - Copy del modulo administrador normalizado (tildes, `ñ`, textos de confirmacion y labels).
 - `Nombre de culto` limitado a 20 caracteres en UI y validado en hook.
 
+## Ajustes recientes en Registro de asistencia (2026-03-22)
+
+- El formulario ya no despliega todas las categorias al elegir `Culto`.
+- Nuevo flujo compacto:
+  - `Culto` y `Fecha` quedan visibles como contexto fijo.
+  - Las categorias activas se recorren una por vez con flechas izquierda/derecha.
+- Los inputs numericos se compactan mejor para reducir scroll y mejorar el uso en movil.
+- Los errores logicos inmediatos migran a notificacion flotante tipo `advertencia` (amarillo), manteniendo solo resalte visual del campo.
+- Reglas duras de captura se bloquean antes de entrar al estado local:
+  - composicion no puede superar total,
+  - procedencia no puede superar total,
+  - permanencia no puede superar total,
+  - visitas no puede superar procedencia.
+- `AsistenciaPage` vuelve a pasar `fechasRegistradas` al formulario para mantener el bloqueo coherente de fechas repetidas.
+
 ## Validaciones tecnicas vigentes
 
 - `npm run build` -> OK.
 - `npx eslint src/pages/SuperadminPage.jsx` -> OK.
 - `npx eslint` sobre archivos modificados de administrador/setup -> OK.
-- `react-doctor` (`--diff`, cambios actuales) -> 99/100 (1 warning estructural, sin bloqueos).
+- `react-doctor` (`--diff`, cambios actuales) -> 100/100.
 - Flujo runtime API comprobado:
   - `401` auth sin token.
   - `429` rate limit de login.
@@ -105,6 +120,10 @@ Rutas activas:
 - `src/components/layout/Sidebar.jsx`
 - `src/config/events.js`
 - `src/config/api.js`
+- `src/components/asistencia/AsistenciaForm.jsx`
+- `src/hooks/useAsistencia.js`
+- `src/utils/notify.js`
+- `src/components/ui/ToastContainer.jsx`
 
 ## Proximo foco
 

@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import SelectorFecha from './SelectorFecha';
 import {
   ETIQUETAS_SECCION,
@@ -30,18 +31,21 @@ function limitarSaltosObservaciones(valor) {
   return lineas.slice(0, OBSERVACIONES_MAX_SALTOS + 1).join('\n');
 }
 
-function campoTexto({
-  metrica,
-  formulario,
-  errores,
-  cargando,
-  onCambiarCampo
-}) {
+function obtenerClaseCampo(metrica) {
+  if (metrica.clave === 'observaciones') return 'col-12';
+  if (metrica.clave.startsWith('nombres_visitas_')) return 'col-12';
+  if (metrica.tipo === 'texto') return 'col-12 col-lg-6';
+  if (metrica.clave === 'total_asistentes') return 'col-6 col-md-4';
+  return 'col-6 col-md-4';
+}
+
+function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo }) {
   const esNombresVisitas = metrica.clave.startsWith('nombres_visitas_');
+  const claseColumna = obtenerClaseCampo(metrica);
 
   if (metrica.clave === 'observaciones') {
     return (
-      <div className="col-12" key={metrica.clave}>
+      <div className={claseColumna} key={metrica.clave}>
         <label htmlFor={metrica.clave} className="form-label">
           {metrica.etiqueta}
           {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
@@ -49,23 +53,21 @@ function campoTexto({
         <textarea
           id={metrica.clave}
           name={metrica.clave}
-          rows={4}
+          rows={3}
           className={`form-control asistencia-observaciones-textarea ${errores[metrica.clave] ? 'is-invalid' : ''}`}
           value={formulario.metricas?.[metrica.clave] ?? ''}
           onChange={(event) => onCambiarCampo(metrica.clave, limitarSaltosObservaciones(event.target.value))}
           disabled={cargando}
           placeholder={metrica.etiqueta}
           maxLength={OBSERVACIONES_MAX}
+          aria-invalid={errores[metrica.clave] ? 'true' : 'false'}
         />
-        {errores[metrica.clave] && (
-          <div className="invalid-feedback d-block">{errores[metrica.clave]}</div>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="col-md-6 col-lg-4" key={metrica.clave}>
+    <div className={claseColumna} key={metrica.clave}>
       <label htmlFor={metrica.clave} className="form-label">
         {metrica.etiqueta}
         {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
@@ -79,10 +81,8 @@ function campoTexto({
         onChange={(event) => onCambiarCampo(metrica.clave, event.target.value)}
         placeholder={esNombresVisitas ? 'Nombre 1, Nombre 2, Nombre 3' : metrica.etiqueta}
         disabled={cargando}
+        aria-invalid={errores[metrica.clave] ? 'true' : 'false'}
       />
-      {errores[metrica.clave] && (
-        <div className="invalid-feedback">{errores[metrica.clave]}</div>
-      )}
     </div>
   );
 }
@@ -102,7 +102,7 @@ function campoNumero({
   const soloLectura = (esTotal && totalAutoCalculado) || esPermanenciaAuto;
 
   return (
-    <div className={esTotal ? 'col-md-6' : 'col-md-6 col-lg-4'} key={metrica.clave}>
+    <div className={obtenerClaseCampo(metrica)} key={metrica.clave}>
       <label htmlFor={metrica.clave} className="form-label">
         {metrica.etiqueta}
         {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
@@ -118,10 +118,8 @@ function campoNumero({
         placeholder="Cantidad"
         disabled={cargando || soloLectura}
         readOnly={soloLectura}
+        aria-invalid={errores[metrica.clave] ? 'true' : 'false'}
       />
-      {errores[metrica.clave] && (
-        <div className="invalid-feedback">{errores[metrica.clave]}</div>
-      )}
     </div>
   );
 }
@@ -140,13 +138,37 @@ export default function AsistenciaForm({
   onGuardar,
   onLimpiar
 }) {
-  const grupos = agruparMetricasPorSeccion(metricasActivas);
-  const metricasInfoCulto = obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto');
+  const grupos = useMemo(() => agruparMetricasPorSeccion(metricasActivas), [metricasActivas]);
+  const metricasInfoCulto = useMemo(
+    () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto'),
+    [metricasActivas]
+  );
   const totalAutoCalculado = metricasInfoCulto.length > 0;
   const permanenciaAuto = {
     clave: clavePermanenciaAuto,
     bloqueada: permanenciaAutoBloqueada
   };
+  const seccionesVisibles = useMemo(
+    () => SECCIONES_ORDEN.filter((seccion) => (grupos[seccion] || []).length > 0),
+    [grupos]
+  );
+  const [seccionActiva, setSeccionActiva] = useState(seccionesVisibles[0] || null);
+
+  useEffect(() => {
+    if (!formulario.culto_id) {
+      setSeccionActiva(seccionesVisibles[0] || null);
+      return;
+    }
+
+    if (!seccionesVisibles.length) {
+      setSeccionActiva(null);
+      return;
+    }
+
+    if (!seccionesVisibles.includes(seccionActiva)) {
+      setSeccionActiva(seccionesVisibles[0]);
+    }
+  }, [formulario.culto_id, seccionActiva, seccionesVisibles]);
 
   const formatearNombreCulto = (nombre = '', codigo = '') => {
     const valor = nombre || codigo || '';
@@ -196,82 +218,113 @@ export default function AsistenciaForm({
   };
 
   const mostrarFormularioDetalle = Boolean(formulario.culto_id);
+  const indiceSeccionActiva = seccionActiva ? seccionesVisibles.findIndex((item) => item === seccionActiva) : -1;
+  const metricasSeccionActiva = seccionActiva ? grupos[seccionActiva] || [] : [];
+
+  const cambiarSeccion = (direccion) => {
+    if (!seccionesVisibles.length) return;
+    const indiceActual = indiceSeccionActiva >= 0 ? indiceSeccionActiva : 0;
+    const siguiente = (indiceActual + direccion + seccionesVisibles.length) % seccionesVisibles.length;
+    setSeccionActiva(seccionesVisibles[siguiente]);
+  };
 
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header">
         <h5 className="mb-0" style={{ color: '#FFFFFF' }}>
-          {editandoId ? 'Editar Registro de Asistencia' : 'Nuevo Registro de Asistencia'}
+          {editandoId ? 'Editar registro de asistencia' : 'Nuevo registro de asistencia'}
         </h5>
       </div>
       <div className="card-body">
         <form onSubmit={manejarEnvio}>
-          <div className="seccion-form">
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label htmlFor="culto_id" className="form-label">
-                  Culto <span className="text-danger">*</span>
-                </label>
-                <select
-                  id="culto_id"
-                  name="culto_id"
-                  className={`form-select ${errores.culto_id ? 'is-invalid' : ''}`}
-                  value={formulario.culto_id}
-                  onChange={manejarCambioCulto}
-                  disabled={cargando}
-                >
-                  <option value="">-- Seleccionar culto --</option>
-                  {cultos.map((culto) => (
-                    <option key={culto.id} value={culto.id}>
-                      {formatearNombreCulto(culto.nombre, culto.codigo)} - {culto.hora_inicio?.substring(0, 5)}
-                    </option>
-                  ))}
-                </select>
-                {errores.culto_id && <div className="invalid-feedback">{errores.culto_id}</div>}
-              </div>
+          <div className="asistencia-top-grid">
+            <div className="asistencia-top-card">
+              <label htmlFor="culto_id" className="form-label">
+                Culto <span className="text-danger">*</span>
+              </label>
+              <select
+                id="culto_id"
+                name="culto_id"
+                className={`form-select ${errores.culto_id ? 'is-invalid' : ''}`}
+                value={formulario.culto_id}
+                onChange={manejarCambioCulto}
+                disabled={cargando}
+                aria-invalid={errores.culto_id ? 'true' : 'false'}
+              >
+                <option value="">-- Seleccionar culto --</option>
+                {cultos.map((culto) => (
+                  <option key={culto.id} value={culto.id}>
+                    {formatearNombreCulto(culto.nombre, culto.codigo)} - {culto.hora_inicio?.substring(0, 5)}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            {mostrarFormularioDetalle && (
+              <div className="asistencia-top-card">
+                <label htmlFor="fecha" className="form-label">
+                  Fecha <span className="text-danger">*</span>
+                </label>
+                <SelectorFecha
+                  value={formulario.fecha}
+                  onChange={(valor) => onCambiarCampo('fecha', valor)}
+                  diaPermitido={diaPermitido}
+                  fechasDeshabilitadas={editandoId ? [] : fechasRegistradas}
+                  disabled={cargando || !formulario.culto_id}
+                  className={errores.fecha ? 'is-invalid' : ''}
+                  placeholder="Seleccionar fecha"
+                  nombreDia={NOMBRES_DIA[diaPermitido] || ''}
+                />
+              </div>
+            )}
           </div>
 
           {!mostrarFormularioDetalle && (
-            <div className="small text-muted pt-1">
-              Seleccione un culto para habilitar la fecha y el resto del registro.
+            <div className="asistencia-empty-hint">
+              Seleccione un culto para habilitar la fecha y avanzar por categorías.
             </div>
           )}
 
           {mostrarFormularioDetalle && (
             <>
-              <div className="seccion-form">
-                <div className="row g-3">
-                  <div className="col-md-6">
-                    <label htmlFor="fecha" className="form-label">
-                      Fecha <span className="text-danger">*</span>
-                    </label>
-                    <SelectorFecha
-                      value={formulario.fecha}
-                      onChange={(valor) => onCambiarCampo('fecha', valor)}
-                      diaPermitido={diaPermitido}
-                      fechasDeshabilitadas={editandoId ? [] : fechasRegistradas}
-                      disabled={cargando || !formulario.culto_id}
-                      className={errores.fecha ? 'is-invalid' : ''}
-                      placeholder="Seleccionar fecha"
-                      nombreDia={NOMBRES_DIA[diaPermitido] || ''}
-                    />
-                    {errores.fecha && (
-                      <div className="invalid-feedback d-block">{errores.fecha}</div>
-                    )}
+              {seccionActiva && (
+                <div className="asistencia-categoria-shell">
+                  <div className="admin-info-switch asistencia-categoria-switch mb-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
+                      onClick={() => cambiarSeccion(-1)}
+                      aria-label="Ir a la categoría anterior"
+                      disabled={cargando || seccionesVisibles.length < 2}
+                    >
+                      <i className="bi bi-chevron-left"></i>
+                    </button>
+
+                    <div className="admin-info-switch-title asistencia-categoria-title">
+                      <span className="badge text-bg-light border">{indiceSeccionActiva + 1} / {seccionesVisibles.length}</span>
+                      <span>{ETIQUETAS_SECCION[seccionActiva] || seccionActiva}</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
+                      onClick={() => cambiarSeccion(1)}
+                      aria-label="Ir a la categoría siguiente"
+                      disabled={cargando || seccionesVisibles.length < 2}
+                    >
+                      <i className="bi bi-chevron-right"></i>
+                    </button>
                   </div>
-                </div>
-              </div>
 
-              {SECCIONES_ORDEN.map((seccion) => {
-                const metricas = grupos[seccion] || [];
-                if (metricas.length === 0) return null;
-
-                return (
-                  <div className="seccion-form" key={seccion}>
-                    <h6>{ETIQUETAS_SECCION[seccion] || seccion}</h6>
-                    <div className="row g-3">
-                      {metricas.map((metrica) => (
+                  <div className="seccion-form asistencia-seccion-card">
+                    <div className="asistencia-seccion-header">
+                      <h6>{ETIQUETAS_SECCION[seccionActiva] || seccionActiva}</h6>
+                      <span className="asistencia-seccion-meta">
+                        {metricasSeccionActiva.length} campo{metricasSeccionActiva.length === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    <div className="row g-3 asistencia-seccion-grid">
+                      {metricasSeccionActiva.map((metrica) => (
                         metrica.tipo === 'texto'
                           ? campoTexto({
                             metrica,
@@ -292,10 +345,16 @@ export default function AsistenciaForm({
                       ))}
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              )}
 
-              <div className="d-flex gap-2 mt-3">
+              {!seccionActiva && (
+                <div className="asistencia-empty-hint">
+                  No hay categorías activas para este registro.
+                </div>
+              )}
+
+              <div className="d-flex flex-wrap gap-2 mt-3">
                 <button
                   type="submit"
                   className="btn btn-primary px-4"
@@ -325,4 +384,3 @@ export default function AsistenciaForm({
     </div>
   );
 }
-

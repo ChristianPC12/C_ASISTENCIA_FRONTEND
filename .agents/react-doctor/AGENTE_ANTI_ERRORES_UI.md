@@ -264,6 +264,26 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   3. Si el backend envía mensajes técnicos, mapearlos en frontend a copy amigable antes de notificar.
   4. Priorizar mensajes cortos y orientados a resultado (ejemplo: abrir panel X y guardar).
 
+### E29) Formularios largos sin navegación por etapas
+
+- Qué pasó: en `Registro de asistencia`, después de elegir el culto se mostraban todas las categorías a la vez.
+- Impacto: exceso de scroll, peor lectura en móvil y sensación de formulario pesado.
+- Regla preventiva:
+  1. Si un formulario dinámico tiene varias categorías, mostrar una sola categoría visible por vez.
+  2. Usar navegación compacta con flechas izquierda/derecha cuando el flujo sea secuencial y móvil-first.
+  3. Mantener `Culto` y `Fecha` como contexto fijo, pero no desplegar todas las categorías simultáneamente.
+  4. Optimizar ancho de inputs por tipo real; no dar ancho excesivo a campos numéricos cortos.
+
+### E30) Feedback lógico duplicado o invasivo dentro del formulario
+
+- Qué pasó: se mostraron mensajes lógicos como `invalid-feedback` debajo de inputs, ocupando espacio y ensuciando la lectura.
+- Impacto: UI más alta, ruido visual y menos claridad en formularios compactos.
+- Regla preventiva:
+  1. Para errores lógicos de interacción inmediata, usar notificación flotante del sistema en `advertencia` (amarillo) + resalte visual del campo.
+  2. Evitar bloques inline de texto cuando el producto ya usa toasts para feedback global.
+  3. No propagar un error de una categoría a otra; cada campo debe recibir solo feedback de su propia regla.
+  4. Si una entrada rompe una regla dura (`suma > total`, `visitas > procedencia`), bloquear el cambio antes de persistirlo en estado.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -323,4 +343,8 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] Archivos UI guardados en UTF-8 y sin patrones mojibake (`MÃ`, `Ã`, `Â`).
 - [ ] Estado de setup validado con normalización booleana consistente (`bloqueada_operacion`).
 - [ ] Mensajes de error/notificación en lenguaje de usuario final (sin claves técnicas).
+- [ ] Formularios dinámicos extensos muestran una sola categoría/paso visible por vez.
+- [ ] Errores lógicos inmediatos usan toast `advertencia` + borde de campo, sin `invalid-feedback` invasivo.
+- [ ] Ninguna categoría muestra errores prestados de otra categoría.
+- [ ] Inputs numéricos cortos usan ancho compacto y no dominan el layout móvil.
 - [ ] Lint/build/react-doctor ejecutados.

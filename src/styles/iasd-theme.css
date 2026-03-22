@@ -191,6 +191,91 @@ a:hover {
   line-height: 1.4;
 }
 
+.asistencia-top-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.asistencia-top-card {
+  border: 1px solid rgba(0, 51, 102, 0.14);
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.04) 0%, #ffffff 100%);
+}
+
+.asistencia-empty-hint {
+  border: 1px dashed rgba(0, 51, 102, 0.18);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  color: rgba(26, 43, 60, 0.82);
+  font-size: 0.92rem;
+  background: rgba(0, 51, 102, 0.03);
+}
+
+.asistencia-categoria-shell {
+  margin-top: 0.4rem;
+}
+
+.asistencia-categoria-switch {
+  min-height: 3.2rem;
+}
+
+.asistencia-categoria-title .badge {
+  color: var(--iasd-azul);
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+.asistencia-seccion-card {
+  border: 1px solid rgba(0, 51, 102, 0.12);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 51, 102, 0.05);
+}
+
+.asistencia-seccion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.95rem;
+}
+
+.asistencia-seccion-header h6 {
+  margin: 0;
+  color: var(--iasd-azul);
+}
+
+.asistencia-seccion-meta {
+  color: rgba(0, 51, 102, 0.72);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.asistencia-seccion-grid .form-control,
+.asistencia-seccion-grid .form-select {
+  min-height: 44px;
+}
+
+@media (max-width: 991px) {
+  .asistencia-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .asistencia-seccion-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .asistencia-categoria-switch {
+    padding-inline: 0.45rem;
+  }
+}
+
 /* ==============================================
    Tablas
    ============================================== */
@@ -1604,6 +1689,10 @@ a:hover {
 .toast-iasd-exito { background: var(--iasd-exito); }
 .toast-iasd-error { background: var(--iasd-peligro); }
 .toast-iasd-info  { background: var(--iasd-azul); }
+.toast-iasd-advertencia {
+  background: var(--bs-warning);
+  color: #2f1e00;
+}
 
 .toast-iasd-icono {
   font-size: 1.2rem;
@@ -1627,6 +1716,14 @@ a:hover {
   transition: color 0.15s;
 }
 .toast-iasd-cerrar:hover { color: #ffffff; }
+
+.toast-iasd-advertencia .toast-iasd-cerrar {
+  color: rgba(47, 30, 0, 0.78);
+}
+
+.toast-iasd-advertencia .toast-iasd-cerrar:hover {
+  color: #2f1e00;
+}
 
 @keyframes toastEntrar {
   from { opacity: 0; transform: translateX(40px) scale(0.95); }
