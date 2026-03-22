@@ -119,13 +119,6 @@ function campoNumero({
         disabled={cargando || soloLectura}
         readOnly={soloLectura}
       />
-      {soloLectura && (
-        <small className="text-muted">
-          {esTotal
-            ? 'Se calcula automáticamente desde Información del culto.'
-            : 'Se calcula automáticamente para completar Permanencia.'}
-        </small>
-      )}
       {errores[metrica.clave] && (
         <div className="invalid-feedback">{errores[metrica.clave]}</div>
       )}
@@ -332,3 +325,4 @@ export default function AsistenciaForm({
     </div>
   );
 }
+

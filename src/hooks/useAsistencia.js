@@ -96,117 +96,31 @@ function extraerValorCampoFormulario(datos, campo) {
   return datos?.metricas?.[campo];
 }
 
-function esMensajeRequeridoSimple(mensaje = '') {
-  const normalizado = String(mensaje || '').trim().toLowerCase();
-  return normalizado === 'debe seleccionar un culto.'
-    || normalizado === 'la fecha es obligatoria.'
-    || normalizado.endsWith(' es obligatorio.');
-}
-
-function obtenerClavesRelacionadasTiempoReal({
-  campo,
-  metricasPorClave,
-  metricasInfoCulto,
-  metricasPermanencia,
-  claveTotal
-}) {
-  const relacionadas = new Set();
-  if (!campo) return relacionadas;
-
-  relacionadas.add(campo);
-
-  const metrica = metricasPorClave[campo];
-  const seccion = metrica?.seccion || metrica?.categoria || '';
-
-  if (campo === 'culto_id') {
-    relacionadas.add('fecha');
-    return relacionadas;
-  }
-
-  if (campo === 'fecha') {
-    relacionadas.add('culto_id');
-    return relacionadas;
-  }
-
-  if (
-    claveTotal
-    && ['informacion_culto', 'composicion_asistentes', 'procedencia', 'visitas', 'permanencia']
-      .includes(seccion)
-  ) {
-    relacionadas.add(claveTotal);
-  }
-
-  if (seccion === 'informacion_culto') {
-    metricasInfoCulto.forEach((item) => relacionadas.add(item.clave));
-  }
-
-  if (seccion === 'permanencia') {
-    metricasPermanencia.forEach((item) => relacionadas.add(item.clave));
-  }
-
-  if (campo.startsWith('proc_')) {
-    const slug = campo.slice('proc_'.length);
-    relacionadas.add(`visitas_${slug}`);
-    relacionadas.add(`nombres_visitas_${slug}`);
-  }
-
-  if (campo.startsWith('visitas_')) {
-    const slug = campo.slice('visitas_'.length);
-    relacionadas.add(`proc_${slug}`);
-    relacionadas.add(`nombres_visitas_${slug}`);
-  }
-
-  if (campo.startsWith('nombres_visitas_')) {
-    const slug = campo.slice('nombres_visitas_'.length);
-    relacionadas.add(`proc_${slug}`);
-    relacionadas.add(`visitas_${slug}`);
-  }
-
-  return relacionadas;
-}
-
-function filtrarErroresTiempoReal({
-  erroresValidacion,
-  datos,
-  tocados,
-  campoActual,
-  metricasPorClave,
-  metricasInfoCulto,
-  metricasPermanencia,
-  claveTotal
-}) {
-  const relacionadas = obtenerClavesRelacionadasTiempoReal({
-    campo: campoActual,
-    metricasPorClave,
-    metricasInfoCulto,
-    metricasPermanencia,
-    claveTotal
-  });
-
-  const erroresFiltrados = Object.entries(erroresValidacion).reduce((acc, [clave, mensaje]) => {
+function filtrarErroresTiempoReal({ erroresValidacion, datos, tocados }) {
+  return Object.entries(erroresValidacion).reduce((acc, [clave, mensaje]) => {
     const tocado = Boolean(tocados?.[clave]);
     const tieneValor = !esValorVacio(extraerValorCampoFormulario(datos, clave));
-    const relacionado = relacionadas.has(clave);
 
-    if (tocado || tieneValor || (relacionado && !esMensajeRequeridoSimple(mensaje))) {
+    if (tocado || tieneValor) {
       acc[clave] = mensaje;
     }
 
     return acc;
   }, {});
+}
 
-  if (campoActual && !erroresFiltrados[campoActual]) {
-    const mensajeRelacionado = [...relacionadas]
-      .filter((clave) => clave !== campoActual)
-      .map((clave) => erroresValidacion[clave])
-      .find((mensaje) => mensaje && !esMensajeRequeridoSimple(mensaje));
+function normalizarValorNumericoEntrada(valor) {
+  const texto = String(valor ?? '').trim();
+  if (texto === '') return '';
+  if (!/^\d+$/.test(texto)) return null;
+  return String(Math.max(0, Math.trunc(Number(texto))));
+}
 
-    if (mensajeRelacionado) {
-      erroresFiltrados[campoActual] = mensajeRelacionado;
-    }
-  }
-
-  return erroresFiltrados;
+function sumarMetricas(metricas, valores, excluirClaves = []) {
+  const excluidas = new Set(excluirClaves);
+  return (Array.isArray(metricas) ? metricas : [])
+    .filter((item) => !excluidas.has(item.clave))
+    .reduce((acumulado, item) => acumulado + aEnteroPositivo(valores?.[item.clave]), 0);
 }
 
 /**
@@ -236,6 +150,14 @@ export function useAsistencia() {
   );
   const metricasInfoCulto = useMemo(
     () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'informacion_culto'),
+    [metricasActivas]
+  );
+  const metricasComposicion = useMemo(
+    () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'composicion_asistentes'),
+    [metricasActivas]
+  );
+  const metricasProcedencia = useMemo(
+    () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'procedencia'),
     [metricasActivas]
   );
   const metricasPermanencia = useMemo(
@@ -279,21 +201,10 @@ export function useAsistencia() {
     const erroresFiltrados = filtrarErroresTiempoReal({
       erroresValidacion: validacion.errores,
       datos,
-      tocados,
-      campoActual,
-      metricasPorClave,
-      metricasInfoCulto,
-      metricasPermanencia,
-      claveTotal
+      tocados
     });
     setErrores(erroresFiltrados);
-  }, [
-    metricasActivas,
-    metricasPorClave,
-    metricasInfoCulto,
-    metricasPermanencia,
-    claveTotal
-  ]);
+  }, [metricasActivas]);
 
   // Auto-calcular total_asistentes si hay métricas activas en Información del culto.
   useEffect(() => {
@@ -536,6 +447,111 @@ export function useAsistencia() {
     cargarFechasRegistradas(formulario.culto_id);
   }, [formulario.culto_id, cultos, cargarFechasRegistradas]);
 
+  const obtenerErrorBloqueoCambio = useCallback((campo, valor, datosActuales) => {
+    const metrica = metricasPorClave[campo];
+    if (!metrica || metrica.tipo !== 'numero') {
+      return { mensaje: null, valorNormalizado: valor };
+    }
+
+    const valorNormalizado = normalizarValorNumericoEntrada(valor);
+    if (valorNormalizado === null) {
+      return { mensaje: null, valorNormalizado: null };
+    }
+
+    const siguienteMetricas = {
+      ...(datosActuales?.metricas || {}),
+      [campo]: valorNormalizado
+    };
+    const totalRaw = campo === claveTotal ? valorNormalizado : siguienteMetricas?.[claveTotal];
+    const totalExiste = !esValorVacio(totalRaw);
+    const total = aEnteroPositivo(totalRaw);
+    const seccion = metrica.seccion || metrica.categoria || '';
+
+    if (campo === claveTotal && totalExiste) {
+      const sumaComposicion = sumarMetricas(metricasComposicion, siguienteMetricas);
+      if (sumaComposicion > total) {
+        return {
+          mensaje: 'Total de asistentes no puede ser menor que la suma de Composición de asistentes.',
+          valorNormalizado
+        };
+      }
+
+      const sumaProcedencia = sumarMetricas(metricasProcedencia, siguienteMetricas);
+      if (sumaProcedencia > total) {
+        return {
+          mensaje: 'Total de asistentes no puede ser menor que la suma de Procedencia.',
+          valorNormalizado
+        };
+      }
+
+      const sumaPermanenciaManual = sumarMetricas(
+        metricasPermanencia,
+        siguienteMetricas,
+        clavePermanenciaAuto ? [clavePermanenciaAuto] : []
+      );
+      if (sumaPermanenciaManual > total) {
+        return {
+          mensaje: 'Total de asistentes no puede ser menor que la suma de Permanencia.',
+          valorNormalizado
+        };
+      }
+    }
+
+    if (seccion === 'composicion_asistentes' && totalExiste) {
+      const sumaComposicion = sumarMetricas(metricasComposicion, siguienteMetricas);
+      if (sumaComposicion > total) {
+        return {
+          mensaje: 'La suma de Composición de asistentes no puede superar Total de asistentes.',
+          valorNormalizado
+        };
+      }
+    }
+
+    if (seccion === 'procedencia' && totalExiste) {
+      const sumaProcedencia = sumarMetricas(metricasProcedencia, siguienteMetricas);
+      if (sumaProcedencia > total) {
+        return {
+          mensaje: 'La suma de Procedencia no puede superar Total de asistentes.',
+          valorNormalizado
+        };
+      }
+    }
+
+    if (seccion === 'permanencia' && totalExiste) {
+      const sumaPermanenciaManual = sumarMetricas(
+        metricasPermanencia,
+        siguienteMetricas,
+        clavePermanenciaAuto ? [clavePermanenciaAuto] : []
+      );
+      if (sumaPermanenciaManual > total) {
+        return {
+          mensaje: 'La suma de Permanencia no puede superar Total de asistentes.',
+          valorNormalizado
+        };
+      }
+    }
+
+    if (campo.startsWith('visitas_')) {
+      const slug = campo.slice('visitas_'.length);
+      const procedenciaRelacionada = aEnteroPositivo(siguienteMetricas?.[`proc_${slug}`]);
+      if (aEnteroPositivo(valorNormalizado) > procedenciaRelacionada) {
+        return {
+          mensaje: 'Las visitas no pueden superar la procedencia indicada.',
+          valorNormalizado
+        };
+      }
+    }
+
+    return { mensaje: null, valorNormalizado };
+  }, [
+    metricasPorClave,
+    claveTotal,
+    metricasComposicion,
+    metricasProcedencia,
+    metricasPermanencia,
+    clavePermanenciaAuto
+  ]);
+
   useEffect(() => {
     if (Object.keys(camposTocados).length === 0) {
       return;
@@ -550,16 +566,30 @@ export function useAsistencia() {
 
     if (campo === 'culto_id' || campo === 'fecha') {
       setFormulario((prev) => ({ ...prev, [campo]: valor }));
-    } else {
-      setFormulario((prev) => ({
-        ...prev,
-        metricas: {
-          ...prev.metricas,
-          [campo]: valor
-        }
-      }));
+      return;
     }
-  }, []);
+
+    const { mensaje, valorNormalizado } = obtenerErrorBloqueoCambio(campo, valor, formulario);
+    if (valorNormalizado === null) {
+      return;
+    }
+
+    if (mensaje) {
+      setErrores((prev) => ({
+        ...prev,
+        [campo]: mensaje
+      }));
+      return;
+    }
+
+    setFormulario((prev) => ({
+      ...prev,
+      metricas: {
+        ...prev.metricas,
+        [campo]: valorNormalizado
+      }
+    }));
+  }, [formulario, obtenerErrorBloqueoCambio]);
 
   const prepararDatos = useCallback((datos) => {
     const sanitizados = sanitizarObjeto(datos);

@@ -75,13 +75,6 @@ export function validarAsistencia(datos, opciones = {}) {
 
   Object.assign(errores, validarDependenciasMetricas(metricasActivas, metricasFormulario));
 
-  const total = aEnteroPositivo(metricasFormulario?.total_asistentes);
-  const ninos = aEnteroPositivo(metricasFormulario?.ninos);
-  const jovenes = aEnteroPositivo(metricasFormulario?.jovenes);
-  if (total > 0 && total < ninos + jovenes) {
-    errores.total_asistentes = 'El total de asistentes debe ser mayor o igual a ninos + jovenes.';
-  }
-
   const ordenCampos = construirOrdenCampos(metricasActivas);
   const primerCampoError = ordenCampos.find((campo) => errores[campo]) || null;
 
