@@ -48,18 +48,18 @@ function normalizarMensajeServidor(mensaje) {
     .toLowerCase();
 
   if (normalizado.includes('reactivar un usuario inactivo') && normalizado.includes('contrasena')) {
-    return 'Para reactivar un usuario inactivo se requiere cambiar su contraseña.';
+    return 'Para reactivar un usuario inactivo se requiere cambiar su contrase\u00f1a.';
   }
 
-  return texto.replace(/contrasena/gi, 'contraseña');
+  return texto.replace(/contrasena/gi, 'contrase\u00f1a');
 }
 
 function mensajeCupoHumano(mensajeBackend) {
   const detalle = normalizarMensajeServidor(mensajeBackend);
   if (!detalle) {
-    return 'No hay cupo disponible para ese rol en esta organización.';
+    return 'No hay cupo disponible para ese rol en esta organizaci\u00f3n.';
   }
-  return `No se pudo completar la acción por política de cupos: ${detalle}`;
+  return `No se pudo completar la acci\u00f3n por pol\u00edtica de cupos: ${detalle}`;
 }
 
 function esErrorDeCupo(errorOrMessage) {
@@ -128,7 +128,7 @@ function construirPayloadCupos(roles) {
 }
 
 /**
- * Hook para CRUD de usuarios y política de cupos por rol (solo ADMIN).
+ * Hook para CRUD de usuarios y politica de cupos por rol (solo ADMIN).
  */
 export function useUsuario() {
   const { cerrarSesion, usuario, refrescarSesion } = useAuth();
@@ -177,7 +177,7 @@ export function useUsuario() {
               setResumenCupos(construirResumenCupos(sync?.datos?.resumen, rolesSync));
             }
           } catch {
-            // Silencioso: la UI sigue mostrando política del sistema.
+            // Silencioso: la UI sigue mostrando politica del sistema.
           }
         }
       }
@@ -201,6 +201,10 @@ export function useUsuario() {
     setErrores((prev) => {
       const nuevos = { ...prev };
       delete nuevos[campo];
+      if (campo === 'password' || campo === 'password_confirmacion') {
+        delete nuevos.password;
+        delete nuevos.password_confirmacion;
+      }
       return nuevos;
     });
   }, []);
@@ -307,6 +311,7 @@ export function useUsuario() {
       nombre_completo: usuario.nombre_completo,
       usuario: usuario.usuario,
       password: '',
+      password_confirmacion: '',
       rol_id: usuario.rol_id,
       activo: usuario.activo
     });
@@ -316,7 +321,7 @@ export function useUsuario() {
   }, []);
 
   const eliminar = useCallback(async (id) => {
-    if (!await confirmar('¿Está seguro de que desea desactivar este usuario?')) {
+    if (!await confirmar('\u00bfEst\u00e1 seguro de que desea desactivar este usuario?')) {
       return false;
     }
 

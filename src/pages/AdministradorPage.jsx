@@ -151,6 +151,7 @@ export default function AdministradorPage() {
     tieneCambiosMetricas,
     metricasAdicionalesCount,
     maxMetricasAdicionales,
+    maxCultosInstancia,
     puedeAgregarMetrica,
     restaurarCultos,
     restaurarProcedencias,
@@ -554,10 +555,16 @@ export default function AdministradorPage() {
           <div className="card-header d-flex justify-content-between align-items-center gap-2">
             <div className="d-flex align-items-center gap-2">
               <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Cultos de la instancia</h5>
-              <span className="badge text-bg-light">{cultos.length}</span>
+              <span className="badge text-bg-light">{cultos.length}/{maxCultosInstancia}</span>
             </div>
             <div className="d-flex align-items-center gap-2">
-              <button type="button" className="btn btn-light btn-sm" onClick={agregarCulto}>
+              <button
+                type="button"
+                className="btn btn-light btn-sm"
+                onClick={agregarCulto}
+                disabled={cultos.length >= maxCultosInstancia}
+                title={cultos.length >= maxCultosInstancia ? `Máximo ${maxCultosInstancia} cultos` : 'Agregar culto'}
+              >
                 Agregar culto
               </button>
               <button

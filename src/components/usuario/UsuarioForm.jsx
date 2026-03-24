@@ -83,7 +83,8 @@ export default function UsuarioForm({
             {/* Contrasena */}
             <div className="col-md-6">
               <label htmlFor="password_campo" className="form-label">
-                Contraseña {editandoId && <small className="text-muted">(dejar vacío para no cambiar)</small>}
+                {'Contraseña '}
+                {editandoId && <small className="text-muted">{'(dejar vacío para no cambiar)'}</small>}
               </label>
               <input
                 type="password"
@@ -105,6 +106,28 @@ export default function UsuarioForm({
                 <div className="form-text">
                   Debe contener 12-64 caracteres, mayúscula, minúscula, número y carácter especial.
                 </div>
+              )}
+            </div>
+
+            <div className="col-md-6">
+              <label htmlFor="password_confirmacion_campo" className="form-label">
+                {'Confirmar contraseña'}
+              </label>
+              <input
+                type="password"
+                id="password_confirmacion_campo"
+                name="password_confirmacion"
+                className={`form-control ${errores.password_confirmacion ? 'is-invalid' : ''}`}
+                value={formulario.password_confirmacion}
+                onChange={manejarCambio}
+                placeholder={editandoId ? 'Repita la nueva contraseña' : 'Repita la contraseña'}
+                autoComplete="new-password"
+                minLength={12}
+                maxLength={64}
+                disabled={cargando}
+              />
+              {errores.password_confirmacion && (
+                <div className="invalid-feedback">{errores.password_confirmacion}</div>
               )}
             </div>
 

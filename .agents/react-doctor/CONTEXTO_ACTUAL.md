@@ -152,3 +152,6 @@ Rutas activas:
 ## Proximo foco
 
 - F8 discovery UX (Campanas, Pequenas Congregaciones, Estudios Biblicos), definido por owner.
+- Setup ADMIN: `Cultos de la instancia` ahora tiene tope de 10 cultos por organizacion. El boton `Agregar culto` se deshabilita al llegar al maximo y backend/frontend validan el mismo limite.
+- Setup ADMIN: strings visibles de cultos/dias y validaciones tocadas quedaron normalizadas para evitar textos con tildes rotas en este flujo.
+- Usuarios ADMIN: crear/editar usuario ahora exige `password` + `password_confirmacion` cuando se define una nueva contraseña; el payload enviado a API sigue mandando solo `password`.

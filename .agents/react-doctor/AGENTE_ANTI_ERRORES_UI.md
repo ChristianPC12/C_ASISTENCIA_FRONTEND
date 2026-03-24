@@ -481,3 +481,6 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] En `Visitas`, cantidad y nombres se renderizan como pareja visual por procedencia.
 - [ ] Cada nombre en `Nombres de visitas` respeta límite de 20 caracteres separado por coma.
 - [ ] Lint/build/react-doctor ejecutados.
+- [ ] Listas configurables con tope de negocio (`cultos`, `procedencias`, metricas adicionales) deben bloquear alta extra en UI y validar el mismo maximo en backend.
+- [ ] En formularios de usuario, toda contraseña nueva o editada debe pedirse dos veces y validarse antes de enviar.
+- [ ] Si se corrige texto visible en un modulo tocado, revisar tambien mensajes asociados del mismo flujo para evitar mojibake parcial.

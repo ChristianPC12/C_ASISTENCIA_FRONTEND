@@ -3,27 +3,27 @@ import { LIMITES } from '../config/constants';
 
 function validarPasswordFuerte(password) {
   if (password.length < LIMITES.PASSWORD_MIN || password.length > LIMITES.PASSWORD_MAX) {
-    return `La contraseña debe tener entre ${LIMITES.PASSWORD_MIN} y ${LIMITES.PASSWORD_MAX} caracteres.`;
+    return `La contrase\u00f1a debe tener entre ${LIMITES.PASSWORD_MIN} y ${LIMITES.PASSWORD_MAX} caracteres.`;
   }
 
   if (!/[a-z]/.test(password)) {
-    return 'La contraseña debe incluir al menos una letra minúscula.';
+    return 'La contrase\u00f1a debe incluir al menos una letra min\u00fascula.';
   }
 
   if (!/[A-Z]/.test(password)) {
-    return 'La contraseña debe incluir al menos una letra mayúscula.';
+    return 'La contrase\u00f1a debe incluir al menos una letra may\u00fascula.';
   }
 
   if (!/\d/.test(password)) {
-    return 'La contraseña debe incluir al menos un número.';
+    return 'La contrase\u00f1a debe incluir al menos un n\u00famero.';
   }
 
   if (!/[^A-Za-z0-9]/.test(password)) {
-    return 'La contraseña debe incluir al menos un carácter especial.';
+    return 'La contrase\u00f1a debe incluir al menos un car\u00e1cter especial.';
   }
 
   if (/\s/.test(password)) {
-    return 'La contraseña no puede contener espacios.';
+    return 'La contrase\u00f1a no puede contener espacios.';
   }
 
   return '';
@@ -38,7 +38,6 @@ function validarPasswordFuerte(password) {
 export function validarUsuario(datos, esEdicion = false) {
   const errores = {};
 
-  // Nombre completo
   const nombre = recortar(datos.nombre_completo || '');
   if (!nombre) {
     errores.nombre_completo = 'El nombre completo es obligatorio.';
@@ -48,7 +47,6 @@ export function validarUsuario(datos, esEdicion = false) {
     errores.nombre_completo = `El nombre no puede superar los ${LIMITES.NOMBRE_COMPLETO_MAX} caracteres.`;
   }
 
-  // Usuario
   const usuario = recortar(datos.usuario || '');
   if (!usuario) {
     errores.usuario = 'El nombre de usuario es obligatorio.';
@@ -58,10 +56,11 @@ export function validarUsuario(datos, esEdicion = false) {
     errores.usuario = `El usuario no puede superar los ${LIMITES.USUARIO_MAX} caracteres.`;
   }
 
-  // Password
   const password = datos.password || '';
+  const passwordConfirmacion = datos.password_confirmacion || '';
+
   if (!esEdicion && !password) {
-    errores.password = 'La contraseña es obligatoria.';
+    errores.password = 'La contrase\u00f1a es obligatoria.';
   } else if (password) {
     const errorPassword = validarPasswordFuerte(password);
     if (errorPassword) {
@@ -69,9 +68,16 @@ export function validarUsuario(datos, esEdicion = false) {
     }
   }
 
-  // Rol
+  if (!password && passwordConfirmacion) {
+    errores.password_confirmacion = 'Escriba la contrase\u00f1a antes de confirmarla.';
+  } else if (password && !passwordConfirmacion) {
+    errores.password_confirmacion = 'Debe repetir la contrase\u00f1a.';
+  } else if (password && passwordConfirmacion && password !== passwordConfirmacion) {
+    errores.password_confirmacion = 'Las contrase\u00f1as no coinciden.';
+  }
+
   if (!datos.rol_id || ![1, 2].includes(Number(datos.rol_id))) {
-    errores.rol_id = 'Debe seleccionar un rol válido.';
+    errores.rol_id = 'Debe seleccionar un rol v\u00e1lido.';
   }
 
   return {

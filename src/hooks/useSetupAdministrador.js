@@ -12,6 +12,7 @@ import {
 const CLAVES_PUNTUALIDAD = ['llegaron_antes_hora', 'llegaron_despues_hora'];
 const CLAVES_PERMANENCIA_BASE = ['retiros_antes_terminar', 'se_quedaron_todo'];
 const CLAVE_TOTAL_ASISTENTES = 'total_asistentes';
+const MAX_CULTOS_INSTANCIA = 10;
 const MAX_METRICAS_ADICIONALES = 7;
 const CATEGORIA_INFO_CULTO = 'informacion_culto';
 const CATEGORIA_PERMANENCIA = 'permanencia';
@@ -28,10 +29,10 @@ const METRICAS_FIJAS_MAP = new Map(
 );
 const ETIQUETA_METRICA_BASE = {
   llegaron_antes_hora: 'Llegaron antes de la hora',
-  llegaron_despues_hora: 'Llegaron despuÃ©s de la hora',
+  llegaron_despues_hora: 'Llegaron despu\u00e9s de la hora',
   total_asistentes: 'Total de asistentes',
-  ninos: 'NiÃ±os',
-  jovenes: 'JÃ³venes'
+  ninos: 'Ni\u00f1os',
+  jovenes: 'J\u00f3venes'
 };
 
 const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
@@ -39,16 +40,16 @@ const DIA_OPCIONES = [
   { valor: 1, etiqueta: 'Domingo' },
   { valor: 2, etiqueta: 'Lunes' },
   { valor: 3, etiqueta: 'Martes' },
-  { valor: 4, etiqueta: 'MiÃ©rcoles' },
+  { valor: 4, etiqueta: 'Mi\u00e9rcoles' },
   { valor: 5, etiqueta: 'Jueves' },
   { valor: 6, etiqueta: 'Viernes' },
-  { valor: 7, etiqueta: 'SÃ¡bado' }
+  { valor: 7, etiqueta: 'S\u00e1bado' }
 ];
 
 const CULTOS_DEFAULT = [
-  { codigo: 'SABADO', nombre: 'Culto SÃ¡bado', dia_semana: 7, hora_inicio: '09:00', activo: false, orden: 1 },
+  { codigo: 'SABADO', nombre: 'Culto S\u00e1bado', dia_semana: 7, hora_inicio: '09:00', activo: false, orden: 1 },
   { codigo: 'DOMINGO', nombre: 'Culto Domingo', dia_semana: 1, hora_inicio: '18:30', activo: false, orden: 2 },
-  { codigo: 'MIERCOLES', nombre: 'Culto MiÃ©rcoles', dia_semana: 4, hora_inicio: '18:30', activo: false, orden: 3 }
+  { codigo: 'MIERCOLES', nombre: 'Culto Mi\u00e9rcoles', dia_semana: 4, hora_inicio: '18:30', activo: false, orden: 3 }
 ];
 
 const PROCEDENCIAS_DEFAULT = [
@@ -82,7 +83,7 @@ function toBool(valor) {
   if (typeof valor === 'boolean') return valor;
   if (typeof valor === 'number') return valor === 1;
   if (typeof valor === 'string') {
-    return ['1', 'true', 'on', 'yes', 'si', 'sÃ­'].includes(valor.trim().toLowerCase());
+    return ['1', 'true', 'on', 'yes', 'si', 's\u00ed'].includes(valor.trim().toLowerCase());
   }
   return false;
 }
@@ -136,12 +137,12 @@ function normalizarMensajeMetricasUsuarioFinal(mensajeRaw) {
     const etiquetas = Array.from(new Set(clavesFaltantes))
       .map((clave) => ETIQUETA_METRICA_BASE[clave] || clave.replace(/_/g, ' '));
     if (etiquetas.length > 0) {
-      return 'La configuraciÃ³n de mÃ©tricas es invÃ¡lida. Revise las mÃ©tricas base y guarde nuevamente.';
+      return 'La configuraci\u00f3n de m\u00e9tricas es inv\u00e1lida. Revise las m\u00e9tricas base y guarde nuevamente.';
     }
   }
 
   if (normalizado.includes('configuracion de metricas invalida')) {
-    return 'La configuraciÃ³n de mÃ©tricas es invÃ¡lida. Revise el panel de MÃ©tricas y guarde nuevamente.';
+    return 'La configuraci\u00f3n de m\u00e9tricas es inv\u00e1lida. Revise el panel de M\u00e9tricas y guarde nuevamente.';
   }
 
   return mensaje;
@@ -485,14 +486,18 @@ function validarCultos(cultos) {
     return { general: 'Debe configurar al menos un culto.' };
   }
 
+  if (cultos.length > MAX_CULTOS_INSTANCIA) {
+    return { general: `Solo se permiten hasta ${MAX_CULTOS_INSTANCIA} cultos.` };
+  }
+
   cultos.forEach((culto, idx) => {
     const key = `fila_${idx}`;
     const filaErrores = {};
 
     if (!/^[A-Z0-9_]{2,30}$/.test(culto.codigo || '')) {
-      filaErrores.codigo = 'CÃ³digo invÃ¡lido (A-Z, 0-9 y guion bajo).';
+      filaErrores.codigo = 'C\u00f3digo inv\u00e1lido (A-Z, 0-9 y guion bajo).';
     } else if (codigos.has(culto.codigo)) {
-      filaErrores.codigo = 'CÃ³digo duplicado.';
+      filaErrores.codigo = 'C\u00f3digo duplicado.';
     } else {
       codigos.add(culto.codigo);
     }
@@ -503,15 +508,15 @@ function validarCultos(cultos) {
     }
 
     if (!Number.isInteger(culto.dia_semana) || culto.dia_semana < 1 || culto.dia_semana > 7) {
-      filaErrores.dia_semana = 'DÃ­a invÃ¡lido.';
+      filaErrores.dia_semana = 'D\u00eda inv\u00e1lido.';
     }
 
     if (!/^\d{2}:\d{2}$/.test(culto.hora_inicio || '')) {
-      filaErrores.hora_inicio = 'Formato de hora invÃ¡lido (HH:MM).';
+      filaErrores.hora_inicio = 'Formato de hora inv\u00e1lido (HH:MM).';
     }
 
     if (!Number.isInteger(culto.orden) || culto.orden < 1 || culto.orden > 99) {
-      filaErrores.orden = 'Orden invÃ¡lido (1-99).';
+      filaErrores.orden = 'Orden inv\u00e1lido (1-99).';
     } else if (ordenes.has(culto.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -546,7 +551,7 @@ function validarProcedencias(procedencias) {
     const nombreClave = nombre.toLowerCase();
 
     if (nombre.length < 2 || nombre.length > 80) {
-      filaErrores.nombre = 'Nombre invÃ¡lido (2-80).';
+      filaErrores.nombre = 'Nombre inv\u00e1lido (2-80).';
     } else if (nombres.has(nombreClave)) {
       filaErrores.nombre = 'Nombre duplicado.';
     } else {
@@ -554,7 +559,7 @@ function validarProcedencias(procedencias) {
     }
 
     if (!Number.isInteger(item.orden) || item.orden < 1 || item.orden > 99) {
-      filaErrores.orden = 'Orden invÃ¡lido (1-99).';
+      filaErrores.orden = 'Orden inv\u00e1lido (1-99).';
     } else if (ordenes.has(item.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -586,11 +591,11 @@ function validarMetricasConfiguracion(metricas) {
   let visitasHabilitadas = 0;
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
-    return { general: 'Debe configurar al menos una mÃ©trica.' };
+    return { general: 'Debe configurar al menos una m\u00e9trica.' };
   }
 
   if (metricasAdicionales > MAX_METRICAS_ADICIONALES) {
-    return { general: `Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} mÃ©tricas adicionales.` };
+    return { general: `Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} m\u00e9tricas adicionales.` };
   }
 
   metricas.forEach((item, idx) => {
@@ -600,7 +605,7 @@ function validarMetricasConfiguracion(metricas) {
     const categoria = normalizarCategoriaMetrica(item?.categoria, claveNormalizada);
 
     if (!/^[a-z0-9_]{2,80}$/.test(claveNormalizada)) {
-      filaErrores.clave = 'Clave invÃ¡lida (a-z, 0-9 y guion bajo).';
+      filaErrores.clave = 'Clave inv\u00e1lida (a-z, 0-9 y guion bajo).';
     } else if (claves.has(claveNormalizada)) {
       filaErrores.clave = 'Clave duplicada.';
     } else {
@@ -612,7 +617,7 @@ function validarMetricasConfiguracion(metricas) {
     }
 
     if (!CATEGORIAS_VALIDAS.has(categoria)) {
-      filaErrores.categoria = 'Seleccione una categorÃ­a vÃ¡lida.';
+      filaErrores.categoria = 'Seleccione una categor\u00eda v\u00e1lida.';
     }
 
     if (item.habilitado) {
@@ -636,21 +641,21 @@ function validarMetricasConfiguracion(metricas) {
   });
 
   if (habilitadas < 1) {
-    errores.general = 'Debe dejar al menos una mÃ©trica habilitada.';
+    errores.general = 'Debe dejar al menos una m\u00e9trica habilitada.';
   }
 
   if ((antes && !despues) || (!antes && despues)) {
-    errores.general = 'Puntualidad requiere ambas mÃ©tricas: antes y despuÃ©s.';
+    errores.general = 'Puntualidad requiere ambas m\u00e9tricas: antes y despu\u00e9s.';
   }
 
   if (antes && despues) {
     if (antes.habilitado !== despues.habilitado) {
-      errores.general = 'Puntualidad (antes/despuÃ©s) debe mantenerse ambos o ninguno.';
+      errores.general = 'Puntualidad (antes/despu\u00e9s) debe mantenerse ambos o ninguno.';
     }
   }
 
   if ((retiroAntesTerminar && !seQuedaronTodo) || (!retiroAntesTerminar && seQuedaronTodo)) {
-    errores.general = 'Permanencia base requiere ambas mÃ©tricas: retiros y se quedaron hasta el final.';
+    errores.general = 'Permanencia base requiere ambas m\u00e9tricas: retiros y se quedaron hasta el final.';
   }
 
   if (retiroAntesTerminar && seQuedaronTodo) {
@@ -668,7 +673,7 @@ function validarMetricasConfiguracion(metricas) {
     || procedenciaHabilitadas > 0
     || visitasHabilitadas > 0
   ) && (!total || !total.habilitado)) {
-    errores.general = 'Total de asistentes debe estar habilitado cuando hay mÃ©tricas que dependen del total.';
+    errores.general = 'Total de asistentes debe estar habilitado cuando hay m\u00e9tricas que dependen del total.';
   }
 
   return errores;
@@ -732,18 +737,25 @@ export function useSetupAdministrador() {
   }, []);
 
   const agregarCulto = useCallback(() => {
-    setCultos((prev) => ([
-      ...prev,
-      {
-        ui_id: generarUiId('culto'),
-        codigo: '',
-        nombre: '',
-        dia_semana: 1,
-        hora_inicio: '09:00',
-        activo: true,
-        orden: prev.length + 1
+    setCultos((prev) => {
+      if (prev.length >= MAX_CULTOS_INSTANCIA) {
+        notificarError(`Solo se permiten hasta ${MAX_CULTOS_INSTANCIA} cultos.`);
+        return prev;
       }
-    ]));
+
+      return [
+        ...prev,
+        {
+          ui_id: generarUiId('culto'),
+          codigo: '',
+          nombre: '',
+          dia_semana: 1,
+          hora_inicio: '09:00',
+          activo: true,
+          orden: prev.length + 1
+        }
+      ];
+    });
   }, []);
 
   const eliminarCulto = useCallback((index) => {
@@ -946,7 +958,7 @@ export function useSetupAdministrador() {
     });
 
     if (limiteAlcanzado) {
-      notificarError(`Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} mÃ©tricas adicionales.`);
+      notificarError(`Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} m\u00e9tricas adicionales.`);
       return null;
     }
 
@@ -967,7 +979,7 @@ export function useSetupAdministrador() {
     const validacion = validarCultos(cultosPreparados);
     setErroresCultos(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuraciÃ³n de cultos.');
+      notificarError(validacion.general || 'Revise la configuraci\u00f3n de cultos.');
       return false;
     }
 
@@ -1008,7 +1020,7 @@ export function useSetupAdministrador() {
     const validacion = validarProcedencias(procedenciasPreparadas);
     setErroresProcedencias(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuraciÃ³n de procedencias.');
+      notificarError(validacion.general || 'Revise la configuraci\u00f3n de procedencias.');
       return false;
     }
 
@@ -1049,7 +1061,7 @@ export function useSetupAdministrador() {
     const validacion = validarMetricasConfiguracion(metricasPreparadas);
     setErroresMetricas(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuraciÃ³n de mÃ©tricas.');
+      notificarError(validacion.general || 'Revise la configuraci\u00f3n de m\u00e9tricas.');
       return false;
     }
 
@@ -1094,16 +1106,16 @@ export function useSetupAdministrador() {
         setFirmaMetricasBase(firmarMetricas(metricasPreparadas));
         aplicarDetalleSetup(detalleActualizado);
         setErroresMetricas({});
-        notificarExito(res.mensaje || 'MÃ©tricas guardadas correctamente.');
+        notificarExito(res.mensaje || 'M\u00e9tricas guardadas correctamente.');
         return true;
       }
       notificarError(
-        normalizarMensajeMetricasUsuarioFinal(res?.mensaje) || 'No se pudieron guardar las mÃ©tricas.'
+        normalizarMensajeMetricasUsuarioFinal(res?.mensaje) || 'No se pudieron guardar las m\u00e9tricas.'
       );
       return false;
     } catch (error) {
       notificarError(
-        normalizarMensajeMetricasUsuarioFinal(error?.mensaje) || 'No se pudieron guardar las mÃ©tricas.'
+        normalizarMensajeMetricasUsuarioFinal(error?.mensaje) || 'No se pudieron guardar las m\u00e9tricas.'
       );
       return false;
     } finally {
@@ -1189,6 +1201,7 @@ export function useSetupAdministrador() {
     tieneCambiosMetricas,
     metricasAdicionalesCount,
     maxMetricasAdicionales: MAX_METRICAS_ADICIONALES,
+    maxCultosInstancia: MAX_CULTOS_INSTANCIA,
     puedeAgregarMetrica,
     restaurarCultos,
     restaurarProcedencias,

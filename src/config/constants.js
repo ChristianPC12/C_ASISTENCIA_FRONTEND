@@ -75,6 +75,7 @@ export const USUARIO_FORM_INICIAL = {
   nombre_completo: '',
   usuario: '',
   password: '',
+  password_confirmacion: '',
   rol_id: 2,
   activo: true
 };
