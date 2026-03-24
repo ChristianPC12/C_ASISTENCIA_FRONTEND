@@ -404,6 +404,15 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   3. En `Permanencia`, si varios campos siguen vacíos pero la suma conocida ya alcanzó el total, no debe exigirse `N-1`; los faltantes pasan a `0`.
   4. No dejar vacíos ambiguos en categorías que el sistema ya pudo cerrar lógicamente.
 
+### E43) Limpiar sin reiniciar el paso activo del wizard
+
+- Qué pasó: al usar `Limpiar`, el formulario borraba datos pero mantenía la última categoría activa, de modo que al reanudar el flujo no volvía visualmente a `1/N`.
+- Impacto: sensación de reinicio incompleto y mayor confusión al retomar el registro.
+- Regla preventiva:
+  1. `Limpiar` debe reiniciar también la categoría activa al primer paso visible del wizard.
+  2. Después de limpiar, el foco debe volver al inicio del formulario para dejar claro que el flujo empezó de nuevo.
+  3. No conservar el paso activo anterior cuando el formulario ya fue reseteado.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve

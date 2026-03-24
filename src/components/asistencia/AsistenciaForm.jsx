@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import SelectorFecha from './SelectorFecha';
 import {
   ETIQUETAS_SECCION,
@@ -277,6 +277,7 @@ export default function AsistenciaForm({
     [grupos, totalAutoCalculado]
   );
   const [seccionActiva, setSeccionActiva] = useState(seccionesVisibles[0] || null);
+  const cultoSelectRef = useRef(null);
 
   useEffect(() => {
     if (!seccionesVisibles.length) {
@@ -414,6 +415,14 @@ export default function AsistenciaForm({
     setSeccionActiva(seccionesVisibles[siguienteIndice]);
   };
 
+  const manejarLimpiar = () => {
+    setSeccionActiva(seccionesVisibles[0] || null);
+    onLimpiar();
+    setTimeout(() => {
+      cultoSelectRef.current?.focus?.({ preventScroll: true });
+    }, 0);
+  };
+
   return (
     <div className="card shadow-sm mb-4 asistencia-form-card">
       <div className="card-body">
@@ -424,6 +433,7 @@ export default function AsistenciaForm({
                 Culto <span className="text-danger">*</span>
               </label>
               <select
+                ref={cultoSelectRef}
                 id="culto_id"
                 name="culto_id"
                 className={`form-select ${errores.culto_id ? 'is-invalid' : ''}`}
@@ -582,7 +592,7 @@ export default function AsistenciaForm({
                 <button
                   type="button"
                   className="btn btn-outline-secondary"
-                  onClick={onLimpiar}
+                  onClick={manejarLimpiar}
                   disabled={cargando}
                 >
                   {editandoId ? 'Cancelar' : 'Limpiar'}
