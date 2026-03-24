@@ -145,8 +145,8 @@ function sumarMetricas(metricas, valores, excluirClaves = []) {
     .reduce((acumulado, item) => acumulado + aEnteroPositivo(valores?.[item.clave]), 0);
 }
 
-function normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, claveTotal) {
-  if (!datos || !claveTotal || !Array.isArray(metricasProcedencia) || metricasProcedencia.length === 0) {
+function normalizarMetricasResueltasPorTotal(datos, metricasSeccion, claveTotal) {
+  if (!datos || !claveTotal || !Array.isArray(metricasSeccion) || metricasSeccion.length === 0) {
     return datos;
   }
 
@@ -156,17 +156,17 @@ function normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, cla
   }
 
   const total = aEnteroPositivo(totalRaw);
-  const sumaProcedencia = metricasProcedencia
+  const sumaSeccion = metricasSeccion
     .reduce((acumulado, metrica) => acumulado + aEnteroPositivo(datos?.metricas?.[metrica.clave]), 0);
 
-  if (sumaProcedencia !== total) {
+  if (sumaSeccion !== total) {
     return datos;
   }
 
   let huboCambios = false;
   const metricasNormalizadas = { ...(datos?.metricas || {}) };
 
-  metricasProcedencia.forEach((metrica) => {
+  metricasSeccion.forEach((metrica) => {
     if (esValorVacio(metricasNormalizadas[metrica.clave])) {
       metricasNormalizadas[metrica.clave] = '0';
       huboCambios = true;
@@ -181,6 +181,20 @@ function normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, cla
     ...datos,
     metricas: metricasNormalizadas
   };
+}
+
+function normalizarCategoriasResueltasPorTotal(
+  datos,
+  metricasInfoCulto,
+  metricasProcedencia,
+  metricasPermanencia,
+  claveTotal
+) {
+  let salida = datos;
+  salida = normalizarMetricasResueltasPorTotal(salida, metricasInfoCulto, claveTotal);
+  salida = normalizarMetricasResueltasPorTotal(salida, metricasProcedencia, claveTotal);
+  salida = normalizarMetricasResueltasPorTotal(salida, metricasPermanencia, claveTotal);
+  return salida;
 }
 
 /**
@@ -272,7 +286,13 @@ export function useAsistencia() {
   }, []);
 
   const validarTiempoReal = useCallback((datos, tocados, campoActual = null) => {
-    const datosNormalizados = normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, claveTotal);
+    const datosNormalizados = normalizarCategoriasResueltasPorTotal(
+      datos,
+      metricasInfoCulto,
+      metricasProcedencia,
+      metricasPermanencia,
+      claveTotal
+    );
     const validacion = validarAsistencia(datosNormalizados, { metricasActivas });
     const erroresFiltrados = filtrarErroresTiempoReal({
       erroresValidacion: validacion.errores,
@@ -284,7 +304,7 @@ export function useAsistencia() {
     if (campoActual && erroresFiltrados[campoActual]) {
       mostrarAdvertencia(erroresFiltrados[campoActual]);
     }
-  }, [metricasActivas, metricasProcedencia, claveTotal, mostrarAdvertencia]);
+  }, [metricasActivas, metricasInfoCulto, metricasProcedencia, metricasPermanencia, claveTotal, mostrarAdvertencia]);
 
   // Auto-calcular total_asistentes si hay metricas activas en Informacion del culto.
   useEffect(() => {
@@ -356,10 +376,16 @@ export function useAsistencia() {
 
   useEffect(() => {
     setFormulario((prev) => {
-      const normalizado = normalizarProcedenciasResueltasPorTotal(prev, metricasProcedencia, claveTotal);
+      const normalizado = normalizarCategoriasResueltasPorTotal(
+        prev,
+        metricasInfoCulto,
+        metricasProcedencia,
+        metricasPermanencia,
+        claveTotal
+      );
       return normalizado === prev ? prev : normalizado;
     });
-  }, [formulario.metricas, metricasProcedencia, claveTotal]);
+  }, [formulario.metricas, metricasInfoCulto, metricasProcedencia, metricasPermanencia, claveTotal]);
 
   const permanenciaAutoBloqueada = useMemo(() => {
     if (!claveTotal || !clavePermanenciaAuto || metricasPermanencia.length < 2) {
@@ -698,7 +724,13 @@ export function useAsistencia() {
   }, [formulario, obtenerErrorBloqueoCambio, mostrarAdvertencia]);
 
   const prepararDatos = useCallback((datos) => {
-    const datosNormalizados = normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, claveTotal);
+    const datosNormalizados = normalizarCategoriasResueltasPorTotal(
+      datos,
+      metricasInfoCulto,
+      metricasProcedencia,
+      metricasPermanencia,
+      claveTotal
+    );
     const sanitizados = sanitizarObjeto(datosNormalizados);
     const metricasPayload = normalizarPayloadMetricas(metricasActivas, sanitizados.metricas || {});
     const observacionesNormalizadas = typeof metricasPayload.observaciones === 'string'
@@ -715,11 +747,17 @@ export function useAsistencia() {
       metricas: metricasPayload,
       observaciones: observacionesNormalizadas
     };
-  }, [metricasActivas, metricasProcedencia, claveTotal]);
+  }, [metricasActivas, metricasInfoCulto, metricasProcedencia, metricasPermanencia, claveTotal]);
 
   // Guardar (crear o actualizar)
   const guardar = useCallback(async () => {
-    const formularioNormalizado = normalizarProcedenciasResueltasPorTotal(formulario, metricasProcedencia, claveTotal);
+    const formularioNormalizado = normalizarCategoriasResueltasPorTotal(
+      formulario,
+      metricasInfoCulto,
+      metricasProcedencia,
+      metricasPermanencia,
+      claveTotal
+    );
     if (formularioNormalizado !== formulario) {
       setFormulario(formularioNormalizado);
     }

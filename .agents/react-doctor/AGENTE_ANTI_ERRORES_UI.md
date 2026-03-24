@@ -394,6 +394,16 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   3. `Permanencia` no debe generar error de total mientras esa categoría siga completamente vacía.
   4. Nunca mostrar una advertencia de una categoría futura para impedir el avance desde una categoría que todavía no es el origen real del problema.
 
+### E42) Categoría resuelta pero con vacíos ambiguos
+
+- Qué pasó: cuando una categoría que reparte el total ya quedaba completamente resuelta por un solo valor, los demás campos seguían vacíos en vez de pasar a `0`.
+- Impacto: inconsistencia visual, duda para el usuario y riesgo de validaciones distintas entre frontend y backend.
+- Regla preventiva:
+  1. Si una categoría numérica que reparte `Total de asistentes` ya suma exactamente el total, todos los vacíos restantes de esa misma categoría deben normalizarse a `0`.
+  2. Esta regla aplica tanto en frontend como en backend para evitar discrepancias entre vista y persistencia.
+  3. En `Permanencia`, si varios campos siguen vacíos pero la suma conocida ya alcanzó el total, no debe exigirse `N-1`; los faltantes pasan a `0`.
+  4. No dejar vacíos ambiguos en categorías que el sistema ya pudo cerrar lógicamente.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve

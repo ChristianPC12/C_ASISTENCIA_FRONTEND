@@ -370,11 +370,16 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
             'La suma de Permanencia no puede superar Total de asistentes.';
         }
       } else {
-        const minimoCompletas = metricasPermanencia.length - 1;
-        const completas = metricasPermanencia.length - faltantes.length;
-        if (completas < minimoCompletas) {
+        if (sumaCompletas > totalNorm) {
           errores[faltantes[0].clave] =
-            `Complete al menos ${minimoCompletas} métricas de Permanencia para calcular la restante.`;
+            'La suma de Permanencia no puede superar Total de asistentes.';
+        } else if (sumaCompletas < totalNorm) {
+          const minimoCompletas = metricasPermanencia.length - 1;
+          const completas = metricasPermanencia.length - faltantes.length;
+          if (completas < minimoCompletas) {
+            errores[faltantes[0].clave] =
+              `Complete al menos ${minimoCompletas} métricas de Permanencia para calcular la restante.`;
+          }
         }
       }
     }

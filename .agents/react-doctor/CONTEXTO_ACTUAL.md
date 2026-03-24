@@ -108,6 +108,7 @@ Rutas activas:
   - el registro se valida solo por relaciones lógicas reales entre categorías.
 - Si `Total de asistentes` depende de `Información del culto`, el wizard bloquea desde esa categoría cuando sigue vacía; si el total es manual, el bloqueo ocurre en el propio paso `Total de asistentes`.
 - `Permanencia` ya no lanza error de total mientras toda la categoría siga vacía.
+- Si `Información del culto`, `Procedencia` o `Permanencia` ya suman exactamente `Total de asistentes`, los vacíos restantes de esa misma categoría se normalizan automáticamente a `0`.
 - Reglas duras de captura se bloquean antes de entrar al estado local:
   - composicion no puede superar total,
   - procedencia no puede superar total,
