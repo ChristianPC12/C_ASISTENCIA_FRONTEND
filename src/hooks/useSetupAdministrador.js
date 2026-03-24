@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import setupApi from '../api/setupApi';
 import { notificarError, notificarExito } from '../utils/notify';
 import { useSetupStatus } from './useSetupStatus';
@@ -28,10 +28,10 @@ const METRICAS_FIJAS_MAP = new Map(
 );
 const ETIQUETA_METRICA_BASE = {
   llegaron_antes_hora: 'Llegaron antes de la hora',
-  llegaron_despues_hora: 'Llegaron después de la hora',
+  llegaron_despues_hora: 'Llegaron despuÃ©s de la hora',
   total_asistentes: 'Total de asistentes',
-  ninos: 'Niños',
-  jovenes: 'Jóvenes'
+  ninos: 'NiÃ±os',
+  jovenes: 'JÃ³venes'
 };
 
 const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
@@ -39,16 +39,16 @@ const DIA_OPCIONES = [
   { valor: 1, etiqueta: 'Domingo' },
   { valor: 2, etiqueta: 'Lunes' },
   { valor: 3, etiqueta: 'Martes' },
-  { valor: 4, etiqueta: 'Miércoles' },
+  { valor: 4, etiqueta: 'MiÃ©rcoles' },
   { valor: 5, etiqueta: 'Jueves' },
   { valor: 6, etiqueta: 'Viernes' },
-  { valor: 7, etiqueta: 'Sábado' }
+  { valor: 7, etiqueta: 'SÃ¡bado' }
 ];
 
 const CULTOS_DEFAULT = [
-  { codigo: 'SABADO', nombre: 'Culto Sábado', dia_semana: 7, hora_inicio: '09:00', activo: false, orden: 1 },
+  { codigo: 'SABADO', nombre: 'Culto SÃ¡bado', dia_semana: 7, hora_inicio: '09:00', activo: false, orden: 1 },
   { codigo: 'DOMINGO', nombre: 'Culto Domingo', dia_semana: 1, hora_inicio: '18:30', activo: false, orden: 2 },
-  { codigo: 'MIERCOLES', nombre: 'Culto Miércoles', dia_semana: 4, hora_inicio: '18:30', activo: false, orden: 3 }
+  { codigo: 'MIERCOLES', nombre: 'Culto MiÃ©rcoles', dia_semana: 4, hora_inicio: '18:30', activo: false, orden: 3 }
 ];
 
 const PROCEDENCIAS_DEFAULT = [
@@ -82,7 +82,7 @@ function toBool(valor) {
   if (typeof valor === 'boolean') return valor;
   if (typeof valor === 'number') return valor === 1;
   if (typeof valor === 'string') {
-    return ['1', 'true', 'on', 'yes', 'si', 'sí'].includes(valor.trim().toLowerCase());
+    return ['1', 'true', 'on', 'yes', 'si', 'sÃ­'].includes(valor.trim().toLowerCase());
   }
   return false;
 }
@@ -136,12 +136,12 @@ function normalizarMensajeMetricasUsuarioFinal(mensajeRaw) {
     const etiquetas = Array.from(new Set(clavesFaltantes))
       .map((clave) => ETIQUETA_METRICA_BASE[clave] || clave.replace(/_/g, ' '));
     if (etiquetas.length > 0) {
-      return 'La configuración de métricas es inválida. Revise las métricas base y guarde nuevamente.';
+      return 'La configuraciÃ³n de mÃ©tricas es invÃ¡lida. Revise las mÃ©tricas base y guarde nuevamente.';
     }
   }
 
   if (normalizado.includes('configuracion de metricas invalida')) {
-    return 'La configuración de métricas es inválida. Revise el panel de Métricas y guarde nuevamente.';
+    return 'La configuraciÃ³n de mÃ©tricas es invÃ¡lida. Revise el panel de MÃ©tricas y guarde nuevamente.';
   }
 
   return mensaje;
@@ -193,12 +193,10 @@ function sincronizarGrupoMetricasProcedencia(listaMetricas, slugProcedencia, hab
       return item;
     }
 
-    const obligatorio = habilitado && clave.startsWith('proc_');
     return {
       ...item,
       habilitado,
-      obligatorio,
-      obligatorio_previo: obligatorio
+      obligatorio: false
     };
   });
 
@@ -215,12 +213,10 @@ function sincronizarGrupoMetricasProcedencia(listaMetricas, slugProcedencia, hab
       return item;
     }
 
-    const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
     return {
       ...item,
       habilitado: true,
-      obligatorio: obligatorioPrevio,
-      obligatorio_previo: obligatorioPrevio
+      obligatorio: false
     };
   });
 }
@@ -402,7 +398,6 @@ function prepararMetricasParaGuardar(metricas) {
     const fija = obtenerDefinicionMetricaFija(clave);
 
     const habilitado = !!item?.habilitado;
-    const obligatorio = habilitado ? !!item?.obligatorio : false;
     const categoria = fija
       ? normalizarCategoriaMetrica(fija.categoria, clave)
       : normalizarCategoriaMetrica(item?.categoria, clave);
@@ -413,7 +408,7 @@ function prepararMetricasParaGuardar(metricas) {
       etiqueta: fija ? fija.etiqueta : etiquetaIngresada,
       categoria,
       habilitado,
-      obligatorio,
+      obligatorio: false,
       es_fija: Boolean(fija || item?.es_fija)
     };
   });
@@ -426,7 +421,6 @@ function firmarMetricas(metricas) {
       etiqueta: String(item?.etiqueta || '').trim(),
       categoria: normalizarCategoriaMetrica(item?.categoria, item?.clave),
       habilitado: !!item?.habilitado,
-      obligatorio: !!item?.obligatorio,
       es_fija: !!item?.es_fija
     }))
   );
@@ -476,7 +470,7 @@ function normalizarMetricas(metricasRaw) {
       etiqueta: definicionFija?.etiqueta || item.etiqueta,
       categoria: categoriaBase,
       habilitado: item.habilitado,
-      obligatorio: item.obligatorio,
+      obligatorio: false,
       es_fija: esFija
     };
   });
@@ -496,9 +490,9 @@ function validarCultos(cultos) {
     const filaErrores = {};
 
     if (!/^[A-Z0-9_]{2,30}$/.test(culto.codigo || '')) {
-      filaErrores.codigo = 'Código inválido (A-Z, 0-9 y guion bajo).';
+      filaErrores.codigo = 'CÃ³digo invÃ¡lido (A-Z, 0-9 y guion bajo).';
     } else if (codigos.has(culto.codigo)) {
-      filaErrores.codigo = 'Código duplicado.';
+      filaErrores.codigo = 'CÃ³digo duplicado.';
     } else {
       codigos.add(culto.codigo);
     }
@@ -509,15 +503,15 @@ function validarCultos(cultos) {
     }
 
     if (!Number.isInteger(culto.dia_semana) || culto.dia_semana < 1 || culto.dia_semana > 7) {
-      filaErrores.dia_semana = 'Día inválido.';
+      filaErrores.dia_semana = 'DÃ­a invÃ¡lido.';
     }
 
     if (!/^\d{2}:\d{2}$/.test(culto.hora_inicio || '')) {
-      filaErrores.hora_inicio = 'Formato de hora inválido (HH:MM).';
+      filaErrores.hora_inicio = 'Formato de hora invÃ¡lido (HH:MM).';
     }
 
     if (!Number.isInteger(culto.orden) || culto.orden < 1 || culto.orden > 99) {
-      filaErrores.orden = 'Orden inválido (1-99).';
+      filaErrores.orden = 'Orden invÃ¡lido (1-99).';
     } else if (ordenes.has(culto.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -552,7 +546,7 @@ function validarProcedencias(procedencias) {
     const nombreClave = nombre.toLowerCase();
 
     if (nombre.length < 2 || nombre.length > 80) {
-      filaErrores.nombre = 'Nombre inválido (2-80).';
+      filaErrores.nombre = 'Nombre invÃ¡lido (2-80).';
     } else if (nombres.has(nombreClave)) {
       filaErrores.nombre = 'Nombre duplicado.';
     } else {
@@ -560,7 +554,7 @@ function validarProcedencias(procedencias) {
     }
 
     if (!Number.isInteger(item.orden) || item.orden < 1 || item.orden > 99) {
-      filaErrores.orden = 'Orden inválido (1-99).';
+      filaErrores.orden = 'Orden invÃ¡lido (1-99).';
     } else if (ordenes.has(item.orden)) {
       filaErrores.orden = 'Orden duplicado.';
     } else {
@@ -592,11 +586,11 @@ function validarMetricasConfiguracion(metricas) {
   let visitasHabilitadas = 0;
 
   if (!Array.isArray(metricas) || metricas.length < 1) {
-    return { general: 'Debe configurar al menos una métrica.' };
+    return { general: 'Debe configurar al menos una mÃ©trica.' };
   }
 
   if (metricasAdicionales > MAX_METRICAS_ADICIONALES) {
-    return { general: `Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} métricas adicionales.` };
+    return { general: `Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} mÃ©tricas adicionales.` };
   }
 
   metricas.forEach((item, idx) => {
@@ -606,7 +600,7 @@ function validarMetricasConfiguracion(metricas) {
     const categoria = normalizarCategoriaMetrica(item?.categoria, claveNormalizada);
 
     if (!/^[a-z0-9_]{2,80}$/.test(claveNormalizada)) {
-      filaErrores.clave = 'Clave inválida (a-z, 0-9 y guion bajo).';
+      filaErrores.clave = 'Clave invÃ¡lida (a-z, 0-9 y guion bajo).';
     } else if (claves.has(claveNormalizada)) {
       filaErrores.clave = 'Clave duplicada.';
     } else {
@@ -617,12 +611,8 @@ function validarMetricasConfiguracion(metricas) {
       filaErrores.etiqueta = 'Etiqueta muy corta.';
     }
 
-    if (!item.habilitado && item.obligatorio) {
-      filaErrores.obligatorio = 'No puede ser obligatoria si está deshabilitada.';
-    }
-
     if (!CATEGORIAS_VALIDAS.has(categoria)) {
-      filaErrores.categoria = 'Seleccione una categoría válida.';
+      filaErrores.categoria = 'Seleccione una categorÃ­a vÃ¡lida.';
     }
 
     if (item.habilitado) {
@@ -646,27 +636,26 @@ function validarMetricasConfiguracion(metricas) {
   });
 
   if (habilitadas < 1) {
-    errores.general = 'Debe dejar al menos una métrica habilitada.';
+    errores.general = 'Debe dejar al menos una mÃ©trica habilitada.';
   }
 
   if ((antes && !despues) || (!antes && despues)) {
-    errores.general = 'Puntualidad requiere ambas métricas: antes y después.';
+    errores.general = 'Puntualidad requiere ambas mÃ©tricas: antes y despuÃ©s.';
   }
 
   if (antes && despues) {
-    if (antes.habilitado !== despues.habilitado || antes.obligatorio !== despues.obligatorio) {
-      errores.general = 'Puntualidad (antes/después) debe mantenerse ambos o ninguno.';
+    if (antes.habilitado !== despues.habilitado) {
+      errores.general = 'Puntualidad (antes/despuÃ©s) debe mantenerse ambos o ninguno.';
     }
   }
 
   if ((retiroAntesTerminar && !seQuedaronTodo) || (!retiroAntesTerminar && seQuedaronTodo)) {
-    errores.general = 'Permanencia base requiere ambas métricas: retiros y se quedaron hasta el final.';
+    errores.general = 'Permanencia base requiere ambas mÃ©tricas: retiros y se quedaron hasta el final.';
   }
 
   if (retiroAntesTerminar && seQuedaronTodo) {
     if (
       retiroAntesTerminar.habilitado !== seQuedaronTodo.habilitado
-      || retiroAntesTerminar.obligatorio !== seQuedaronTodo.obligatorio
     ) {
       errores.general = 'Permanencia base (retiros/se quedaron) debe mantenerse ambos o ninguno.';
     }
@@ -679,7 +668,7 @@ function validarMetricasConfiguracion(metricas) {
     || procedenciaHabilitadas > 0
     || visitasHabilitadas > 0
   ) && (!total || !total.habilitado)) {
-    errores.general = 'Total de asistentes debe estar habilitado cuando hay métricas que dependen del total.';
+    errores.general = 'Total de asistentes debe estar habilitado cuando hay mÃ©tricas que dependen del total.';
   }
 
   return errores;
@@ -805,22 +794,15 @@ export function useSetupAdministrador() {
 
         if (campo === 'habilitado') {
           const habilitado = !!valor;
-          const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
           return {
             ...item,
             habilitado,
-            obligatorio: habilitado ? obligatorioPrevio : false,
-            obligatorio_previo: obligatorioPrevio
+            obligatorio: false
           };
         }
 
         if (campo === 'obligatorio') {
-          const obligatorio = item.habilitado ? !!valor : false;
-          return {
-            ...item,
-            obligatorio,
-            obligatorio_previo: obligatorio
-          };
+          return item;
         }
 
         if (esFija) {
@@ -855,20 +837,14 @@ export function useSetupAdministrador() {
         actualizado = actualizado.map((item, idx) => {
           if (idx === index || !CLAVES_PUNTUALIDAD.includes(item.clave)) return item;
           if (campo === 'habilitado') {
-            const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
             return {
               ...item,
               habilitado: metricaEditada.habilitado,
-              obligatorio: metricaEditada.habilitado ? obligatorioPrevio : false,
-              obligatorio_previo: obligatorioPrevio
+              obligatorio: false
             };
           }
           if (campo === 'obligatorio') {
-            return {
-              ...item,
-              obligatorio: metricaEditada.habilitado ? metricaEditada.obligatorio : false,
-              obligatorio_previo: metricaEditada.obligatorio
-            };
+            return item;
           }
           return item;
         });
@@ -878,20 +854,14 @@ export function useSetupAdministrador() {
         actualizado = actualizado.map((item, idx) => {
           if (idx === index || !CLAVES_PERMANENCIA_BASE.includes(item.clave)) return item;
           if (campo === 'habilitado') {
-            const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
             return {
               ...item,
               habilitado: metricaEditada.habilitado,
-              obligatorio: metricaEditada.habilitado ? obligatorioPrevio : false,
-              obligatorio_previo: obligatorioPrevio
+              obligatorio: false
             };
           }
           if (campo === 'obligatorio') {
-            return {
-              ...item,
-              obligatorio: metricaEditada.habilitado ? metricaEditada.obligatorio : false,
-              obligatorio_previo: metricaEditada.obligatorio
-            };
+            return item;
           }
           return item;
         });
@@ -922,12 +892,10 @@ export function useSetupAdministrador() {
               return item;
             }
 
-            const obligatorioPrevio = item.habilitado ? !!item.obligatorio : !!item.obligatorio_previo;
             return {
               ...item,
               habilitado: true,
-              obligatorio: obligatorioPrevio,
-              obligatorio_previo: obligatorioPrevio
+              obligatorio: false
             };
           });
         }
@@ -949,9 +917,7 @@ export function useSetupAdministrador() {
         }
       }
 
-      return actualizado.map((item) => (
-        !item.habilitado && item.obligatorio ? { ...item, obligatorio: false } : item
-      ));
+      return actualizado;
     });
   }, []);
 
@@ -980,7 +946,7 @@ export function useSetupAdministrador() {
     });
 
     if (limiteAlcanzado) {
-      notificarError(`Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} métricas adicionales.`);
+      notificarError(`Solo se permiten hasta ${MAX_METRICAS_ADICIONALES} mÃ©tricas adicionales.`);
       return null;
     }
 
@@ -1001,7 +967,7 @@ export function useSetupAdministrador() {
     const validacion = validarCultos(cultosPreparados);
     setErroresCultos(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuración de cultos.');
+      notificarError(validacion.general || 'Revise la configuraciÃ³n de cultos.');
       return false;
     }
 
@@ -1042,7 +1008,7 @@ export function useSetupAdministrador() {
     const validacion = validarProcedencias(procedenciasPreparadas);
     setErroresProcedencias(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuración de procedencias.');
+      notificarError(validacion.general || 'Revise la configuraciÃ³n de procedencias.');
       return false;
     }
 
@@ -1083,7 +1049,7 @@ export function useSetupAdministrador() {
     const validacion = validarMetricasConfiguracion(metricasPreparadas);
     setErroresMetricas(validacion);
     if (Object.keys(validacion).length > 0) {
-      notificarError(validacion.general || 'Revise la configuración de métricas.');
+      notificarError(validacion.general || 'Revise la configuraciÃ³n de mÃ©tricas.');
       return false;
     }
 
@@ -1095,7 +1061,7 @@ export function useSetupAdministrador() {
           etiqueta: item.etiqueta.trim(),
           categoria: normalizarCategoriaMetrica(item.categoria, item.clave),
           habilitado: !!item.habilitado,
-          obligatorio: !!item.obligatorio
+          obligatorio: false
         }))
       };
       const res = await setupApi.guardarMetricas(payload);
@@ -1128,16 +1094,16 @@ export function useSetupAdministrador() {
         setFirmaMetricasBase(firmarMetricas(metricasPreparadas));
         aplicarDetalleSetup(detalleActualizado);
         setErroresMetricas({});
-        notificarExito(res.mensaje || 'Métricas guardadas correctamente.');
+        notificarExito(res.mensaje || 'MÃ©tricas guardadas correctamente.');
         return true;
       }
       notificarError(
-        normalizarMensajeMetricasUsuarioFinal(res?.mensaje) || 'No se pudieron guardar las métricas.'
+        normalizarMensajeMetricasUsuarioFinal(res?.mensaje) || 'No se pudieron guardar las mÃ©tricas.'
       );
       return false;
     } catch (error) {
       notificarError(
-        normalizarMensajeMetricasUsuarioFinal(error?.mensaje) || 'No se pudieron guardar las métricas.'
+        normalizarMensajeMetricasUsuarioFinal(error?.mensaje) || 'No se pudieron guardar las mÃ©tricas.'
       );
       return false;
     } finally {
@@ -1244,3 +1210,4 @@ export function useSetupAdministrador() {
     finalizarSetup
   };
 }
+

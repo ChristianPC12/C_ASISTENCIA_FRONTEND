@@ -203,6 +203,13 @@ a:hover {
   border-radius: 0.75rem;
   padding: 0.9rem 1rem;
   background: linear-gradient(180deg, rgba(0, 51, 102, 0.04) 0%, #ffffff 100%);
+  overflow: visible;
+}
+
+.asistencia-form-card,
+.asistencia-form-card .card-body,
+.asistencia-categoria-shell {
+  overflow: visible;
 }
 
 .asistencia-empty-hint {
@@ -232,40 +239,25 @@ a:hover {
   border-radius: 0.85rem;
   background: #ffffff;
   box-shadow: 0 10px 24px rgba(0, 51, 102, 0.05);
-  max-height: min(58vh, 540px);
+  overflow: visible;
+}
+
+.asistencia-seccion-scroll {
+  max-height: 11.75rem;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-right: 0.15rem;
 }
 
-.asistencia-seccion-card::-webkit-scrollbar {
+.asistencia-seccion-scroll-visitas {
+  max-height: 11.75rem;
+}
+
+.asistencia-seccion-scroll::-webkit-scrollbar {
   width: 0;
   height: 0;
-}
-
-.asistencia-seccion-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  margin-bottom: 0.95rem;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: #ffffff;
-  padding-bottom: 0.65rem;
-}
-
-.asistencia-seccion-header h6 {
-  margin: 0;
-  color: var(--iasd-azul);
-}
-
-.asistencia-seccion-meta {
-  color: rgba(0, 51, 102, 0.72);
-  font-size: 0.82rem;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .asistencia-seccion-grid .form-control,
@@ -293,24 +285,41 @@ a:hover {
   overflow-x: auto;
 }
 
+.selector-fecha-wrapper {
+  overflow: visible;
+}
+
+.selector-fecha-popover {
+  min-width: min(300px, calc(100vw - 2rem));
+  max-width: min(340px, calc(100vw - 2rem));
+}
+
 @media (max-width: 991px) {
   .asistencia-top-grid {
     grid-template-columns: 1fr;
   }
+
+  .asistencia-seccion-scroll {
+    max-height: 11.25rem;
+  }
 }
 
 @media (max-width: 576px) {
-  .asistencia-seccion-card {
-    max-height: min(50vh, 460px);
-  }
-
-  .asistencia-seccion-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .asistencia-seccion-scroll {
+    max-height: 10.75rem;
   }
 
   .asistencia-categoria-switch {
     padding-inline: 0.45rem;
+  }
+
+  .selector-fecha-popover {
+    left: 50% !important;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100vw - 2rem);
+    min-width: 0;
+    max-width: 340px;
   }
 }
 

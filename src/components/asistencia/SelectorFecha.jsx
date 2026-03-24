@@ -266,12 +266,12 @@ export default function SelectorFecha({
   const celdas = generarDias();
 
   return (
-    <div ref={refContenedor} id={id} style={{ position: 'relative' }}>
+    <div ref={refContenedor} id={id} className="selector-fecha-wrapper" style={{ position: 'relative' }}>
       {/* Input que muestra la fecha y abre el calendario */}
       <div
         role="button"
         tabIndex={disabled ? -1 : 0}
-        className={`form-control d-flex align-items-center justify-content-between ${disabled ? 'bg-light' : ''} ${className}`}
+        className={`form-control d-flex align-items-center justify-content-between selector-fecha-trigger ${disabled ? 'bg-light' : ''} ${className}`}
         onClick={() => !disabled && setAbierto(!abierto)}
         onKeyDown={alPresionarTecla(() => !disabled && setAbierto(!abierto))}
         style={{
@@ -303,13 +303,12 @@ export default function SelectorFecha({
       {/* Dropdown del calendario */}
       {abierto && (
         <div
-          className="card shadow"
+          className="card shadow selector-fecha-popover"
           style={{
             position: 'absolute',
             zIndex: 1050,
             top: '100%',
             left: 0,
-            minWidth: '300px',
             marginTop: '4px'
           }}
         >

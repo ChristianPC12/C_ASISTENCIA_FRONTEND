@@ -145,6 +145,44 @@ function sumarMetricas(metricas, valores, excluirClaves = []) {
     .reduce((acumulado, item) => acumulado + aEnteroPositivo(valores?.[item.clave]), 0);
 }
 
+function normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, claveTotal) {
+  if (!datos || !claveTotal || !Array.isArray(metricasProcedencia) || metricasProcedencia.length === 0) {
+    return datos;
+  }
+
+  const totalRaw = datos?.metricas?.[claveTotal];
+  if (esValorVacio(totalRaw)) {
+    return datos;
+  }
+
+  const total = aEnteroPositivo(totalRaw);
+  const sumaProcedencia = metricasProcedencia
+    .reduce((acumulado, metrica) => acumulado + aEnteroPositivo(datos?.metricas?.[metrica.clave]), 0);
+
+  if (sumaProcedencia !== total) {
+    return datos;
+  }
+
+  let huboCambios = false;
+  const metricasNormalizadas = { ...(datos?.metricas || {}) };
+
+  metricasProcedencia.forEach((metrica) => {
+    if (esValorVacio(metricasNormalizadas[metrica.clave])) {
+      metricasNormalizadas[metrica.clave] = '0';
+      huboCambios = true;
+    }
+  });
+
+  if (!huboCambios) {
+    return datos;
+  }
+
+  return {
+    ...datos,
+    metricas: metricasNormalizadas
+  };
+}
+
 /**
  * Hook para CRUD de asistencia con metricas dinamicas por tenant
  */
@@ -234,10 +272,11 @@ export function useAsistencia() {
   }, []);
 
   const validarTiempoReal = useCallback((datos, tocados, campoActual = null) => {
-    const validacion = validarAsistencia(datos, { metricasActivas });
+    const datosNormalizados = normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, claveTotal);
+    const validacion = validarAsistencia(datosNormalizados, { metricasActivas });
     const erroresFiltrados = filtrarErroresTiempoReal({
       erroresValidacion: validacion.errores,
-      datos,
+      datos: datosNormalizados,
       tocados
     });
     setErrores(erroresFiltrados);
@@ -245,9 +284,9 @@ export function useAsistencia() {
     if (campoActual && erroresFiltrados[campoActual]) {
       mostrarAdvertencia(erroresFiltrados[campoActual]);
     }
-  }, [metricasActivas, mostrarAdvertencia]);
+  }, [metricasActivas, metricasProcedencia, claveTotal, mostrarAdvertencia]);
 
-  // Auto-calcular total_asistentes si hay métricas activas en Información del culto.
+  // Auto-calcular total_asistentes si hay metricas activas en Informacion del culto.
   useEffect(() => {
     if (!claveTotal || metricasInfoCulto.length < 1) {
       return;
@@ -278,7 +317,7 @@ export function useAsistencia() {
     metricasInfoCulto
   ]);
 
-  // Si no hay Información del culto, permitir derivar total desde Permanencia cuando el usuario complete todas.
+  // Si no hay Informacion del culto, permitir derivar total desde Permanencia cuando el usuario complete todas.
   useEffect(() => {
     if (!claveTotal || metricasInfoCulto.length > 0 || metricasPermanencia.length < 1) {
       return;
@@ -315,6 +354,13 @@ export function useAsistencia() {
     metricasPermanencia
   ]);
 
+  useEffect(() => {
+    setFormulario((prev) => {
+      const normalizado = normalizarProcedenciasResueltasPorTotal(prev, metricasProcedencia, claveTotal);
+      return normalizado === prev ? prev : normalizado;
+    });
+  }, [formulario.metricas, metricasProcedencia, claveTotal]);
+
   const permanenciaAutoBloqueada = useMemo(() => {
     if (!claveTotal || !clavePermanenciaAuto || metricasPermanencia.length < 2) {
       return false;
@@ -333,7 +379,7 @@ export function useAsistencia() {
     metricasPermanencia
   ]);
 
-  // Calcular en tiempo real la última métrica de Permanencia (auto) para que la suma coincida con total_asistentes.
+  // Calcular en tiempo real la ultima metrica de Permanencia (auto) para que la suma coincida con total_asistentes.
   useEffect(() => {
     if (!claveTotal || !clavePermanenciaAuto || metricasPermanencia.length < 2) {
       return;
@@ -633,10 +679,12 @@ export function useAsistencia() {
 
     if (mensaje) {
       mostrarAdvertencia(mensaje);
-      setErrores((prev) => ({
-        ...prev,
-        [campo]: mensaje
-      }));
+      setErrores((prev) => {
+        if (!prev[campo]) return prev;
+        const siguientes = { ...prev };
+        delete siguientes[campo];
+        return siguientes;
+      });
       return;
     }
 
@@ -647,10 +695,11 @@ export function useAsistencia() {
         [campo]: valorNormalizado
       }
     }));
-  }, [formulario, obtenerErrorBloqueoCambio]);
+  }, [formulario, obtenerErrorBloqueoCambio, mostrarAdvertencia]);
 
   const prepararDatos = useCallback((datos) => {
-    const sanitizados = sanitizarObjeto(datos);
+    const datosNormalizados = normalizarProcedenciasResueltasPorTotal(datos, metricasProcedencia, claveTotal);
+    const sanitizados = sanitizarObjeto(datosNormalizados);
     const metricasPayload = normalizarPayloadMetricas(metricasActivas, sanitizados.metricas || {});
     const observacionesNormalizadas = typeof metricasPayload.observaciones === 'string'
       ? normalizarSaltosObservaciones(metricasPayload.observaciones)
@@ -666,11 +715,16 @@ export function useAsistencia() {
       metricas: metricasPayload,
       observaciones: observacionesNormalizadas
     };
-  }, [metricasActivas]);
+  }, [metricasActivas, metricasProcedencia, claveTotal]);
 
   // Guardar (crear o actualizar)
   const guardar = useCallback(async () => {
-    const validacion = validarAsistencia(formulario, { metricasActivas });
+    const formularioNormalizado = normalizarProcedenciasResueltasPorTotal(formulario, metricasProcedencia, claveTotal);
+    if (formularioNormalizado !== formulario) {
+      setFormulario(formularioNormalizado);
+    }
+
+    const validacion = validarAsistencia(formularioNormalizado, { metricasActivas });
     if (!validacion.valido) {
       setErrores(validacion.errores);
       const primerMensaje = validacion.primerCampoError
@@ -704,7 +758,7 @@ export function useAsistencia() {
     setErrores({});
 
     try {
-      const datos = prepararDatos(formulario);
+      const datos = prepararDatos(formularioNormalizado);
 
       let res;
       if (editandoId) {
@@ -761,7 +815,7 @@ export function useAsistencia() {
 
   // Eliminar registro
   const eliminar = useCallback(async (id) => {
-    if (!await confirmar('¿Está seguro de que desea eliminar este registro de asistencia?')) {
+    if (!await confirmar('\u00BFEst\u00E1 seguro de que desea eliminar este registro de asistencia?')) {
       return false;
     }
 

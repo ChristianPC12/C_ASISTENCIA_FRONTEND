@@ -1,4 +1,4 @@
-﻿# Agente Anti Errores UI (2026-03-11)
+# Agente Anti Errores UI (2026-03-11)
 
 ## Objetivo
 
@@ -294,6 +294,106 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
   3. Mantener `Nombres de visitas` como input de una sola línea con scroll interno natural del input.
   4. Aplicar límite de 20 caracteres por cada nombre separado por coma desde la captura, no solo al guardar.
 
+### E32) Wizard validado solo por campos tocados o por "algún dato"
+
+- Qué pasó: el paso permitía avanzar con solo tener un dato cualquiera o con errores aún no visibles porque el campo dependiente no había sido tocado.
+- Impacto: el usuario podía pasar de categoría con inputs obligatorios vacíos o con reglas globales incumplidas (`total`, `procedencia`, `visitas`, `permanencia`).
+- Regla preventiva:
+  1. El avance entre pasos debe usar validación completa del formulario, no solo errores filtrados por campos tocados.
+  2. Si la categoría tiene campos obligatorios, no se avanza mientras alguno siga vacío; `0` sí cuenta como valor válido en inputs numéricos.
+  3. Si una categoría depende de `Total de asistentes`, el bloqueo debe usar el error real de `total_asistentes` aunque ese input no se haya tocado en ese momento.
+  4. Nunca usar "tiene algún dato" como criterio suficiente para habilitar la flecha derecha.
+
+### E33) Scroll interno atrapando calendario y overlays
+
+- Qué pasó: al meter `overflow` en el contenedor equivocado, el calendario y otros overlays quedaban recortados o parecían metidos dentro del scroll.
+- Impacto: selección de fecha incómoda y percepción de UI rota en móvil/tablet.
+- Regla preventiva:
+  1. El `overflow: auto` debe vivir en un wrapper interno de contenido, no en la tarjeta externa que contiene overlays.
+  2. La tarjeta/panel padre debe conservar `overflow: visible` cuando tenga dropdowns, popovers o calendarios absolutos.
+  3. El scroll vertical del wizard debe ser invisible y contenido, pero sin atrapar el calendario.
+  4. En móvil, el popover del calendario debe adaptarse al viewport sin generar scroll horizontal.
+
+### E34) Flujo del wizard sin prerequisitos claros
+
+- Qué pasó: el formulario llegaba a mostrar navegación o categorías antes de tener el contexto mínimo definido.
+- Impacto: el usuario veía demasiados campos, navegación incoherente y dependencia difícil de entender.
+- Regla preventiva:
+  1. Sin `Culto`, no se muestra `Fecha`.
+  2. Sin `Culto + Fecha`, no se muestran categorías ni flechas del wizard.
+  3. Si existe `Total de asistentes`, debe quedar primero en el orden del wizard para dar contexto a validaciones dependientes.
+  4. La flecha izquierda debe quedar deshabilitada en `1/N` y la derecha en el último paso, sin navegación circular.
+
+### E35) Paso no accionable bloqueando el wizard
+
+- Qué pasó: `Total de asistentes` quedó como primer paso aunque en ciertos setups se calcula automáticamente y el usuario no puede editarlo.
+- Impacto: el wizard se bloquea en una pantalla donde no hay acción posible.
+- Regla preventiva:
+  1. Si una sección es solo informativa o autocalculada, no debe ocupar un paso obligatorio del wizard.
+  2. `Total de asistentes` solo debe aparecer como paso cuando sea editable/manual.
+  3. Si `Total de asistentes` se calcula desde otra categoría, se excluye de la navegación para no frenar el flujo.
+  4. La prioridad visual de una categoría nunca debe imponerse por encima de si realmente es accionable.
+
+### E36) Campos numéricos obligatorios vacíos aunque el total ya quedó resuelto
+
+- Qué pasó: en `Procedencia`, podían quedar inputs obligatorios vacíos aun cuando otra procedencia ya completaba exactamente `Total de asistentes`.
+- Impacto: el usuario quedaba bloqueado por omitir ceros que no cambian el resultado, y el sistema seguía tratando esos campos como incompletos.
+- Regla preventiva:
+  1. En categorías numéricas dependientes del total, distinguir siempre entre `vacío` y `0`.
+  2. Si la suma ya coincide exactamente con `Total de asistentes`, los obligatorios vacíos deben normalizarse automáticamente a `0`.
+  3. Esa normalización debe aplicarse en estado, validación y guardado.
+  4. No debilitar la regla dejando pasar vacíos ambiguos; si el total aún no está cubierto, el bloqueo debe mantenerse.
+
+### E37) Altura del paso sin límite real en formularios wizard
+
+- Qué pasó: aunque el wizard mostraba una categoría por vez, algunas secciones seguían creciendo demasiado en altura y consumían demasiado viewport.
+- Impacto: más scroll del necesario y menor control visual del formulario, especialmente en `Visitas`.
+- Regla preventiva:
+  1. Cada paso del wizard debe tener altura fija y scroll interno propio.
+  2. El alto visible debe equivaler aproximadamente a dos filas útiles de inputs; el resto se navega con scroll interno.
+  3. En `Visitas`, `cantidad + nombres` deben permanecer en la misma fila también en móvil para no duplicar altura por grupo.
+  4. El scroll debe vivir solo dentro del panel del paso, no expandir toda la tarjeta.
+
+### E38) Acción principal visible antes de completar el wizard
+
+- Qué pasó: `Guardar` seguía visible desde pasos intermedios, permitiendo una acción prematura mientras el usuario aún no llegaba al final del flujo.
+- Impacto: riesgo de guardar registros incompletos o de confundir al usuario sobre cuándo termina realmente el formulario.
+- Regla preventiva:
+  1. En formularios tipo wizard, `Guardar` solo debe aparecer en el último paso.
+  2. Aunque el botón no esté visible, el `submit` del formulario también debe bloquearse si no se está en el último paso.
+  3. Mantener visibles solo acciones seguras en pasos intermedios (por ejemplo `Limpiar` o navegación).
+  4. La visibilidad de la acción principal debe seguir el progreso real del flujo, no solo la presencia de datos parciales.
+
+### E39) Paso compacto con validación cruzada mal aislada
+
+- Qué pasó: el wizard de asistencia mantenía un header interno redundante (`Visitas`, `6 campos`) y además propagaba errores de `Total de asistentes` hacia categorías no relacionadas como `Composición de asistentes`.
+- Impacto: pérdida de espacio útil y bloqueo injustificado al avanzar por categorías que no dependen de esa regla.
+- Regla preventiva:
+  1. Si el nombre de la categoría ya aparece en el switch superior, no repetirlo dentro del panel del paso.
+  2. El panel del paso debe usar `max-height` con scroll interno, no altura fija rígida; si hay pocos campos, el alto debe colapsar naturalmente.
+  3. Los errores cruzados de `Total de asistentes` solo se propagan a categorías que realmente dependen de ese dato en ese momento (`Procedencia`, `Permanencia`), no a `Composición de asistentes`.
+  4. Antes de cerrar un ajuste de wizard, revisar que cada categoría pueda avanzar únicamente por sus propias reglas y no por residuos de otra sección.
+
+### E40) Obligatoriedad de métricas mezclada con lógica real del registro
+
+- Qué pasó: la bandera `obligatorio` en métricas estaba generando validaciones artificiales en setup y en registro, duplicando reglas que en realidad ya dependen de relaciones lógicas entre categorías.
+- Impacto: más complejidad, más mensajes inconsistentes y más regresiones al intentar resolver un caso puntual.
+- Regla preventiva:
+  1. En métricas dinámicas del sistema, `obligatorio` no se expone al usuario ni se usa como contrato activo de negocio.
+  2. El setup de métricas debe manejar solo `habilitado` + `categoría` + reglas estructurales del sistema.
+  3. En `Nuevo registro`, el bloqueo debe venir de la lógica real (`total`, `permanencia`, `procedencia`, `visitas`) y no de un flag genérico de obligatoriedad.
+  4. Si la base de datos conserva la columna por compatibilidad, frontend y backend deben forzar `obligatorio = false` para evitar residuos de configuraciones antiguas.
+
+### E41) El bloqueo debe ocurrir en la categoría origen, no en una posterior
+
+- Qué pasó: el wizard permitía salir de `Información del culto` sin datos y luego bloqueaba más adelante en `Procedencia` con un mensaje sobre `Total de asistentes` o `Permanencia`.
+- Impacto: el usuario recibe un error fuera de contexto y siente que la lógica falla, aunque el problema real estaba en el paso anterior.
+- Regla preventiva:
+  1. Si `Total de asistentes` se calcula desde `Información del culto`, el bloqueo debe ocurrir al salir de `Información del culto` cuando aún no hay datos.
+  2. Si `Total de asistentes` es manual y existen categorías posteriores que dependen de él, el bloqueo debe ocurrir en el paso `Total de asistentes`.
+  3. `Permanencia` no debe generar error de total mientras esa categoría siga completamente vacía.
+  4. Nunca mostrar una advertencia de una categoría futura para impedir el avance desde una categoría que todavía no es el origen real del problema.
+
 ## Protocolo reutilizable para nuevos módulos
 
 1. Discovery breve
@@ -354,8 +454,10 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] Estado de setup validado con normalización booleana consistente (`bloqueada_operacion`).
 - [ ] Mensajes de error/notificación en lenguaje de usuario final (sin claves técnicas).
 - [ ] Formularios dinámicos extensos muestran una sola categoría/paso visible por vez.
+- [ ] El wizard valida el paso completo con reglas reales, no solo con campos tocados.
 - [ ] Errores lógicos inmediatos usan toast `advertencia` + borde de campo, sin `invalid-feedback` invasivo.
 - [ ] Ninguna categoría muestra errores prestados de otra categoría.
+- [ ] El scroll interno no atrapa calendarios, popovers ni dropdowns.
 - [ ] Inputs numéricos cortos usan ancho compacto y no dominan el layout móvil.
 - [ ] En `Visitas`, cantidad y nombres se renderizan como pareja visual por procedencia.
 - [ ] Cada nombre en `Nombres de visitas` respeta límite de 20 caracteres separado por coma.

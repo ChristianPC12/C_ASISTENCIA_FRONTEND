@@ -86,15 +86,35 @@ Rutas activas:
 - Nuevo flujo compacto:
   - `Culto` y `Fecha` quedan visibles como contexto fijo.
   - Las categorias activas se recorren una por vez con flechas izquierda/derecha.
+- Regla de prerequisito vigente:
+  - sin `Culto`, no aparece `Fecha`;
+  - sin `Culto + Fecha`, no aparecen categorias ni navegación.
+- Si `Total de asistentes` es manual, se prioriza al inicio del wizard; si es autocalculado, se excluye de la navegación para no bloquear el flujo.
 - Los inputs numericos se compactan mejor para reducir scroll y mejorar el uso en movil.
 - En `Visitas`, `cantidad` y `nombres` ahora se presentan como pareja visual por procedencia.
 - `Nombres de visitas` queda en una sola linea, con scroll interno del input y limite de 20 caracteres por nombre separado por coma.
 - Los errores logicos inmediatos migran a notificacion flotante tipo `advertencia` (amarillo), manteniendo solo resalte visual del campo.
+- El avance entre flechas ya no depende solo de campos tocados:
+  - valida campos obligatorios vacios,
+  - usa validacion completa del formulario para dependencias con `total_asistentes`,
+  - bloquea el paso si la categoria actual tiene inconsistencias reales.
+- En `Procedencia`, si la suma ya coincide exactamente con `Total de asistentes`, los inputs vacíos restantes se normalizan automáticamente a `0`.
+- Cada categoría del wizard usa ahora `max-height` con scroll interno invisible; si una sección tiene pocos inputs, el panel colapsa sin dejar espacio en blanco innecesario.
+- El título de la categoría se muestra una sola vez en el switch superior; el panel interno ya no repite encabezados como `Visitas` o `6 campos`.
+- El botón `Guardar` solo aparece en el último paso del wizard y el `submit` queda bloqueado en pasos intermedios.
+- La bandera `obligatorio` deja de formar parte del flujo activo de métricas:
+  - ya no se muestra en setup,
+  - frontend y backend la neutralizan en `false`,
+  - el registro se valida solo por relaciones lógicas reales entre categorías.
+- Si `Total de asistentes` depende de `Información del culto`, el wizard bloquea desde esa categoría cuando sigue vacía; si el total es manual, el bloqueo ocurre en el propio paso `Total de asistentes`.
+- `Permanencia` ya no lanza error de total mientras toda la categoría siga vacía.
 - Reglas duras de captura se bloquean antes de entrar al estado local:
   - composicion no puede superar total,
   - procedencia no puede superar total,
   - permanencia no puede superar total,
   - visitas no puede superar procedencia.
+- Los errores cruzados de `Total de asistentes` ya no bloquean `Composición de asistentes`; solo se propagan a categorías realmente dependientes (`Procedencia`, `Permanencia`).
+- El scroll vertical del panel vive en un wrapper interno y el contenedor externo queda con `overflow: visible` para no atrapar calendario/popovers.
 - `AsistenciaPage` vuelve a pasar `fechasRegistradas` al formulario para mantener el bloqueo coherente de fechas repetidas.
 
 ## Validaciones tecnicas vigentes

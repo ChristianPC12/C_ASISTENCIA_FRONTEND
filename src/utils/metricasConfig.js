@@ -118,7 +118,7 @@ function normalizarListaMetricas(listaRaw) {
         etiqueta,
         categoria,
         habilitado: toBool(item?.habilitado ?? true),
-        obligatorio: toBool(item?.obligatorio ?? false),
+        obligatorio: false,
         tipo: tipoMetricaPorClave(clave),
         seccion: categoria
       });
@@ -286,11 +286,6 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
     const valor = metricasFormulario?.[metrica.clave];
     const vacio = valor === '' || valor === null || valor === undefined;
 
-    if (metrica.obligatorio && vacio) {
-      errores[metrica.clave] = `${metrica.etiqueta} es obligatorio.`;
-      return;
-    }
-
     if (metrica.tipo === 'numero' && !vacio) {
       const numero = Number(valor);
       if (!Number.isFinite(numero) || numero < 0) {
@@ -330,7 +325,7 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
 
       if (hayInformacionDigitada || !totalVacio) {
         if (totalVacio) {
-          errores.total_asistentes = 'Total de asistentes es obligatorio cuando se digitan métricas de Información del culto.';
+          errores.total_asistentes = 'Debe indicar Total de asistentes cuando se digitan métricas de Información del culto.';
         } else if (aNumeroNoNegativo(totalRaw) !== sumaInfoCulto) {
           errores.total_asistentes = 'Total de asistentes debe coincidir con la suma de Información del culto.';
         }
@@ -345,6 +340,8 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
       const totalRaw = metricasFormulario?.total_asistentes;
       const totalVacio = esValorVacio(totalRaw);
       const totalNorm = aNumeroNoNegativo(totalRaw);
+      const hayPermanenciaDigitada = metricasPermanencia
+        .some((metrica) => !esValorVacio(metricasFormulario?.[metrica.clave]));
       const valoresPermanencia = metricasPermanencia.map((metrica) => {
         const raw = metricasFormulario?.[metrica.clave];
         return {
@@ -358,8 +355,10 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
         .filter((item) => !item.vacio)
         .reduce((acumulado, item) => acumulado + item.valor, 0);
 
-      if (totalVacio) {
-        errores.total_asistentes = 'Total de asistentes es obligatorio cuando hay métricas de Permanencia.';
+      if (!hayPermanenciaDigitada) {
+        // Si no se ha digitado Permanencia, no debe bloquear otras categorías.
+      } else if (totalVacio) {
+        errores.total_asistentes = 'Debe indicar Total de asistentes cuando hay métricas de Permanencia.';
       } else if (faltantes.length === 0) {
         if (sumaCompletas !== totalNorm) {
           errores.total_asistentes =
@@ -400,7 +399,7 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
       } else if (totalVacioGlobal) {
         if (!errores.total_asistentes) {
           errores.total_asistentes =
-            'Total de asistentes es obligatorio cuando se digitan métricas de Composición de asistentes.';
+            'Debe indicar Total de asistentes cuando se digitan métricas de Composición de asistentes.';
         }
       } else {
         const sumaComposicion = metricasComposicion
@@ -428,7 +427,7 @@ export function validarDependenciasMetricas(metricasActivas, metricasFormulario)
       } else if (totalVacioGlobal) {
         if (!errores.total_asistentes) {
           errores.total_asistentes =
-            'Total de asistentes es obligatorio cuando se digitan métricas de Procedencia.';
+            'Debe indicar Total de asistentes cuando se digitan métricas de Procedencia.';
         }
       } else {
         const sumaProcedencia = metricasProcedencia

@@ -748,7 +748,6 @@ export default function AdministradorPage() {
                     <th>Métrica</th>
                     <th>Categoría</th>
                     <th>Habilitado</th>
-                    <th>Obligatorio</th>
                     <th className="text-center admin-col-acciones">Acciones</th>
                   </tr>
                 </thead>
@@ -802,15 +801,6 @@ export default function AdministradorPage() {
                             className="form-check-input"
                             checked={!!item.habilitado}
                             onChange={(event) => cambiarMetrica(index, 'habilitado', event.target.checked)}
-                          />
-                        </td>
-                        <td className="text-center">
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={!!item.obligatorio}
-                            onChange={(event) => cambiarMetrica(index, 'obligatorio', event.target.checked)}
-                            disabled={!item.habilitado}
                           />
                         </td>
                         <td className="text-center admin-col-acciones">

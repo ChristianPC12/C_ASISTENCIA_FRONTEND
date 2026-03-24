@@ -5,18 +5,18 @@ import {
   agruparMetricasPorSeccion,
   obtenerMetricasNumericasPorSeccion
 } from '../../utils/metricasConfig';
-import { OBSERVACIONES_MAX } from '../../validators/asistenciaValidator';
+import { OBSERVACIONES_MAX, validarAsistencia } from '../../validators/asistenciaValidator';
 import { notificarAdvertencia } from '../../utils/notify';
 
 const FECHAS_REGISTRADAS_VACIAS = [];
 const OBSERVACIONES_MAX_SALTOS = 3;
 const SECCIONES_ORDEN = [
+  'total_asistentes',
   'informacion_culto',
   'composicion_asistentes',
   'procedencia',
   'visitas',
   'permanencia',
-  'total_asistentes',
   'adicionales',
   'observaciones'
 ];
@@ -32,27 +32,67 @@ function limitarSaltosObservaciones(valor) {
   return lineas.slice(0, OBSERVACIONES_MAX_SALTOS + 1).join('\n');
 }
 
-function seccionTieneDatos(metricas, formulario) {
-  return (Array.isArray(metricas) ? metricas : []).some((metrica) => {
-    const valor = formulario?.metricas?.[metrica.clave];
-    if (metrica.tipo === 'texto') {
-      return String(valor ?? '').trim() !== '';
-    }
-    return valor !== '' && valor !== null && valor !== undefined;
-  });
+function campoTieneValor(metrica, formulario) {
+  const valor = formulario?.metricas?.[metrica.clave];
+  if (metrica.tipo === 'texto') {
+    return String(valor ?? '').trim() !== '';
+  }
+  return valor !== '' && valor !== null && valor !== undefined;
 }
+
+function seccionTieneDatos(metricas, formulario) {
+  return (Array.isArray(metricas) ? metricas : []).some((metrica) => campoTieneValor(metrica, formulario));
+}
+
+function obtenerEstadoSeccion({ seccion, metricas, formulario, errores }) {
+  const listaMetricas = Array.isArray(metricas) ? metricas : [];
+  const erroresPropios = listaMetricas
+    .filter((metrica) => Boolean(errores?.[metrica.clave]))
+    .map((metrica) => ({
+      clave: metrica.clave,
+      etiqueta: metrica.etiqueta,
+      mensaje: errores?.[metrica.clave]
+    }));
+
+  const erroresRelacionados = [];
+  if (['procedencia', 'permanencia'].includes(seccion) && errores?.total_asistentes) {
+    erroresRelacionados.push({
+      clave: 'total_asistentes',
+      etiqueta: 'Total de asistentes',
+      mensaje: errores.total_asistentes
+    });
+  }
+
+  return {
+    valida: erroresPropios.length === 0 && erroresRelacionados.length === 0,
+    erroresPropios,
+    erroresRelacionados
+  };
+}
+
 function obtenerClaseCampoBase(metrica) {
   if (metrica.clave === 'observaciones') return 'col-12';
+  if (metrica.clave === 'total_asistentes') return 'col-12 col-sm-8 col-lg-6';
   if (metrica.clave.startsWith('nombres_visitas_')) return 'col-12';
-  if (metrica.tipo === 'texto') return 'col-12 col-lg-6';
-  return 'col-6 col-md-4';
+  if (metrica.tipo === 'texto') return 'col-12';
+
+  switch (metrica.seccion || metrica.categoria) {
+    case 'informacion_culto':
+      return 'col-12 col-sm-6';
+    case 'composicion_asistentes':
+    case 'procedencia':
+    case 'permanencia':
+      return 'col-12 col-sm-6 col-xl-4';
+    default:
+      return 'col-12 col-sm-6 col-lg-4';
+  }
 }
 
 function agruparMetricasVisitas(metricas) {
   const grupos = [];
   const mapa = new Map();
 
-  metricas.forEach((metrica) => {
+  (Array.isArray(metricas) ? metricas : []).forEach((metrica) => {
     const clave = metrica.clave || '';
     let slug = null;
 
@@ -93,7 +133,6 @@ function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo, cl
       <div className={clase} key={metrica.clave}>
         <label htmlFor={metrica.clave} className="form-label">
           {metrica.etiqueta}
-          {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
         </label>
         <textarea
           id={metrica.clave}
@@ -115,7 +154,6 @@ function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo, cl
     <div className={clase} key={metrica.clave}>
       <label htmlFor={metrica.clave} className="form-label">
         {metrica.etiqueta}
-        {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
       </label>
       <input
         type="text"
@@ -153,7 +191,6 @@ function campoNumero({
     <div className={clase} key={metrica.clave}>
       <label htmlFor={metrica.clave} className="form-label">
         {metrica.etiqueta}
-        {metrica.obligatorio && <span className="text-danger ms-1">*</span>}
       </label>
       <input
         type="number"
@@ -230,32 +267,29 @@ export default function AsistenciaForm({
     bloqueada: permanenciaAutoBloqueada
   };
   const seccionesVisibles = useMemo(
-    () => SECCIONES_ORDEN.filter((seccion) => (grupos[seccion] || []).length > 0),
-    [grupos]
+    () => {
+      const ordenBase = totalAutoCalculado
+        ? SECCIONES_ORDEN.filter((seccion) => seccion !== 'total_asistentes')
+        : SECCIONES_ORDEN;
+
+      return ordenBase.filter((seccion) => (grupos[seccion] || []).length > 0);
+    },
+    [grupos, totalAutoCalculado]
   );
   const [seccionActiva, setSeccionActiva] = useState(seccionesVisibles[0] || null);
 
   useEffect(() => {
-    const siguienteSeccion = (() => {
-      if (!formulario.culto_id) {
-        return seccionesVisibles[0] || null;
-      }
-
-      if (!seccionesVisibles.length) {
-        return null;
-      }
-
-      if (seccionesVisibles.includes(seccionActiva)) {
-        return seccionActiva;
-      }
-
-      return seccionesVisibles[0];
-    })();
-
-    if (siguienteSeccion !== seccionActiva) {
-      setSeccionActiva(siguienteSeccion);
+    if (!seccionesVisibles.length) {
+      setSeccionActiva(null);
+      return;
     }
-  }, [formulario.culto_id, seccionActiva, seccionesVisibles]);
+
+    if (seccionesVisibles.includes(seccionActiva)) {
+      return;
+    }
+
+    setSeccionActiva(seccionesVisibles[0]);
+  }, [seccionActiva, seccionesVisibles]);
 
   const formatearNombreCulto = (nombre = '', codigo = '') => {
     const valor = nombre || codigo || '';
@@ -266,12 +300,7 @@ export default function AsistenciaForm({
       .replace(/Miercoles/gi, 'Miercoles');
   };
 
-  const manejarEnvio = (e) => {
-    e.preventDefault();
-    onGuardar();
-  };
-
-  const cultoSeleccionado = cultos.find((c) => String(c.id) === String(formulario.culto_id));
+  const cultoSeleccionado = cultos.find((culto) => String(culto.id) === String(formulario.culto_id));
   const aDiaJs = (diaMysql) => {
     const dia = Number(diaMysql);
     if (!Number.isInteger(dia) || dia < 1 || dia > 7) return null;
@@ -282,56 +311,111 @@ export default function AsistenciaForm({
     0: 'domingo',
     1: 'lunes',
     2: 'martes',
-    3: 'miercoles',
+    3: 'mi\u00E9rcoles',
     4: 'jueves',
     5: 'viernes',
-    6: 'sabado'
+    6: 's\u00E1bado'
   };
 
-  const manejarCambioCulto = (e) => {
-    const nuevoCultoId = e.target.value;
+  const manejarCambioCulto = (event) => {
+    const nuevoCultoId = event.target.value;
     onCambiarCampo('culto_id', nuevoCultoId);
     if (formulario.fecha && nuevoCultoId) {
-      const nuevoCulto = cultos.find((c) => String(c.id) === String(nuevoCultoId));
+      const nuevoCulto = cultos.find((culto) => String(culto.id) === String(nuevoCultoId));
       if (nuevoCulto) {
-        const diaReq = aDiaJs(nuevoCulto.dia_semana);
+        const diaRequerido = aDiaJs(nuevoCulto.dia_semana);
         const [anio, mes, dia] = formulario.fecha.split('-').map(Number);
         const fecha = new Date(anio, mes - 1, dia);
-        if (diaReq !== null && diaReq !== undefined && fecha.getDay() !== diaReq) {
+        if (diaRequerido !== null && diaRequerido !== undefined && fecha.getDay() !== diaRequerido) {
           onCambiarCampo('fecha', '');
         }
       }
     }
   };
 
-  const mostrarFormularioDetalle = Boolean(formulario.culto_id);
+  const mostrarSelectorFecha = Boolean(formulario.culto_id);
+  const mostrarFormularioDetalle = Boolean(formulario.culto_id && formulario.fecha);
   const indiceSeccionActiva = seccionActiva ? seccionesVisibles.findIndex((item) => item === seccionActiva) : -1;
   const metricasSeccionActiva = seccionActiva ? grupos[seccionActiva] || [] : [];
+  const haySeccionesDependientesDelTotal = useMemo(
+    () => seccionesVisibles.some((seccion) => ['composicion_asistentes', 'procedencia', 'visitas', 'permanencia'].includes(seccion)),
+    [seccionesVisibles]
+  );
   const gruposVisitas = useMemo(
     () => (seccionActiva === 'visitas' ? agruparMetricasVisitas(metricasSeccionActiva) : []),
     [metricasSeccionActiva, seccionActiva]
   );
-  const seccionActivaConDatos = useMemo(
-    () => seccionTieneDatos(metricasSeccionActiva, formulario),
-    [metricasSeccionActiva, formulario]
+  const erroresPaso = useMemo(
+    () => validarAsistencia(formulario, { metricasActivas }).errores,
+    [formulario, metricasActivas]
   );
+  const estadoSeccionActiva = useMemo(
+    () => obtenerEstadoSeccion({
+      seccion: seccionActiva,
+      metricas: metricasSeccionActiva,
+      formulario,
+      errores: erroresPaso
+    }),
+    [seccionActiva, metricasSeccionActiva, formulario, erroresPaso]
+  );
+  const puedeRetroceder = indiceSeccionActiva > 0;
+  const puedeAvanzar = indiceSeccionActiva >= 0 && indiceSeccionActiva < (seccionesVisibles.length - 1);
+  const esUltimoPaso = indiceSeccionActiva >= 0 && indiceSeccionActiva === (seccionesVisibles.length - 1);
 
-  const cambiarSeccion = (direccion) => {
-    if (!seccionesVisibles.length) return;
+  const manejarEnvio = (event) => {
+    event.preventDefault();
 
-    if (direccion > 0 && metricasSeccionActiva.length > 0 && !seccionActivaConDatos) {
-      const nombreSeccion = ETIQUETAS_SECCION[seccionActiva] || 'esta categor\\u00EDa';
-      notificarAdvertencia(`Ingrese al menos un dato en ${nombreSeccion} antes de avanzar.`);
+    if (!esUltimoPaso) {
+      notificarAdvertencia('Complete el formulario hasta el \u00FAltimo paso antes de guardar.');
       return;
     }
 
-    const indiceActual = indiceSeccionActiva >= 0 ? indiceSeccionActiva : 0;
-    const siguiente = (indiceActual + direccion + seccionesVisibles.length) % seccionesVisibles.length;
-    setSeccionActiva(seccionesVisibles[siguiente]);
+    onGuardar();
+  };
+
+  const cambiarSeccion = (direccion) => {
+    if (!seccionesVisibles.length) return;
+    if (direccion < 0 && !puedeRetroceder) return;
+    if (direccion > 0 && !puedeAvanzar) return;
+
+    if (direccion > 0 && metricasSeccionActiva.length > 0) {
+      if (
+        seccionActiva === 'informacion_culto'
+        && totalAutoCalculado
+        && haySeccionesDependientesDelTotal
+        && !seccionTieneDatos(metricasSeccionActiva, formulario)
+      ) {
+        notificarAdvertencia('Complete Información del culto para calcular Total de asistentes antes de continuar.');
+        return;
+      }
+
+      if (
+        seccionActiva === 'total_asistentes'
+        && !totalAutoCalculado
+        && haySeccionesDependientesDelTotal
+        && !seccionTieneDatos(metricasSeccionActiva, formulario)
+      ) {
+        notificarAdvertencia('Indique Total de asistentes antes de continuar.');
+        return;
+      }
+
+      if (estadoSeccionActiva.erroresPropios.length > 0) {
+        notificarAdvertencia(estadoSeccionActiva.erroresPropios[0].mensaje);
+        return;
+      }
+
+      if (estadoSeccionActiva.erroresRelacionados.length > 0) {
+        notificarAdvertencia(estadoSeccionActiva.erroresRelacionados[0].mensaje);
+        return;
+      }
+    }
+
+    const siguienteIndice = (indiceSeccionActiva >= 0 ? indiceSeccionActiva : 0) + direccion;
+    setSeccionActiva(seccionesVisibles[siguienteIndice]);
   };
 
   return (
-    <div className="card shadow-sm mb-4">
+    <div className="card shadow-sm mb-4 asistencia-form-card">
       <div className="card-body">
         <form onSubmit={manejarEnvio}>
           <div className="asistencia-top-grid">
@@ -357,12 +441,13 @@ export default function AsistenciaForm({
               </select>
             </div>
 
-            {mostrarFormularioDetalle && (
+            {mostrarSelectorFecha && (
               <div className="asistencia-top-card">
                 <label htmlFor="fecha" className="form-label">
                   Fecha <span className="text-danger">*</span>
                 </label>
                 <SelectorFecha
+                  id="fecha"
                   value={formulario.fecha}
                   onChange={(valor) => onCambiarCampo('fecha', valor)}
                   diaPermitido={diaPermitido}
@@ -378,7 +463,9 @@ export default function AsistenciaForm({
 
           {!mostrarFormularioDetalle && (
             <div className="asistencia-empty-hint">
-              Seleccione un culto para habilitar la fecha y avanzar por categorÃƒÂ­as.
+              {formulario.culto_id
+                ? 'Seleccione una fecha para habilitar las categor\u00EDas.'
+                : 'Seleccione un culto para habilitar la fecha y avanzar por categor\u00EDas.'}
             </div>
           )}
 
@@ -391,8 +478,8 @@ export default function AsistenciaForm({
                       type="button"
                       className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
                       onClick={() => cambiarSeccion(-1)}
-                      aria-label="Ir a la categorÃƒÂ­a anterior"
-                      disabled={cargando || seccionesVisibles.length < 2}
+                      aria-label="Ir a la categor\u00EDa anterior"
+                      disabled={cargando || seccionesVisibles.length < 2 || !puedeRetroceder}
                     >
                       <i className="bi bi-chevron-left"></i>
                     </button>
@@ -406,94 +493,91 @@ export default function AsistenciaForm({
                       type="button"
                       className="btn btn-outline-primary btn-sm admin-info-arrow-btn"
                       onClick={() => cambiarSeccion(1)}
-                      aria-label="Ir a la categorÃƒÂ­a siguiente"
-                      disabled={cargando || seccionesVisibles.length < 2}
+                      aria-label="Ir a la categor\u00EDa siguiente"
+                      disabled={cargando || seccionesVisibles.length < 2 || !puedeAvanzar}
                     >
                       <i className="bi bi-chevron-right"></i>
                     </button>
                   </div>
 
                   <div className="seccion-form asistencia-seccion-card">
-                    <div className="asistencia-seccion-header">
-                      <h6>{ETIQUETAS_SECCION[seccionActiva] || seccionActiva}</h6>
-                      <span className="asistencia-seccion-meta">
-                        {metricasSeccionActiva.length} campo{metricasSeccionActiva.length === 1 ? '' : 's'}
-                      </span>
+                    <div className={`asistencia-seccion-scroll ${seccionActiva === 'visitas' ? 'asistencia-seccion-scroll-visitas' : ''}`.trim()}>
+                      {seccionActiva === 'visitas' ? (
+                        <div className="asistencia-visitas-stack">
+                          {gruposVisitas.map((grupo) => (
+                            <div className="row g-3 align-items-start asistencia-visitas-row" key={grupo.slug}>
+                              {grupo.cantidad && renderCampoMetrica({
+                                metrica: grupo.cantidad,
+                                formulario,
+                                errores,
+                                cargando,
+                                onCambiarCampo,
+                                totalAutoCalculado,
+                                permanenciaAuto,
+                                claseColumna: 'col-4 col-sm-4'
+                              })}
+                              {grupo.nombres && renderCampoMetrica({
+                                metrica: grupo.nombres,
+                                formulario,
+                                errores,
+                                cargando,
+                                onCambiarCampo,
+                                totalAutoCalculado,
+                                permanenciaAuto,
+                                claseColumna: 'col-8 col-sm-8'
+                              })}
+                              {(grupo.extras || []).map((metrica) => renderCampoMetrica({
+                                metrica,
+                                formulario,
+                                errores,
+                                cargando,
+                                onCambiarCampo,
+                                totalAutoCalculado,
+                                permanenciaAuto,
+                                claseColumna: 'col-12'
+                              }))}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="row g-3 asistencia-seccion-grid">
+                          {metricasSeccionActiva.map((metrica) => renderCampoMetrica({
+                            metrica,
+                            formulario,
+                            errores,
+                            cargando,
+                            onCambiarCampo,
+                            totalAutoCalculado,
+                            permanenciaAuto
+                          }))}
+                        </div>
+                      )}
                     </div>
-
-                    {seccionActiva === 'visitas' ? (
-                      <div className="asistencia-visitas-stack">
-                        {gruposVisitas.map((grupo) => (
-                          <div className="row g-3 align-items-start asistencia-visitas-row" key={grupo.slug}>
-                            {grupo.cantidad && renderCampoMetrica({
-                              metrica: grupo.cantidad,
-                              formulario,
-                              errores,
-                              cargando,
-                              onCambiarCampo,
-                              totalAutoCalculado,
-                              permanenciaAuto,
-                              claseColumna: 'col-12 col-md-4'
-                            })}
-                            {grupo.nombres && renderCampoMetrica({
-                              metrica: grupo.nombres,
-                              formulario,
-                              errores,
-                              cargando,
-                              onCambiarCampo,
-                              totalAutoCalculado,
-                              permanenciaAuto,
-                              claseColumna: 'col-12 col-md-8'
-                            })}
-                            {(grupo.extras || []).map((metrica) => renderCampoMetrica({
-                              metrica,
-                              formulario,
-                              errores,
-                              cargando,
-                              onCambiarCampo,
-                              totalAutoCalculado,
-                              permanenciaAuto,
-                              claseColumna: 'col-12'
-                            }))}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="row g-3 asistencia-seccion-grid">
-                        {metricasSeccionActiva.map((metrica) => renderCampoMetrica({
-                          metrica,
-                          formulario,
-                          errores,
-                          cargando,
-                          onCambiarCampo,
-                          totalAutoCalculado,
-                          permanenciaAuto
-                        }))}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
 
               {!seccionActiva && (
                 <div className="asistencia-empty-hint">
-                  No hay categorÃƒÂ­as activas para este registro.
+                  No hay categor\u00EDas activas para este registro.
                 </div>
               )}
 
               <div className="d-flex flex-wrap gap-2 mt-3">
-                <button
-                  type="submit"
-                  className="btn btn-primary px-4"
-                  disabled={cargando}
-                >
-                  {cargando ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                      Guardando...
-                    </>
-                  ) : editandoId ? 'Actualizar' : 'Guardar'}
-                </button>
+                {esUltimoPaso && (
+                  <button
+                    type="submit"
+                    className="btn btn-primary px-4"
+                    disabled={cargando}
+                  >
+                    {cargando ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        Guardando...
+                      </>
+                    ) : editandoId ? 'Actualizar' : 'Guardar'}
+                  </button>
+                )}
 
                 <button
                   type="button"
@@ -511,4 +595,3 @@ export default function AsistenciaForm({
     </div>
   );
 }
-

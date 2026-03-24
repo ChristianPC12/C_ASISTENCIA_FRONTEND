@@ -53,11 +53,6 @@ export function validarAsistencia(datos, opciones = {}) {
     const etiqueta = metrica.etiqueta || clave;
     const valorRaw = metricasFormulario?.[clave];
 
-    if (metrica.obligatorio && esVacio(valorRaw)) {
-      errores[clave] = `${etiqueta} es obligatorio.`;
-      return;
-    }
-
     if (metrica.tipo === 'numero' && !esVacio(valorRaw)) {
       const numero = Number(valorRaw);
       if (!Number.isFinite(numero) || numero < 0) {
