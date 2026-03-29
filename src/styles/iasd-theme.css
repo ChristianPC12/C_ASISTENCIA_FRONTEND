@@ -527,15 +527,29 @@ a:hover {
 
 .admin-setup-tabla-wrap {
   max-height: clamp(240px, 52vh, 560px);
-  overflow: auto;
+  width: fit-content;
+  min-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
+  background: #ffffff;
 }
 
 .admin-setup-tabla-wrap .table {
   width: 100%;
   min-width: 100%;
   table-layout: fixed;
+}
+
+.admin-tabla-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  max-width: 100%;
+  touch-action: auto;
 }
 
 .admin-setup-tabla-wrap-cultos .table {
@@ -575,16 +589,27 @@ a:hover {
 
 .admin-usuarios-table-wrap {
   max-height: clamp(240px, 44vh, 420px);
-  overflow: auto;
+  width: fit-content;
+  min-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.6rem;
+  background: #ffffff;
 }
 
 .admin-usuarios-table-wrap thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #ffffff;
+  background: var(--iasd-azul);
+  color: #ffffff;
+}
+
+.admin-usuarios-table-wrap .table {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
 }
 
 .usuario-form-card {
@@ -1122,18 +1147,28 @@ a:hover {
 
   .admin-setup-tabla-wrap {
     max-height: clamp(220px, 48vh, 420px);
+    width: max-content;
+    min-width: 100%;
   }
 
   .admin-setup-tabla-wrap-cultos .table {
-    min-width: 100%;
+    width: max-content;
+    min-width: 29rem;
   }
 
   .admin-setup-tabla-wrap-procedencias .table {
-    min-width: 100%;
+    width: max-content;
+    min-width: 20rem;
   }
 
   .admin-setup-tabla-wrap-metricas .table {
-    min-width: 100%;
+    width: max-content;
+    min-width: 31rem;
+  }
+
+  .admin-usuarios-table-wrap .table {
+    width: max-content;
+    min-width: 47rem;
   }
 
   .admin-setup-side-actions {
@@ -1286,15 +1321,23 @@ a:hover {
   }
 
   .admin-setup-tabla-wrap-cultos .table {
-    min-width: 100%;
+    width: max-content;
+    min-width: 30rem;
   }
 
   .admin-setup-tabla-wrap-procedencias .table {
-    min-width: 100%;
+    width: max-content;
+    min-width: 20.5rem;
   }
 
   .admin-setup-tabla-wrap-metricas .table {
-    min-width: 100%;
+    width: max-content;
+    min-width: 31.5rem;
+  }
+
+  .admin-usuarios-table-wrap .table {
+    width: max-content;
+    min-width: 47rem;
   }
 
   .admin-col-culto-nombre {

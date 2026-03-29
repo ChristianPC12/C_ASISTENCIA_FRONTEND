@@ -689,8 +689,9 @@ export default function AdministradorPage() {
           <div className="card-body">
             {erroresCultos.general && <div className="alert alert-danger">{erroresCultos.general}</div>}
 
-            <div className="table-responsive admin-setup-tabla-wrap admin-setup-tabla-wrap-cultos">
-              <table className="table table-sm align-middle mb-0">
+            <div className="table-responsive admin-tabla-scroll-x">
+              <div className="admin-setup-tabla-wrap admin-setup-tabla-wrap-cultos">
+                <table className="table table-sm align-middle mb-0">
                 <colgroup>
                   <col className="admin-col-culto-nombre" />
                   <col className="admin-col-culto-dia" />
@@ -764,6 +765,7 @@ export default function AdministradorPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
@@ -816,8 +818,9 @@ export default function AdministradorPage() {
             />
           </div>
           <div className="card-body">
-            <div className="table-responsive admin-setup-tabla-wrap admin-setup-tabla-wrap-metricas">
-              <table className="table table-sm align-middle mb-0">
+            <div className="table-responsive admin-tabla-scroll-x">
+              <div className="admin-setup-tabla-wrap admin-setup-tabla-wrap-metricas">
+                <table className="table table-sm align-middle mb-0">
                 <colgroup>
                   <col className="admin-col-metrica-etiqueta" />
                   <col className="admin-col-metrica-categoria" />
@@ -902,6 +905,7 @@ export default function AdministradorPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
@@ -1091,8 +1095,9 @@ export default function AdministradorPage() {
           <div className="card-body">
             {erroresProcedencias.general && <div className="alert alert-danger">{erroresProcedencias.general}</div>}
 
-            <div className="table-responsive admin-setup-tabla-wrap admin-setup-tabla-wrap-procedencias">
-              <table className="table table-sm align-middle mb-0">
+            <div className="table-responsive admin-tabla-scroll-x">
+              <div className="admin-setup-tabla-wrap admin-setup-tabla-wrap-procedencias">
+                <table className="table table-sm align-middle mb-0">
                 <colgroup>
                   <col className="admin-col-procedencia-nombre" />
                   <col className="admin-col-check" />
@@ -1143,6 +1148,7 @@ export default function AdministradorPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">

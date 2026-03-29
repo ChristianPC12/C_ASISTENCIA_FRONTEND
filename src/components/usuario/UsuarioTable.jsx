@@ -68,16 +68,17 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
 
         {/* Tabla de usuarios */}
         {!cargando && usuarios.length > 0 && (
-          <div className="table-responsive admin-usuarios-table-wrap">
-            <table className="table table-striped table-hover align-middle mb-0">
+          <div className="table-responsive admin-tabla-scroll-x admin-usuarios-table-scroll-x">
+            <div className="admin-usuarios-table-wrap">
+              <table className="table table-striped table-hover align-middle mb-0">
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Nombre Completo</th>
+                  <th>Nombre</th>
                   <th>Usuario</th>
                   <th className="text-center">Rol</th>
                   <th className="text-center">Estado</th>
-                  <th className="text-center">Expira contraseña</th>
+                  <th className="text-center">Expira</th>
                   <th>Creado</th>
                   <th className="text-center">Acciones</th>
                 </tr>
@@ -117,19 +118,21 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                       <td className="text-center">
                         <div className="d-flex gap-1 justify-content-center">
                           <button
-                            className="btn btn-outline-primary btn-sm"
+                            className="btn btn-outline-primary btn-sm admin-table-icon-btn"
                             onClick={() => onEditar(usr)}
                             title="Editar"
+                            aria-label="Editar usuario"
                           >
-                            Editar
+                            <i className="bi bi-pencil-square" aria-hidden="true"></i>
                           </button>
                           {usr.activo && (
                             <button
-                              className="btn btn-outline-danger btn-sm"
+                              className="btn btn-outline-danger btn-sm admin-table-icon-btn"
                               onClick={() => onEliminar(usr.id)}
                               title="Desactivar"
+                              aria-label="Desactivar usuario"
                             >
-                              Desactivar
+                              <i className="bi bi-person-x" aria-hidden="true"></i>
                             </button>
                           )}
                         </div>
@@ -139,6 +142,7 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>
