@@ -113,3 +113,15 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
 - Nunca permitir que un listado embebido arrastre todo el panel hacia abajo si puede resolverse dentro de su propio contenedor.
 - En móvil, los formularios compactos no deben reactivar texto en botones si eso rompe la alineación con el campo principal.
 - Si hay `titulo + tabs + cerrar`, la prioridad es mantener una sola franja coordinada antes que aceptar un wrap desordenado.
+
+### D15) Patron estable para tablas moviles con doble scroll
+
+- Si una tabla necesita scroll horizontal y vertical, separar ambos ejes:
+  - wrapper externo: scroll horizontal
+  - wrapper interno: scroll vertical
+- El header sticky vive en el wrapper vertical y debe conservar fondo solido.
+- En movil, permitir que la tabla crezca a max-content con un min-width concreto por tabla; no forzar width:100% si eso impide el scroll lateral.
+- Antes de dar por buena una tabla responsive, comprobar tres cosas:
+  - se puede deslizar horizontalmente cuando hace falta,
+  - no se siente arrastrable en diagonal,
+  - Dia, Hora, Categoria y Acciones siguen siendo legibles en vertical.
