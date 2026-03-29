@@ -515,7 +515,7 @@ export default function AsistenciaForm({
                       {seccionActiva === 'visitas' ? (
                         <div className="asistencia-visitas-stack">
                           {gruposVisitas.map((grupo) => (
-                            <div className="row g-3 align-items-start asistencia-visitas-row" key={grupo.slug}>
+                            <div className="row g-3 asistencia-visitas-row" key={grupo.slug}>
                               {grupo.cantidad && renderCampoMetrica({
                                 metrica: grupo.cantidad,
                                 formulario,
@@ -524,7 +524,7 @@ export default function AsistenciaForm({
                                 onCambiarCampo,
                                 totalAutoCalculado,
                                 permanenciaAuto,
-                                claseColumna: 'col-4 col-sm-4'
+                                claseColumna: 'col-4 col-sm-4 asistencia-visitas-col asistencia-visitas-col-cantidad'
                               })}
                               {grupo.nombres && renderCampoMetrica({
                                 metrica: grupo.nombres,
@@ -534,7 +534,7 @@ export default function AsistenciaForm({
                                 onCambiarCampo,
                                 totalAutoCalculado,
                                 permanenciaAuto,
-                                claseColumna: 'col-8 col-sm-8'
+                                claseColumna: 'col-8 col-sm-8 asistencia-visitas-col asistencia-visitas-col-nombres'
                               })}
                               {(grupo.extras || []).map((metrica) => renderCampoMetrica({
                                 metrica,
@@ -573,29 +573,39 @@ export default function AsistenciaForm({
                 </div>
               )}
 
-              <div className="d-flex flex-wrap gap-2 mt-3">
+              <div className="asistencia-form-actions mt-3">
                 {esUltimoPaso && (
                   <button
                     type="submit"
-                    className="btn btn-primary px-4"
+                    className="btn btn-primary px-4 asistencia-form-action-btn"
                     disabled={cargando}
+                    title={editandoId ? 'Actualizar registro' : 'Guardar registro'}
+                    aria-label={editandoId ? 'Actualizar registro' : 'Guardar registro'}
                   >
                     {cargando ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Guardando...
+                        <span className="asistencia-form-btn-label">Guardando...</span>
                       </>
-                    ) : editandoId ? 'Actualizar' : 'Guardar'}
+                    ) : (
+                      <>
+                        <i className="bi bi-floppy" aria-hidden="true"></i>
+                        <span className="asistencia-form-btn-label">{editandoId ? 'Actualizar' : 'Guardar'}</span>
+                      </>
+                    )}
                   </button>
                 )}
 
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
+                  className="btn btn-outline-secondary asistencia-form-action-btn"
                   onClick={manejarLimpiar}
                   disabled={cargando}
+                  title={editandoId ? 'Cancelar edición' : 'Limpiar formulario'}
+                  aria-label={editandoId ? 'Cancelar edición' : 'Limpiar formulario'}
                 >
-                  {editandoId ? 'Cancelar' : 'Limpiar'}
+                  <i className={`bi ${editandoId ? 'bi-x-lg' : 'bi-arrow-counterclockwise'}`} aria-hidden="true"></i>
+                  <span className="asistencia-form-btn-label">{editandoId ? 'Cancelar' : 'Limpiar'}</span>
                 </button>
               </div>
             </>

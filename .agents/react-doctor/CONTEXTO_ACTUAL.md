@@ -199,3 +199,17 @@ Rutas activas:
   - Cultos, Procedencias, Metricas y Usuarios del sistema ya usan ese patron,
   - Usuarios del sistema ademas simplifica headers a Nombre y Expira,
   - acciones de tabla en Usuarios del sistema pasan a iconos para mantener coherencia con el responsive movil del resto del sistema.
+- Ajuste final en resumen responsive de Administrador:
+  - las tarjetas Cultos, Procedencias, Metricas y Usuarios ya no se muestran mientras el setup siga pendiente; en ese estado manda solo la lista de pendientes,
+  - el carrusel movil del resumen ahora envuelve en ambos sentidos con continuidad visual usando clones + salto silencioso, para que el swipe no se sienta rigido al pasar del ultimo al primero.
+- Ajuste final en responsive de Nuevo registro:
+  - en Visitas, las parejas Cantidad + Nombres ahora reservan la misma altura de label en movil para que los inputs queden alineados aunque una etiqueta haga salto de linea.
+- Ajuste reciente en Registros:
+  - se eliminó la columna `Resumen de métricas` para recuperar ancho útil en tabla,
+  - el detalle por fila ya no expande otra tabla debajo; ahora abre un modal que muestra fecha, culto, total y solo las métricas realmente registradas,
+  - el bloque superior se compactó: sin título redundante, con `Fecha exacta` del mismo peso visual que los otros filtros y `cantidad + Informe Excel` alineados a la derecha,
+  - la exportación individual de cada registro salió de la fila y ahora vive dentro del modal para no ensanchar la tabla móvil.
+- Ajuste fino posterior en `Registros` y `Nuevo registro`:
+  - en móvil, los botones finales del formulario de asistencia (`Guardar`/`Actualizar`, `Limpiar`/`Cancelar`) ahora deben seguir el patrón de iconos del resto del sistema,
+  - el modal de detalle ya no debe mostrar métricas en `0` si no agregan información real,
+  - la tabla de registros se compacta desde columnas específicas (`Fecha`, `Culto`, `Total`, `Acciones`) y mantiene las acciones lado a lado, sin apilarse.

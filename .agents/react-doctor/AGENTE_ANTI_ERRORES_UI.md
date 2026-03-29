@@ -512,3 +512,12 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] No usar touch-action restrictivo en wrappers de tablas moviles si bloquea el gesto lateral; primero validar que el usuario pueda desplazar realmente a la derecha e izquierda.
 - [ ] En tablas de administracion moviles, los headers abreviados deben ser cortos y claros (Nombre, Expira, Activo, Acciones) para ganar legibilidad sin perder contexto.
 - [ ] En Usuarios del sistema, las acciones de tabla deben usar iconos en movil y mantener el mismo patron visual que las otras tablas administrativas.
+- [ ] Si el setup inicial sigue pendiente y la vista ya muestra Pendientes por completar, no duplicar ese estado con tarjetas-resumen o carruseles que todavia no aportan valor.
+- [ ] Si un carrusel debe sentirse circular en swipe manual, no resolver el wrap solo con modulo; usar clones y salto silencioso para conservar la misma direccion visual al pasar del ultimo al primero.
+- [ ] Si dos campos comparten fila en movil y sus labels pueden partirse en distinta cantidad de lineas, reservar una altura comun para esas etiquetas antes de renderizar los inputs.
+- [ ] En tablas de registros, no mantener una columna-resumen larga si solo repite detalle; si consume ancho util, mover el detalle a modal y dejar la tabla con datos base + acciones.
+- [ ] En modales de detalle de registro, no mostrar guiones para datos opcionales no capturados; solo renderizar campos que realmente fueron registrados.
+- [ ] Si existe exportación global y exportación por fila, la global debe vivir en la barra de filtros y la individual dentro del modal de detalle, no como tercer botón que ensanche la tabla móvil.
+- [ ] En móvil, los botones finales de formularios largos (`Guardar`, `Actualizar`, `Limpiar`, `Cancelar`) también deben pasar a icono-only; no dejar ese patrón solo en paneles administrativos.
+- [ ] En modales/listados de registros, un valor `0` que no aporta información real no debe renderizarse como si fuera un dato útil; ocultarlo si no cambia la interpretación del registro.
+- [ ] Al compactar una tabla, ajustar columnas problemáticas específicas; no estrechar la tabla completa si el problema real está en `Culto`, `Total`, `Categoría` o `Acciones`.

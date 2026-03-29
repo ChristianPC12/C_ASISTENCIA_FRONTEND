@@ -275,6 +275,15 @@ a:hover {
   border-bottom: 1px solid rgba(0, 51, 102, 0.08);
 }
 
+.asistencia-visitas-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.asistencia-visitas-col .form-label {
+  line-height: 1.35;
+}
+
 .asistencia-visitas-row:last-child {
   padding-bottom: 0;
   border-bottom: none;
@@ -307,6 +316,12 @@ a:hover {
 @media (max-width: 576px) {
   .asistencia-seccion-scroll {
     max-height: 10.75rem;
+  }
+
+  .asistencia-visitas-col .form-label {
+    min-height: 3.4rem;
+    display: flex;
+    align-items: flex-start;
   }
 
   .asistencia-categoria-switch {
@@ -386,6 +401,54 @@ a:hover {
   margin-bottom: 1.5rem;
 }
 
+.registros-filtros-panel {
+  padding: 0.9rem 1rem;
+}
+
+.registros-toolbar-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  height: 100%;
+}
+
+.registros-count-chip {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding-inline: 0.7rem;
+  font-size: 0.82rem;
+}
+
+.registros-export-btn {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.asistencia-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.asistencia-form-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.asistencia-form-action-btn i {
+  font-size: 1rem;
+}
+
 /* ===== Tabla de registros: scroll vertical + horizontal ===== */
 .tabla-registros-scroll {
   max-height: 65vh;
@@ -407,9 +470,42 @@ a:hover {
 }
 
 .tabla-registros {
-  min-width: 1100px;      /* fuerza scroll horizontal en pantallas chicas */
+  width: 100%;
+  min-width: 28rem;
   margin-bottom: 0 !important;
   touch-action: auto;
+}
+
+.registro-col-fecha {
+  width: 5.3rem;
+  min-width: 5.3rem;
+}
+
+.registro-col-culto {
+  width: auto;
+}
+
+.registro-col-total {
+  width: 3.8rem;
+  min-width: 3.8rem;
+}
+
+.registro-col-acciones {
+  width: 5.1rem;
+  min-width: 5.1rem;
+}
+
+.tabla-registros th,
+.tabla-registros td {
+  padding-inline: 0.55rem;
+}
+
+.tabla-registros td:nth-child(2) .badge {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .tabla-registros-thead {
@@ -479,8 +575,15 @@ a:hover {
 
 .admin-resumen-track {
   display: flex;
-  transition: transform 0.42s ease;
   will-change: transform;
+}
+
+.admin-resumen-track.is-animated {
+  transition: transform 0.42s ease;
+}
+
+.admin-resumen-track.is-static {
+  transition: none;
 }
 
 .admin-resumen-slide {
@@ -1135,10 +1238,207 @@ a:hover {
   word-break: break-word;
 }
 
+.registro-overlay-iasd {
+  position: fixed;
+  inset: 0;
+  z-index: 10950;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.registro-overlay-dismiss {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: default;
+}
+
+.registro-modal-iasd {
+  position: relative;
+  z-index: 1;
+  width: min(860px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 0.95rem;
+  padding: 1.15rem;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+}
+
+.registro-modal-close {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.registro-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.registro-modal-head-main {
+  min-width: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.registro-modal-head-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.registro-modal-head-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 34px;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(0, 51, 102, 0.08);
+  color: var(--iasd-azul);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.registro-modal-head-chip-culto {
+  background: rgba(197, 160, 40, 0.18);
+}
+
+.registro-modal-item {
+  border: 1px solid rgba(0, 51, 102, 0.14);
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, rgba(0, 51, 102, 0.04) 0%, #ffffff 100%);
+  padding: 0.72rem 0.8rem;
+}
+
+.registro-modal-item-label {
+  display: block;
+  color: var(--iasd-texto-sec);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.3rem;
+}
+
+.registro-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.registro-modal-item.is-wide {
+  grid-column: 1 / -1;
+}
+
+.registro-modal-item-value {
+  color: var(--iasd-azul);
+  font-size: 1rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.registro-modal-empty,
+.registro-modal-footer {
+  border: 1px solid rgba(0, 51, 102, 0.12);
+  border-radius: 0.75rem;
+  background: rgba(0, 51, 102, 0.04);
+  padding: 0.8rem 0.9rem;
+}
+
+.registro-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.registro-modal-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.registro-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.registro-row-action-btn {
+  flex: 0 0 auto;
+}
+
 /* Responsive: reducir altura de tabla en móvil */
 @media (max-width: 768px) {
   .tabla-registros-scroll {
     max-height: 55vh;
+  }
+
+  .tabla-registros {
+    width: max-content;
+    min-width: 23.25rem;
+  }
+
+  .registro-col-fecha {
+    width: 4.8rem;
+    min-width: 4.8rem;
+  }
+
+  .registro-col-total {
+    width: 3.35rem;
+    min-width: 3.35rem;
+  }
+
+  .registro-col-acciones {
+    width: 5rem;
+    min-width: 5rem;
+  }
+
+  .tabla-registros th,
+  .tabla-registros td {
+    padding-inline: 0.42rem;
+  }
+
+  .tabla-registros td:nth-child(2) .badge {
+    max-width: 8rem;
+  }
+
+  .registro-modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .registros-export-btn,
+  .registro-modal-export-btn,
+  .asistencia-form-action-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .registros-export-label,
+  .registro-modal-export-label,
+  .asistencia-form-btn-label {
+    display: none;
   }
 
   .superadmin-tabla-scroll {
@@ -1246,6 +1546,55 @@ a:hover {
 @media (max-width: 576px) {
   .admin-resumen-slide .col-12 + .col-12 {
     margin-top: 0;
+  }
+
+  .registros-filtros-panel {
+    padding: 0.85rem;
+  }
+
+  .registros-toolbar-actions {
+    justify-content: flex-end;
+  }
+
+  .registros-count-chip {
+    min-width: 46px;
+    padding-inline: 0.45rem;
+  }
+
+  .registros-export-btn {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .registros-export-label {
+    display: none;
+  }
+
+  .registro-overlay-iasd {
+    padding: 0.8rem;
+  }
+
+  .registro-modal-iasd {
+    padding: 1rem 0.9rem;
+  }
+
+  .registro-modal-head {
+    gap: 0.65rem;
+  }
+
+  .registro-modal-head-main {
+    gap: 0.45rem;
+  }
+
+  .registro-modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .registro-modal-item.is-wide {
+    grid-column: 1 / -1;
   }
 
   .admin-responsive-action-btn {

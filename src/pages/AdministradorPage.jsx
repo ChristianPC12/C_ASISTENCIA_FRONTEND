@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useSetupAdministrador } from '../hooks/useSetupAdministrador';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIAS_METRICA_OPCIONES } from '../utils/metricasConfig';
@@ -220,6 +220,7 @@ export default function AdministradorPage() {
   const [vistaActiva, setVistaActiva] = useState(VISTA_RESUMEN);
   const [infoSeccionActiva, setInfoSeccionActiva] = useState(INFO_SECCIONES[0].id);
   const [slideResumenActivo, setSlideResumenActivo] = useState(0);
+  const [slideResumenAnimado, setSlideResumenAnimado] = useState(false);
   const [slideInfoActivo, setSlideInfoActivo] = useState(0);
   const [usuarioSeccionActiva, setUsuarioSeccionActiva] = useState(SECCION_USUARIOS);
   const metricaPendienteFocusRef = useRef(null);
@@ -281,6 +282,12 @@ export default function AdministradorPage() {
     procedenciasActivas
   ]);
   const slidesResumen = useMemo(() => agruparEnPares(tarjetasResumen), [tarjetasResumen]);
+  const slidesResumenCarrusel = useMemo(() => {
+    if (slidesResumen.length <= 1) {
+      return slidesResumen;
+    }
+    return [slidesResumen[slidesResumen.length - 1], ...slidesResumen, slidesResumen[0]];
+  }, [slidesResumen]);
   const itemsInfoActivos = infoSeccionActiva === 'METRICAS'
     ? CATEGORIAS_METRICA_OPCIONES
     : ACCESO_ROLES_PRELIMINAR;
@@ -395,6 +402,7 @@ export default function AdministradorPage() {
   const mostrarProcedencias = vistaActiva === VISTA_PROCEDENCIAS;
   const mostrarCategoriasMetricas = vistaActiva === VISTA_CATEGORIAS_METRICAS;
   const mostrarUsuarios = vistaActiva === VISTA_USUARIOS;
+  const mostrarTarjetasResumen = mostrarResumen && setupCompleto;
   const mensajeEncabezado = setupCompleto
     ? 'Configuración inicial completada. Ya puede registrar asistencia, ver reportes/estadísticas y crear usuarios; también puede editar el setup cuando lo necesite.'
     : 'Complete la configuración inicial para habilitar registro, reportes y estadísticas. Debe crear al menos un administrador definitivo.';
@@ -402,7 +410,8 @@ export default function AdministradorPage() {
 
   const cambiarSlideResumen = useCallback((direccion) => {
     if (slidesResumen.length <= 1) return;
-    setSlideResumenActivo((prev) => (prev + direccion + slidesResumen.length) % slidesResumen.length);
+    setSlideResumenAnimado(true);
+    setSlideResumenActivo((prev) => prev + direccion);
   }, [slidesResumen.length]);
 
   const manejarTouchInicioResumen = useCallback((event) => {
@@ -422,23 +431,34 @@ export default function AdministradorPage() {
   }, [cambiarSlideResumen]);
 
   useEffect(() => {
-    if (!mostrarResumen || slidesResumen.length <= 1) {
+    if (!mostrarTarjetasResumen || slidesResumen.length <= 1) {
       return undefined;
     }
 
     const timer = window.setInterval(() => {
-      setSlideResumenActivo((prev) => (prev + 1) % slidesResumen.length);
+      setSlideResumenAnimado(true);
+      setSlideResumenActivo((prev) => prev + 1);
     }, 8000);
 
     return () => window.clearInterval(timer);
-  }, [mostrarResumen, slidesResumen.length]);
+  }, [mostrarTarjetasResumen, slidesResumen.length]);
 
-  useEffect(() => {
-    setSlideResumenActivo((prev) => {
-      if (slidesResumen.length <= 1) return 0;
-      return prev >= slidesResumen.length ? 0 : prev;
+  useLayoutEffect(() => {
+    if (slidesResumen.length <= 1) {
+      setSlideResumenAnimado(false);
+      setSlideResumenActivo(0);
+      return undefined;
+    }
+
+    setSlideResumenAnimado(false);
+    setSlideResumenActivo(1);
+
+    const raf = window.requestAnimationFrame(() => {
+      setSlideResumenAnimado(true);
     });
-  }, [slidesResumen.length]);
+
+    return () => window.cancelAnimationFrame(raf);
+  }, [slidesResumen.length, setupCompleto]);
 
   const cambiarSlideInfo = useCallback((direccion) => {
     if (slidesInfo.length <= 1) return;
@@ -565,6 +585,32 @@ export default function AdministradorPage() {
 
   const indiceInfoActivo = INFO_SECCIONES.findIndex((item) => item.id === infoSeccionActiva);
   const metaInfoActiva = INFO_SECCIONES[indiceInfoActivo >= 0 ? indiceInfoActivo : 0];
+  const manejarResumenTransitionEnd = useCallback(() => {
+    if (slidesResumen.length <= 1) {
+      return;
+    }
+
+    if (slideResumenActivo === 0) {
+      setSlideResumenAnimado(false);
+      setSlideResumenActivo(slidesResumen.length);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setSlideResumenAnimado(true);
+        });
+      });
+      return;
+    }
+
+    if (slideResumenActivo === slidesResumen.length + 1) {
+      setSlideResumenAnimado(false);
+      setSlideResumenActivo(1);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setSlideResumenAnimado(true);
+        });
+      });
+    }
+  }, [slideResumenActivo, slidesResumen.length]);
 
   return (
     <div className="container-fluid py-4">
@@ -619,44 +665,49 @@ export default function AdministradorPage() {
             </div>
           </div>
 
-          <div className="row g-3 mb-3 d-none d-lg-flex">
-            {tarjetasResumen.map((item) => (
-              <div className="col-lg-6" key={item.id}>
-                <EstadoBloqueCard
-                  titulo={item.titulo}
-                  detalle={item.detalle}
-                  completo={item.completo}
-                />
-              </div>
-            ))}
-          </div>
-
-          <div
-            className="admin-resumen-carousel mb-3 d-lg-none"
-            onTouchStart={manejarTouchInicioResumen}
-            onTouchEnd={manejarTouchFinResumen}
-          >
-            <div
-              className="admin-resumen-track"
-              style={{ transform: `translateX(-${slideResumenActivo * 100}%)` }}
-            >
-              {slidesResumen.map((slide, slideIndex) => (
-                <div className="admin-resumen-slide" key={`slide_resumen_${slideIndex}`}>
-                  <div className="row g-3 admin-resumen-slide-grid">
-                    {slide.map((item) => (
-                      <div className="col-12 col-md-6" key={item.id}>
-                        <EstadoBloqueCard
-                          titulo={item.titulo}
-                          detalle={item.detalle}
-                          completo={item.completo}
-                        />
-                      </div>
-                    ))}
-                  </div>
+          {mostrarTarjetasResumen && (
+            <div className="row g-3 mb-3 d-none d-lg-flex">
+              {tarjetasResumen.map((item) => (
+                <div className="col-lg-6" key={item.id}>
+                  <EstadoBloqueCard
+                    titulo={item.titulo}
+                    detalle={item.detalle}
+                    completo={item.completo}
+                  />
                 </div>
               ))}
             </div>
-          </div>
+          )}
+
+          {mostrarTarjetasResumen && (
+            <div
+              className="admin-resumen-carousel mb-3 d-lg-none"
+              onTouchStart={manejarTouchInicioResumen}
+              onTouchEnd={manejarTouchFinResumen}
+            >
+              <div
+                className={`admin-resumen-track ${slideResumenAnimado ? 'is-animated' : 'is-static'}`}
+                style={{ transform: `translateX(-${slideResumenActivo * 100}%)` }}
+                onTransitionEnd={manejarResumenTransitionEnd}
+              >
+                {slidesResumenCarrusel.map((slide, slideIndex) => (
+                  <div className="admin-resumen-slide" key={`slide_resumen_${slideIndex}`}>
+                    <div className="row g-3 admin-resumen-slide-grid">
+                      {slide.map((item) => (
+                        <div className="col-12 col-md-6" key={`${item.id}_${slideIndex}`}>
+                          <EstadoBloqueCard
+                            titulo={item.titulo}
+                            detalle={item.detalle}
+                            completo={item.completo}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {faltantesVisibles.length > 0 && (
             <div className="alert alert-warning">

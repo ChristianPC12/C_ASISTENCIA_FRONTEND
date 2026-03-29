@@ -125,3 +125,22 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
   - se puede deslizar horizontalmente cuando hace falta,
   - no se siente arrastrable en diagonal,
   - Dia, Hora, Categoria y Acciones siguen siendo legibles en vertical.
+### D16) Carruseles de resumen con utilidad real
+- Si el setup sigue pendiente y ya existe una lista clara de Pendientes por completar, ocultar tarjetas-resumen duplicadas hasta que el estado quede completo.
+- Si el carrusel debe envolver del ultimo al primero, hacerlo con continuidad visual; el usuario no debe sentir que el bloque se devuelve de golpe.
+- Para ese wrap continuo, preferir clones + reposicion silenciosa antes que un cambio directo de indice con modulo.
+### D17) Parejas de campos alineadas en movil
+- Si dos inputs viven en la misma fila y sus labels tienen longitudes distintas, la fila debe verse simetrica aunque una etiqueta ocupe dos lineas.
+- No dejar que un label largo empuje solo su input hacia abajo; reservar una altura comun para las etiquetas de esa pareja.
+- Esta regla aplica especialmente a bloques como Cantidad + Nombres en Visitas.
+
+### D18) Listados de registros sin columnas estorbo
+
+- Si una tabla de registros tiene poco espacio horizontal, primero quitar columnas-resumen redundantes antes de aceptar scroll extra.
+- `Fecha exacta` no debe ocupar media fila; usar ancho compacto y compartir esa franja con estado corto y exportacion.
+- Cuando el detalle completo de una fila consume demasiada altura dentro de la tabla, preferir modal bloqueante y limpio antes que expandir otra tabla debajo.
+- En esa barra compacta, acciones globales como cantidad y exportacion deben alinearse a la derecha, separadas del input para no mezclar jerarquias.
+- Si la tabla se aprieta en movil, la exportacion individual debe salir de la fila y mudarse al modal del registro.
+- En móvil, los botones de edición/cierre/guardado dentro de formularios de registro deben seguir la misma convención icon-only del resto del sistema.
+- Si una fila tiene pocas columnas, compactar el ancho desde la columna que sobra; no aceptar huecos artificiales entre `Culto`, `Total` y `Acciones`.
+- En el modal de detalle, mostrar solo valores significativos; un `0` de una métrica no seleccionada genera ruido visual, no información.
