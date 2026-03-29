@@ -4,11 +4,11 @@ import UsuarioTable from '../components/usuario/UsuarioTable';
 import UsuarioCuposCard from '../components/usuario/UsuarioCuposCard';
 import { useUsuario } from '../hooks/useUsuario';
 
-const SECCION_USUARIOS = 'USUARIOS_SISTEMA';
-const SECCION_FORMULARIO = 'AGREGAR_USUARIO';
-const SECCION_ROLES = 'ROLES_Y_CUPOS';
+export const SECCION_USUARIOS = 'USUARIOS_SISTEMA';
+export const SECCION_FORMULARIO = 'AGREGAR_USUARIO';
+export const SECCION_ROLES = 'ROLES_Y_CUPOS';
 
-const OPCIONES_USUARIO = [
+export const OPCIONES_USUARIO = [
   {
     valor: SECCION_USUARIOS,
     etiqueta: 'Usuarios del sistema',
@@ -31,7 +31,12 @@ const OPCIONES_USUARIO = [
  * - modo="pagina": se usa como ruta independiente (compatibilidad).
  * - modo="panel": se usa dentro de Administrador.
  */
-export default function UsuarioPage({ modo = 'pagina' }) {
+export default function UsuarioPage({
+  modo = 'pagina',
+  seccionActiva: seccionActivaExterna,
+  onCambiarSeccion,
+  mostrarSelector = true
+}) {
   const esPanel = modo === 'panel';
   const {
     usuarios,
@@ -50,7 +55,15 @@ export default function UsuarioPage({ modo = 'pagina' }) {
     limpiarFormulario
   } = useUsuario();
 
-  const [seccionActiva, setSeccionActiva] = useState(SECCION_USUARIOS);
+  const [seccionActivaInterna, setSeccionActivaInterna] = useState(SECCION_USUARIOS);
+  const seccionActiva = seccionActivaExterna ?? seccionActivaInterna;
+  const setSeccionActiva = useCallback((valor) => {
+    if (typeof onCambiarSeccion === 'function') {
+      onCambiarSeccion(valor);
+      return;
+    }
+    setSeccionActivaInterna(valor);
+  }, [onCambiarSeccion]);
 
   const totalUsuarios = usuarios.length;
   const usuariosActivos = usuarios.filter((item) => !!item.activo).length;
@@ -59,11 +72,6 @@ export default function UsuarioPage({ modo = 'pagina' }) {
     editar(usuario);
     setSeccionActiva(SECCION_FORMULARIO);
   }, [editar]);
-
-  const abrirNuevoUsuario = useCallback(() => {
-    limpiarFormulario();
-    setSeccionActiva(SECCION_FORMULARIO);
-  }, [limpiarFormulario]);
 
   const limpiarFormularioConRetorno = useCallback(() => {
     limpiarFormulario();
@@ -80,19 +88,23 @@ export default function UsuarioPage({ modo = 'pagina' }) {
         </p>
       )}
 
-      <div className="admin-usuarios-switch mb-3">
-        {OPCIONES_USUARIO.map((opcion) => (
-          <button
-            key={opcion.valor}
-            type="button"
-            className={`admin-usuarios-switch-btn ${seccionActiva === opcion.valor ? 'is-active' : ''}`}
-            onClick={() => setSeccionActiva(opcion.valor)}
-          >
-            <i className={`bi ${opcion.icono}`} aria-hidden="true"></i>
-            {opcion.etiqueta}
-          </button>
-        ))}
-      </div>
+      {mostrarSelector && (
+        <div className="admin-usuarios-switch mb-3">
+          {OPCIONES_USUARIO.map((opcion) => (
+            <button
+              key={opcion.valor}
+              type="button"
+              className={`admin-usuarios-switch-btn ${seccionActiva === opcion.valor ? 'is-active' : ''}`}
+              onClick={() => setSeccionActiva(opcion.valor)}
+              title={opcion.etiqueta}
+              aria-label={opcion.etiqueta}
+            >
+              <i className={`bi ${opcion.icono}`} aria-hidden="true"></i>
+              <span className="admin-usuarios-switch-btn-label">{opcion.etiqueta}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {seccionActiva === SECCION_USUARIOS && (
         <>
@@ -104,15 +116,6 @@ export default function UsuarioPage({ modo = 'pagina' }) {
             <div className="admin-usuarios-resumen-item">
               <span className="admin-usuarios-resumen-label">Activos</span>
               <strong className="admin-usuarios-resumen-value">{usuariosActivos}</strong>
-            </div>
-            <div className="admin-usuarios-resumen-item is-action">
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={abrirNuevoUsuario}
-              >
-                Crear usuario
-              </button>
             </div>
           </div>
 

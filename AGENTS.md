@@ -21,7 +21,8 @@ y avanzar los siguientes modulos con ejecucion controlada (discovery -> implemen
 3. `.agents/react-doctor/TICKETS_ESCALABILIDAD_NACIONAL.md`
 4. `.agents/react-doctor/prompt_frontend.md`
 5. `.agents/react-doctor/AGENTE_ANTI_ERRORES_UI.md`
-6. `.agents/react-doctor/SKILL.md`
+6. `.agents/react-doctor/AGENTE_DISENO_ESPACIO_UI.md`
+7. `.agents/react-doctor/SKILL.md`
 
 ## Modo de arranque obligatorio (sin programar)
 
@@ -40,6 +41,7 @@ Si no hay instruccion explicita de implementacion, el agente permanece en modo a
 ## Regla de uso por tipo de tarea
 
 - Cambios React (JSX, hooks, rutas, formularios): ejecutar `react-doctor`.
+- Cambios de diseño/orden/layout: leer y respetar `AGENTE_DISENO_ESPACIO_UI.md`.
 - Cambios de auth/API/rutas/roles: actualizar `CONTEXTO_ACTUAL.md` y `prompt_frontend.md`.
 - Cambios de escalabilidad (multiiglesia, multigrupo, superadmin): actualizar roadmap y tickets antes y despues.
 

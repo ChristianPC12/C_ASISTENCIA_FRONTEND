@@ -32,15 +32,10 @@ export default function UsuarioForm({
   };
 
   return (
-    <div className="card shadow-sm mb-4">
-      <div className="card-header">
-        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>
-          {editandoId ? 'Editar Usuario' : 'Nuevo Usuario'}
-        </h5>
-      </div>
-      <div className="card-body">
-        <form onSubmit={manejarEnvio} noValidate>
-          <div className="row g-3">
+    <div className="card shadow-sm mb-4 usuario-form-card">
+      <div className="card-body usuario-form-body">
+        <form onSubmit={manejarEnvio} noValidate className="usuario-form">
+          <div className="row g-3 usuario-form-grid">
             {/* Nombre completo */}
             <div className="col-md-6">
               <label htmlFor="nombre_completo" className="form-label">Nombre completo</label>
@@ -131,76 +126,86 @@ export default function UsuarioForm({
               )}
             </div>
 
-            {/* Rol */}
-            <div className="col-md-6">
-              <label htmlFor="rol_id" className="form-label">Rol</label>
-              <select
-                id="rol_id"
-                name="rol_id"
-                className={`form-select ${errores.rol_id ? 'is-invalid' : ''}`}
-                value={formulario.rol_id}
-                onChange={manejarCambio}
-                disabled={cargando}
-              >
-                {ROL_OPCIONES.map((rol) => (
-                  <option key={rol.valor} value={rol.valor}>{rol.etiqueta}</option>
-                ))}
-              </select>
-              {errores.rol_id && (
-                <div className="invalid-feedback">{errores.rol_id}</div>
-              )}
-              {cupoRolSeleccionado && (
-                <div className="form-text">
-                  Cupo {cupoRolSeleccionado.rol_nombre}: {cupoRolSeleccionado.consumo_actual}/{cupoRolSeleccionado.cupo_maximo}
-                  {' '}({cupoRolSeleccionado.disponibles} disponibles).
-                </div>
-              )}
-            </div>
+            <div className="col-12">
+              <div className="usuario-form-toolbar">
+                <div className="usuario-form-toolbar-top">
+                  <div className="usuario-form-rol-block">
+                    <label htmlFor="rol_id" className="form-label">Rol</label>
+                    <select
+                      id="rol_id"
+                      name="rol_id"
+                      className={`form-select usuario-form-rol-select ${errores.rol_id ? 'is-invalid' : ''}`}
+                      value={formulario.rol_id}
+                      onChange={manejarCambio}
+                      disabled={cargando}
+                    >
+                      {ROL_OPCIONES.map((rol) => (
+                        <option key={rol.valor} value={rol.valor}>{rol.etiqueta}</option>
+                      ))}
+                    </select>
+                  </div>
 
-            {/* Activo (solo en edicion) */}
-            {editandoId && (
-              <div className="col-md-6">
-                <div className="form-check mt-4">
-                  <input
-                    type="checkbox"
-                    id="activo"
-                    name="activo"
-                    className="form-check-input"
-                    checked={formulario.activo}
-                    onChange={manejarCambio}
-                    disabled={cargando}
-                  />
-                  <label htmlFor="activo" className="form-check-label">
-                    Usuario activo
-                  </label>
+                  <div className="usuario-form-actions">
+                    <button
+                      type="submit"
+                      className="btn btn-primary usuario-form-action-btn admin-responsive-action-btn"
+                      disabled={cargando}
+                      title={editandoId ? 'Actualizar' : 'Crear Usuario'}
+                      aria-label={editandoId ? 'Actualizar' : 'Crear Usuario'}
+                    >
+                      <i className={`bi ${editandoId ? 'bi-floppy' : 'bi-person-plus'}`} aria-hidden="true"></i>
+                      {cargando ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm" role="status"></span>
+                          <span className="admin-responsive-btn-label">Guardando...</span>
+                        </>
+                      ) : <span className="admin-responsive-btn-label">{editandoId ? 'Actualizar' : 'Crear Usuario'}</span>}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary usuario-form-action-btn admin-responsive-action-btn"
+                      onClick={onLimpiar}
+                      disabled={cargando}
+                      title={editandoId ? 'Cancelar' : 'Limpiar'}
+                      aria-label={editandoId ? 'Cancelar' : 'Limpiar'}
+                    >
+                      <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                      <span className="admin-responsive-btn-label">{editandoId ? 'Cancelar' : 'Limpiar'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {errores.rol_id && (
+                  <div className="invalid-feedback d-block">{errores.rol_id}</div>
+                )}
+
+                <div className="usuario-form-toolbar-meta">
+                  {cupoRolSeleccionado && (
+                    <div className="form-text usuario-form-cupo-text">
+                      Cupo {cupoRolSeleccionado.rol_nombre}: {cupoRolSeleccionado.consumo_actual}/{cupoRolSeleccionado.cupo_maximo}
+                      {' '}({cupoRolSeleccionado.disponibles} disponibles).
+                    </div>
+                  )}
+                  {editandoId && (
+                    <div className="form-check usuario-form-activo-check">
+                      <input
+                        type="checkbox"
+                        id="activo"
+                        name="activo"
+                        className="form-check-input"
+                        checked={formulario.activo}
+                        onChange={manejarCambio}
+                        disabled={cargando}
+                      />
+                      <label htmlFor="activo" className="form-check-label">
+                        Usuario activo
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-
-          {/* Botones */}
-          <div className="d-flex gap-2 mt-4">
-            <button
-              type="submit"
-              className="btn btn-primary px-4"
-              disabled={cargando}
-            >
-              {cargando ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Guardando...
-                </>
-              ) : editandoId ? 'Actualizar' : 'Crear usuario'}
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={onLimpiar}
-              disabled={cargando}
-            >
-              {editandoId ? 'Cancelar' : 'Limpiar'}
-            </button>
+            </div>
           </div>
         </form>
       </div>

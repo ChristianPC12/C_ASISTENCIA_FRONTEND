@@ -503,8 +503,8 @@ function validarCultos(cultos) {
     }
 
     const largoNombreCulto = String(culto.nombre || '').trim().length;
-    if (largoNombreCulto < 3 || largoNombreCulto > 20) {
-      filaErrores.nombre = 'El nombre debe tener entre 3 y 20 caracteres.';
+    if (largoNombreCulto < 3 || largoNombreCulto > 25) {
+      filaErrores.nombre = 'El nombre debe tener entre 3 y 25 caracteres.';
     }
 
     if (!Number.isInteger(culto.dia_semana) || culto.dia_semana < 1 || culto.dia_semana > 7) {
@@ -550,8 +550,8 @@ function validarProcedencias(procedencias) {
     const nombre = String(item.nombre || '').trim();
     const nombreClave = nombre.toLowerCase();
 
-    if (nombre.length < 2 || nombre.length > 80) {
-      filaErrores.nombre = 'Nombre inv\u00e1lido (2-80).';
+    if (nombre.length < 2 || nombre.length > 25) {
+      filaErrores.nombre = 'Nombre inválido (2-25).';
     } else if (nombres.has(nombreClave)) {
       filaErrores.nombre = 'Nombre duplicado.';
     } else {
@@ -612,8 +612,11 @@ function validarMetricasConfiguracion(metricas) {
       claves.add(claveNormalizada);
     }
 
-    if ((item.etiqueta || '').trim().length < 2) {
+    const largoEtiqueta = String(item.etiqueta || '').trim().length;
+    if (largoEtiqueta < 2) {
       filaErrores.etiqueta = 'Etiqueta muy corta.';
+    } else if (largoEtiqueta > 40) {
+      filaErrores.etiqueta = 'Etiqueta muy larga (máximo 40 caracteres).';
     }
 
     if (!CATEGORIAS_VALIDAS.has(categoria)) {
@@ -732,6 +735,7 @@ export function useSetupAdministrador() {
       if (campo === 'activo') return { ...item, activo: !!valor };
       if (campo === 'dia_semana' || campo === 'orden') return { ...item, [campo]: toInt(valor, item[campo]) };
       if (campo === 'codigo') return { ...item, codigo: String(valor || '').toUpperCase().replace(/\s+/g, '_') };
+      if (campo === 'nombre') return { ...item, nombre: String(valor || '').slice(0, 25) };
       return { ...item, [campo]: valor };
     }));
   }, []);
@@ -767,6 +771,9 @@ export function useSetupAdministrador() {
       const actualizado = reordenarProcedencias(prev.map((item, idx) => {
         if (idx !== index) return item;
         if (campo === 'activo') return { ...item, activo: !!valor };
+        if (campo === 'nombre') {
+          return { ...item, nombre: String(valor || '').slice(0, 25) };
+        }
         return { ...item, [campo]: valor };
       }));
 
@@ -783,15 +790,22 @@ export function useSetupAdministrador() {
   }, []);
 
   const agregarProcedencia = useCallback(() => {
-    setProcedencias((prev) => reordenarProcedencias([
-      ...prev,
-      {
-        ui_id: generarUiId('procedencia'),
-        nombre: '',
-        activo: true,
-        orden: prev.length + 1
+    setProcedencias((prev) => {
+      if (prev.length >= 10) {
+        notificarError('Solo se permiten hasta 10 procedencias.');
+        return prev;
       }
-    ]));
+
+      return reordenarProcedencias([
+        ...prev,
+        {
+          ui_id: generarUiId('procedencia'),
+          nombre: '',
+          activo: true,
+          orden: prev.length + 1
+        }
+      ]);
+    });
   }, []);
 
   const eliminarProcedencia = useCallback((index) => {
@@ -822,7 +836,7 @@ export function useSetupAdministrador() {
         }
 
         if (campo === 'etiqueta') {
-          return { ...item, etiqueta: String(valor || '') };
+          return { ...item, etiqueta: String(valor || '').slice(0, 40) };
         }
 
         if (campo === 'categoria') {

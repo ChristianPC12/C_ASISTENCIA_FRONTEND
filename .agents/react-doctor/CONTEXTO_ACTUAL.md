@@ -152,6 +152,40 @@ Rutas activas:
 ## Proximo foco
 
 - F8 discovery UX (Campanas, Pequenas Congregaciones, Estudios Biblicos), definido por owner.
+
+## Ajustes recientes de diseño
+
+- Panel `Usuarios` en administrador:
+  - se removió el header interno redundante de `Nuevo Usuario` / `Editar Usuario`,
+  - la franja de `Rol` ahora comparte línea visual con `cupo`, `estado activo` y acciones principales,
+  - el formulario quedó compactado para escritorio y mejor apilado para teléfono.
+- Vista resumen de administrador:
+  - se eliminó el bloque `alert-secondary admin-setup-help` con accesos rápidos por consumir altura sin aportar valor suficiente.
+- Vista resumen de administrador:
+  - los estados principales (`Cultos`, `Procedencias`, `Métricas`, `Usuarios`) ahora se muestran en carrusel liviano de 2 en 2,
+  - rota automáticamente cada 8 segundos,
+  - admite swipe horizontal táctil sin controles visibles extra.
+- Regla visual nueva aplicada:
+  - en móvil, barras de acciones/navegación priorizan iconos consistentes para ahorrar espacio,
+  - `agregar`, `limpiar`, `guardar` y `cerrar` deben conservar el mismo icono en módulos equivalentes.
+- Se creó el documento `.agents/react-doctor/AGENTE_DISENO_ESPACIO_UI.md` como guía específica para aprovechar espacio, reducir ruido visual y mantener una UI limpia/profesional.
 - Setup ADMIN: `Cultos de la instancia` ahora tiene tope de 10 cultos por organizacion. El boton `Agregar culto` se deshabilita al llegar al maximo y backend/frontend validan el mismo limite.
 - Setup ADMIN: strings visibles de cultos/dias y validaciones tocadas quedaron normalizadas para evitar textos con tildes rotas en este flujo.
 - Usuarios ADMIN: crear/editar usuario ahora exige `password` + `password_confirmacion` cuando se define una nueva contraseña; el payload enviado a API sigue mandando solo `password`.
+- Ajuste responsive en `Administrador`:
+  - `Cultos` y `Procedencias` ahora usan anchos por columna mas compactos para movil/tablet.
+  - `Procedencias` limita `Nombre` a 25 caracteres en UI y hook.
+  - `Informacion` cambio a carrusel de 2 tarjetas por vista, con rotacion automatica cada 8 segundos y swipe tactil.
+  - Los selectores de `Informacion` y `Usuarios` se movieron al header del panel para ahorrar altura util.
+  - Se hizo prueba de centrado vertical medido en vistas cortas de `Administrador` para compensar espacio vacio inferior cuando no existe scroll.
+- Ajuste global del layout:
+  - el contenedor principal ya no usa un tope fijo que deje huecos junto al sidebar o a la derecha en monitores anchos/ultraanchos.
+- Afinado responsive adicional en `Administrador`:
+  - `Cultos` ahora permite hasta 25 caracteres en nombre y compacta mejor la columna para no tapar `Acciones`.
+  - `Procedencias` mantiene 25 caracteres maximos y reduce el ancho visual de `Nombre`/`Activo`.
+  - `Métricas` limita `Etiqueta` a 40 caracteres en UI + hook y compacta la columna `Categoría`.
+  - `Usuarios del sistema` ahora tiene altura fija con scroll interno.
+  - El formulario de `Usuarios` alinea mejor `Rol` con acciones en escritorio y elimina el hueco grande entre metadatos y botones en móvil.
+- Ajuste fino adicional en móvil:
+  - `Usuarios` vuelve a usar botones compactos con icono en la franja de acciones del formulario para evitar huecos grandes.
+  - El header de `Usuarios` dentro de `Administrador` se compactó para que título + tabs internas no queden descoordinados ni con saltos raros.

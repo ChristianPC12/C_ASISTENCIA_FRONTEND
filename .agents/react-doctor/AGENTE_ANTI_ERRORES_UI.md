@@ -481,6 +481,28 @@ Evitar repetir errores de ejecución y de UX en módulos futuros, especialmente 
 - [ ] En `Visitas`, cantidad y nombres se renderizan como pareja visual por procedencia.
 - [ ] Cada nombre en `Nombres de visitas` respeta límite de 20 caracteres separado por coma.
 - [ ] Lint/build/react-doctor ejecutados.
+- [ ] En paneles embebidos, no repetir títulos internos si la topbar o la navegación ya da el contexto.
+- [ ] No usar `alert-secondary` o bloques de ayuda grises cuando solo agregan altura y repiten lo visible.
+- [ ] Botones principales de formulario deben quedar alineados con el bloque funcional que controlan (`rol`, `estado`, `cupo`, etc.), no aislados al fondo por costumbre.
+- [ ] En móvil/tablet, compactar antes de apilar: primero ordenar, luego decidir si un botón debe ocupar ancho completo.
+- [ ] Si una pantalla funciona pero sigue consumiendo más altura de la necesaria, todavía requiere ajuste de diseño.
 - [ ] Listas configurables con tope de negocio (`cultos`, `procedencias`, metricas adicionales) deben bloquear alta extra en UI y validar el mismo maximo en backend.
 - [ ] En formularios de usuario, toda contraseña nueva o editada debe pedirse dos veces y validarse antes de enviar.
 - [ ] Si se corrige texto visible en un modulo tocado, revisar tambien mensajes asociados del mismo flujo para evitar mojibake parcial.
+- [ ] En responsive móvil, los botones secundarios y de navegación deben priorizar iconos consistentes para reducir peso visual.
+- [ ] La misma acción debe conservar el mismo icono en módulos distintos (`agregar`, `limpiar`, `guardar`, `cerrar`, etc.).
+- [ ] Si hay varias tarjetas-resumen, preferir carrusel o agrupación antes que obligar a scroll vertical largo.
+- [ ] En tablas administrativas responsivas, cada columna debe ocupar solo el ancho que necesita; no reutilizar anchos genericos que obliguen scroll horizontal innecesario.
+- [ ] En `Cultos` y `Procedencias`, el nombre debe tener tope de caracteres y el input no debe dominar la tabla en movil.
+- [ ] En paneles informativos con muchas tarjetas, mostrar solo 2 por vista usando carrusel automatico liviano (8s) y swipe manual opcional.
+- [ ] Si una navegacion interna consume altura util en movil, moverla al header del panel antes de abrir mas scroll vertical.
+- [ ] Si un panel no requiere scroll y sobra mucha altura, evaluar centrado vertical medido del contenido para compensar el espacio vacio inferior.
+- [ ] En layouts compartidos para pantallas grandes o ultraanchas, evitar topes fijos que separen el contenido del sidebar o dejen huecos muertos a la derecha.
+- [ ] Si un input tiene tope de negocio corto, su columna visible debe reflejarlo; no dejar campos de `Nombre` tan anchos que oculten `Acciones` en móvil.
+- [ ] `Cultos`: nombre máximo 25 caracteres y columna compacta para no empujar la tabla hacia scroll horizontal innecesario.
+- [ ] `Procedencias`: nombre máximo 25 caracteres y columna compacta; `Activo` debe verse centrado con el ancho justo del check.
+- [ ] `Métricas`: `Etiqueta` máxima 40 caracteres en UI y lógica; la columna `Categoría` debe ser más corta porque ninguna opción justifica un ancho exagerado.
+- [ ] Tablas de administración con listados crecientes (`Usuarios`, etc.) deben tener altura fija con scroll interno; no dejar que empujen toda la pantalla hacia abajo.
+- [ ] En formularios como `Usuarios`, el select principal y las acciones deben alinearse visualmente en escritorio y en móvil no debe quedar un hueco grande entre metadatos y botones.
+- [ ] En móvil, si una acción ya se entiende por icono (`Crear`, `Limpiar`, tabs internas), no volver a forzar labels visibles en formularios compactos porque reabre huecos y saltos de línea innecesarios.
+- [ ] En headers de panel con título + tabs/botones, evitar wraps torcidos: primero alinear la franja completa y luego decidir si una acción baja de línea.

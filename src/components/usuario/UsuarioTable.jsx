@@ -68,7 +68,7 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
 
         {/* Tabla de usuarios */}
         {!cargando && usuarios.length > 0 && (
-          <div className="table-responsive">
+          <div className="table-responsive admin-usuarios-table-wrap">
             <table className="table table-striped table-hover align-middle mb-0">
               <thead>
                 <tr>

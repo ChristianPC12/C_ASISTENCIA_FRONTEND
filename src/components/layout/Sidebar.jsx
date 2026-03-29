@@ -271,8 +271,8 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   type="button"
                   className={claseBotonTopbarAdmin('CULTOS')}
                   onClick={abrirPanelCultos}
-                  aria-label="Cultos de la instancia"
-                  title="Cultos de la instancia"
+                  aria-label="Cultos"
+                  title="Cultos"
                 >
                   <i className="bi bi-calendar-week" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Cultos</span>

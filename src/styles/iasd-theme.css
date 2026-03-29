@@ -471,6 +471,27 @@ a:hover {
   color: var(--iasd-azul);
 }
 
+.admin-resumen-carousel {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.admin-resumen-track {
+  display: flex;
+  transition: transform 0.42s ease;
+  will-change: transform;
+}
+
+.admin-resumen-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+}
+
+.admin-resumen-slide-grid {
+  min-height: 100%;
+}
+
 .admin-setup-panel {
   border: 1px solid var(--iasd-borde);
 }
@@ -489,6 +510,21 @@ a:hover {
   font-size: 0.8rem;
 }
 
+.admin-responsive-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.admin-responsive-action-btn i {
+  font-size: 0.92rem;
+}
+
+.admin-responsive-btn-label {
+  display: inline;
+}
+
 .admin-setup-tabla-wrap {
   max-height: clamp(240px, 52vh, 560px);
   overflow: auto;
@@ -497,7 +533,24 @@ a:hover {
 }
 
 .admin-setup-tabla-wrap .table {
-  min-width: 920px;
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.admin-setup-tabla-wrap-cultos .table {
+  width: 100%;
+  min-width: 100%;
+}
+
+.admin-setup-tabla-wrap-procedencias .table {
+  width: 100%;
+  min-width: 100%;
+}
+
+.admin-setup-tabla-wrap-metricas .table {
+  width: 100%;
+  min-width: 100%;
 }
 
 .admin-setup-tabla-wrap thead th {
@@ -507,60 +560,135 @@ a:hover {
   background-color: var(--iasd-azul);
 }
 
+.admin-setup-tabla-wrap .form-control-sm,
+.admin-setup-tabla-wrap .form-select-sm {
+  min-width: 0;
+}
+
 .admin-setup-side-actions {
   justify-content: space-between;
-}
-
-.admin-setup-help {
-  border: 1px solid rgba(0, 51, 102, 0.16);
-  background: linear-gradient(180deg, rgba(0, 51, 102, 0.06) 0%, rgba(0, 51, 102, 0.02) 100%);
-}
-
-.admin-quick-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.65rem;
-}
-
-.admin-quick-link-btn {
-  border: 1px solid rgba(0, 51, 102, 0.22);
-  background: #ffffff;
-  color: var(--iasd-azul);
-  border-radius: 999px;
-  padding: 0.34rem 0.8rem;
-  min-height: 32px;
-  font-size: 0.79rem;
-  font-weight: 600;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.36rem;
-  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-
-.admin-quick-link-btn i {
-  font-size: 0.84rem;
-}
-
-.admin-quick-link-btn:hover,
-.admin-quick-link-btn:focus-visible {
-  background: var(--iasd-azul);
-  color: #ffffff;
-  border-color: var(--iasd-azul);
-  box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.16);
-  outline: none;
 }
 
 .admin-usuarios-shell {
   width: 100%;
 }
 
+.admin-usuarios-table-wrap {
+  max-height: clamp(240px, 44vh, 420px);
+  overflow: auto;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.6rem;
+}
+
+.admin-usuarios-table-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+}
+
+.usuario-form-card {
+  border: 1px solid rgba(0, 51, 102, 0.14);
+  border-radius: 0.8rem;
+  overflow: hidden;
+}
+
+.usuario-form-body {
+  padding: clamp(0.95rem, 1.8vw, 1.2rem);
+}
+
+.usuario-form-grid .form-label {
+  font-weight: 600;
+  color: var(--iasd-texto);
+}
+
+.usuario-form-grid .form-text {
+  font-size: 0.82rem;
+}
+
+.usuario-form-toolbar {
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 0.15rem;
+}
+
+.usuario-form-toolbar-top {
+  display: grid;
+  grid-template-columns: minmax(0, 14rem) auto;
+  align-items: end;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.usuario-form-rol-block {
+  min-width: 0;
+}
+
+.usuario-form-rol-select {
+  max-width: 14rem;
+}
+
+.usuario-form-toolbar-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin-top: 0.38rem;
+}
+
+.usuario-form-cupo-text {
+  margin: 0;
+}
+
+.usuario-form-activo-check {
+  margin: 0;
+  min-height: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.usuario-form-activo-check .form-check-input {
+  margin: 0;
+}
+
+.usuario-form-activo-check .form-check-label {
+  color: var(--iasd-texto);
+  font-weight: 600;
+}
+
+.usuario-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.usuario-form-action-btn {
+  min-width: 142px;
+  white-space: nowrap;
+}
+
 .admin-usuarios-switch {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
+}
+
+.admin-panel-header-actions,
+.admin-info-header-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-panel-header-top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .admin-usuarios-switch-btn {
@@ -584,9 +712,12 @@ a:hover {
   font-size: 0.86rem;
 }
 
+.admin-usuarios-switch-btn-label {
+  display: inline;
+}
+
 .admin-usuarios-switch-btn:hover,
-.admin-usuarios-switch-btn:focus-visible,
-.admin-usuarios-switch-btn.is-active {
+.admin-usuarios-switch-btn:focus-visible {
   background: var(--iasd-azul);
   color: #ffffff;
   border-color: var(--iasd-azul);
@@ -594,9 +725,17 @@ a:hover {
   outline: none;
 }
 
+.admin-panel-header-top .admin-usuarios-switch-btn.is-active {
+  background: #ffffff;
+  color: var(--iasd-azul);
+  border-color: #f4c95d;
+  box-shadow: 0 0 0 2px rgba(244, 201, 93, 0.52);
+  font-weight: 700;
+}
+
 .admin-usuarios-resumen {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
 }
 
@@ -609,10 +748,6 @@ a:hover {
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
-
-.admin-usuarios-resumen-item.is-action {
-  align-items: flex-end;
 }
 
 .admin-usuarios-resumen-label {
@@ -657,23 +792,6 @@ a:hover {
   color: var(--iasd-azul);
   padding: 0.08rem 0.25rem;
   border-radius: 0.3rem;
-}
-
-.admin-metricas-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.5rem 0.7rem;
-  border: 1px solid rgba(0, 51, 102, 0.2);
-  border-radius: 0.5rem;
-  background: rgba(0, 51, 102, 0.04);
-  color: var(--iasd-texto);
-  font-size: 0.82rem;
-}
-
-.admin-metricas-note i {
-  color: var(--iasd-azul);
-  margin-top: 0.05rem;
 }
 
 .admin-categoria-card {
@@ -750,6 +868,42 @@ a:hover {
   outline: none;
 }
 
+.admin-info-tab-btn-label {
+  display: inline;
+}
+
+.admin-info-panel-body {
+  display: grid;
+  gap: 0.85rem;
+  padding-bottom: 1rem;
+}
+
+.admin-info-carousel {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.admin-info-track {
+  display: flex;
+  transition: transform 0.42s ease;
+  will-change: transform;
+}
+
+.admin-info-slide {
+  flex: 0 0 100%;
+  min-width: 100%;
+}
+
+.admin-info-content {
+  min-height: 0;
+}
+
+.admin-info-card-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .admin-reglas-card {
   border: 1px solid rgba(0, 51, 102, 0.15);
   border-left: 3px solid var(--iasd-azul);
@@ -788,6 +942,102 @@ a:hover {
 .admin-col-acciones {
   width: 1%;
   white-space: nowrap;
+}
+
+.admin-col-check {
+  width: 2.45rem;
+  min-width: 2.45rem;
+  white-space: nowrap;
+}
+
+.admin-col-culto-nombre {
+  width: 49%;
+}
+
+.admin-col-culto-dia {
+  width: 16%;
+}
+
+.admin-col-culto-hora {
+  width: 15%;
+}
+
+.admin-col-procedencia-nombre {
+  width: 73%;
+}
+
+.admin-col-metrica-etiqueta {
+  width: 39%;
+}
+
+.admin-col-metrica-categoria {
+  width: 30%;
+}
+
+.admin-setup-tabla-wrap .table > :not(caption) > * > * {
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+}
+
+.admin-setup-tabla-wrap .admin-col-acciones {
+  width: 4.5rem;
+  min-width: 4.5rem;
+}
+
+.admin-setup-tabla-wrap-cultos .admin-col-check {
+  width: 8%;
+  min-width: 4.15rem;
+}
+
+.admin-setup-tabla-wrap-procedencias .admin-col-check {
+  width: 11%;
+  min-width: 4.2rem;
+}
+
+.admin-setup-tabla-wrap-cultos .admin-col-acciones,
+.admin-setup-tabla-wrap-procedencias .admin-col-acciones {
+  width: 10%;
+  min-width: 5.05rem;
+}
+
+.admin-input-culto-nombre {
+  width: 100%;
+  max-width: none;
+}
+
+.admin-select-culto-dia {
+  width: 100%;
+  max-width: none;
+}
+
+.admin-input-culto-hora {
+  width: 100%;
+  max-width: none;
+}
+
+.admin-input-procedencia-nombre {
+  width: 100%;
+  max-width: none;
+}
+
+.admin-input-metrica-etiqueta {
+  width: 100%;
+  max-width: none;
+}
+
+.admin-select-metrica-categoria {
+  width: 100%;
+  max-width: none;
+}
+
+.admin-setup-tabla-wrap-metricas .admin-col-check {
+  width: 13%;
+  min-width: 4.3rem;
+}
+
+.admin-setup-tabla-wrap-metricas .admin-col-acciones {
+  width: 18%;
+  min-width: 5.2rem;
 }
 
 .admin-table-icon-btn {
@@ -874,8 +1124,16 @@ a:hover {
     max-height: clamp(220px, 48vh, 420px);
   }
 
-  .admin-setup-tabla-wrap .table {
-    min-width: 760px;
+  .admin-setup-tabla-wrap-cultos .table {
+    min-width: 100%;
+  }
+
+  .admin-setup-tabla-wrap-procedencias .table {
+    min-width: 100%;
+  }
+
+  .admin-setup-tabla-wrap-metricas .table {
+    min-width: 100%;
   }
 
   .admin-setup-side-actions {
@@ -886,25 +1144,8 @@ a:hover {
     max-height: clamp(200px, 42vh, 380px);
   }
 
-  .admin-quick-link-btn {
-    flex: 1 1 calc(50% - 0.55rem);
-  }
-
   .admin-usuarios-switch-btn {
     flex: 1 1 calc(50% - 0.6rem);
-  }
-
-  .admin-usuarios-resumen {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .admin-usuarios-resumen-item.is-action {
-    grid-column: 1 / -1;
-    align-items: stretch;
-  }
-
-  .admin-usuarios-resumen-item.is-action .btn {
-    width: 100%;
   }
 
   .admin-info-switch {
@@ -912,22 +1153,187 @@ a:hover {
     gap: 0.55rem;
   }
 
+  .admin-panel-header-actions,
+  .admin-info-header-tabs {
+    width: 100%;
+  }
+
   .admin-info-tab-btn {
     flex: 1 1 calc(50% - 0.55rem);
+  }
+
+  .admin-col-culto-nombre {
+    width: 48%;
+  }
+
+  .admin-col-culto-dia {
+    width: 17%;
+  }
+
+  .admin-col-culto-hora {
+    width: 16%;
+  }
+
+  .admin-col-check {
+    width: 2.9rem;
+    min-width: 2.9rem;
+  }
+
+  .admin-col-metrica-categoria {
+    width: 31%;
+  }
+
+  .usuario-form-toolbar-top,
+  .usuario-form-actions {
+    width: 100%;
+  }
+
+  .usuario-form-toolbar-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+  }
+
+  .usuario-form-rol-block,
+  .usuario-form-rol-select {
+    max-width: 100%;
+  }
+
+  .usuario-form-actions {
+    justify-content: flex-start;
+  }
+
+  .usuario-form-action-btn {
+    flex: 0 0 auto;
+    min-width: 0;
   }
 }
 
 @media (max-width: 576px) {
-  .admin-quick-link-btn {
-    flex: 1 1 100%;
+  .admin-resumen-slide .col-12 + .col-12 {
+    margin-top: 0;
+  }
+
+  .admin-responsive-action-btn {
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    gap: 0;
+    border-radius: 0.6rem;
+  }
+
+  .admin-responsive-btn-label,
+  .admin-usuarios-switch-btn-label,
+  .admin-info-tab-btn-label {
+    display: none;
   }
 
   .admin-usuarios-switch-btn {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
+    min-width: 42px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
   }
 
   .admin-info-tab-btn {
-    flex: 1 1 100%;
+    flex: 0 0 auto;
+    min-width: 42px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+  }
+
+  .usuario-form-body {
+    padding: 0.85rem;
+  }
+
+  .usuario-form-toolbar-meta {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .usuario-form-action-btn {
+    width: auto;
+    flex: 1 1 calc(50% - 0.275rem);
+    min-width: 0;
+  }
+
+  .usuario-form-action-btn.admin-responsive-action-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  .usuario-form-action-btn.admin-responsive-action-btn .admin-responsive-btn-label {
+    display: none;
+  }
+
+  .admin-panel-header-actions,
+  .admin-info-header-tabs {
+    gap: 0.45rem;
+  }
+
+  .admin-panel-header-top {
+    flex-wrap: nowrap;
+  }
+
+  .admin-panel-header-actions {
+    flex-wrap: nowrap;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table {
+    min-width: 100%;
+  }
+
+  .admin-setup-tabla-wrap-procedencias .table {
+    min-width: 100%;
+  }
+
+  .admin-setup-tabla-wrap-metricas .table {
+    min-width: 100%;
+  }
+
+  .admin-col-culto-nombre {
+    width: 47%;
+  }
+
+  .admin-col-culto-dia {
+    width: 18%;
+  }
+
+  .admin-col-culto-hora {
+    width: 17%;
+  }
+
+  .admin-col-check {
+    width: 2.8rem;
+    min-width: 2.8rem;
+  }
+
+  .admin-col-metrica-categoria {
+    width: 32%;
+  }
+
+  .admin-col-metrica-etiqueta {
+    width: 37%;
+  }
+
+  .admin-setup-tabla-wrap .table > :not(caption) > * > * {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+
+  .usuario-form-toolbar-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .usuario-form-actions {
+    gap: 0.45rem;
   }
 }
 
@@ -1639,9 +2045,12 @@ a:hover {
 }
 
 .sidebar-main > .container-fluid {
-  width: min(100%, 1240px);
-  margin-left: auto;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
   margin-right: auto;
+  padding-left: clamp(0.9rem, 1.2vw, 1.5rem);
+  padding-right: clamp(0.9rem, 1.2vw, 1.5rem);
 }
 
 .sidebar-contenido-bloqueado {
