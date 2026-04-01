@@ -49,6 +49,7 @@ const normalizarFechaExacta = (valor) => {
 
 const OBSERVACIONES_MAX_SALTOS = 3;
 const NOMBRE_VISITA_MAX = 20;
+const EXCEL_MIME_XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 const esValorVacio = (valor) => valor === '' || valor === null || valor === undefined;
 
@@ -80,6 +81,83 @@ const coincideTextoFecha = (fechaIso, textoBusqueda) => {
 
   return fechaCorta.startsWith(texto) || fechaLarga.startsWith(texto);
 };
+
+function esValorCeroExportable(valor) {
+  if (valor === 0) return true;
+  if (typeof valor !== 'string') return false;
+  const texto = valor.trim();
+  if (!texto) return false;
+  return /^0+(?:[.,]0+)?$/.test(texto);
+}
+
+function tieneValorExportable(valor) {
+  if (valor === null || valor === undefined) return false;
+  if (typeof valor === 'number') return !esValorCeroExportable(valor);
+  if (typeof valor === 'string') return valor.trim() !== '' && !esValorCeroExportable(valor);
+  return true;
+}
+
+function obtenerMetricasExportables(registro, mapaEtiquetasMetricas = {}) {
+  return Object.entries(registro?.metricas || {})
+    .filter(([clave, valor]) => clave !== 'total_asistentes' && tieneValorExportable(valor))
+    .map(([clave, valor]) => ({
+      clave,
+      etiqueta: mapaEtiquetasMetricas?.[clave] || clave,
+      valor
+    }));
+}
+
+function descargarArchivoExcel(buffer, nombreArchivo) {
+  const blob = new Blob([buffer], { type: EXCEL_MIME_XLSX });
+  const url = window.URL.createObjectURL(blob);
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = nombreArchivo;
+  document.body.appendChild(enlace);
+  enlace.click();
+  document.body.removeChild(enlace);
+  window.URL.revokeObjectURL(url);
+}
+
+function aplicarEstiloEncabezadoFila(row) {
+  row.height = 24;
+  row.eachCell((cell) => {
+    cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF003366' }
+    };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FF002244' } },
+      left: { style: 'thin', color: { argb: 'FF002244' } },
+      bottom: { style: 'thin', color: { argb: 'FF002244' } },
+      right: { style: 'thin', color: { argb: 'FF002244' } }
+    };
+  });
+}
+
+function aplicarEstiloFilaDatos(row, index, totalColumnas) {
+  row.height = 22;
+  const colorBase = index % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF';
+  for (let col = 1; col <= totalColumnas; col += 1) {
+    const cell = row.getCell(col);
+    cell.font = { name: 'Calibri', size: 11, color: { argb: 'FF1F2937' } };
+    cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'left', wrapText: true };
+    cell.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: colorBase }
+    };
+    cell.border = {
+      top: { style: 'thin', color: { argb: 'FFDDE3EA' } },
+      left: { style: 'thin', color: { argb: 'FFDDE3EA' } },
+      bottom: { style: 'thin', color: { argb: 'FFDDE3EA' } },
+      right: { style: 'thin', color: { argb: 'FFDDE3EA' } }
+    };
+  }
+}
 
 function crearFormularioVacio(metricasActivas) {
   return {
@@ -881,18 +959,45 @@ export function useAsistencia() {
     if (!registro?.id) return false;
 
     try {
-      const blob = await asistenciaApi.exportarExcel(registro.id);
-      const extension = 'xls';
+      const exceljs = await import('exceljs');
+      const workbook = new exceljs.Workbook();
+      workbook.creator = 'Sistema C_ASISTENCIA';
+      workbook.created = new Date();
+
+      const worksheet = workbook.addWorksheet('Registro');
+      worksheet.columns = [
+        { header: 'Campo', key: 'campo', width: 28 },
+        { header: 'Valor', key: 'valor', width: 42 }
+      ];
+      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+      aplicarEstiloEncabezadoFila(worksheet.getRow(1));
+
+      const filasBase = [
+        ['Culto', registro.culto_nombre || registro.culto_codigo || '-'],
+        ['Fecha', registro.fecha || ''],
+        ['Trimestre', String(registro.trimestre || '')],
+        ['Total de asistentes', String(registro.total_asistentes ?? '')]
+      ];
+
+      const metricasExportables = obtenerMetricasExportables(registro, mapaEtiquetasMetricas);
+      const filasMetricas = metricasExportables.map((item) => [item.etiqueta, String(item.valor)]);
+      const filasFinales = [
+        ...filasBase,
+        ...filasMetricas,
+        ...(registro.registrado_por_nombre ? [['Registrado por', registro.registrado_por_nombre]] : []),
+        ...(registro.creado_en ? [['Creado en', String(registro.creado_en)]] : [])
+      ];
+
+      filasFinales.forEach(([campo, valor], index) => {
+        const row = worksheet.addRow({ campo, valor });
+        aplicarEstiloFilaDatos(row, index, 2);
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
       const fecha = (registro.fecha || 'sin-fecha').replace(/[^\d-]/g, '');
-      const nombre = `asistencia_${fecha}.${extension}`;
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nombre;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const nombre = `asistencia_${fecha}.xlsx`;
+      descargarArchivoExcel(buffer, nombre);
 
       notificarExito('Exportacion Excel generada.');
       return true;
@@ -900,38 +1005,68 @@ export function useAsistencia() {
       notificarError('No se pudo exportar el registro a Excel.');
       return false;
     }
-  }, []);
+  }, [mapaEtiquetasMetricas]);
 
   // Exportar informe segun filtros actuales (solo Excel)
   const exportarInforme = useCallback(async () => {
     try {
-      const params = {};
-      if (filtros.culto) params.culto = filtros.culto;
-      const fechaExactaNormalizada = normalizarFechaExacta(filtros.fecha_exacta);
-      if (fechaExactaNormalizada) {
-        params.fecha_exacta = fechaExactaNormalizada;
-      } else {
-        if (filtros.anio) params.anio = filtros.anio;
-        if (filtros.trimestre) params.trimestre = filtros.trimestre;
-        if (filtros.mes) params.mes = String(filtros.mes).padStart(2, '0');
+      if (!registros.length) {
+        notificarAdvertencia('No hay registros para exportar con los filtros actuales.');
+        return false;
       }
 
-      const blob = await asistenciaApi.exportarInformeExcel(params);
-      const extension = 'xls';
+      const exceljs = await import('exceljs');
+      const workbook = new exceljs.Workbook();
+      workbook.creator = 'Sistema C_ASISTENCIA';
+      workbook.created = new Date();
+
+      const worksheet = workbook.addWorksheet('Registros');
+      const clavesPresentes = new Set(
+        registros.flatMap((registro) => obtenerMetricasExportables(registro, mapaEtiquetasMetricas).map((item) => item.clave))
+      );
+      const clavesMapa = Object.keys(mapaEtiquetasMetricas || {});
+      const clavesMetricas = [
+        ...clavesMapa.filter((clave) => clavesPresentes.has(clave) && clave !== 'total_asistentes'),
+        ...Array.from(clavesPresentes).filter((clave) => clave !== 'total_asistentes' && !clavesMapa.includes(clave))
+      ];
+
+      worksheet.columns = [
+        { header: 'Fecha', key: 'fecha', width: 14 },
+        { header: 'Culto', key: 'culto', width: 26 },
+        { header: 'Total', key: 'total', width: 10 },
+        ...clavesMetricas.map((clave) => ({
+          header: mapaEtiquetasMetricas?.[clave] || clave,
+          key: clave,
+          width: Math.min(Math.max(String(mapaEtiquetasMetricas?.[clave] || clave).length + 4, 14), 28)
+        }))
+      ];
+      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+      worksheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: 1, column: Math.max(3, worksheet.columns.length) }
+      };
+      aplicarEstiloEncabezadoFila(worksheet.getRow(1));
+
+      registros.forEach((registro, index) => {
+        const metricasRegistro = Object.fromEntries(
+          obtenerMetricasExportables(registro, mapaEtiquetasMetricas).map((item) => [item.clave, item.valor])
+        );
+        const row = worksheet.addRow({
+          fecha: registro.fecha || '',
+          culto: registro.culto_nombre || registro.culto_codigo || '-',
+          total: registro.total_asistentes ?? '',
+          ...metricasRegistro
+        });
+        aplicarEstiloFilaDatos(row, index, worksheet.columns.length);
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
       const anio = filtros.anio || ANIO_ACTUAL;
       const periodo = filtros.mes
         ? `mes-${String(filtros.mes).padStart(2, '0')}`
         : (filtros.trimestre ? `t${filtros.trimestre}` : 'todos');
-      const nombre = `informe_asistencia_${anio}_${periodo}.${extension}`;
-
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = nombre;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const nombre = `informe_asistencia_${anio}_${periodo}.xlsx`;
+      descargarArchivoExcel(buffer, nombre);
 
       notificarExito('Informe Excel generado.');
       return true;
@@ -939,7 +1074,7 @@ export function useAsistencia() {
       notificarError('No se pudo generar el informe en Excel.');
       return false;
     }
-  }, [filtros]);
+  }, [filtros, registros, mapaEtiquetasMetricas]);
 
   // Limpiar formulario
   const limpiarFormulario = useCallback(() => {
@@ -977,3 +1112,4 @@ export function useAsistencia() {
     cambiarFiltro
   };
 }
+

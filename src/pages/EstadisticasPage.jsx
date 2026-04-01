@@ -116,16 +116,60 @@ function CardComparativa({ titulo, izquierda, derecha, colorIzquierda, colorDere
   );
 }
 
-function EstadisticasFiltrosCard({ filtros, cultos, onCambiarFiltro }) {
+function EstadisticasFiltrosCard({
+  filtros,
+  cultos,
+  onCambiarFiltro,
+  resumenCondensado,
+  resumenGeneral,
+  onAbrirDetalle
+}) {
   return (
-    <div className="card shadow-sm mb-4">
-      <div className="card-header">
-        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Filtros del periodo</h5>
-      </div>
+    <div className="card shadow-sm mb-3 estad-filtros-card">
       <div className="card-body">
+        <div className="estad-toolbar mb-3">
+          <div className="estad-toolbar-note" title={resumenCondensado || 'Seleccione filtros para visualizar estadísticas.'}>
+            <i className="bi bi-lightbulb" aria-hidden="true"></i>
+            <span>{resumenCondensado || 'Seleccione filtros para visualizar estadísticas.'}</span>
+          </div>
+          <div className="estad-toolbar-actions">
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm estad-toolbar-btn"
+              onClick={onAbrirDetalle}
+              title="Ver detalle estadístico"
+              aria-label="Ver detalle estadístico"
+            >
+              <i className="bi bi-layout-text-sidebar-reverse" aria-hidden="true"></i>
+              <span className="estad-toolbar-btn-label">Detalle</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="estad-toolbar-kpis mb-3" role="group" aria-label="Resumen del período">
+          <div className="estad-toolbar-kpi">
+            <span className="estad-toolbar-kpi-label">Cultos</span>
+            <strong className="estad-toolbar-kpi-value">{resumenGeneral.total_cultos_registrados}</strong>
+          </div>
+          <div className="estad-toolbar-kpi">
+            <span className="estad-toolbar-kpi-label">Asistentes</span>
+            <strong className="estad-toolbar-kpi-value">{resumenGeneral.total_asistentes}</strong>
+          </div>
+          <div className="estad-toolbar-kpi">
+            <span className="estad-toolbar-kpi-label">Promedio</span>
+            <strong className="estad-toolbar-kpi-value">{resumenGeneral.promedio_por_culto}</strong>
+          </div>
+          <div className="estad-toolbar-kpi">
+            <span className="estad-toolbar-kpi-label">Máx. / Mín.</span>
+            <strong className="estad-toolbar-kpi-value">
+              {resumenGeneral.maximo_asistentes} / {resumenGeneral.minimo_asistentes}
+            </strong>
+          </div>
+        </div>
+
         <div className="row g-3 align-items-end">
-          <div className="col-12 col-md-3">
-            <label htmlFor="estad-anio" className="form-label fw-semibold">Anio</label>
+          <div className="col-4 col-md-2">
+            <label htmlFor="estad-anio" className="form-label fw-semibold">Año</label>
             <select
               id="estad-anio"
               className="form-select"
@@ -138,7 +182,7 @@ function EstadisticasFiltrosCard({ filtros, cultos, onCambiarFiltro }) {
             </select>
           </div>
 
-          <div className="col-12 col-md-3">
+          <div className="col-8 col-md-4">
             <label htmlFor="estad-trimestre" className="form-label fw-semibold">Trimestre</label>
             <select
               id="estad-trimestre"
@@ -153,7 +197,7 @@ function EstadisticasFiltrosCard({ filtros, cultos, onCambiarFiltro }) {
             </select>
           </div>
 
-          <div className="col-12 col-md-3">
+          <div className="col-4 col-md-2">
             <label htmlFor="estad-mes" className="form-label fw-semibold">Mes</label>
             <select
               id="estad-mes"
@@ -168,8 +212,8 @@ function EstadisticasFiltrosCard({ filtros, cultos, onCambiarFiltro }) {
             </select>
           </div>
 
-          <div className="col-12 col-md-3">
-            <label htmlFor="estad-culto" className="form-label fw-semibold">Culto (obligatorio)</label>
+          <div className="col-8 col-md-4">
+            <label htmlFor="estad-culto" className="form-label fw-semibold">Culto</label>
             <select
               id="estad-culto"
               className="form-select"
@@ -193,25 +237,25 @@ function EstadisticasFiltrosCard({ filtros, cultos, onCambiarFiltro }) {
 
 function EstadisticasKpisRow({ resumenGeneral }) {
   return (
-    <div className="row g-3 mb-4">
+    <div className="row g-2 mb-3 estad-kpi-grid">
       <div className="col-12 col-md-6 col-xl-3">
-        <div className="card shadow-sm h-100 estad-kpi-card">
-          <div className="card-body d-flex flex-column">
+        <div className="card shadow-sm h-100 estad-kpi-card estad-kpi-card-compact">
+          <div className="card-body">
             <span className="estad-kpi-label">Total de cultos registrados</span>
             <div className="estad-kpi-valor">{resumenGeneral.total_cultos_registrados}</div>
           </div>
         </div>
       </div>
       <div className="col-12 col-md-6 col-xl-3">
-        <div className="card shadow-sm h-100 estad-kpi-card">
-          <div className="card-body d-flex flex-column">
+        <div className="card shadow-sm h-100 estad-kpi-card estad-kpi-card-compact">
+          <div className="card-body">
             <span className="estad-kpi-label">Total de asistentes</span>
             <div className="estad-kpi-valor">{resumenGeneral.total_asistentes}</div>
           </div>
         </div>
       </div>
       <div className="col-12 col-md-6 col-xl-3">
-        <div className="card shadow-sm h-100 estad-kpi-card">
+        <div className="card shadow-sm h-100 estad-kpi-card estad-kpi-card-compact">
           <div className="card-body">
             <span className="estad-kpi-label">Promedio por culto</span>
             <div className="estad-kpi-valor">{resumenGeneral.promedio_por_culto}</div>
@@ -219,12 +263,12 @@ function EstadisticasKpisRow({ resumenGeneral }) {
         </div>
       </div>
       <div className="col-12 col-md-6 col-xl-3">
-        <div className="card shadow-sm h-100 estad-kpi-card">
+        <div className="card shadow-sm h-100 estad-kpi-card estad-kpi-card-compact">
           <div className="card-body">
-            <span className="estad-kpi-label">Maximo y minimo</span>
-            <div className="small mt-2">
-              <div><strong>Maximo:</strong> {resumenGeneral.maximo_asistentes}</div>
-              <div><strong>Minimo:</strong> {resumenGeneral.minimo_asistentes}</div>
+            <span className="estad-kpi-label">Máximo y mínimo</span>
+            <div className="estad-kpi-split mt-2">
+              <div><strong>Máx.</strong> {resumenGeneral.maximo_asistentes}</div>
+              <div><strong>Mín.</strong> {resumenGeneral.minimo_asistentes}</div>
             </div>
           </div>
         </div>
@@ -330,16 +374,23 @@ function EstadisticasVisitasCard({ visitas }) {
     <div className="card shadow-sm h-100">
       <div className="card-body">
         <h6 className="estad-card-titulo">Visitas del periodo</h6>
-        <div className="mb-3">
-          <span className="estad-kpi-label">Total de visitas</span>
-          <div className="estad-kpi-valor">{visitas.total_visitas}</div>
-        </div>
-
-        <div className="small fw-semibold mb-2">
-          Barrio: {visitas.barrio.cantidad} ({formatearPorcentaje(visitas.barrio.porcentaje)})
-        </div>
-        <div className="small fw-semibold mb-3">
-          Guayabo: {visitas.guayabo.cantidad} ({formatearPorcentaje(visitas.guayabo.porcentaje)})
+        <div className="estad-visitas-resumen mb-3">
+          <div className="estad-visitas-chip">
+            <span className="estad-visitas-chip-label">Total</span>
+            <strong className="estad-visitas-chip-value">{visitas.total_visitas}</strong>
+          </div>
+          <div className="estad-visitas-chip">
+            <span className="estad-visitas-chip-label">Barrio</span>
+            <strong className="estad-visitas-chip-value">
+              {visitas.barrio.cantidad} <small>({formatearPorcentaje(visitas.barrio.porcentaje)})</small>
+            </strong>
+          </div>
+          <div className="estad-visitas-chip">
+            <span className="estad-visitas-chip-label">Guayabo</span>
+            <strong className="estad-visitas-chip-value">
+              {visitas.guayabo.cantidad} <small>({formatearPorcentaje(visitas.guayabo.porcentaje)})</small>
+            </strong>
+          </div>
         </div>
 
         <h6 className="estad-card-titulo mb-2">Top de nombres mas repetidos</h6>
@@ -347,23 +398,25 @@ function EstadisticasVisitasCard({ visitas }) {
           <p className="text-muted mb-0">No hay nombres de visitas en este periodo.</p>
         )}
         {visitas.top_nombres.length > 0 && (
-          <div className="table-responsive">
-            <table className="table table-sm align-middle mb-0">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th className="text-end">Cantidad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visitas.top_nombres.map((item) => (
-                  <tr key={item.nombre}>
-                    <td>{item.nombre}</td>
-                    <td className="text-end fw-semibold">{item.cantidad}</td>
+          <div className="estad-visitas-table-wrap">
+            <div className="table-responsive">
+              <table className="table table-sm align-middle mb-0 estad-visitas-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th className="text-end">Cantidad</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {visitas.top_nombres.map((item) => (
+                    <tr key={item.nombre}>
+                      <td>{item.nombre}</td>
+                      <td className="text-end fw-semibold">{item.cantidad}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -371,28 +424,154 @@ function EstadisticasVisitasCard({ visitas }) {
   );
 }
 
+function EstadisticasDetalleModal({
+  visible,
+  onClose,
+  estadisticas,
+  serieAsistencia,
+  maxSerie,
+  cultoNombre
+}) {
+  useEffect(() => {
+    if (!visible) return undefined;
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const manejarTecla = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', manejarTecla);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', manejarTecla);
+    };
+  }, [visible, onClose]);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <div className="estad-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="estad-detalle-title">
+      <button
+        type="button"
+        className="estad-modal-dismiss"
+        onClick={onClose}
+        aria-label="Cerrar detalle estadístico"
+      />
+      <div className="estad-modal-iasd">
+        <div className="estad-modal-head">
+          <div className="estad-modal-head-main">
+            <h5 id="estad-detalle-title" className="mb-0">Detalle estadístico</h5>
+            <div className="estad-modal-head-tags">
+              <span className="estad-modal-head-chip">{cultoNombre || 'Culto seleccionado'}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm"
+            onClick={onClose}
+            aria-label="Cerrar detalle estadístico"
+          >
+            <i className="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div className="estad-modal-body">
+          <div className="row g-3 mb-3">
+            <div className="col-12 col-xl-4">
+              <CardComparativa
+                titulo="Composición de asistentes"
+                izquierda={{
+                  etiqueta: 'Niños',
+                  cantidad: estadisticas.composicion_asistentes.ninos.cantidad,
+                  porcentaje: estadisticas.composicion_asistentes.ninos.porcentaje
+                }}
+                derecha={{
+                  etiqueta: 'Jóvenes',
+                  cantidad: estadisticas.composicion_asistentes.jovenes.cantidad,
+                  porcentaje: estadisticas.composicion_asistentes.jovenes.porcentaje
+                }}
+                colorIzquierda="bg-primary"
+                colorDerecha="bg-secondary"
+              />
+            </div>
+            <div className="col-12 col-xl-4">
+              <CardComparativa
+                titulo="Puntualidad"
+                izquierda={{
+                  etiqueta: 'Temprano',
+                  cantidad: estadisticas.puntualidad.antes.cantidad,
+                  porcentaje: estadisticas.puntualidad.antes.porcentaje
+                }}
+                derecha={{
+                  etiqueta: 'Tarde',
+                  cantidad: estadisticas.puntualidad.despues.cantidad,
+                  porcentaje: estadisticas.puntualidad.despues.porcentaje
+                }}
+                colorIzquierda="bg-success"
+                colorDerecha="bg-warning"
+              />
+            </div>
+            <div className="col-12 col-xl-4">
+              <CardComparativa
+                titulo="Procedencia"
+                izquierda={{
+                  etiqueta: 'Barrio',
+                  cantidad: estadisticas.procedencia.barrio.cantidad,
+                  porcentaje: estadisticas.procedencia.barrio.porcentaje
+                }}
+                derecha={{
+                  etiqueta: 'Guayabo',
+                  cantidad: estadisticas.procedencia.guayabo.cantidad,
+                  porcentaje: estadisticas.procedencia.guayabo.porcentaje
+                }}
+                colorIzquierda="bg-info"
+                colorDerecha="bg-dark"
+              />
+            </div>
+          </div>
+
+          <div className="row g-3">
+            <div className="col-12 col-xl-7">
+              <EstadisticasSerieCard
+                serieAsistencia={serieAsistencia}
+                maxSerie={maxSerie}
+              />
+            </div>
+            <div className="col-12 col-xl-5">
+              <EstadisticasVisitasCard visitas={estadisticas.visitas} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMetricas }) {
   return (
-    <div className="card shadow-sm">
-      <div className="card-header">
-        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Metricas dinamicas del periodo</h5>
-      </div>
+    <div className="card shadow-sm estad-metricas-card">
       <div className="card-body p-0">
         {metricasDinamicas.length === 0 && (
           <div className="p-3 text-muted">
-            No hay metricas dinamicas numericas para este periodo.
+            No hay métricas dinámicas numéricas para este período.
           </div>
         )}
         {metricasDinamicas.length > 0 && (
-          <div className="table-responsive">
-            <table className="table table-sm align-middle mb-0">
+          <div className="estad-metricas-table-wrap">
+            <table className="table table-sm align-middle mb-0 estad-metricas-table">
               <thead>
                 <tr>
-                  <th>Metrica</th>
+                  <th>Métrica</th>
                   <th className="text-end">Suma</th>
                   <th className="text-end">Promedio</th>
-                  <th className="text-end">Maximo</th>
-                  <th className="text-end">Minimo</th>
+                  <th className="text-end">Máximo</th>
+                  <th className="text-end">Mínimo</th>
                   <th className="text-end">Registros</th>
                 </tr>
               </thead>
@@ -422,6 +601,7 @@ export default function EstadisticasPage() {
   const [cultos, setCultos] = useState([]);
   const [estadisticas, setEstadisticas] = useState(ESTADISTICAS_VACIAS);
   const [cargando, setCargando] = useState(false);
+  const [detalleVisible, setDetalleVisible] = useState(false);
   const [filtros, setFiltros] = useState({
     anio: ANIO_ACTUAL,
     trimestre: TRIMESTRE_ACTUAL,
@@ -507,6 +687,7 @@ export default function EstadisticasPage() {
 
   const serieAsistencia = estadisticas?.series?.asistencia_por_fecha || [];
   const metricasDinamicas = estadisticas?.metricas_dinamicas || [];
+  const cultoSeleccionado = cultos.find((item) => item.codigo === filtros.culto);
 
   const mapaEtiquetasMetricas = useMemo(() => {
     return metricasActivas.reduce((acc, item) => {
@@ -522,12 +703,13 @@ export default function EstadisticasPage() {
 
   return (
     <div className="container-fluid py-4">
-      <h2 className="mb-3">Estadisticas de Asistencia</h2>
-
       <EstadisticasFiltrosCard
         filtros={filtros}
         cultos={cultos}
         onCambiarFiltro={cambiarFiltro}
+        resumenCondensado={estadisticas.resumen_condensado}
+        resumenGeneral={estadisticas.resumen_general}
+        onAbrirDetalle={() => setDetalleVisible(true)}
       />
 
       {cargando && (
@@ -540,30 +722,18 @@ export default function EstadisticasPage() {
 
       {!cargando && (
         <>
-          <div className="alert alert-iasd mb-4">
-            <i className="bi bi-lightbulb me-2" />
-            {estadisticas.resumen_condensado || 'Seleccione filtros para visualizar estadisticas.'}
-          </div>
-
-          <EstadisticasKpisRow resumenGeneral={estadisticas.resumen_general} />
-          <EstadisticasComparativasRow estadisticas={estadisticas} />
-
-          <div className="row g-3 mb-4">
-            <div className="col-12 col-xl-7">
-              <EstadisticasSerieCard
-                serieAsistencia={serieAsistencia}
-                maxSerie={maxSerie}
-              />
-            </div>
-
-            <div className="col-12 col-xl-5">
-              <EstadisticasVisitasCard visitas={estadisticas.visitas} />
-            </div>
-          </div>
-
           <EstadisticasMetricasDinamicasCard
             metricasDinamicas={metricasDinamicas}
             mapaEtiquetasMetricas={mapaEtiquetasMetricas}
+          />
+
+          <EstadisticasDetalleModal
+            visible={detalleVisible}
+            onClose={() => setDetalleVisible(false)}
+            estadisticas={estadisticas}
+            serieAsistencia={serieAsistencia}
+            maxSerie={maxSerie}
+            cultoNombre={formatearNombreCulto(cultoSeleccionado?.nombre, cultoSeleccionado?.codigo)}
           />
         </>
       )}

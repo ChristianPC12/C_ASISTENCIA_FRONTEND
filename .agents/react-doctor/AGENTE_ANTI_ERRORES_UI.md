@@ -521,3 +521,11 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] En móvil, los botones finales de formularios largos (`Guardar`, `Actualizar`, `Limpiar`, `Cancelar`) también deben pasar a icono-only; no dejar ese patrón solo en paneles administrativos.
 - [ ] En modales/listados de registros, un valor `0` que no aporta información real no debe renderizarse como si fuera un dato útil; ocultarlo si no cambia la interpretación del registro.
 - [ ] Al compactar una tabla, ajustar columnas problemáticas específicas; no estrechar la tabla completa si el problema real está en `Culto`, `Total`, `Categoría` o `Acciones`.
+- [ ] En tablas de registros, fijar una altura útil corta desde el inicio; si la lista crece, el scroll debe empezar pronto y no después de empujar toda la página.
+- [ ] Si Excel advierte que formato y extensión no coinciden, no insistir con `.xls` HTML; generar `.xlsx` real.
+- [ ] En exportaciones, no duplicar datos derivados: si `Fecha` ya contiene el año, no agregar una fila `Año` aparte salvo que aporte algo distinto.
+- [ ] En módulos densos como `Estadísticas`, no dejar tarjetas secundarias abiertas en la pantalla principal si pueden vivir mejor dentro de un modal de detalle.
+- [ ] Si la tabla principal es lo más consultado del módulo, darle altura fija con scroll interno y quitar headers redundantes antes de agregar más bloques arriba.
+- [ ] Si un módulo analítico necesita mostrar KPIs y filtros, los KPIs deben ir compactos en la franja superior del propio módulo antes de volver a abrir otra fila completa de tarjetas.
+- [ ] En tarjetas como `Visitas del período`, fijar el scroll de tablas internas (`Top nombres`) antes de permitir que el modal crezca sin control.
+- [ ] Si una tabla tiene scroll vertical interno, su header debe quedar sticky siempre; no depender de wrappers intermedios que rompan ese comportamiento.

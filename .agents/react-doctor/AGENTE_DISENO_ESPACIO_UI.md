@@ -144,3 +144,14 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
 - En móvil, los botones de edición/cierre/guardado dentro de formularios de registro deben seguir la misma convención icon-only del resto del sistema.
 - Si una fila tiene pocas columnas, compactar el ancho desde la columna que sobra; no aceptar huecos artificiales entre `Culto`, `Total` y `Acciones`.
 - En el modal de detalle, mostrar solo valores significativos; un `0` de una métrica no seleccionada genera ruido visual, no información.
+- En listados como `Registros`, la tabla debe tener alto fijo desde pocos elementos; mostrar unas 4 filas y después usar scroll interno es mejor que alargar toda la vista.
+- Si un botón global de Excel vive en escritorio, el copy corto `Excel` suele funcionar mejor que `Informe Excel`; el contexto ya lo da la barra de filtros.
+
+### D19) Estadísticas con foco visual único
+
+- En `Estadísticas`, la pantalla principal debe priorizar filtros, resumen corto, KPIs compactos y tabla principal.
+- `Composición`, `Puntualidad`, `Procedencia`, `Tendencia` y `Visitas` pueden vivir en un modal de detalle si están consumiendo demasiada altura.
+- Antes de dejar un módulo analítico con mucho scroll vertical, mover el análisis secundario a una capa modal y comprimir los KPIs en una sola franja.
+- Si los KPIs todavía ocupan demasiada altura, convertirlos en chips/resumen dentro de la barra superior del módulo en vez de dejarlos como cuatro tarjetas completas.
+- En un modal analítico, el contenido con más riesgo de crecer (`Top nombres`, listados, tablas pequeñas) debe tener su propio scroll fijo.
+- En toolbars compactas de módulos analíticos, un botón auxiliar como `Detalle` no debe ocupar una fila completa en móvil; compartir línea con el resumen corto es mejor uso del espacio.

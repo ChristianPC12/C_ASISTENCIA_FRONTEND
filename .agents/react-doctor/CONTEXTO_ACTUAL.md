@@ -213,3 +213,17 @@ Rutas activas:
   - en móvil, los botones finales del formulario de asistencia (`Guardar`/`Actualizar`, `Limpiar`/`Cancelar`) ahora deben seguir el patrón de iconos del resto del sistema,
   - el modal de detalle ya no debe mostrar métricas en `0` si no agregan información real,
   - la tabla de registros se compacta desde columnas específicas (`Fecha`, `Culto`, `Total`, `Acciones`) y mantiene las acciones lado a lado, sin apilarse.
+- Ajuste posterior en `Registros`:
+  - la tabla ahora debe quedarse en una altura corta fija para mostrar alrededor de 4 registros antes de activar scroll interno,
+  - el botón global de escritorio pasa a `Excel` con referencia visual más clara al formato,
+  - la exportación individual y el informe se generan como `.xlsx` real desde frontend para evitar avisos de formato/extensión en Excel,
+  - el export individual ya no incluye `Código del culto` ni una fila separada de `Año`, y adopta el mismo look base azul/blanco usado en otros Excel del proyecto.
+- Reacomodo total en `Estadísticas`:
+  - se eliminan títulos y headers redundantes (`Estadísticas de asistencia`, `Filtros del período`, `Métricas dinámicas del período`),
+  - el resumen con ícono de bombillo pasa a una barra compacta junto con el acceso al modal de detalle,
+  - los KPIs salen de la fila de tarjetas y pasan a una franja compacta del propio módulo,
+  - en móvil, `Año + Trimestre` y `Mes + Culto` comparten fila con reparto 4/8 para aprovechar mejor el ancho, y el botón `Detalle` ya no debe bajar solo a una fila vacía,
+  - `Composición`, `Puntualidad`, `Procedencia`, `Tendencia por fechas` y `Visitas del período` salen de la vista principal y viven dentro de un modal de detalle,
+  - `Tendencia` y `Visitas` se compactan más dentro del modal, y `Top nombres` ahora usa scroll fijo,
+  - la tabla de métricas dinámicas queda como foco principal, con altura fija, scroll interno y header sticky real,
+  - los 4 indicadores superiores reducen ligeramente su tipografía para evitar cortes en teléfonos estrechos.

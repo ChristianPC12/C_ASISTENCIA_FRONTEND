@@ -451,7 +451,7 @@ a:hover {
 
 /* ===== Tabla de registros: scroll vertical + horizontal ===== */
 .tabla-registros-scroll {
-  max-height: 65vh;
+  max-height: 15.75rem;
   overflow-y: auto;
   overflow-x: hidden;
   border: 1px solid var(--iasd-borde);
@@ -1387,8 +1387,63 @@ a:hover {
 
 /* Responsive: reducir altura de tabla en móvil */
 @media (max-width: 768px) {
+  .estad-toolbar-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .estad-toolbar-btn {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+
+  .estad-toolbar-btn-label {
+    display: none;
+  }
+
+  .estad-kpi-valor {
+    font-size: 1.55rem;
+  }
+
+  .estad-serie-scroll {
+    min-height: 165px;
+  }
+
+  .estad-serie {
+    min-height: 165px;
+    min-width: 520px;
+  }
+
+  .estad-serie-item {
+    height: 145px;
+  }
+
+  .estad-metricas-table-wrap {
+    max-height: clamp(210px, 38vh, 280px);
+  }
+
+  .estad-modal-iasd {
+    max-height: 90vh;
+    padding: 0.95rem 0.9rem;
+  }
+
+  .estad-modal-head {
+    flex-wrap: wrap;
+  }
+
+  .estad-visitas-resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .estad-visitas-table-wrap {
+    max-height: 9rem;
+  }
+
   .tabla-registros-scroll {
-    max-height: 55vh;
+    max-height: 15rem;
   }
 
   .tabla-registros {
@@ -1402,8 +1457,8 @@ a:hover {
   }
 
   .registro-col-total {
-    width: 3.35rem;
-    min-width: 3.35rem;
+    width: 3.15rem;
+    min-width: 3.15rem;
   }
 
   .registro-col-acciones {
@@ -1544,6 +1599,33 @@ a:hover {
 }
 
 @media (max-width: 576px) {
+  .estad-toolbar {
+    align-items: stretch;
+  }
+
+  .estad-toolbar-note {
+    flex-basis: 100%;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .estad-toolbar-kpis {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+  }
+
+  .estad-toolbar-kpi {
+    padding: 0.55rem 0.6rem;
+  }
+
+  .estad-toolbar-kpi-value {
+    font-size: 0.88rem;
+  }
+
+  .estad-toolbar-kpi-label {
+    font-size: 0.62rem;
+  }
+
   .admin-resumen-slide .col-12 + .col-12 {
     margin-top: 0;
   }
@@ -1747,6 +1829,85 @@ a:hover {
   border-left: 4px solid var(--iasd-dorado);
 }
 
+.estad-filtros-card .card-body {
+  padding: 0.95rem 1rem;
+}
+
+.estad-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.estad-toolbar-note {
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(0, 51, 102, 0.12);
+  border-radius: 0.85rem;
+  background: rgba(0, 51, 102, 0.05);
+  color: var(--iasd-azul);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.estad-toolbar-actions {
+  display: inline-flex;
+  align-items: center;
+  align-self: start;
+  gap: 0.5rem;
+}
+
+.estad-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 38px;
+}
+
+.estad-toolbar-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.estad-toolbar-kpi {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(0, 51, 102, 0.12);
+  border-radius: 0.85rem;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+}
+
+.estad-toolbar-kpi-label {
+  font-size: 0.69rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--iasd-texto-sec);
+  white-space: nowrap;
+}
+
+.estad-toolbar-kpi-value {
+  font-size: 1rem;
+  color: var(--iasd-azul);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.estad-kpi-card-compact .card-body {
+  padding: 0.85rem 0.9rem;
+}
+
 .estad-kpi-label {
   display: block;
   font-size: 0.82rem;
@@ -1761,6 +1922,14 @@ a:hover {
   font-weight: 700;
   color: var(--iasd-azul);
   line-height: 1.2;
+}
+
+.estad-kpi-split {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+  font-size: 0.88rem;
+  color: var(--iasd-texto-sec);
 }
 
 .estad-card-titulo {
@@ -1779,7 +1948,7 @@ a:hover {
 .estad-serie-scroll {
   overflow-x: auto;
   padding-bottom: 0.35rem;
-  min-height: 220px;
+  min-height: 180px;
   display: flex;
   align-items: flex-end;
   -ms-overflow-style: none;
@@ -1791,7 +1960,7 @@ a:hover {
 }
 
 .estad-serie {
-  min-height: 220px;
+  min-height: 180px;
   min-width: 680px;
   display: flex;
   align-items: flex-end;
@@ -1802,7 +1971,7 @@ a:hover {
 
 .estad-serie-item {
   width: 24px;
-  height: 200px;
+  height: 160px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -1820,6 +1989,143 @@ a:hover {
 .estad-serie-label {
   font-size: 0.68rem;
   color: var(--iasd-texto-sec);
+  white-space: nowrap;
+}
+
+.estad-metricas-table-wrap {
+  max-height: clamp(240px, 40vh, 320px);
+  overflow: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(0, 51, 102, 0.1);
+}
+
+.estad-metricas-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--iasd-azul);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.estad-metricas-table {
+  min-width: 100%;
+}
+
+.estad-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.estad-modal-dismiss {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: transparent;
+}
+
+.estad-modal-iasd {
+  position: relative;
+  width: min(1100px, 100%);
+  max-height: min(88vh, 980px);
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.25);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.estad-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.estad-modal-head-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.estad-modal-head-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.estad-modal-head-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 51, 102, 0.08);
+  color: var(--iasd-azul);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.estad-modal-body {
+  overflow: auto;
+  padding-right: 0.15rem;
+}
+
+.estad-visitas-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.estad-visitas-chip {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.8rem;
+  background: rgba(0, 51, 102, 0.05);
+  border: 1px solid rgba(0, 51, 102, 0.08);
+}
+
+.estad-visitas-chip-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--iasd-texto-sec);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.estad-visitas-chip-value {
+  display: block;
+  color: var(--iasd-azul);
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.estad-visitas-chip-value small {
+  font-size: 0.72rem;
+  color: var(--iasd-texto-sec);
+}
+
+.estad-visitas-table-wrap {
+  max-height: 10.5rem;
+  overflow: auto;
+  border: 1px solid rgba(0, 51, 102, 0.1);
+  border-radius: 0.75rem;
+}
+
+.estad-visitas-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
   white-space: nowrap;
 }
 

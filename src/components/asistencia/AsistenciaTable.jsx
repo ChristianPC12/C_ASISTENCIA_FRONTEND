@@ -291,14 +291,14 @@ export default function AsistenciaTable({
                 </span>
                 {typeof onExportarInforme === 'function' && (
                   <button
-                    className="btn btn-outline-secondary btn-sm registros-export-btn"
+                    className="btn btn-outline-success btn-sm registros-export-btn"
                     type="button"
                     onClick={() => onExportarInforme()}
-                    title="Generar informe Excel"
-                    aria-label="Generar informe Excel"
+                    title="Exportar Excel"
+                    aria-label="Exportar Excel"
                   >
                     <i className="bi bi-filetype-xls" aria-hidden="true"></i>
-                    <span className="registros-export-label">Informe Excel</span>
+                    <span className="registros-export-label">Excel</span>
                   </button>
                 )}
               </div>
