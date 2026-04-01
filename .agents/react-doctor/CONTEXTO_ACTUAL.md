@@ -228,3 +228,9 @@ Rutas activas:
   - la tabla de métricas dinámicas queda como foco principal, con altura fija, scroll interno y header sticky real,
   - los 4 indicadores superiores reducen ligeramente su tipografía para evitar cortes en teléfonos estrechos,
   - además, esos KPIs ya no deben depender de `nowrap`: su texto debe envolverse de forma controlada para respetar el chip/contenedor en móvil.
+- Reacomodo total en `Comparaciones`:
+  - se eliminan títulos y headers redundantes (`Comparaciones mensuales`, `Filtros de comparación`, `Indicadores comparados`, `Diferencia calculada...`),
+  - el resumen `Periodo A vs Periodo B para Culto` pasa a un toolbar compacto del módulo con botones para abrir modales secundarios,
+  - los dos resúmenes generales se mueven a un modal `Detalles generales`,
+  - `Top nombres de visitas` sale de la vista principal y vive en su propio modal con scroll fijo,
+  - la tabla de indicadores comparados queda como foco principal, con altura fija, scroll interno y header sticky.

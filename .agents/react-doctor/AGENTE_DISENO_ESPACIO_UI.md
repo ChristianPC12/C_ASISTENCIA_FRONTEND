@@ -156,3 +156,4 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
 - En un modal analítico, el contenido con más riesgo de crecer (`Top nombres`, listados, tablas pequeñas) debe tener su propio scroll fijo.
 - En toolbars compactas de módulos analíticos, un botón auxiliar como `Detalle` no debe ocupar una fila completa en móvil; compartir línea con el resumen corto es mejor uso del espacio.
 - En chips/KPIs compactos, la tipografía debe respetar el contenedor: evitar `nowrap` y truncados rígidos cuando el mismo bloque puede resolverlo mejor con wrapping controlado.
+- En `Comparaciones`, mover `Detalles generales` y `Top nombres` a botones de toolbar + modal libera suficiente altura para que la tabla principal respire sin perder información.
