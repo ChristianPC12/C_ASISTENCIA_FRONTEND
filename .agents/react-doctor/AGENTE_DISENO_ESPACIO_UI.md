@@ -155,3 +155,4 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
 - Si los KPIs todavía ocupan demasiada altura, convertirlos en chips/resumen dentro de la barra superior del módulo en vez de dejarlos como cuatro tarjetas completas.
 - En un modal analítico, el contenido con más riesgo de crecer (`Top nombres`, listados, tablas pequeñas) debe tener su propio scroll fijo.
 - En toolbars compactas de módulos analíticos, un botón auxiliar como `Detalle` no debe ocupar una fila completa en móvil; compartir línea con el resumen corto es mejor uso del espacio.
+- En chips/KPIs compactos, la tipografía debe respetar el contenedor: evitar `nowrap` y truncados rígidos cuando el mismo bloque puede resolverlo mejor con wrapping controlado.

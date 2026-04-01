@@ -529,3 +529,5 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] Si un módulo analítico necesita mostrar KPIs y filtros, los KPIs deben ir compactos en la franja superior del propio módulo antes de volver a abrir otra fila completa de tarjetas.
 - [ ] En tarjetas como `Visitas del período`, fijar el scroll de tablas internas (`Top nombres`) antes de permitir que el modal crezca sin control.
 - [ ] Si una tabla tiene scroll vertical interno, su header debe quedar sticky siempre; no depender de wrappers intermedios que rompan ese comportamiento.
+- [ ] En KPIs compactos de móviles, no forzar `white-space: nowrap` si el chip puede estrecharse; la tipografía debe adaptarse al bloque antes que salirse o cortarse.
+- [ ] Si un resumen superior usa chips pequeños, revisar `font-size`, `line-height` y wrapping real sobre el teléfono más estrecho antes de darlo por terminado.

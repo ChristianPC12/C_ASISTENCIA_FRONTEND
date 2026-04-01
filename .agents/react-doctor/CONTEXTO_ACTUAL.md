@@ -226,4 +226,5 @@ Rutas activas:
   - `Composición`, `Puntualidad`, `Procedencia`, `Tendencia por fechas` y `Visitas del período` salen de la vista principal y viven dentro de un modal de detalle,
   - `Tendencia` y `Visitas` se compactan más dentro del modal, y `Top nombres` ahora usa scroll fijo,
   - la tabla de métricas dinámicas queda como foco principal, con altura fija, scroll interno y header sticky real,
-  - los 4 indicadores superiores reducen ligeramente su tipografía para evitar cortes en teléfonos estrechos.
+  - los 4 indicadores superiores reducen ligeramente su tipografía para evitar cortes en teléfonos estrechos,
+  - además, esos KPIs ya no deben depender de `nowrap`: su texto debe envolverse de forma controlada para respetar el chip/contenedor en móvil.

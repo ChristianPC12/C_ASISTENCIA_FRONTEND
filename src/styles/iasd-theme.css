@@ -1619,11 +1619,12 @@ a:hover {
   }
 
   .estad-toolbar-kpi-value {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
   }
 
   .estad-toolbar-kpi-label {
-    font-size: 0.62rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.03em;
   }
 
   .admin-resumen-slide .col-12 + .col-12 {
@@ -1879,6 +1880,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  justify-content: center;
   padding: 0.65rem 0.75rem;
   border: 1px solid rgba(0, 51, 102, 0.12);
   border-radius: 0.85rem;
@@ -1887,21 +1889,27 @@ a:hover {
 }
 
 .estad-toolbar-kpi-label {
+  display: block;
+  width: 100%;
   font-size: 0.69rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--iasd-texto-sec);
-  white-space: nowrap;
+  line-height: 1.15;
+  white-space: normal;
+  text-wrap: balance;
 }
 
 .estad-toolbar-kpi-value {
+  display: block;
+  width: 100%;
   font-size: 1rem;
   color: var(--iasd-azul);
-  line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.1;
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
 .estad-kpi-card-compact .card-body {
