@@ -8,5 +8,7 @@ export const EVENT_ADMIN_ABRIR_PROCEDENCIAS = 'admin:abrir-procedencias';
 export const EVENT_ADMIN_ABRIR_CATEGORIAS_METRICAS = 'admin:abrir-categorias-metricas';
 export const EVENT_ADMIN_ABRIR_USUARIOS = 'admin:abrir-usuarios';
 export const EVENT_ADMIN_VISTA_ACTIVA = 'admin:vista-activa';
+export const EVENT_ESTADISTICAS_ABRIR_TABLA = 'estadisticas:abrir-tabla';
+export const EVENT_COMPARACIONES_ABRIR_TABLA = 'comparaciones:abrir-tabla';
 export const EVENT_COMPARACIONES_ABRIR_DETALLE = 'comparaciones:abrir-detalle';
 export const EVENT_COMPARACIONES_ABRIR_VISITAS = 'comparaciones:abrir-visitas';

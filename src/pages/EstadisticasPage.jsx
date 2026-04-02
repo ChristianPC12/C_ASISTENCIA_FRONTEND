@@ -2,6 +2,7 @@
 import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { ANIO_ACTUAL, ANIO_OPCIONES, TRIMESTRE_OPCIONES, MES_OPCIONES } from '../config/constants';
+import { EVENT_ESTADISTICAS_ABRIR_TABLA } from '../config/events';
 import { notificarError } from '../utils/notify';
 import { useSetupStatus } from '../hooks/useSetupStatus';
 
@@ -473,7 +474,7 @@ function EstadisticasDetalleModal({
           </div>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm"
+            className="btn btn-outline-secondary btn-sm estad-modal-close"
             onClick={onClose}
             aria-label="Cerrar detalle estadístico"
           >
@@ -553,7 +554,75 @@ function EstadisticasDetalleModal({
   );
 }
 
-function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMetricas }) {
+function EstadisticasTablaModal({
+  visible,
+  onClose,
+  metricasDinamicas,
+  mapaEtiquetasMetricas,
+  cultoNombre
+}) {
+  useEffect(() => {
+    if (!visible) return undefined;
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const manejarTecla = (event) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', manejarTecla);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', manejarTecla);
+    };
+  }, [visible, onClose]);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <div className="estad-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="estad-tabla-title">
+      <button
+        type="button"
+        className="estad-modal-dismiss"
+        onClick={onClose}
+        aria-label="Cerrar tabla de estadísticas"
+      />
+      <div className="estad-modal-iasd estad-modal-iasd-wide">
+        <div className="estad-modal-head">
+          <div className="estad-modal-head-main">
+            <h5 id="estad-tabla-title" className="mb-0">Tabla de estadísticas</h5>
+            <div className="estad-modal-head-tags">
+              <span className="estad-modal-head-chip">{cultoNombre || 'Culto seleccionado'}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-secondary btn-sm estad-modal-close"
+            onClick={onClose}
+            aria-label="Cerrar tabla de estadísticas"
+          >
+            <i className="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div className="estad-modal-body">
+          <EstadisticasMetricasDinamicasCard
+            metricasDinamicas={metricasDinamicas}
+            mapaEtiquetasMetricas={mapaEtiquetasMetricas}
+            expandida
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMetricas, expandida = false }) {
   return (
     <div className="card shadow-sm estad-metricas-card">
       <div className="card-body p-0">
@@ -564,7 +633,7 @@ function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMet
         )}
         {metricasDinamicas.length > 0 && (
           <div className="table-responsive estad-metricas-table-scroll-x">
-            <div className="estad-metricas-table-wrap">
+            <div className={`estad-metricas-table-wrap ${expandida ? 'estad-metricas-table-wrap-expanded' : ''}`.trim()}>
               <table className="table table-sm align-middle mb-0 estad-metricas-table">
                 <thead>
                   <tr>
@@ -604,6 +673,7 @@ export default function EstadisticasPage() {
   const [estadisticas, setEstadisticas] = useState(ESTADISTICAS_VACIAS);
   const [cargando, setCargando] = useState(false);
   const [detalleVisible, setDetalleVisible] = useState(false);
+  const [tablaVisible, setTablaVisible] = useState(false);
   const [filtros, setFiltros] = useState({
     anio: ANIO_ACTUAL,
     trimestre: TRIMESTRE_ACTUAL,
@@ -664,6 +734,14 @@ export default function EstadisticasPage() {
   useEffect(() => {
     cargarEstadisticas();
   }, [cargarEstadisticas]);
+
+  useEffect(() => {
+    const manejarAbrirTabla = () => setTablaVisible(true);
+    window.addEventListener(EVENT_ESTADISTICAS_ABRIR_TABLA, manejarAbrirTabla);
+    return () => {
+      window.removeEventListener(EVENT_ESTADISTICAS_ABRIR_TABLA, manejarAbrirTabla);
+    };
+  }, []);
 
   const cambiarFiltro = useCallback((campo, valor) => {
     setFiltros((prev) => {
@@ -735,6 +813,13 @@ export default function EstadisticasPage() {
             estadisticas={estadisticas}
             serieAsistencia={serieAsistencia}
             maxSerie={maxSerie}
+            cultoNombre={formatearNombreCulto(cultoSeleccionado?.nombre, cultoSeleccionado?.codigo)}
+          />
+          <EstadisticasTablaModal
+            visible={tablaVisible}
+            onClose={() => setTablaVisible(false)}
+            metricasDinamicas={metricasDinamicas}
+            mapaEtiquetasMetricas={mapaEtiquetasMetricas}
             cultoNombre={formatearNombreCulto(cultoSeleccionado?.nombre, cultoSeleccionado?.codigo)}
           />
         </>

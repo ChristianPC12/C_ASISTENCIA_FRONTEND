@@ -540,3 +540,5 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] En tablas analíticas de móvil (`Estadísticas`, `Comparaciones`), copiar el patrón de `Administrador`: wrapper externo `table-responsive` para eje X, wrapper interno para eje Y y `thead` sticky.
 - [ ] En ese patrón móvil, el contenedor interno debe usar `width: max-content` y `min-width: 100%`; `fit-content` puede dejar la tabla “bien” visualmente pero cancelar el scroll horizontal real.
 - [ ] En modales analíticos, el botón de cerrar debe anclarse en la esquina superior derecha con tamaño compacto; no dejarlo ocupando espacio dentro del flujo normal del header.
+- [ ] Si una tabla principal sigue viéndose demasiado baja en teléfono, ofrecer una acción contextual en topbar para abrirla completa en modal antes de seguir apretando alturas que ya son razonables.
+- [ ] Si se restaura una acción duplicada como `Cerrar sesión`, hacerlo solo donde realmente aporta: escritorio sí, móvil no, si en móvil ya existe una ubicación mejor resuelta.

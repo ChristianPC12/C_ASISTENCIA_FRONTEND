@@ -10,8 +10,10 @@ import {
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
   EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA,
+  EVENT_COMPARACIONES_ABRIR_TABLA,
   EVENT_COMPARACIONES_ABRIR_DETALLE,
   EVENT_COMPARACIONES_ABRIR_VISITAS,
+  EVENT_ESTADISTICAS_ABRIR_TABLA,
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
@@ -49,6 +51,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
+  const enPantallaEstadisticas = esRutaActiva('/estadisticas');
   const enPantallaComparaciones = esRutaActiva('/comparaciones');
   const tenantSesion = tenant || usuario?.tenant || {};
   const campoSesion = String(
@@ -115,8 +118,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     window.dispatchEvent(new CustomEvent(EVENT_COMPARACIONES_ABRIR_DETALLE));
   };
 
+  const abrirTablaComparaciones = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_COMPARACIONES_ABRIR_TABLA));
+  };
+
   const abrirVisitasComparaciones = () => {
     window.dispatchEvent(new CustomEvent(EVENT_COMPARACIONES_ABRIR_VISITAS));
+  };
+
+  const abrirTablaEstadisticas = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ESTADISTICAS_ABRIR_TABLA));
   };
 
   let enlaces = [];
@@ -210,6 +221,12 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               </div>
             )}
           </div>
+          <button
+            className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn d-none d-md-inline-flex justify-content-center align-items-center"
+            onClick={onCerrarSesion}
+          >
+            Cerrar sesión
+          </button>
         </div>
       </aside>
 
@@ -329,6 +346,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 <button
                   type="button"
                   className="sidebar-topbar-metric-btn d-md-none"
+                  onClick={abrirTablaComparaciones}
+                  aria-label="Ver tabla comparativa"
+                  title="Ver tabla comparativa"
+                >
+                  <i className="bi bi-table" aria-hidden="true"></i>
+                  <span className="visually-hidden">Ver tabla comparativa</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn d-md-none"
                   onClick={abrirDetalleComparaciones}
                   aria-label="Ver detalles generales"
                   title="Ver detalles generales"
@@ -347,6 +374,18 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <span className="visually-hidden">Ver top nombres de visitas</span>
                 </button>
               </>
+            )}
+            {enPantallaEstadisticas && (
+              <button
+                type="button"
+                className="sidebar-topbar-metric-btn d-md-none"
+                onClick={abrirTablaEstadisticas}
+                aria-label="Ver tabla de estadísticas"
+                title="Ver tabla de estadísticas"
+              >
+                <i className="bi bi-table" aria-hidden="true"></i>
+                <span className="visually-hidden">Ver tabla de estadísticas</span>
+              </button>
             )}
             <button
               type="button"

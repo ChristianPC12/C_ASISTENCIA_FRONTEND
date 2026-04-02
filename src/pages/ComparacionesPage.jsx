@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { ANIO_OPCIONES, MES_OPCIONES } from '../config/constants';
-import { EVENT_COMPARACIONES_ABRIR_DETALLE, EVENT_COMPARACIONES_ABRIR_VISITAS } from '../config/events';
+import { EVENT_COMPARACIONES_ABRIR_DETALLE, EVENT_COMPARACIONES_ABRIR_TABLA, EVENT_COMPARACIONES_ABRIR_VISITAS } from '../config/events';
 import { useComparaciones } from '../hooks/useComparaciones';
 
 const COMPARACION_MODAL_ETIQUETAS_VACIAS = [];
@@ -269,6 +269,54 @@ function ComparacionTopNombresModal({
   );
 }
 
+function ComparacionTablaModal({
+  visible,
+  onClose,
+  etiquetaPeriodoA,
+  etiquetaPeriodoB,
+  indicadores
+}) {
+  return (
+    <ComparacionModalBase
+      visible={visible}
+      onClose={onClose}
+      titulo="Tabla comparativa"
+      etiquetas={[etiquetaPeriodoA, etiquetaPeriodoB]}
+    >
+      <div className="table-responsive comparacion-table-scroll-x">
+        <div className="comparacion-table-scroll-y comparacion-table-scroll-y-expanded">
+          <table className="table table-hover align-middle mb-0 comparacion-tabla comparacion-indicadores-tabla">
+            <thead>
+              <tr>
+                <th>Indicador</th>
+                <th className="text-end">{etiquetaPeriodoA}</th>
+                <th className="text-end">{etiquetaPeriodoB}</th>
+                <th className="text-end">Diferencia</th>
+                <th className="text-end">Variación</th>
+              </tr>
+            </thead>
+            <tbody>
+              {indicadores.map((item) => (
+                <tr key={`modal-${item.id}`}>
+                  <td className="fw-semibold">{item.etiqueta}</td>
+                  <td className="text-end">{formatearValor(item.valorA, item.unidad)}</td>
+                  <td className="text-end">{formatearValor(item.valorB, item.unidad)}</td>
+                  <td className={`text-end fw-semibold ${obtenerClaseCambio(item.diferencia)}`}>
+                    {formatearDiferencia(item.diferencia, item.unidad)}
+                  </td>
+                  <td className={`text-end fw-semibold ${obtenerClaseCambio(item.variacion || 0)}`}>
+                    {formatearVariacion(item.variacion)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ComparacionModalBase>
+  );
+}
+
 export default function ComparacionesPage() {
   const {
     cultos,
@@ -285,6 +333,7 @@ export default function ComparacionesPage() {
   } = useComparaciones();
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
   const [mostrarVisitas, setMostrarVisitas] = useState(false);
+  const [mostrarTabla, setMostrarTabla] = useState(false);
 
   const resumenComparacion = useMemo(() => {
     const base = `${etiquetaPeriodoA} vs ${etiquetaPeriodoB}`;
@@ -293,13 +342,16 @@ export default function ComparacionesPage() {
 
   useEffect(() => {
     const manejarAbrirDetalle = () => setMostrarDetalle(true);
+    const manejarAbrirTabla = () => setMostrarTabla(true);
     const manejarAbrirVisitas = () => setMostrarVisitas(true);
 
     window.addEventListener(EVENT_COMPARACIONES_ABRIR_DETALLE, manejarAbrirDetalle);
+    window.addEventListener(EVENT_COMPARACIONES_ABRIR_TABLA, manejarAbrirTabla);
     window.addEventListener(EVENT_COMPARACIONES_ABRIR_VISITAS, manejarAbrirVisitas);
 
     return () => {
       window.removeEventListener(EVENT_COMPARACIONES_ABRIR_DETALLE, manejarAbrirDetalle);
+      window.removeEventListener(EVENT_COMPARACIONES_ABRIR_TABLA, manejarAbrirTabla);
       window.removeEventListener(EVENT_COMPARACIONES_ABRIR_VISITAS, manejarAbrirVisitas);
     };
   }, []);
@@ -451,6 +503,14 @@ export default function ComparacionesPage() {
             etiquetaPeriodoB={etiquetaPeriodoB}
             cultoSeleccionado={cultoSeleccionado}
             topNombresComparados={topNombresComparados}
+          />
+
+          <ComparacionTablaModal
+            visible={mostrarTabla}
+            onClose={() => setMostrarTabla(false)}
+            etiquetaPeriodoA={etiquetaPeriodoA}
+            etiquetaPeriodoB={etiquetaPeriodoB}
+            indicadores={indicadores}
           />
         </>
       )}

@@ -249,3 +249,7 @@ Rutas activas:
   - `Estadísticas` y `Comparaciones` adoptan el mismo patrón operativo de tablas de `Administrador` (`table-responsive` externo + wrapper vertical interno + `width: max-content` en móvil + header sticky),
   - los modales de `Comparaciones` fijan el botón de cierre en la esquina superior derecha con tamaño compacto para teléfono,
   - la corrección anterior evita perder el scroll horizontal real en teléfono mientras se conserva el scroll vertical y el header fijo.
+- Ajuste final en analíticos y layout compartido:
+  - `Estadísticas` y `Comparaciones` agregan un icono contextual en topbar móvil para abrir la tabla principal completa en modal,
+  - la tabla principal se mantiene en pantalla, pero el modal da una segunda vía con más altura útil cuando el teléfono la deja demasiado baja,
+  - `Cerrar sesión` vuelve a mostrarse en el sidebar solo para escritorio; en móvil se mantiene únicamente en la esquina superior derecha.

@@ -163,3 +163,5 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mÃ³
 - Si una tabla analítica necesita scroll en ambos ejes, reutilizar el mismo patrón visual/estructural de `Administrador`; no improvisar otra variante porque rompe el gesto horizontal en teléfono.
 - En ese patrón, el wrapper horizontal debe verse serio y estable, mientras el contenido vertical vive dentro; el usuario no debe sentir que está arrastrando la tabla completa como una tarjeta suelta.
 - Los cierres de modales compactos deben vivir en la esquina superior derecha del modal, alineados con el borde y sin consumir una columna extra del header.
+- Cuando una tabla central de un módulo analítico queda demasiado baja en teléfono, es válido sumar una acción en topbar para verla completa en modal; eso libera altura sin sacrificar acceso inmediato.
+- Las acciones duplicadas solo deben existir si resuelven contextos distintos: por ejemplo, `Cerrar sesión` puede reaparecer en escritorio si ahí ayuda, pero no debe volver a cargar el diseño móvil si ya está mejor resuelto arriba.

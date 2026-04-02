@@ -2023,6 +2023,10 @@ a:hover {
   overscroll-behavior-y: contain;
 }
 
+.estad-metricas-table-wrap-expanded {
+  max-height: min(72vh, 620px);
+}
+
 .estad-metricas-table thead th {
   position: sticky;
   top: 0;
@@ -2079,6 +2083,10 @@ a:hover {
   overflow: hidden;
 }
 
+.estad-modal-iasd-wide {
+  width: min(1180px, 100%);
+}
+
 .estad-modal-head {
   display: flex;
   align-items: flex-start;
@@ -2091,6 +2099,8 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  min-width: 0;
+  padding-right: 2.8rem;
 }
 
 .estad-modal-head-tags {
@@ -2115,6 +2125,21 @@ a:hover {
   overflow-x: hidden;
   padding-right: 0.15rem;
   overscroll-behavior: contain;
+}
+
+.estad-modal-close {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border-radius: 999px;
+  z-index: 3;
 }
 
 .estad-visitas-resumen {
@@ -2270,6 +2295,10 @@ a:hover {
   border-radius: 0.85rem;
   background: #ffffff;
   overscroll-behavior-y: contain;
+}
+
+.comparacion-table-scroll-y-expanded {
+  max-height: min(72vh, 620px);
 }
 
 .comparacion-tabla {
@@ -2428,6 +2457,7 @@ a:hover {
     min-width: 44rem;
   }
 
+  .estad-modal-close,
   .comparacion-modal-close {
     top: 0;
     right: 0;
