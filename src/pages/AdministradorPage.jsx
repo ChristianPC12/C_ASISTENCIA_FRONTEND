@@ -144,10 +144,10 @@ function BotonCerrarPanel({ onClick, label }) {
   return (
     <button
       type="button"
-      className="btn btn-outline-light btn-sm admin-panel-close"
+      className="btn btn-outline-light btn-sm iasd-icon-btn-round admin-panel-close"
       onClick={onClick}
       aria-label={label}
-      title="Cerrar"
+      title={label}
     >
       <i className="bi bi-x-lg" aria-hidden="true"></i>
     </button>

@@ -543,3 +543,7 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] Si una tabla principal sigue viéndose demasiado baja en teléfono, ofrecer una acción contextual en topbar para abrirla completa en modal antes de seguir apretando alturas que ya son razonables.
 - [ ] Si se restaura una acción duplicada como `Cerrar sesión`, hacerlo solo donde realmente aporta: escritorio sí, móvil no, si en móvil ya existe una ubicación mejor resuelta.
 - [ ] Si una tabla principal pasa a mostrarse solo por botón/modal, ocultarla realmente de la vista nativa; no dejar la tabla renderizada y el botón al mismo tiempo porque se duplica el propósito.
+- [ ] Los botones icon-only de modales y topbars móviles deben compartir la misma forma base (`round`) y el mismo tamaño visual; no mezclar unos cuadrados y otros redondos en módulos vecinos.
+- [ ] Si dos modales hermanos usan el mismo patrón de cierre, el botón `X` debe anclarse al mismo contenedor relativo para que quede en la misma posición visual.
+- [ ] Los botones de cerrar panel en módulos administrativos también deben reutilizar la misma clase/base de icon-only redonda; no dejarlos con estilo aparte aunque hagan la misma acción que otras `X` del sistema.
+- [ ] En headers de modales con chips/contexto y una `X` absoluta, el bloque principal debe reservar ancho real (`flex:1` + `max-width`) para que el contenido no se monte con la acción de cierre ni con el body que viene debajo.

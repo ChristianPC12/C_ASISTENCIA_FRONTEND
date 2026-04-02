@@ -181,7 +181,7 @@ function ComparacionModalBase({ visible, onClose, titulo, etiquetas = COMPARACIO
           </div>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm comparacion-modal-close"
+            className="btn btn-outline-secondary btn-sm iasd-icon-btn-round comparacion-modal-close"
             onClick={onClose}
             aria-label={`Cerrar ${titulo.toLowerCase()}`}
           >

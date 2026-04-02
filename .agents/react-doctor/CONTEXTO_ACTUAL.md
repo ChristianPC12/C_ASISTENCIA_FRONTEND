@@ -257,3 +257,12 @@ Rutas activas:
   - las tablas principales de `Estadísticas` y `Comparaciones` quedan ocultas en la vista nativa,
   - el acceso pasa exclusivamente por botón/modal (toolbar en escritorio, topbar contextual en móvil),
   - así se libera altura real en pantalla sin perder acceso a la información.
+- Ajuste final de consistencia visual:
+  - `Estadísticas`, `Comparaciones` y `PromptModal` comparten ahora el mismo patrón de botón icon-only redondo,
+  - la `X` de modales hermanos se ancla al mismo contenedor relativo para conservar simetría visual,
+  - en móvil, los botones icon-only de topbar también fuerzan geometría redonda.
+- Ajuste de consistencia pendiente resuelto:
+  - los cierres de `Cultos`, `Procedencias`, `Métricas`, `Información` y `Usuarios` en `Administrador` reutilizan la misma base icon-only redonda que los demás modales/botones móviles.
+- Ajuste fino adicional en modales analíticos:
+  - el header de `Detalle estadístico` ahora reserva ancho real para título/chips (`flex:1` + `max-width`) y añade respiro antes del body,
+  - con eso los chips como `Culto Sábado` ya no se montan con el contenido del modal.

@@ -485,7 +485,7 @@ function EstadisticasDetalleModal({
           </div>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm estad-modal-close"
+            className="btn btn-outline-secondary btn-sm iasd-icon-btn-round estad-modal-close"
             onClick={onClose}
             aria-label="Cerrar detalle estadístico"
           >
@@ -613,7 +613,7 @@ function EstadisticasTablaModal({
           </div>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm estad-modal-close"
+            className="btn btn-outline-secondary btn-sm iasd-icon-btn-round estad-modal-close"
             onClick={onClose}
             aria-label="Cerrar tabla de estadísticas"
           >

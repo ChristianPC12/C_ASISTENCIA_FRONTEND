@@ -166,3 +166,7 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mÃ³
 - Cuando una tabla central de un módulo analítico queda demasiado baja en teléfono, es válido sumar una acción en topbar para verla completa en modal; eso libera altura sin sacrificar acceso inmediato.
 - Las acciones duplicadas solo deben existir si resuelven contextos distintos: por ejemplo, `Cerrar sesión` puede reaparecer en escritorio si ahí ayuda, pero no debe volver a cargar el diseño móvil si ya está mejor resuelto arriba.
 - Si una tabla ya se resolvió mejor dentro de un modal, la pantalla base debe confiar en esa decisión y liberar altura; no dejar la misma tabla visible debajo por inercia.
+- En móvil, si un botón queda solo con icono, la forma preferida es redonda; reservar pills rectangulares para cuando todavía viven con texto visible.
+- Los cierres de modales hermanos deben verse simétricos entre sí; no basta con que “no estén pegados”, deben compartir referencia visual y anclaje.
+- Si un panel administrativo usa botón `X` en header, debe compartir exactamente la misma geometría icon-only del resto del sistema, especialmente en teléfono.
+- Si un modal muestra chips de contexto bajo el título, no basta con empujar la `X`; el bloque del título/chips debe reservarse su propio ancho para que el contenido respire y no se vea montado.

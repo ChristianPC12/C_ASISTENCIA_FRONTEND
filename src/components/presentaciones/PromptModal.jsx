@@ -40,7 +40,7 @@ export default function PromptModal({
           </div>
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-outline-secondary iasd-icon-btn-round"
             onClick={onClose}
             disabled={enviando}
             aria-label="Cerrar modal"

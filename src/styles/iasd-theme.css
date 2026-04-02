@@ -2088,25 +2088,30 @@ a:hover {
 }
 
 .estad-modal-head {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+  padding-right: 0;
+  min-height: 34px;
   margin-bottom: 0.9rem;
 }
 
 .estad-modal-head-main {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
   min-width: 0;
-  padding-right: 2.8rem;
+  max-width: calc(100% - 3rem);
 }
 
 .estad-modal-head-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  padding-right: 0.15rem;
 }
 
 .estad-modal-head-chip {
@@ -2123,22 +2128,27 @@ a:hover {
 .estad-modal-body {
   overflow-y: auto;
   overflow-x: hidden;
+  padding-top: 0.2rem;
   padding-right: 0.15rem;
   overscroll-behavior: contain;
 }
 
-.estad-modal-close {
-  position: absolute;
-  top: 0.15rem;
-  right: 0.15rem;
+.iasd-icon-btn-round {
   width: 34px;
   height: 34px;
+  min-width: 34px;
   padding: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
   border-radius: 999px;
+}
+
+.estad-modal-close {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
   z-index: 3;
 }
 
@@ -2355,28 +2365,10 @@ a:hover {
   padding-top: 0.35rem;
 }
 
-.comparacion-modal .estad-modal-head {
-  position: relative;
-  padding-right: 0;
-  min-height: 34px;
-}
-
-.comparacion-modal .estad-modal-head-main {
-  padding-right: 2.8rem;
-}
-
 .comparacion-modal-close {
   position: absolute;
   top: 0.15rem;
   right: 0.15rem;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  border-radius: 999px;
   z-index: 3;
 }
 
@@ -2457,12 +2449,14 @@ a:hover {
     min-width: 44rem;
   }
 
+  .iasd-icon-btn-round,
   .estad-modal-close,
   .comparacion-modal-close {
-    top: 0;
-    right: 0;
+    top: 0.2rem;
+    right: 0.2rem;
     width: 32px;
     height: 32px;
+    min-width: 32px;
   }
 }
 
@@ -3064,7 +3058,10 @@ a:hover {
   }
   .sidebar-topbar-metric-btn {
     width: 32px;
+    height: 32px;
+    min-width: 32px;
     padding: 0;
+    border-radius: 999px;
   }
 }
 
