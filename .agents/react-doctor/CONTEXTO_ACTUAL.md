@@ -234,3 +234,18 @@ Rutas activas:
   - los dos resúmenes generales se mueven a un modal `Detalles generales`,
   - `Top nombres de visitas` sale de la vista principal y vive en su propio modal con scroll fijo,
   - la tabla de indicadores comparados queda como foco principal, con altura fija, scroll interno y header sticky.
+- Ajustes finos posteriores:
+  - el header de la tabla principal en `Comparaciones` vuelve al azul institucional para mantener coherencia con las demás tablas,
+  - se elimina el botón duplicado de `Cerrar sesión` del footer del sidebar móvil porque la acción ya existe arriba a la derecha,
+  - el focus del login se limpia para no romper visualmente la tarjeta en teléfono.
+- Ajuste responsive adicional en `Comparaciones`:
+  - en móvil, los botones `Generales` y `Visitas` salen del cuerpo del módulo y suben al topbar, junto al logout, para liberar altura antes de la tabla principal.
+- Ajustes de interacción posteriores:
+  - `Comparaciones` ya escucha eventos del topbar móvil para abrir `Generales` y `Visitas`,
+  - `Estadísticas` separa scroll horizontal y vertical también en tabla principal y `Top nombres`,
+  - el body del modal analítico bloquea el eje X para evitar el efecto de arrastre diagonal,
+  - en `Presentaciones`, una fila ya seleccionada del historial deja de comportarse como botón disponible.
+- Ajuste fino posterior de tablas analíticas:
+  - `Estadísticas` y `Comparaciones` adoptan el mismo patrón operativo de tablas de `Administrador` (`table-responsive` externo + wrapper vertical interno + `width: max-content` en móvil + header sticky),
+  - los modales de `Comparaciones` fijan el botón de cierre en la esquina superior derecha con tamaño compacto para teléfono,
+  - la corrección anterior evita perder el scroll horizontal real en teléfono mientras se conserva el scroll vertical y el header fijo.

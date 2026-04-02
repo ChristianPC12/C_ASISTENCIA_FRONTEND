@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import asistenciaApi from '../api/asistenciaApi';
 import cultoApi from '../api/cultoApi';
 import { ANIO_ACTUAL, ANIO_OPCIONES, TRIMESTRE_OPCIONES, MES_OPCIONES } from '../config/constants';
@@ -50,8 +50,8 @@ const ESTADISTICAS_VACIAS = {
 function formatearNombreCulto(nombre = '', codigo = '') {
   const valor = nombre || codigo || '';
   return valor
-    .replace(/Sabado/gi, 'Sabado')
-    .replace(/Miercoles/gi, 'Miercoles');
+    .replace(/Sábado/gi, 'Sábado')
+    .replace(/Miércoles/gi, 'Miércoles');
 }
 
 function formatearPorcentaje(valor) {
@@ -282,14 +282,14 @@ function EstadisticasComparativasRow({ estadisticas }) {
     <div className="row g-3 mb-4">
       <div className="col-12 col-lg-4">
         <CardComparativa
-          titulo="Composicion de asistentes"
+          titulo="Composición de asistentes"
           izquierda={{
-            etiqueta: 'Ninos',
+            etiqueta: 'Niños',
             cantidad: estadisticas.composicion_asistentes.ninos.cantidad,
             porcentaje: estadisticas.composicion_asistentes.ninos.porcentaje
           }}
           derecha={{
-            etiqueta: 'Jovenes',
+            etiqueta: 'Jóvenes',
             cantidad: estadisticas.composicion_asistentes.jovenes.cantidad,
             porcentaje: estadisticas.composicion_asistentes.jovenes.porcentaje
           }}
@@ -341,7 +341,7 @@ function EstadisticasSerieCard({ serieAsistencia, maxSerie }) {
       <div className="card-body d-flex flex-column">
         <h6 className="estad-card-titulo">Tendencia por fecha (asistentes)</h6>
         {serieAsistencia.length === 0 && (
-          <p className="text-muted mb-0">Sin datos para el periodo seleccionado.</p>
+          <p className="text-muted mb-0">Sin datos para el período seleccionado.</p>
         )}
         {serieAsistencia.length > 0 && (
           <div className="estad-serie-scroll mt-auto">
@@ -373,7 +373,7 @@ function EstadisticasVisitasCard({ visitas }) {
   return (
     <div className="card shadow-sm h-100">
       <div className="card-body">
-        <h6 className="estad-card-titulo">Visitas del periodo</h6>
+        <h6 className="estad-card-titulo">Visitas del período</h6>
         <div className="estad-visitas-resumen mb-3">
           <div className="estad-visitas-chip">
             <span className="estad-visitas-chip-label">Total</span>
@@ -393,13 +393,13 @@ function EstadisticasVisitasCard({ visitas }) {
           </div>
         </div>
 
-        <h6 className="estad-card-titulo mb-2">Top de nombres mas repetidos</h6>
+        <h6 className="estad-card-titulo mb-2">Top de nombres más repetidos</h6>
         {visitas.top_nombres.length === 0 && (
-          <p className="text-muted mb-0">No hay nombres de visitas en este periodo.</p>
+          <p className="text-muted mb-0">No hay nombres de visitas en este período.</p>
         )}
         {visitas.top_nombres.length > 0 && (
-          <div className="estad-visitas-table-wrap">
-            <div className="table-responsive">
+          <div className="table-responsive estad-visitas-table-scroll-x">
+            <div className="estad-visitas-table-wrap">
               <table className="table table-sm align-middle mb-0 estad-visitas-table">
                 <thead>
                   <tr>
@@ -563,31 +563,33 @@ function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMet
           </div>
         )}
         {metricasDinamicas.length > 0 && (
-          <div className="estad-metricas-table-wrap">
-            <table className="table table-sm align-middle mb-0 estad-metricas-table">
-              <thead>
-                <tr>
-                  <th>Métrica</th>
-                  <th className="text-end">Suma</th>
-                  <th className="text-end">Promedio</th>
-                  <th className="text-end">Máximo</th>
-                  <th className="text-end">Mínimo</th>
-                  <th className="text-end">Registros</th>
-                </tr>
-              </thead>
-              <tbody>
-                {metricasDinamicas.map((item) => (
-                  <tr key={item.clave}>
-                    <td className="fw-semibold">{mapaEtiquetasMetricas[item.clave] || item.clave}</td>
-                    <td className="text-end">{Number(item.suma || 0).toLocaleString('es-CR')}</td>
-                    <td className="text-end">{Number(item.promedio || 0).toLocaleString('es-CR')}</td>
-                    <td className="text-end">{Number(item.maximo || 0).toLocaleString('es-CR')}</td>
-                    <td className="text-end">{Number(item.minimo || 0).toLocaleString('es-CR')}</td>
-                    <td className="text-end">{Number(item.registros || 0).toLocaleString('es-CR')}</td>
+          <div className="table-responsive estad-metricas-table-scroll-x">
+            <div className="estad-metricas-table-wrap">
+              <table className="table table-sm align-middle mb-0 estad-metricas-table">
+                <thead>
+                  <tr>
+                    <th>Métrica</th>
+                    <th className="text-end">Suma</th>
+                    <th className="text-end">Promedio</th>
+                    <th className="text-end">Máximo</th>
+                    <th className="text-end">Mínimo</th>
+                    <th className="text-end">Registros</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {metricasDinamicas.map((item) => (
+                    <tr key={item.clave}>
+                      <td className="fw-semibold">{mapaEtiquetasMetricas[item.clave] || item.clave}</td>
+                      <td className="text-end">{Number(item.suma || 0).toLocaleString('es-CR')}</td>
+                      <td className="text-end">{Number(item.promedio || 0).toLocaleString('es-CR')}</td>
+                      <td className="text-end">{Number(item.maximo || 0).toLocaleString('es-CR')}</td>
+                      <td className="text-end">{Number(item.minimo || 0).toLocaleString('es-CR')}</td>
+                      <td className="text-end">{Number(item.registros || 0).toLocaleString('es-CR')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
@@ -649,7 +651,7 @@ export default function EstadisticasPage() {
       }
     } catch (error) {
       setEstadisticas(ESTADISTICAS_VACIAS);
-      notificarError(error?.mensaje || 'No se pudieron cargar las estadisticas.');
+      notificarError(error?.mensaje || 'No se pudieron cargar las estadísticas.');
     } finally {
       setCargando(false);
     }
@@ -740,3 +742,6 @@ export default function EstadisticasPage() {
     </div>
   );
 }
+
+
+

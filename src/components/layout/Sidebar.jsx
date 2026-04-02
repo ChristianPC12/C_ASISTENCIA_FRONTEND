@@ -10,6 +10,8 @@ import {
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
   EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA,
+  EVENT_COMPARACIONES_ABRIR_DETALLE,
+  EVENT_COMPARACIONES_ABRIR_VISITAS,
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
@@ -47,6 +49,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
+  const enPantallaComparaciones = esRutaActiva('/comparaciones');
   const tenantSesion = tenant || usuario?.tenant || {};
   const campoSesion = String(
     tenantSesion?.campo_nombre || tenantSesion?.campo || usuario?.campo_nombre || usuario?.campo || ''
@@ -106,6 +109,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirPanelUsuarios = () => {
     window.dispatchEvent(new CustomEvent(EVENT_ADMIN_ABRIR_USUARIOS));
+  };
+
+  const abrirDetalleComparaciones = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_COMPARACIONES_ABRIR_DETALLE));
+  };
+
+  const abrirVisitasComparaciones = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_COMPARACIONES_ABRIR_VISITAS));
   };
 
   let enlaces = [];
@@ -186,7 +197,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           ))}
         </nav>
 
-        {/* Info del usuario y logout al fondo */}
+        {/* Info del usuario al fondo */}
         <div className="sidebar-footer">
           <div className="sidebar-usuario-info sidebar-usuario-info-mobile">
             <span className="sidebar-usuario-nombre">{usuario?.nombre_completo}</span>
@@ -199,12 +210,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               </div>
             )}
           </div>
-          <button
-            className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn"
-            onClick={onCerrarSesion}
-          >
-            Cerrar sesión
-          </button>
         </div>
       </aside>
 
@@ -316,6 +321,30 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 >
                   <i className="bi bi-person-gear" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Usuarios</span>
+                </button>
+              </>
+            )}
+            {enPantallaComparaciones && (
+              <>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn d-md-none"
+                  onClick={abrirDetalleComparaciones}
+                  aria-label="Ver detalles generales"
+                  title="Ver detalles generales"
+                >
+                  <i className="bi bi-grid-1x2" aria-hidden="true"></i>
+                  <span className="visually-hidden">Ver detalles generales</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn d-md-none"
+                  onClick={abrirVisitasComparaciones}
+                  aria-label="Ver top nombres de visitas"
+                  title="Ver top nombres de visitas"
+                >
+                  <i className="bi bi-people" aria-hidden="true"></i>
+                  <span className="visually-hidden">Ver top nombres de visitas</span>
                 </button>
               </>
             )}

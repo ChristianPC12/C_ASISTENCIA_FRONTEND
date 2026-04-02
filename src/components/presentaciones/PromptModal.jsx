@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect } from 'react';
 import { ANIO_OPCIONES, MES_OPCIONES } from '../../config/constants';
 
 export default function PromptModal({
@@ -6,6 +6,7 @@ export default function PromptModal({
   enviando,
   filtros,
   cultos,
+  mesesBloqueados,
   onClose,
   onCambiarFiltro,
   onEnviar
@@ -34,8 +35,8 @@ export default function PromptModal({
       <div className="prompt-modal-iasd">
         <div className="d-flex justify-content-between align-items-start mb-3">
           <div>
-            <h5 id="prompt-modal-title" className="mb-1">Generar Presentacion</h5>
-            <p className="text-muted mb-0">Seleccione periodo y culto para generar la presentacion mensual.</p>
+            <h5 id="prompt-modal-title" className="mb-1">Generar presentación</h5>
+            <p className="text-muted mb-0">Seleccione período y culto para generar la presentación mensual.</p>
           </div>
           <button
             type="button"
@@ -93,13 +94,23 @@ export default function PromptModal({
             >
               <option value="">Seleccione</option>
               {MES_OPCIONES.map((mes) => (
-                <option key={mes.valor} value={mes.valor}>
+                <option
+                  key={mes.valor}
+                  value={mes.valor}
+                  disabled={mesesBloqueados?.has?.(String(mes.valor))}
+                >
                   {mes.etiqueta}
                 </option>
               ))}
             </select>
           </div>
         </div>
+
+        {mesesBloqueados?.size > 0 && (
+          <div className="alert alert-warning py-2 px-3 mb-3">
+            Algunos meses ya tienen presentación para esta combinación y quedan bloqueados.
+          </div>
+        )}
 
         <div className="d-flex justify-content-end gap-2">
           <button type="button" className="btn btn-outline-secondary" onClick={onClose} disabled={enviando}>
@@ -118,3 +129,4 @@ export default function PromptModal({
     </div>
   );
 }
+

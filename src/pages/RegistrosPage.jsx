@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AsistenciaTable from '../components/asistencia/AsistenciaTable';
 import PromptModal from '../components/presentaciones/PromptModal';
 import { useAsistencia } from '../hooks/useAsistencia';
@@ -25,6 +25,7 @@ export default function RegistrosPage() {
   } = useAsistencia();
   const [modalPromptVisible, setModalPromptVisible] = useState(false);
   const [enviandoPrompt, setEnviandoPrompt] = useState(false);
+  const [presentacionesExistentes, setPresentacionesExistentes] = useState([]);
   const [filtrosPrompt, setFiltrosPrompt] = useState({
     culto: '',
     anio: String(ANIO_ACTUAL),
@@ -52,9 +53,99 @@ export default function RegistrosPage() {
     setFiltrosPrompt((prev) => ({ ...prev, [campo]: valor }));
   };
 
+  useEffect(() => {
+    if (!modalPromptVisible || !filtrosPrompt.anio) {
+      return;
+    }
+
+    let cancelado = false;
+
+    const cargarPresentacionesExistentes = async () => {
+      try {
+        const params = {
+          anio: Number(filtrosPrompt.anio),
+          limit: 200
+        };
+
+        const res = await presentacionApi.listar(params);
+        if (cancelado) return;
+
+        if (res?.exito) {
+          const items = res?.datos?.items || [];
+          setPresentacionesExistentes(items);
+          return;
+        }
+
+        setPresentacionesExistentes([]);
+      } catch {
+        if (!cancelado) {
+          setPresentacionesExistentes([]);
+        }
+      }
+    };
+
+    cargarPresentacionesExistentes();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [modalPromptVisible, filtrosPrompt.anio]);
+
+  const mesEstaBloqueado = (mes) => {
+    const mesNumero = Number(mes || 0);
+    const cultoSeleccionado = String(filtrosPrompt.culto || '').trim();
+
+    return presentacionesExistentes.some((item) => {
+      const mismoAnio = Number(item?.anio || 0) === Number(filtrosPrompt.anio || 0);
+      const mismoMes = Number(item?.mes || 0) === mesNumero;
+      if (!mismoAnio || !mismoMes) return false;
+
+      const cultoExistente = String(item?.culto_codigo || '').trim();
+
+      if (!cultoSeleccionado) {
+        return true;
+      }
+
+      return cultoExistente === cultoSeleccionado || cultoExistente === '';
+    });
+  };
+
+  const mesesBloqueados = useMemo(() => {
+    return new Set(
+      presentacionesExistentes
+        .filter((item) => {
+          const mismoAnio = Number(item?.anio || 0) === Number(filtrosPrompt.anio || 0);
+          if (!mismoAnio) return false;
+
+          const cultoSeleccionado = String(filtrosPrompt.culto || '').trim();
+          const cultoExistente = String(item?.culto_codigo || '').trim();
+
+          if (!cultoSeleccionado) {
+            return true;
+          }
+
+          return cultoExistente === cultoSeleccionado || cultoExistente === '';
+        })
+        .map((item) => String(Number(item?.mes || 0)))
+        .filter(Boolean)
+    );
+  }, [filtrosPrompt.anio, filtrosPrompt.culto, presentacionesExistentes]);
+
+  useEffect(() => {
+    if (!filtrosPrompt.mes) return;
+    if (!mesesBloqueados.has(String(filtrosPrompt.mes))) return;
+
+    setFiltrosPrompt((prev) => ({ ...prev, mes: '' }));
+  }, [filtrosPrompt.mes, mesesBloqueados]);
+
   const generarPresentacion = async () => {
     if (!filtrosPrompt.anio || !filtrosPrompt.mes) {
       notificarError('Debe seleccionar anio y mes para generar la presentacion.');
+      return;
+    }
+
+    if (mesEstaBloqueado(filtrosPrompt.mes)) {
+      notificarError('Ya existe una presentación para ese período con el culto seleccionado.');
       return;
     }
 
@@ -115,6 +206,7 @@ export default function RegistrosPage() {
         enviando={enviandoPrompt}
         filtros={filtrosPrompt}
         cultos={cultos}
+        mesesBloqueados={mesesBloqueados}
         onClose={() => !enviandoPrompt && setModalPromptVisible(false)}
         onCambiarFiltro={cambiarFiltroPrompt}
         onEnviar={generarPresentacion}

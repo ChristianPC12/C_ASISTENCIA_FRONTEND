@@ -157,3 +157,9 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
 - En toolbars compactas de módulos analíticos, un botón auxiliar como `Detalle` no debe ocupar una fila completa en móvil; compartir línea con el resumen corto es mejor uso del espacio.
 - En chips/KPIs compactos, la tipografía debe respetar el contenedor: evitar `nowrap` y truncados rígidos cuando el mismo bloque puede resolverlo mejor con wrapping controlado.
 - En `Comparaciones`, mover `Detalles generales` y `Top nombres` a botones de toolbar + modal libera suficiente altura para que la tabla principal respire sin perder información.
+- En móvil, si esos botones auxiliares todavía consumen demasiada altura dentro del módulo, subirlos al topbar contextual junto a acciones globales es mejor que dejar una fila extra antes de la tabla principal.
+- Si una acción principal ya está bien resuelta en topbar, no repetirla abajo en sidebar móvil; duplicar controles solo recarga el layout.
+- En pantallas de login, el foco de inputs debe acompañar la tarjeta, no competir con ella; preferir borde limpio sobre glow/halo llamativo.
+- Si una tabla anal�tica necesita scroll en ambos ejes, reutilizar el mismo patr�n visual/estructural de `Administrador`; no improvisar otra variante porque rompe el gesto horizontal en tel�fono.
+- En ese patr�n, el wrapper horizontal debe verse serio y estable, mientras el contenido vertical vive dentro; el usuario no debe sentir que est� arrastrando la tabla completa como una tarjeta suelta.
+- Los cierres de modales compactos deben vivir en la esquina superior derecha del modal, alineados con el borde y sin consumir una columna extra del header.

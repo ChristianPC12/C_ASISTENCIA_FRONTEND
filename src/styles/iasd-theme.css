@@ -2000,11 +2000,27 @@ a:hover {
   white-space: nowrap;
 }
 
+.estad-metricas-table-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
+}
+
 .estad-metricas-table-wrap {
   max-height: clamp(240px, 40vh, 320px);
-  overflow: auto;
+  width: max-content;
+  min-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 0.75rem;
   border: 1px solid rgba(0, 51, 102, 0.1);
+  background: #ffffff;
+  overscroll-behavior-y: contain;
 }
 
 .estad-metricas-table thead th {
@@ -2017,7 +2033,19 @@ a:hover {
 }
 
 .estad-metricas-table {
+  width: 100%;
   min-width: 100%;
+  touch-action: auto;
+}
+
+.estad-metricas-table th:first-child,
+.estad-metricas-table td:first-child {
+  min-width: 220px;
+}
+
+.estad-metricas-table th:not(:first-child),
+.estad-metricas-table td:not(:first-child) {
+  min-width: 110px;
 }
 
 .estad-modal-overlay {
@@ -2083,8 +2111,10 @@ a:hover {
 }
 
 .estad-modal-body {
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 0.15rem;
+  overscroll-behavior: contain;
 }
 
 .estad-visitas-resumen {
@@ -2122,11 +2152,27 @@ a:hover {
   color: var(--iasd-texto-sec);
 }
 
+.estad-visitas-table-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
+}
+
 .estad-visitas-table-wrap {
   max-height: 10.5rem;
-  overflow: auto;
+  width: max-content;
+  min-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid rgba(0, 51, 102, 0.1);
   border-radius: 0.75rem;
+  background: #ffffff;
+  overscroll-behavior-y: contain;
 }
 
 .estad-visitas-table thead th {
@@ -2204,24 +2250,36 @@ a:hover {
 }
 
 .comparacion-table-scroll-x {
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
 }
 
 .comparacion-table-scroll-y {
   max-height: clamp(260px, 50vh, 420px);
+  width: max-content;
+  min-width: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid rgba(0, 51, 102, 0.1);
   border-radius: 0.85rem;
+  background: #ffffff;
+  overscroll-behavior-y: contain;
 }
 
 .comparacion-tabla {
+  width: 100%;
   min-width: 100%;
 }
 
 .comparacion-tabla thead th {
-  background-color: #4f5d75;
-  border-color: #3f4a5f;
+  background-color: var(--iasd-azul);
+  border-color: rgba(0, 34, 68, 0.95);
   color: #ffffff;
   position: sticky;
   top: 0;
@@ -2268,6 +2326,31 @@ a:hover {
   padding-top: 0.35rem;
 }
 
+.comparacion-modal .estad-modal-head {
+  position: relative;
+  padding-right: 0;
+  min-height: 34px;
+}
+
+.comparacion-modal .estad-modal-head-main {
+  padding-right: 2.8rem;
+}
+
+.comparacion-modal-close {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border-radius: 999px;
+  z-index: 3;
+}
+
 .comparacion-empty-state {
   padding: 1rem;
   border: 1px dashed rgba(0, 51, 102, 0.18);
@@ -2294,7 +2377,7 @@ a:hover {
   }
 
   .comparacion-toolbar-actions {
-    justify-content: flex-end;
+    display: none;
   }
 
   .comparacion-toolbar-btn {
@@ -2316,7 +2399,7 @@ a:hover {
 
   .comparacion-indicadores-tabla {
     width: max-content;
-    min-width: 100%;
+    min-width: 39rem;
   }
 
   .comparacion-indicadores-tabla th:first-child,
@@ -2327,6 +2410,29 @@ a:hover {
   .comparacion-indicadores-tabla th:not(:first-child),
   .comparacion-indicadores-tabla td:not(:first-child) {
     min-width: 108px;
+  }
+
+  .comparacion-topnombres-tabla {
+    width: max-content;
+    min-width: 32rem;
+  }
+
+  .estad-visitas-table-wrap,
+  .estad-metricas-table-wrap,
+  .comparacion-table-scroll-y {
+    width: max-content;
+  }
+
+  .estad-metricas-table {
+    width: max-content;
+    min-width: 44rem;
+  }
+
+  .comparacion-modal-close {
+    top: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
   }
 }
 
@@ -2517,11 +2623,11 @@ a:hover {
 .login-field input:focus {
   border-color: var(--iasd-azul);
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.12);
+  box-shadow: none;
 }
 .login-field input.login-input-error { border-color: var(--iasd-peligro); }
 .login-field input.login-input-error:focus {
-  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+  box-shadow: none;
 }
 
 .login-error-text {
@@ -3192,6 +3298,11 @@ a:hover {
 
 .presentacion-item {
   border-left: 3px solid transparent;
+}
+
+.presentacion-item:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .presentacion-item-activo {

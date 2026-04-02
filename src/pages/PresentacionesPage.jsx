@@ -156,7 +156,12 @@ function PresentacionesHistorialCard({
                   key={item.id}
                   type="button"
                   className={`list-group-item list-group-item-action presentacion-item ${seleccionadaId === item.id ? 'presentacion-item-activo' : ''}`}
-                  onClick={() => setSeleccionadaId(item.id)}
+                  onClick={() => {
+                    if (seleccionadaId === item.id) return;
+                    setSeleccionadaId(item.id);
+                  }}
+                  disabled={seleccionadaId === item.id}
+                  aria-pressed={seleccionadaId === item.id}
                 >
                   <div className="d-flex justify-content-between align-items-start gap-2">
                     <div>

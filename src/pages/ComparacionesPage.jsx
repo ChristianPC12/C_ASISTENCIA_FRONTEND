@@ -1,5 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from 'react';
 import { ANIO_OPCIONES, MES_OPCIONES } from '../config/constants';
+import { EVENT_COMPARACIONES_ABRIR_DETALLE, EVENT_COMPARACIONES_ABRIR_VISITAS } from '../config/events';
 import { useComparaciones } from '../hooks/useComparaciones';
 
 const COMPARACION_MODAL_ETIQUETAS_VACIAS = [];
@@ -170,7 +171,7 @@ function ComparacionModalBase({ visible, onClose, titulo, etiquetas = COMPARACIO
           </div>
           <button
             type="button"
-            className="btn btn-outline-secondary btn-sm"
+            className="btn btn-outline-secondary btn-sm comparacion-modal-close"
             onClick={onClose}
             aria-label={`Cerrar ${titulo.toLowerCase()}`}
           >
@@ -237,7 +238,7 @@ function ComparacionTopNombresModal({
       )}
 
       {topNombresComparados.length > 0 && (
-        <div className="comparacion-table-scroll-x">
+        <div className="table-responsive comparacion-table-scroll-x">
           <div className="comparacion-table-scroll-y comparacion-topnombres-scroll">
             <table className="table table-sm align-middle mb-0 comparacion-tabla comparacion-topnombres-tabla">
               <thead>
@@ -289,6 +290,19 @@ export default function ComparacionesPage() {
     const base = `${etiquetaPeriodoA} vs ${etiquetaPeriodoB}`;
     return cultoSeleccionado ? `${base} para ${cultoSeleccionado}` : base;
   }, [cultoSeleccionado, etiquetaPeriodoA, etiquetaPeriodoB]);
+
+  useEffect(() => {
+    const manejarAbrirDetalle = () => setMostrarDetalle(true);
+    const manejarAbrirVisitas = () => setMostrarVisitas(true);
+
+    window.addEventListener(EVENT_COMPARACIONES_ABRIR_DETALLE, manejarAbrirDetalle);
+    window.addEventListener(EVENT_COMPARACIONES_ABRIR_VISITAS, manejarAbrirVisitas);
+
+    return () => {
+      window.removeEventListener(EVENT_COMPARACIONES_ABRIR_DETALLE, manejarAbrirDetalle);
+      window.removeEventListener(EVENT_COMPARACIONES_ABRIR_VISITAS, manejarAbrirVisitas);
+    };
+  }, []);
 
   return (
     <div className="container-fluid py-4">
@@ -387,7 +401,7 @@ export default function ComparacionesPage() {
         <>
           <div className="card shadow-sm mb-4 comparacion-indicadores-card">
             <div className="card-body p-0">
-              <div className="comparacion-table-scroll-x">
+              <div className="table-responsive comparacion-table-scroll-x">
                 <div className="comparacion-table-scroll-y">
                   <table className="table table-hover align-middle mb-0 comparacion-tabla comparacion-indicadores-tabla">
                     <thead>
@@ -443,4 +457,5 @@ export default function ComparacionesPage() {
     </div>
   );
 }
+
 

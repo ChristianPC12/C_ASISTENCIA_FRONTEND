@@ -533,3 +533,10 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] Si un resumen superior usa chips pequeños, revisar `font-size`, `line-height` y wrapping real sobre el teléfono más estrecho antes de darlo por terminado.
 - [ ] En `Comparaciones`, la vista principal debe priorizar filtros compactos, resumen breve del período y la tabla de indicadores; los resúmenes pesados y `Top nombres` deben vivir en modales separados.
 - [ ] Si una tabla comparativa es la pieza central del módulo, quitar headers redundantes del card y darle altura fija con sticky header antes de aceptar más scroll de página.
+- [ ] No duplicar una acción global si ya existe en una ubicación mejor resuelta; si `Cerrar sesión` ya vive en la esquina superior derecha, no repetirlo en el sidebar móvil sin una razón fuerte.
+- [ ] En login móvil, evitar focos visuales agresivos que rompan la composición de la tarjeta; el foco puede resolverse con borde limpio sin halo pesado.
+- [ ] En modales analíticos, el contenedor principal no debe quedar con `overflow:auto` en ambos ejes; usar `overflow-y:auto` y bloquear el eje X para evitar el efecto de arrastre diagonal.
+- [ ] Si un item de historial ya está activo/seleccionado, no volverlo a dejar pulsable como si fuera una acción nueva; evitar clicks redundantes también mejora la señal visual.
+- [ ] En tablas analíticas de móvil (`Estadísticas`, `Comparaciones`), copiar el patrón de `Administrador`: wrapper externo `table-responsive` para eje X, wrapper interno para eje Y y `thead` sticky.
+- [ ] En ese patrón móvil, el contenedor interno debe usar `width: max-content` y `min-width: 100%`; `fit-content` puede dejar la tabla “bien” visualmente pero cancelar el scroll horizontal real.
+- [ ] En modales analíticos, el botón de cerrar debe anclarse en la esquina superior derecha con tamaño compacto; no dejarlo ocupando espacio dentro del flujo normal del header.
