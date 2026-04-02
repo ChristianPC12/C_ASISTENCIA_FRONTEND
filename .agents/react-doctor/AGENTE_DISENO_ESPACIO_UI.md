@@ -170,3 +170,5 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mÃ³
 - Los cierres de modales hermanos deben verse simétricos entre sí; no basta con que “no estén pegados”, deben compartir referencia visual y anclaje.
 - Si un panel administrativo usa botón `X` en header, debe compartir exactamente la misma geometría icon-only del resto del sistema, especialmente en teléfono.
 - Si un modal muestra chips de contexto bajo el título, no basta con empujar la `X`; el bloque del título/chips debe reservarse su propio ancho para que el contenido respire y no se vea montado.
+- En desktop, no esconder tablas grandes si todavía caben bien y eran parte del flujo principal; reservar la estrategia de tabla-por-modal para móvil cuando el viewport realmente lo justifica.
+- La forma de botones icon-only también puede cambiar por breakpoint: desktop puede conservar geometría más cuadrada y móvil priorizar redondos para limpieza visual.

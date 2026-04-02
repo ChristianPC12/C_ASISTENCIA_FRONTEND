@@ -266,3 +266,8 @@ Rutas activas:
 - Ajuste fino adicional en modales analíticos:
   - el header de `Detalle estadístico` ahora reserva ancho real para título/chips (`flex:1` + `max-width`) y añade respiro antes del body,
   - con eso los chips como `Culto Sábado` ya no se montan con el contenido del modal.
+- Ajuste final por breakpoint:
+  - `Estadísticas` y `Comparaciones` vuelven a mostrar su tabla principal en escritorio,
+  - en móvil la tabla principal sigue oculta y se accede por modal/contextual,
+  - los botones icon-only recuperan forma cuadrada en desktop y permanecen redondos solo en celular,
+  - el scroll del body de modales analíticos vuelve a ser invisible.

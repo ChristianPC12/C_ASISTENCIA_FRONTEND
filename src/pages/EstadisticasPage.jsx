@@ -123,8 +123,7 @@ function EstadisticasFiltrosCard({
   onCambiarFiltro,
   resumenCondensado,
   resumenGeneral,
-  onAbrirDetalle,
-  onAbrirTabla
+  onAbrirDetalle
 }) {
   return (
     <div className="card shadow-sm mb-3 estad-filtros-card">
@@ -135,16 +134,6 @@ function EstadisticasFiltrosCard({
             <span>{resumenCondensado || 'Seleccione filtros para visualizar estadísticas.'}</span>
           </div>
           <div className="estad-toolbar-actions">
-            <button
-              type="button"
-              className="btn btn-outline-primary btn-sm estad-toolbar-btn d-none d-md-inline-flex"
-              onClick={onAbrirTabla}
-              title="Ver tabla de estadísticas"
-              aria-label="Ver tabla de estadísticas"
-            >
-              <i className="bi bi-table" aria-hidden="true"></i>
-              <span className="estad-toolbar-btn-label">Tabla</span>
-            </button>
             <button
               type="button"
               className="btn btn-outline-primary btn-sm estad-toolbar-btn"
@@ -801,7 +790,6 @@ export default function EstadisticasPage() {
         resumenCondensado={estadisticas.resumen_condensado}
         resumenGeneral={estadisticas.resumen_general}
         onAbrirDetalle={() => setDetalleVisible(true)}
-        onAbrirTabla={() => setTablaVisible(true)}
       />
 
       {cargando && (
@@ -814,6 +802,13 @@ export default function EstadisticasPage() {
 
       {!cargando && (
         <>
+          <div className="d-none d-md-block">
+            <EstadisticasMetricasDinamicasCard
+              metricasDinamicas={metricasDinamicas}
+              mapaEtiquetasMetricas={mapaEtiquetasMetricas}
+            />
+          </div>
+
           <EstadisticasDetalleModal
             visible={detalleVisible}
             onClose={() => setDetalleVisible(false)}

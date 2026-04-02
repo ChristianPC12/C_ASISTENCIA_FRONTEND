@@ -2131,6 +2131,13 @@ a:hover {
   padding-top: 0.2rem;
   padding-right: 0.15rem;
   overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.estad-modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .iasd-icon-btn-round {
@@ -2142,7 +2149,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   line-height: 1;
-  border-radius: 999px;
+  border-radius: 0.5rem;
 }
 
 .estad-modal-close {
@@ -3070,6 +3077,10 @@ a:hover {
    ============================================== */
 
 @media (max-width: 768px) {
+  .iasd-icon-btn-round {
+    border-radius: 999px;
+  }
+
   .seccion-form { padding: 1rem; }
   .btn          { padding: 0.6rem 1rem; font-size: 1rem; }
   .form-control,

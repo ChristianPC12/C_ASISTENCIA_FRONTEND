@@ -547,3 +547,5 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] Si dos modales hermanos usan el mismo patrón de cierre, el botón `X` debe anclarse al mismo contenedor relativo para que quede en la misma posición visual.
 - [ ] Los botones de cerrar panel en módulos administrativos también deben reutilizar la misma clase/base de icon-only redonda; no dejarlos con estilo aparte aunque hagan la misma acción que otras `X` del sistema.
 - [ ] En headers de modales con chips/contexto y una `X` absoluta, el bloque principal debe reservar ancho real (`flex:1` + `max-width`) para que el contenido no se monte con la acción de cierre ni con el body que viene debajo.
+- [ ] Si una vista cambia por breakpoint, documentar explícitamente el contrato: escritorio puede mantener tabla visible y botones cuadrados; móvil puede ocultar tabla y usar icon-only redondos. No mezclar ambos comportamientos en todos los tamaños.
+- [ ] Si un scroll interno ya funcionaba bien como invisible, conservar esa experiencia al refactorizar modales; no reintroducir barras visibles salvo que aporten claridad real.
