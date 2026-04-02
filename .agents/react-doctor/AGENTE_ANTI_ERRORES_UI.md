@@ -542,3 +542,4 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] En modales analíticos, el botón de cerrar debe anclarse en la esquina superior derecha con tamaño compacto; no dejarlo ocupando espacio dentro del flujo normal del header.
 - [ ] Si una tabla principal sigue viéndose demasiado baja en teléfono, ofrecer una acción contextual en topbar para abrirla completa en modal antes de seguir apretando alturas que ya son razonables.
 - [ ] Si se restaura una acción duplicada como `Cerrar sesión`, hacerlo solo donde realmente aporta: escritorio sí, móvil no, si en móvil ya existe una ubicación mejor resuelta.
+- [ ] Si una tabla principal pasa a mostrarse solo por botón/modal, ocultarla realmente de la vista nativa; no dejar la tabla renderizada y el botón al mismo tiempo porque se duplica el propósito.

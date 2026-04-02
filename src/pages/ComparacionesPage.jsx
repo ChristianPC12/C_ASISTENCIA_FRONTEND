@@ -92,7 +92,7 @@ function ResumenPeriodo({ titulo, estadisticas }) {
   );
 }
 
-function ComparacionToolbar({ resumen, onAbrirDetalle, onAbrirVisitas }) {
+function ComparacionToolbar({ resumen, onAbrirDetalle, onAbrirTabla, onAbrirVisitas }) {
   return (
     <div className="comparacion-toolbar mb-3">
       <div className="comparacion-toolbar-note" title={resumen}>
@@ -100,6 +100,16 @@ function ComparacionToolbar({ resumen, onAbrirDetalle, onAbrirVisitas }) {
         <span>{resumen}</span>
       </div>
       <div className="comparacion-toolbar-actions">
+        <button
+          type="button"
+          className="btn btn-outline-primary btn-sm comparacion-toolbar-btn"
+          onClick={onAbrirTabla}
+          title="Ver tabla comparativa"
+          aria-label="Ver tabla comparativa"
+        >
+          <i className="bi bi-table" aria-hidden="true"></i>
+          <span className="comparacion-toolbar-btn-label">Tabla</span>
+        </button>
         <button
           type="button"
           className="btn btn-outline-primary btn-sm comparacion-toolbar-btn"
@@ -363,6 +373,7 @@ export default function ComparacionesPage() {
           <ComparacionToolbar
             resumen={resumenComparacion}
             onAbrirDetalle={() => setMostrarDetalle(true)}
+            onAbrirTabla={() => setMostrarTabla(true)}
             onAbrirVisitas={() => setMostrarVisitas(true)}
           />
 
@@ -451,41 +462,6 @@ export default function ComparacionesPage() {
 
       {!cargando && (
         <>
-          <div className="card shadow-sm mb-4 comparacion-indicadores-card">
-            <div className="card-body p-0">
-              <div className="table-responsive comparacion-table-scroll-x">
-                <div className="comparacion-table-scroll-y">
-                  <table className="table table-hover align-middle mb-0 comparacion-tabla comparacion-indicadores-tabla">
-                    <thead>
-                      <tr>
-                        <th>Indicador</th>
-                        <th className="text-end">{etiquetaPeriodoA}</th>
-                        <th className="text-end">{etiquetaPeriodoB}</th>
-                        <th className="text-end">Diferencia</th>
-                        <th className="text-end">Variación</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {indicadores.map((item) => (
-                        <tr key={item.id}>
-                          <td className="fw-semibold">{item.etiqueta}</td>
-                          <td className="text-end">{formatearValor(item.valorA, item.unidad)}</td>
-                          <td className="text-end">{formatearValor(item.valorB, item.unidad)}</td>
-                          <td className={`text-end fw-semibold ${obtenerClaseCambio(item.diferencia)}`}>
-                            {formatearDiferencia(item.diferencia, item.unidad)}
-                          </td>
-                          <td className={`text-end fw-semibold ${obtenerClaseCambio(item.variacion || 0)}`}>
-                            {formatearVariacion(item.variacion)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <ComparacionDetalleModal
             visible={mostrarDetalle}
             onClose={() => setMostrarDetalle(false)}

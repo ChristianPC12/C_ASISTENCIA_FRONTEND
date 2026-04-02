@@ -165,3 +165,4 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mÃ³
 - Los cierres de modales compactos deben vivir en la esquina superior derecha del modal, alineados con el borde y sin consumir una columna extra del header.
 - Cuando una tabla central de un módulo analítico queda demasiado baja en teléfono, es válido sumar una acción en topbar para verla completa en modal; eso libera altura sin sacrificar acceso inmediato.
 - Las acciones duplicadas solo deben existir si resuelven contextos distintos: por ejemplo, `Cerrar sesión` puede reaparecer en escritorio si ahí ayuda, pero no debe volver a cargar el diseño móvil si ya está mejor resuelto arriba.
+- Si una tabla ya se resolvió mejor dentro de un modal, la pantalla base debe confiar en esa decisión y liberar altura; no dejar la misma tabla visible debajo por inercia.

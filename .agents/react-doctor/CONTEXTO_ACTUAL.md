@@ -253,3 +253,7 @@ Rutas activas:
   - `Estadísticas` y `Comparaciones` agregan un icono contextual en topbar móvil para abrir la tabla principal completa en modal,
   - la tabla principal se mantiene en pantalla, pero el modal da una segunda vía con más altura útil cuando el teléfono la deja demasiado baja,
   - `Cerrar sesión` vuelve a mostrarse en el sidebar solo para escritorio; en móvil se mantiene únicamente en la esquina superior derecha.
+- Ajuste final adicional:
+  - las tablas principales de `Estadísticas` y `Comparaciones` quedan ocultas en la vista nativa,
+  - el acceso pasa exclusivamente por botón/modal (toolbar en escritorio, topbar contextual en móvil),
+  - así se libera altura real en pantalla sin perder acceso a la información.
