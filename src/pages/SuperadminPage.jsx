@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+﻿import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useSuperadminOrganizaciones,
   TIPO_ORGANIZACION_OPCIONES,
@@ -6,10 +6,18 @@ import {
 } from '../hooks/useSuperadminOrganizaciones';
 import {
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
+  EVENT_SUPERADMIN_ABRIR_GESTION_CATALOGOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
-  EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
+  EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS,
+  EVENT_SUPERADMIN_ABRIR_SUPERADMINS,
+  EVENT_SUPERADMIN_VISTA_ACTIVA
 } from '../config/events';
 import { notificarError } from '../utils/notify';
+import { useSuperadminUsuarios } from '../hooks/useSuperadminUsuarios';
+import SearchInput from '../components/ui/SearchInput';
+
+const VISTA_SUPERADMIN_MOVIL_FORMULARIO = 'FORMULARIO';
+const VISTA_SUPERADMIN_MOVIL_LISTA = 'LISTA';
 
 function obtenerAnioRegistro(organizacion) {
   const raw = String(organizacion?.creado_en || '');
@@ -55,7 +63,132 @@ function generarNombreArchivoExportacion() {
   return `organizaciones_filtradas_${fecha}.xlsx`;
 }
 
+function normalizarBusquedaTexto(valor) {
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .trim();
+}
+
+function FiltrosOrganizacionesFields({
+  prefijo,
+  filtrosTabla,
+  cambiarFiltroTabla,
+  camposOpciones,
+  distritosOpciones,
+  opcionesAnioFiltro,
+  organizacionesTablaOpciones
+}) {
+  return (
+    <div className="row g-2 superadmin-organizaciones-filtros-grid">
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label htmlFor={`${prefijo}_filtro_campo_tabla`} className="form-label mb-1">Campo</label>
+        <select
+          id={`${prefijo}_filtro_campo_tabla`}
+          className="form-select form-select-sm"
+          value={filtrosTabla.campo}
+          onChange={(event) => cambiarFiltroTabla('campo', event.target.value)}
+        >
+          <option value="TODOS">Todos</option>
+          {camposOpciones.map((campo) => (
+            <option key={campo.valor} value={campo.valor}>
+              {campo.etiqueta}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label htmlFor={`${prefijo}_filtro_distrito_tabla`} className="form-label mb-1">Distrito</label>
+        <select
+          id={`${prefijo}_filtro_distrito_tabla`}
+          className="form-select form-select-sm"
+          value={filtrosTabla.distrito}
+          onChange={(event) => cambiarFiltroTabla('distrito', event.target.value)}
+        >
+          <option value="TODOS">Todos</option>
+          {distritosOpciones.map((distrito) => (
+            <option key={distrito.valor} value={distrito.valor}>
+              {distrito.etiqueta}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label htmlFor={`${prefijo}_filtro_tipo_tabla`} className="form-label mb-1">Tipo</label>
+        <select
+          id={`${prefijo}_filtro_tipo_tabla`}
+          className="form-select form-select-sm"
+          value={filtrosTabla.tipo}
+          onChange={(event) => cambiarFiltroTabla('tipo', event.target.value)}
+        >
+          <option value="TODOS">Todos</option>
+          {TIPO_ORGANIZACION_OPCIONES.map((tipo) => (
+            <option key={tipo.valor} value={tipo.valor}>
+              {tipo.etiqueta}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label htmlFor={`${prefijo}_filtro_anio_tabla`} className="form-label mb-1">Año</label>
+        <select
+          id={`${prefijo}_filtro_anio_tabla`}
+          className="form-select form-select-sm"
+          value={filtrosTabla.anio}
+          onChange={(event) => cambiarFiltroTabla('anio', event.target.value)}
+        >
+          <option value="TODOS">Todos</option>
+          {opcionesAnioFiltro.map((anio) => (
+            <option key={anio} value={String(anio)}>
+              {anio}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label htmlFor={`${prefijo}_filtro_estado_admin_tabla`} className="form-label mb-1">Estado ADMIN</label>
+        <select
+          id={`${prefijo}_filtro_estado_admin_tabla`}
+          className="form-select form-select-sm"
+          value={filtrosTabla.estado_admin}
+          onChange={(event) => cambiarFiltroTabla('estado_admin', event.target.value)}
+        >
+          {ESTADO_ADMIN_OPCIONES.map((estado) => (
+            <option key={estado.valor} value={estado.valor}>
+              {estado.etiqueta}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="col-12 col-sm-6 col-lg-2">
+        <label htmlFor={`${prefijo}_filtro_organizacion_tabla`} className="form-label mb-1">Organización</label>
+        <select
+          id={`${prefijo}_filtro_organizacion_tabla`}
+          className="form-select form-select-sm"
+          value={filtrosTabla.organizacion_id}
+          onChange={(event) => cambiarFiltroTabla('organizacion_id', event.target.value)}
+        >
+          <option value="TODOS">Todas</option>
+          {organizacionesTablaOpciones.map((item) => (
+            <option key={item.id} value={String(item.id)}>
+              {item.nombre_organizacion}
+              {item.distrito_nombre ? ` - ${item.distrito_nombre}` : ''}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
 export default function SuperadminPage() {
+  const [mantenimientoSuperadminsVisible, setMantenimientoSuperadminsVisible] = useState(false);
   const {
     formulario,
     errores,
@@ -64,13 +197,11 @@ export default function SuperadminPage() {
     adminTemporalVisible,
     formularioEdicion,
     erroresEdicion,
-    organizaciones,
     organizacionesFiltradas,
     organizacionesTablaOpciones,
     organizacionSeleccionadaTabla,
     organizacionSeleccionadaAdmin,
     detalleAdminTemporalSeleccionado,
-    paginacion,
     cargandoLista,
     guardando,
     guardandoAdminTemporal,
@@ -105,16 +236,33 @@ export default function SuperadminPage() {
     cancelarEdicion,
     recargarOrganizaciones
   } = useSuperadminOrganizaciones();
+  const {
+    superadmins,
+    superadminActual,
+    formularioSuperadmin,
+    erroresSuperadmin,
+    cargandoSuperadmins,
+    guardandoSuperadmin,
+    cambiarCampoSuperadmin,
+    iniciarEdicionSuperadmin,
+    cancelarEdicionSuperadmin,
+    limpiarFormularioSuperadmin,
+    guardarSuperadmin,
+    recargarSuperadmins
+  } = useSuperadminUsuarios({ enabled: mantenimientoSuperadminsVisible });
 
   const [crearInstanciaVisible, setCrearInstanciaVisible] = useState(false);
-  const [gestionCamposVisible, setGestionCamposVisible] = useState(false);
-  const [gestionDistritosVisible, setGestionDistritosVisible] = useState(false);
+  const [gestionCatalogosModo, setGestionCatalogosModo] = useState(null);
   const [exportandoExcel, setExportandoExcel] = useState(false);
-  const [nuevoCampoCodigo, setNuevoCampoCodigo] = useState('');
   const [nuevoCampoNombre, setNuevoCampoNombre] = useState('');
   const [nuevoDistritoNombre, setNuevoDistritoNombre] = useState('');
   const [edicionCampos, setEdicionCampos] = useState({});
   const [edicionDistritos, setEdicionDistritos] = useState({});
+  const [busquedaOrganizaciones, setBusquedaOrganizaciones] = useState('');
+  const [busquedaDistritos, setBusquedaDistritos] = useState('');
+  const [busquedaSuperadmins, setBusquedaSuperadmins] = useState('');
+  const [vistaSuperadminsMovil, setVistaSuperadminsMovil] = useState(VISTA_SUPERADMIN_MOVIL_LISTA);
+  const [filtrosOrganizacionesMovilVisible, setFiltrosOrganizacionesMovilVisible] = useState(false);
 
   const manejarSubmitOrganizacion = async (event) => {
     event.preventDefault();
@@ -139,13 +287,32 @@ export default function SuperadminPage() {
 
   const manejarCerrarPanelCrearInstancia = () => {
     setCrearInstanciaVisible(false);
+    setFiltrosOrganizacionesMovilVisible(false);
     limpiarFormulario();
+  };
+
+  const limpiarEstadoCatalogos = useCallback(() => {
+    setGestionCatalogosModo(null);
+    setNuevoCampoNombre('');
+    setNuevoDistritoNombre('');
+    setEdicionCampos({});
+    setEdicionDistritos({});
+    setBusquedaDistritos('');
+  }, []);
+
+  const manejarCerrarMantenimientoSuperadmins = () => {
+    setMantenimientoSuperadminsVisible(false);
+    setFiltrosOrganizacionesMovilVisible(false);
+    setBusquedaSuperadmins('');
+    setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_LISTA);
+    cancelarEdicionSuperadmin();
   };
 
   const manejarAbrirFormularioAdminTemporal = (organizacion) => {
     setCrearInstanciaVisible(false);
-    setGestionCamposVisible(false);
-    setGestionDistritosVisible(false);
+    setFiltrosOrganizacionesMovilVisible(false);
+    limpiarEstadoCatalogos();
+    setMantenimientoSuperadminsVisible(false);
     abrirFormularioAdminTemporal(organizacion);
   };
 
@@ -155,44 +322,59 @@ export default function SuperadminPage() {
 
   const manejarIniciarEdicion = (organizacion) => {
     setCrearInstanciaVisible(false);
-    setGestionCamposVisible(false);
-    setGestionDistritosVisible(false);
+    setFiltrosOrganizacionesMovilVisible(false);
+    limpiarEstadoCatalogos();
+    setMantenimientoSuperadminsVisible(false);
     iniciarEdicion(organizacion);
   };
 
   const manejarCancelarEdicion = () => {
+    setFiltrosOrganizacionesMovilVisible(false);
     cancelarEdicion();
   };
 
-  const manejarCerrarGestionCampos = () => {
-    setGestionCamposVisible(false);
-    setNuevoCampoCodigo('');
-    setNuevoCampoNombre('');
-    setEdicionCampos({});
-  };
-
-  const manejarCerrarGestionDistritos = () => {
-    setGestionDistritosVisible(false);
-    setNuevoDistritoNombre('');
-    setEdicionDistritos({});
+  const manejarCerrarGestionCatalogos = () => {
+    setFiltrosOrganizacionesMovilVisible(false);
+    limpiarEstadoCatalogos();
   };
 
   const manejarCrearCampo = async (event) => {
     event.preventDefault();
-    const creado = await crearCampoCatalogo(nuevoCampoCodigo, nuevoCampoNombre);
+    const creado = await crearCampoCatalogo(nuevoCampoNombre);
     if (creado) {
-      setNuevoCampoCodigo('');
       setNuevoCampoNombre('');
     }
   };
 
   const manejarCrearDistrito = async (event) => {
     event.preventDefault();
-    const codigoCreado = await crearDistritoCatalogo(nuevoDistritoNombre);
-    if (codigoCreado) {
+    const distritoCreado = await crearDistritoCatalogo(nuevoDistritoNombre);
+    if (distritoCreado) {
       setNuevoDistritoNombre('');
     }
   };
+
+  const manejarSubmitSuperadmin = async (event) => {
+    event.preventDefault();
+    const guardado = await guardarSuperadmin();
+    if (guardado) {
+      setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_LISTA);
+    }
+  };
+
+  const manejarEditarSuperadmin = useCallback((item) => {
+    iniciarEdicionSuperadmin(item);
+    setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_FORMULARIO);
+  }, [iniciarEdicionSuperadmin]);
+
+  const manejarLimpiarSuperadmin = useCallback(() => {
+    if (formularioSuperadmin.id) {
+      cancelarEdicionSuperadmin();
+    } else {
+      limpiarFormularioSuperadmin();
+    }
+    setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_LISTA);
+  }, [cancelarEdicionSuperadmin, limpiarFormularioSuperadmin, formularioSuperadmin.id]);
 
   const manejarGuardarEdicionCampo = async (codigo) => {
     const nombreEditado = edicionCampos[codigo];
@@ -227,23 +409,82 @@ export default function SuperadminPage() {
   };
 
   const estaEditando = !!formularioEdicion.id;
+  const gestionCatalogosVisible = !!gestionCatalogosModo;
+  const mostrarCamposCatalogo = gestionCatalogosModo === 'AMBOS' || gestionCatalogosModo === 'CAMPOS';
+  const mostrarDistritosCatalogo = gestionCatalogosModo === 'AMBOS' || gestionCatalogosModo === 'DISTRITOS';
   const hayAccionAbierta = crearInstanciaVisible
     || adminTemporalVisible
     || estaEditando
-    || gestionCamposVisible
-    || gestionDistritosVisible;
+    || gestionCatalogosVisible
+    || mantenimientoSuperadminsVisible;
   const mostrarTablaOrganizaciones = !hayAccionAbierta;
-  const totalRegistros = paginacion.total || organizaciones.length;
-  const totalFiltrados = organizacionesFiltradas.length;
+  const mostrarTituloInternoCampos = gestionCatalogosModo === 'AMBOS';
+  const mostrarTituloInternoDistritos = gestionCatalogosModo === 'AMBOS';
+  const tituloCatalogos = gestionCatalogosModo === 'DISTRITOS'
+    ? 'Distritos'
+    : gestionCatalogosModo === 'CAMPOS'
+      ? 'Campos'
+      : 'Campos y distritos';
   const adminTemporalTituloRef = useRef(null);
   const edicionTituloRef = useRef(null);
+  const mantenimientoSuperadminsTituloRef = useRef(null);
   const campoOrganizacionAdmin = organizacionSeleccionadaAdmin?.campo_nombre
     || organizacionSeleccionadaAdmin?.campo
     || '-';
   const tipoOrganizacionAdmin = organizacionSeleccionadaAdmin?.tipo_organizacion || '-';
   const nombreOrganizacionAdmin = organizacionSeleccionadaAdmin?.nombre_organizacion || '-';
+  const vistaSuperadminActiva = adminTemporalVisible
+    ? 'ADMIN_TEMPORAL'
+    : estaEditando
+      ? 'EDICION'
+      : mantenimientoSuperadminsVisible
+        ? 'SUPERADMINS'
+        : crearInstanciaVisible
+          ? 'CREAR_INSTANCIA'
+          : gestionCatalogosModo === 'AMBOS'
+            ? 'CATALOGOS'
+            : gestionCatalogosModo === 'CAMPOS'
+              ? 'CAMPOS'
+              : gestionCatalogosModo === 'DISTRITOS'
+                ? 'DISTRITOS'
+                : 'ORGANIZACIONES';
+  const organizacionesVisibles = useMemo(() => {
+    const termino = normalizarBusquedaTexto(busquedaOrganizaciones);
+    if (!termino) {
+      return organizacionesFiltradas;
+    }
+
+    return organizacionesFiltradas.filter((item) => {
+      const nombre = normalizarBusquedaTexto(item?.nombre_organizacion);
+      const correo = normalizarBusquedaTexto(item?.correo_contacto);
+      return nombre.includes(termino) || correo.includes(termino);
+    });
+  }, [busquedaOrganizaciones, organizacionesFiltradas]);
+  const distritosFiltrados = useMemo(() => {
+    const termino = normalizarBusquedaTexto(busquedaDistritos);
+    if (!termino) {
+      return distritosOpciones;
+    }
+
+    return distritosOpciones.filter((item) => normalizarBusquedaTexto(item?.etiqueta).includes(termino));
+  }, [busquedaDistritos, distritosOpciones]);
+  const superadminsFiltrados = useMemo(() => {
+    const termino = normalizarBusquedaTexto(busquedaSuperadmins);
+    if (!termino) {
+      return superadmins;
+    }
+
+    return superadmins.filter((item) => {
+      const nombre = normalizarBusquedaTexto(item?.nombre_completo);
+      const usuarioSuperadmin = normalizarBusquedaTexto(item?.usuario);
+      return nombre.includes(termino) || usuarioSuperadmin.includes(termino);
+    });
+  }, [busquedaSuperadmins, superadmins]);
+  const totalFiltrados = organizacionesVisibles.length;
+  const totalFiltradosBase = organizacionesFiltradas.length;
+  const totalSuperadminsActivos = superadmins.filter((item) => item.activo).length;
   const manejarExportarExcel = async () => {
-    if (organizacionesFiltradas.length === 0) {
+    if (organizacionesVisibles.length === 0) {
       return;
     }
 
@@ -289,7 +530,7 @@ export default function SuperadminPage() {
         };
       });
 
-      organizacionesFiltradas.forEach((item, index) => {
+      organizacionesVisibles.forEach((item, index) => {
         const estadoAdminCodigo = obtenerEstadoAdminOrganizacion(item);
         const estadoAdmin = obtenerConfigEstadoAdmin(estadoAdminCodigo).etiqueta;
 
@@ -357,21 +598,36 @@ export default function SuperadminPage() {
     const manejarAbrirCrearInstancia = () => {
       cerrarFormularioAdminTemporal();
       cancelarEdicion();
-      setGestionCamposVisible(false);
-      setGestionDistritosVisible(false);
+      limpiarEstadoCatalogos();
+      setMantenimientoSuperadminsVisible(false);
+      cancelarEdicionSuperadmin();
+      setCrearInstanciaVisible(true);
+    };
+
+    const manejarAbrirGestionCatalogos = () => {
+      cerrarFormularioAdminTemporal();
+      cancelarEdicion();
+      setCrearInstanciaVisible(false);
+      setMantenimientoSuperadminsVisible(false);
+      cancelarEdicionSuperadmin();
+      setBusquedaDistritos('');
+      setGestionCatalogosModo(window.innerWidth < 768 ? 'CAMPOS' : 'AMBOS');
+      setNuevoCampoNombre('');
+      setNuevoDistritoNombre('');
       setEdicionCampos({});
       setEdicionDistritos({});
-      setCrearInstanciaVisible(true);
     };
 
     const manejarAbrirGestionCampos = () => {
       cerrarFormularioAdminTemporal();
       cancelarEdicion();
       setCrearInstanciaVisible(false);
-      setGestionDistritosVisible(false);
-      setGestionCamposVisible(true);
-      setNuevoCampoCodigo('');
+      setMantenimientoSuperadminsVisible(false);
+      cancelarEdicionSuperadmin();
+      setBusquedaDistritos('');
+      setGestionCatalogosModo(window.innerWidth < 768 ? 'CAMPOS' : 'AMBOS');
       setNuevoCampoNombre('');
+      setEdicionCampos({});
       setEdicionDistritos({});
     };
 
@@ -379,22 +635,50 @@ export default function SuperadminPage() {
       cerrarFormularioAdminTemporal();
       cancelarEdicion();
       setCrearInstanciaVisible(false);
-      setGestionCamposVisible(false);
-      setGestionDistritosVisible(true);
+      setMantenimientoSuperadminsVisible(false);
+      cancelarEdicionSuperadmin();
+      setBusquedaDistritos('');
+      setGestionCatalogosModo(window.innerWidth < 768 ? 'DISTRITOS' : 'AMBOS');
       setNuevoDistritoNombre('');
       setEdicionCampos({});
+      setEdicionDistritos({});
+    };
+
+    const manejarAbrirSuperadmins = () => {
+      cerrarFormularioAdminTemporal();
+      cancelarEdicion();
+      setCrearInstanciaVisible(false);
+      limpiarEstadoCatalogos();
+      setMantenimientoSuperadminsVisible(true);
+      setBusquedaSuperadmins('');
+      setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_LISTA);
     };
 
     window.addEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirCrearInstancia);
+    window.addEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_CATALOGOS, manejarAbrirGestionCatalogos);
     window.addEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS, manejarAbrirGestionCampos);
     window.addEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS, manejarAbrirGestionDistritos);
+    window.addEventListener(EVENT_SUPERADMIN_ABRIR_SUPERADMINS, manejarAbrirSuperadmins);
 
     return () => {
       window.removeEventListener(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA, manejarAbrirCrearInstancia);
+      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_CATALOGOS, manejarAbrirGestionCatalogos);
       window.removeEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS, manejarAbrirGestionCampos);
       window.removeEventListener(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS, manejarAbrirGestionDistritos);
+      window.removeEventListener(EVENT_SUPERADMIN_ABRIR_SUPERADMINS, manejarAbrirSuperadmins);
     };
-  }, [cerrarFormularioAdminTemporal, cancelarEdicion]);
+  }, [
+    cancelarEdicion,
+    cancelarEdicionSuperadmin,
+    cerrarFormularioAdminTemporal,
+    limpiarEstadoCatalogos
+  ]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_VISTA_ACTIVA, {
+      detail: { vista: vistaSuperadminActiva }
+    }));
+  }, [vistaSuperadminActiva]);
 
   useEffect(() => {
     if (!adminTemporalVisible || estaEditando) {
@@ -422,6 +706,25 @@ export default function SuperadminPage() {
     return () => clearTimeout(timer);
   }, [formularioEdicion.id]);
 
+  useEffect(() => {
+    if (!mantenimientoSuperadminsVisible) {
+      return undefined;
+    }
+
+    const timer = setTimeout(() => {
+      mantenimientoSuperadminsTituloRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      mantenimientoSuperadminsTituloRef.current?.focus({ preventScroll: true });
+    }, 60);
+
+    return () => clearTimeout(timer);
+  }, [mantenimientoSuperadminsVisible, formularioSuperadmin.id]);
+
+  useEffect(() => {
+    if (!mostrarTablaOrganizaciones && filtrosOrganizacionesMovilVisible) {
+      setFiltrosOrganizacionesMovilVisible(false);
+    }
+  }, [mostrarTablaOrganizaciones, filtrosOrganizacionesMovilVisible]);
+
   return (
     <div className="container-fluid py-4">
       {!estaEditando && (
@@ -433,11 +736,13 @@ export default function SuperadminPage() {
                   <h3 className="h5 mb-0">Crear nueva instancia</h3>
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm"
+                    className="btn btn-outline-secondary btn-sm admin-panel-close iasd-icon-btn-round"
                     onClick={manejarCerrarPanelCrearInstancia}
                     disabled={guardando}
+                    aria-label="Cerrar creación de instancia"
+                    title="Cerrar"
                   >
-                    Cerrar
+                    <i className="bi bi-x-lg" aria-hidden="true"></i>
                   </button>
                 </div>
 
@@ -537,16 +842,24 @@ export default function SuperadminPage() {
                 </div>
 
                 <div className="d-flex flex-wrap gap-2 mt-4">
-                  <button type="submit" className="btn btn-primary" disabled={guardando}>
-                    {guardando ? 'Creando...' : 'Crear instancia'}
+                  <button
+                    type="submit"
+                    className="btn btn-primary admin-responsive-action-btn"
+                    disabled={guardando}
+                  >
+                    <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                    <span className="admin-responsive-btn-label">
+                      {guardando ? 'Creando...' : 'Crear instancia'}
+                    </span>
                   </button>
                   <button
                     type="button"
-                    className="btn btn-outline-secondary"
+                    className="btn btn-outline-secondary admin-responsive-action-btn"
                     onClick={limpiarFormulario}
                     disabled={guardando}
                   >
-                    Limpiar
+                    <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                    <span className="admin-responsive-btn-label">Limpiar</span>
                   </button>
                 </div>
                 </form>
@@ -554,203 +867,512 @@ export default function SuperadminPage() {
             </div>
           )}
 
-          {gestionCamposVisible && !adminTemporalVisible && (
+                              {gestionCatalogosVisible && !adminTemporalVisible && (
             <div className="card border-0 shadow-sm mb-4">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
-                  <h3 className="h5 mb-0">Gestionar campos</h3>
+                  <h3 className="h5 mb-0">{tituloCatalogos}</h3>
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={manejarCerrarGestionCampos}
+                    className="btn btn-outline-secondary btn-sm admin-panel-close iasd-icon-btn-round"
+                    onClick={manejarCerrarGestionCatalogos}
+                    aria-label="Cerrar gestión de catálogos"
+                    title="Cerrar"
                   >
-                    Cerrar
+                    <i className="bi bi-x-lg" aria-hidden="true"></i>
                   </button>
                 </div>
 
-                <form className="row g-2 mb-3" onSubmit={manejarCrearCampo}>
-                  <div className="col-12 col-md-3">
-                    <label htmlFor="nuevo_campo_codigo" className="form-label">Código</label>
-                    <input
-                      id="nuevo_campo_codigo"
-                      type="text"
-                      className="form-control form-control-sm text-uppercase"
-                      value={nuevoCampoCodigo}
-                      maxLength={10}
-                      onChange={(event) => setNuevoCampoCodigo(event.target.value.toUpperCase())}
-                      placeholder="AN"
-                    />
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="nuevo_campo_nombre" className="form-label">Nombre del campo</label>
-                    <input
-                      id="nuevo_campo_nombre"
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={nuevoCampoNombre}
-                      maxLength={80}
-                      onChange={(event) => setNuevoCampoNombre(event.target.value)}
-                      placeholder="Asociación Norte"
-                    />
-                  </div>
-                  <div className="col-12 col-md-3 d-flex align-items-end">
-                    <button type="submit" className="btn btn-outline-primary btn-sm w-100">
-                      Agregar campo
-                    </button>
-                  </div>
-                </form>
+                <div className="row g-4 superadmin-catalogos-grid">
+                  {mostrarCamposCatalogo && (
+                    <div className={mostrarDistritosCatalogo ? 'col-12 col-xl-6' : 'col-12'}>
+                      <section className="superadmin-catalogo-card">
+                        {mostrarTituloInternoCampos && (
+                          <h4 className="h6 mb-3 d-flex align-items-center superadmin-catalogo-title-row">
+                            Campos o Misiones
+                          </h4>
+                        )}
+                        <form className="row g-2 mb-3 superadmin-catalogo-form" onSubmit={manejarCrearCampo}>
+                          <div className="col">
+                            <label htmlFor="nuevo_campo_nombre" className="form-label">Nombre del Campo o Misión</label>
+                            <input
+                              id="nuevo_campo_nombre"
+                              type="text"
+                              className="form-control form-control-sm"
+                              value={nuevoCampoNombre}
+                              maxLength={35}
+                              onChange={(event) => setNuevoCampoNombre(event.target.value.slice(0, 35))}
+                              placeholder="Asociación Norte CR"
+                            />
+                          </div>
+                          <div className="col-auto d-flex align-items-end">
+                            <button
+                              type="submit"
+                              className="btn btn-primary btn-sm admin-responsive-action-btn superadmin-catalogo-add-btn"
+                              title="Agregar campo"
+                              aria-label="Agregar campo"
+                            >
+                              <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                              <span className="admin-responsive-btn-label">Agregar</span>
+                            </button>
+                          </div>
+                        </form>
 
-                <div className="table-responsive superadmin-metricas-tabla-wrap">
-                  <table className="table table-sm align-middle mb-0">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '140px' }}>Código</th>
-                        <th>Nombre</th>
-                        <th style={{ width: '210px' }}>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {camposOpciones.map((item) => {
-                        const valorEdicion = edicionCampos[item.valor] ?? item.etiqueta;
-                        const cambioPendiente = valorEdicion.trim() !== item.etiqueta;
+                        <div className="table-responsive superadmin-tabla-scroll-x">
+                          <div className="superadmin-tabla-scroll superadmin-metricas-tabla-wrap superadmin-catalogo-tabla-wrap">
+                            <table className="table table-sm align-middle mb-0 superadmin-catalogo-tabla">
+                            <thead>
+                              <tr>
+                                <th>Campo</th>
+                                <th className="superadmin-col-acciones">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {camposOpciones.map((item) => {
+                                const valorEdicion = edicionCampos[item.valor] ?? item.etiqueta;
+                                const cambioPendiente = valorEdicion.trim() !== item.etiqueta;
 
-                        return (
-                          <tr key={item.valor}>
-                            <td><span className="badge text-bg-light border">{item.valor}</span></td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={valorEdicion}
-                                maxLength={80}
-                                onChange={(event) => {
-                                  const nuevoValor = event.target.value;
-                                  setEdicionCampos((prev) => ({ ...prev, [item.valor]: nuevoValor }));
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-primary btn-sm w-100"
-                                  onClick={() => { void manejarGuardarEdicionCampo(item.valor); }}
-                                  disabled={!cambioPendiente}
-                                >
-                                  Guardar
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-danger btn-sm w-100"
-                                  onClick={() => { void eliminarCampoCatalogo(item.valor); }}
-                                >
-                                  Borrar
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                                return (
+                                  <tr key={item.valor}>
+                                    <td>
+                                      <input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        value={valorEdicion}
+                                        maxLength={35}
+                                        onChange={(event) => {
+                                          const nuevoValor = event.target.value.slice(0, 35);
+                                          setEdicionCampos((prev) => ({ ...prev, [item.valor]: nuevoValor }));
+                                        }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <div className="d-flex gap-2">
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-primary btn-sm w-100 admin-responsive-action-btn"
+                                          onClick={() => { void manejarGuardarEdicionCampo(item.valor); }}
+                                          disabled={!cambioPendiente}
+                                        >
+                                          <i className="bi bi-floppy" aria-hidden="true"></i>
+                                          <span className="admin-responsive-btn-label">Guardar</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-danger btn-sm w-100 admin-responsive-action-btn"
+                                          onClick={() => { void eliminarCampoCatalogo(item.valor); }}
+                                        >
+                                          <i className="bi bi-trash3" aria-hidden="true"></i>
+                                          <span className="admin-responsive-btn-label">Eliminar</span>
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  )}
+
+                  {mostrarDistritosCatalogo && (
+                    <div className={mostrarCamposCatalogo ? 'col-12 col-xl-6' : 'col-12'}>
+                      <section className="superadmin-catalogo-card">
+                        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                          {mostrarTituloInternoDistritos && <h4 className="h6 mb-0 me-auto">Distritos</h4>}
+                          <div className="d-flex align-items-center gap-2 ms-auto superadmin-catalogo-head-tools">
+                            <SearchInput
+                              id="buscar_distritos_superadmin"
+                              value={busquedaDistritos}
+                              onChange={setBusquedaDistritos}
+                              placeholder="Buscar distrito"
+                              className="superadmin-search superadmin-search-sm"
+                            />
+                            <span className="badge text-bg-light border superadmin-count-chip">{distritosFiltrados.length}</span>
+                          </div>
+                        </div>
+
+                        <form className="row g-2 mb-3 superadmin-catalogo-form" onSubmit={manejarCrearDistrito}>
+                          <div className="col">
+                            <label htmlFor="nuevo_distrito_nombre" className="form-label">Nombre del distrito</label>
+                            <input
+                              id="nuevo_distrito_nombre"
+                              type="text"
+                              className="form-control form-control-sm"
+                              value={nuevoDistritoNombre}
+                              maxLength={35}
+                              onChange={(event) => setNuevoDistritoNombre(event.target.value.slice(0, 35))}
+                              placeholder="Guanacaste 2"
+                            />
+                          </div>
+                          <div className="col-auto d-flex align-items-end">
+                            <button
+                              type="submit"
+                              className="btn btn-primary btn-sm admin-responsive-action-btn superadmin-catalogo-add-btn"
+                              title="Agregar distrito"
+                              aria-label="Agregar distrito"
+                            >
+                              <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                              <span className="admin-responsive-btn-label">Agregar</span>
+                            </button>
+                          </div>
+                        </form>
+
+                        <div className="table-responsive superadmin-tabla-scroll-x">
+                          <div className="superadmin-tabla-scroll superadmin-metricas-tabla-wrap superadmin-catalogo-tabla-wrap">
+                            <table className="table table-sm align-middle mb-0 superadmin-catalogo-tabla">
+                            <thead>
+                              <tr>
+                                <th>Distrito</th>
+                                <th className="superadmin-col-acciones">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {distritosFiltrados.length === 0 && (
+                                <tr>
+                                  <td colSpan={2} className="text-muted small">No hay distritos para esa búsqueda.</td>
+                                </tr>
+                              )}
+                              {distritosFiltrados.map((item) => {
+                                const valorEdicion = edicionDistritos[item.valor] ?? item.etiqueta;
+                                const cambioPendiente = valorEdicion.trim() !== item.etiqueta;
+
+                                return (
+                                  <tr key={item.valor}>
+                                    <td>
+                                      <input
+                                        type="text"
+                                        className="form-control form-control-sm"
+                                        value={valorEdicion}
+                                        maxLength={35}
+                                        onChange={(event) => {
+                                          const nuevoValor = event.target.value.slice(0, 35);
+                                          setEdicionDistritos((prev) => ({ ...prev, [item.valor]: nuevoValor }));
+                                        }}
+                                      />
+                                    </td>
+                                    <td>
+                                      <div className="d-flex gap-2">
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-primary btn-sm w-100 admin-responsive-action-btn"
+                                          onClick={() => { void manejarGuardarEdicionDistrito(item.valor); }}
+                                          disabled={!cambioPendiente}
+                                        >
+                                          <i className="bi bi-floppy" aria-hidden="true"></i>
+                                          <span className="admin-responsive-btn-label">Guardar</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-danger btn-sm w-100 admin-responsive-action-btn"
+                                          onClick={() => { void eliminarDistritoCatalogo(item.valor); }}
+                                        >
+                                          <i className="bi bi-trash3" aria-hidden="true"></i>
+                                          <span className="admin-responsive-btn-label">Eliminar</span>
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </section>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
-          {gestionDistritosVisible && !adminTemporalVisible && (
+          {mantenimientoSuperadminsVisible && !adminTemporalVisible && !estaEditando && (
             <div className="card border-0 shadow-sm mb-4">
               <div className="card-body">
-                <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
-                  <h3 className="h5 mb-0">Gestionar distritos</h3>
+                <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                  <div className="superadmin-mantenimiento-copy">
+                    <h3
+                      ref={mantenimientoSuperadminsTituloRef}
+                      tabIndex={-1}
+                      className="h5 mb-1 superadmin-maint-title"
+                      style={{ scrollMarginTop: '5.5rem' }}
+                    >
+                      Superadmins
+                    </h3>
+                    <div className="small text-muted superadmin-maint-note">
+                      Las contraseñas de estas cuentas vencen cada 30 días.
+                    </div>
+                  </div>
+                  <div className="d-flex align-items-center gap-2 flex-wrap superadmin-maint-header-actions">
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary btn-sm admin-responsive-action-btn"
+                      onClick={() => { void recargarSuperadmins(); }}
+                      disabled={cargandoSuperadmins}
+                    >
+                      <i className="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                      <span className="admin-responsive-btn-label">
+                        {cargandoSuperadmins ? 'Actualizando...' : 'Actualizar lista'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm admin-panel-close iasd-icon-btn-round"
+                      onClick={manejarCerrarMantenimientoSuperadmins}
+                      aria-label="Cerrar mantenimiento de superadministradores"
+                      title="Cerrar"
+                    >
+                      <i className="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="admin-usuarios-switch superadmin-mobile-switch mb-3">
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm"
-                    onClick={manejarCerrarGestionDistritos}
+                    className={`admin-usuarios-switch-btn ${vistaSuperadminsMovil === VISTA_SUPERADMIN_MOVIL_FORMULARIO ? 'is-active' : ''}`}
+                    onClick={() => setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_FORMULARIO)}
+                    title="Formulario"
+                    aria-label="Formulario"
                   >
-                    Cerrar
+                    <i className="bi bi-person-plus" aria-hidden="true"></i>
+                    <span className="admin-usuarios-switch-btn-label">Formulario</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`admin-usuarios-switch-btn ${vistaSuperadminsMovil === VISTA_SUPERADMIN_MOVIL_LISTA ? 'is-active' : ''}`}
+                    onClick={() => setVistaSuperadminsMovil(VISTA_SUPERADMIN_MOVIL_LISTA)}
+                    title="Superadmins"
+                    aria-label="Superadmins"
+                  >
+                    <i className="bi bi-people" aria-hidden="true"></i>
+                    <span className="admin-usuarios-switch-btn-label">Superadmins</span>
                   </button>
                 </div>
 
-                <form className="row g-2 mb-3" onSubmit={manejarCrearDistrito}>
-                  <div className="col-12 col-md-9">
-                    <label htmlFor="nuevo_distrito_nombre" className="form-label">Nombre del distrito</label>
-                    <input
-                      id="nuevo_distrito_nombre"
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={nuevoDistritoNombre}
-                      maxLength={80}
-                      onChange={(event) => setNuevoDistritoNombre(event.target.value)}
-                      placeholder="Guanacaste 1"
-                    />
-                  </div>
-                  <div className="col-12 col-md-3 d-flex align-items-end">
-                    <button type="submit" className="btn btn-outline-primary btn-sm w-100">
-                      Agregar distrito
-                    </button>
-                  </div>
-                </form>
+                <div className="row g-4 align-items-start">
+                  <div className={`col-12 col-xl-5 superadmin-mobile-panel ${vistaSuperadminsMovil === VISTA_SUPERADMIN_MOVIL_FORMULARIO ? 'is-active' : ''}`}>
+                    <section className="superadmin-catalogo-card superadmin-mantenimiento-form">
+                      <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+                        <h4 className="h6 mb-0">
+                          {formularioSuperadmin.id ? 'Editar cuenta' : 'Nueva cuenta'}
+                        </h4>
+                        {superadminActual && Number(superadminActual.id) === Number(formularioSuperadmin.id) && (
+                          <span className="badge text-bg-light border">Mi cuenta</span>
+                        )}
+                      </div>
 
-                <div className="table-responsive superadmin-metricas-tabla-wrap">
-                  <table className="table table-sm align-middle mb-0">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '180px' }}>Código</th>
-                        <th>Nombre</th>
-                        <th style={{ width: '210px' }}>Acción</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {distritosOpciones.map((item) => {
-                        const valorEdicion = edicionDistritos[item.valor] ?? item.etiqueta;
-                        const cambioPendiente = valorEdicion.trim() !== item.etiqueta;
+                      <form className="row g-3" onSubmit={manejarSubmitSuperadmin} noValidate>
+                        <div className="col-12">
+                          <label htmlFor="superadmin_nombre" className="form-label">Nombre</label>
+                          <input
+                            id="superadmin_nombre"
+                            type="text"
+                            className={'form-control' + (erroresSuperadmin.nombre_completo ? ' is-invalid' : '')}
+                            placeholder="Nombre"
+                            value={formularioSuperadmin.nombre_completo}
+                            onChange={(event) => cambiarCampoSuperadmin('nombre_completo', event.target.value)}
+                            disabled={guardandoSuperadmin}
+                          />
+                          {erroresSuperadmin.nombre_completo && (
+                            <div className="invalid-feedback">{erroresSuperadmin.nombre_completo}</div>
+                          )}
+                        </div>
 
-                        return (
-                          <tr key={item.valor}>
-                            <td><span className="badge text-bg-light border">{item.valor}</span></td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={valorEdicion}
-                                maxLength={80}
-                                onChange={(event) => {
-                                  const nuevoValor = event.target.value;
-                                  setEdicionDistritos((prev) => ({ ...prev, [item.valor]: nuevoValor }));
-                                }}
-                              />
-                            </td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-primary btn-sm w-100"
-                                  onClick={() => { void manejarGuardarEdicionDistrito(item.valor); }}
-                                  disabled={!cambioPendiente}
+                        <div className="col-12">
+                          <label htmlFor="superadmin_usuario" className="form-label">Usuario</label>
+                          <input
+                            id="superadmin_usuario"
+                            type="text"
+                            className={'form-control' + (erroresSuperadmin.usuario ? ' is-invalid' : '')}
+                            placeholder="superadmin.cr"
+                            value={formularioSuperadmin.usuario}
+                            onChange={(event) => cambiarCampoSuperadmin('usuario', event.target.value)}
+                            disabled={guardandoSuperadmin}
+                          />
+                          {erroresSuperadmin.usuario && (
+                            <div className="invalid-feedback">{erroresSuperadmin.usuario}</div>
+                          )}
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <label htmlFor="superadmin_password" className="form-label">
+                            Contraseña{formularioSuperadmin.id ? ' nueva (opcional)' : ''}
+                          </label>
+                          <input
+                            id="superadmin_password"
+                            type="password"
+                            className={'form-control' + (erroresSuperadmin.password ? ' is-invalid' : '')}
+                            placeholder={formularioSuperadmin.id ? 'Solo si va a cambiarla' : 'Contraseña segura'}
+                            value={formularioSuperadmin.password}
+                            onChange={(event) => cambiarCampoSuperadmin('password', event.target.value)}
+                            disabled={guardandoSuperadmin}
+                          />
+                          {erroresSuperadmin.password && (
+                            <div className="invalid-feedback">{erroresSuperadmin.password}</div>
+                          )}
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <label htmlFor="superadmin_password_confirmacion" className="form-label">
+                            Repita la contraseña
+                          </label>
+                          <input
+                            id="superadmin_password_confirmacion"
+                            type="password"
+                            className={'form-control' + (erroresSuperadmin.password_confirmacion ? ' is-invalid' : '')}
+                            placeholder="Repita la contraseña"
+                            value={formularioSuperadmin.password_confirmacion}
+                            onChange={(event) => cambiarCampoSuperadmin('password_confirmacion', event.target.value)}
+                            disabled={guardandoSuperadmin}
+                          />
+                          {erroresSuperadmin.password_confirmacion && (
+                            <div className="invalid-feedback">{erroresSuperadmin.password_confirmacion}</div>
+                          )}
+                        </div>
+
+                        <div className="col-12">
+                          <div className="superadmin-form-toolbar">
+                            {formularioSuperadmin.id && (
+                              <div className="superadmin-form-estado-block superadmin-estado-col">
+                                <label htmlFor="superadmin_activo" className="form-label">Estado</label>
+                                <select
+                                  id="superadmin_activo"
+                                  className="form-select"
+                                  value={formularioSuperadmin.activo ? 'ACTIVO' : 'INACTIVO'}
+                                  onChange={(event) => cambiarCampoSuperadmin('activo', event.target.value === 'ACTIVO')}
+                                  disabled={guardandoSuperadmin}
                                 >
-                                  Guardar
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-danger btn-sm w-100"
-                                  onClick={() => { void eliminarDistritoCatalogo(item.valor); }}
-                                >
-                                  Borrar
-                                </button>
+                                  <option value="ACTIVO">Activo</option>
+                                  <option value="INACTIVO">Inactivo</option>
+                                </select>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            )}
+
+                            <div className="superadmin-form-actions">
+                              <button
+                                type="submit"
+                                className="btn btn-primary admin-responsive-action-btn superadmin-form-action-btn"
+                                disabled={guardandoSuperadmin}
+                              >
+                                <i
+                                  className={`bi ${formularioSuperadmin.id ? 'bi-floppy' : 'bi-plus-lg'}`}
+                                  aria-hidden="true"
+                                ></i>
+                                <span className="admin-responsive-btn-label">
+                                  {guardandoSuperadmin
+                                    ? 'Guardando...'
+                                    : formularioSuperadmin.id
+                                      ? 'Actualizar'
+                                      : 'Agregar'}
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary admin-responsive-action-btn superadmin-form-action-btn"
+                                onClick={manejarLimpiarSuperadmin}
+                                disabled={guardandoSuperadmin}
+                              >
+                                <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                                <span className="admin-responsive-btn-label">
+                                  {formularioSuperadmin.id ? 'Cancelar' : 'Limpiar'}
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </form>
+                    </section>
+                  </div>
+
+                  <div className={`col-12 col-xl-7 superadmin-mobile-panel ${vistaSuperadminsMovil === VISTA_SUPERADMIN_MOVIL_LISTA ? 'is-active' : ''}`}>
+                    <section className="superadmin-catalogo-card">
+                      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                          <h4 className="h6 mb-0">Usuarios</h4>
+                          <span className="badge text-bg-light border">Activos: {totalSuperadminsActivos}</span>
+                        </div>
+                        <div className="d-flex align-items-center gap-2 ms-auto superadmin-catalogo-head-tools">
+                          <SearchInput
+                            id="buscar_superadmins"
+                            value={busquedaSuperadmins}
+                            onChange={setBusquedaSuperadmins}
+                            placeholder="Buscar por nombre"
+                            className="superadmin-search superadmin-search-sm"
+                          />
+                          <span className="badge text-bg-light border superadmin-count-chip">
+                            Registrados: {superadminsFiltrados.length}
+                          </span>
+                        </div>
+                      </div>
+
+                      {cargandoSuperadmins ? (
+                        <div className="text-muted">Cargando superadministradores...</div>
+                      ) : superadmins.length === 0 ? (
+                        <div className="text-muted">No hay superadministradores registrados.</div>
+                      ) : superadminsFiltrados.length === 0 ? (
+                        <div className="text-muted">No hay resultados para esa búsqueda.</div>
+                      ) : (
+                        <div className="table-responsive superadmin-tabla-scroll-x">
+                          <div className="superadmin-tabla-scroll superadmin-metricas-tabla-wrap superadmin-superadmins-tabla-wrap">
+                            <table className="table table-sm align-middle mb-0">
+                            <thead>
+                              <tr>
+                                <th>Nombre</th>
+                                <th>Usuario</th>
+                                <th>Expira</th>
+                                <th>Estado</th>
+                                <th className="superadmin-col-accion">Acción</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {superadminsFiltrados.map((item) => {
+                                const esMiCuenta = Number(item.id) === Number(superadminActual?.id);
+
+                                return (
+                                  <tr key={item.id} className={esMiCuenta ? 'table-active' : ''}>
+                                    <td>
+                                      <div className="fw-semibold">{item.nombre_completo}</div>
+                                      {esMiCuenta && <div className="small text-muted">Mi cuenta</div>}
+                                    </td>
+                                    <td>{item.usuario}</td>
+                                    <td>{formatearFechaDetalle(item.password_expira_en)}</td>
+                                    <td>
+                                      <span className={item.activo ? 'badge text-bg-success' : 'badge text-bg-secondary'}>
+                                        {item.activo ? 'Activo' : 'Inactivo'}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-primary btn-sm w-100 admin-responsive-action-btn"
+                                        onClick={() => manejarEditarSuperadmin(item)}
+                                        title="Editar superadministrador"
+                                        aria-label="Editar superadministrador"
+                                      >
+                                        <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                                        <span className="admin-responsive-btn-label">Editar</span>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </section>
+                  </div>
                 </div>
               </div>
             </div>
           )}
-
-          {adminTemporalVisible && (
+{adminTemporalVisible && (
             <div id="admin-temporal-form" className="card border-0 shadow-sm mb-4">
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-start gap-2 mb-3">
@@ -764,11 +1386,13 @@ export default function SuperadminPage() {
                   </h3>
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm"
+                    className="btn btn-outline-secondary btn-sm admin-panel-close iasd-icon-btn-round"
                     onClick={manejarCerrarFormularioAdminTemporal}
                     disabled={guardandoAdminTemporal}
+                    aria-label="Cerrar formulario de administrador temporal"
+                    title="Cerrar"
                   >
-                    Cerrar
+                    <i className="bi bi-x-lg" aria-hidden="true"></i>
                   </button>
                 </div>
 
@@ -891,18 +1515,22 @@ export default function SuperadminPage() {
                   <div className="d-flex flex-wrap gap-2 mt-4">
                     <button
                       type="submit"
-                      className="btn btn-primary"
+                      className="btn btn-primary admin-responsive-action-btn"
                       disabled={guardandoAdminTemporal || !formularioAdminTemporal.organizacion_id}
                     >
-                      {guardandoAdminTemporal ? 'Creando...' : 'Crear ADMIN temporal'}
+                      <i className="bi bi-person-plus-fill" aria-hidden="true"></i>
+                      <span className="admin-responsive-btn-label">
+                        {guardandoAdminTemporal ? 'Creando...' : 'Crear ADMIN temporal'}
+                      </span>
                     </button>
                     <button
                       type="button"
-                      className="btn btn-outline-secondary"
+                      className="btn btn-outline-secondary admin-responsive-action-btn"
                       onClick={limpiarFormularioAdminTemporal}
                       disabled={guardandoAdminTemporal}
                     >
-                      Limpiar
+                      <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                      <span className="admin-responsive-btn-label">Limpiar</span>
                     </button>
                   </div>
                 </form>
@@ -927,11 +1555,13 @@ export default function SuperadminPage() {
               </h3>
               <button
                 type="button"
-                className="btn btn-outline-secondary btn-sm"
+                className="btn btn-outline-secondary btn-sm admin-panel-close iasd-icon-btn-round"
                 onClick={manejarCancelarEdicion}
                 disabled={guardandoEdicion}
+                aria-label="Cerrar edición de organización"
+                title="Cerrar"
               >
-                Cerrar
+                <i className="bi bi-x-lg" aria-hidden="true"></i>
               </button>
             </div>
 
@@ -1026,16 +1656,24 @@ export default function SuperadminPage() {
               </div>
 
               <div className="d-flex flex-wrap gap-2 mt-4">
-                <button type="submit" className="btn btn-primary" disabled={guardandoEdicion}>
-                  {guardandoEdicion ? 'Guardando...' : 'Guardar cambios'}
+                <button
+                  type="submit"
+                  className="btn btn-primary admin-responsive-action-btn"
+                  disabled={guardandoEdicion}
+                >
+                  <i className="bi bi-floppy" aria-hidden="true"></i>
+                  <span className="admin-responsive-btn-label">
+                    {guardandoEdicion ? 'Guardando...' : 'Guardar cambios'}
+                  </span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-outline-secondary"
+                  className="btn btn-outline-secondary admin-responsive-action-btn"
                   onClick={manejarCancelarEdicion}
                   disabled={guardandoEdicion}
                 >
-                  Cancelar
+                  <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                  <span className="admin-responsive-btn-label">Cancelar</span>
                 </button>
               </div>
             </form>
@@ -1046,24 +1684,45 @@ export default function SuperadminPage() {
       {mostrarTablaOrganizaciones && (
         <div className="card border-0 shadow-sm">
           <div className="card-body">
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-              <h3 className="h5 mb-0">Organizaciones registradas</h3>
-              <div className="d-flex flex-wrap align-items-center gap-2">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 superadmin-organizaciones-head">
+              <div className="d-flex align-items-center gap-2 flex-wrap superadmin-organizaciones-title-wrap">
+                <h3 className="h5 mb-0">Organizaciones registradas</h3>
+                <span className="badge text-bg-light border superadmin-organizaciones-count">
+                  <span className="d-none d-md-inline">
+                    Mostrando: {totalFiltrados} de {totalFiltradosBase}
+                  </span>
+                  <span className="d-md-none">
+                    {totalFiltrados}/{totalFiltradosBase}
+                  </span>
+                </span>
+              </div>
+              <div className="d-flex align-items-center gap-2 ms-auto superadmin-organizaciones-search-wrap">
+                <SearchInput
+                  id="buscar_organizaciones_superadmin"
+                  value={busquedaOrganizaciones}
+                  onChange={setBusquedaOrganizaciones}
+                  placeholder="Buscar por nombre o correo"
+                  className="superadmin-search superadmin-search-organizaciones"
+                />
+              </div>
+              <div className="d-none d-md-flex align-items-center gap-2 superadmin-organizaciones-head-tools">
                 <button
-                  className="btn btn-outline-primary btn-sm"
+                  className="btn btn-outline-primary btn-sm admin-responsive-action-btn superadmin-toolbar-action-btn"
                   type="button"
                   onClick={recargarOrganizaciones}
                   disabled={cargandoLista}
+                  aria-label="Actualizar lista"
+                  title="Actualizar lista"
                 >
-                  {cargandoLista ? 'Actualizando...' : 'Actualizar lista'}
+                  <i className="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                  <span className="admin-responsive-btn-label">
+                    {cargandoLista ? 'Actualizando...' : 'Actualizar lista'}
+                  </span>
                 </button>
-                <span className="badge text-bg-light border">
-                  Mostrando: {totalFiltrados} de {totalRegistros}
-                </span>
               </div>
             </div>
 
-            <div className="row g-2 mb-3">
+            <div className="row g-2 mb-3 superadmin-organizaciones-filtros-desktop">
               <div className="col-12 col-md-2">
                 <label htmlFor="filtro_campo_tabla" className="form-label mb-1">Campo</label>
                 <select
@@ -1169,29 +1828,96 @@ export default function SuperadminPage() {
               <div className="col-12 d-flex flex-wrap align-items-end gap-2">
                 <button
                   type="button"
-                  className="btn btn-outline-secondary btn-sm"
+                  className="btn btn-outline-secondary btn-sm admin-responsive-action-btn superadmin-toolbar-action-btn"
                   onClick={limpiarFiltrosTabla}
+                  aria-label="Limpiar filtros"
+                  title="Limpiar filtros"
                 >
-                  Limpiar filtros
+                  <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                  <span className="admin-responsive-btn-label">Limpiar filtros</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-outline-success btn-sm"
+                  className="btn btn-outline-success btn-sm admin-responsive-action-btn superadmin-toolbar-action-btn"
                   onClick={manejarExportarExcel}
-                  disabled={organizacionesFiltradas.length === 0 || exportandoExcel}
+                  disabled={organizacionesVisibles.length === 0 || exportandoExcel}
+                  aria-label="Exportar Excel"
+                  title="Exportar Excel"
                 >
-                  {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
+                  <i className="bi bi-file-earmark-excel" aria-hidden="true"></i>
+                  <span className="admin-responsive-btn-label">
+                    {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
+                  </span>
                 </button>
               </div>
             </div>
 
+            {filtrosOrganizacionesMovilVisible && (
+              <div className="registro-overlay-iasd superadmin-filtros-overlay d-md-none">
+                <button
+                  type="button"
+                  className="registro-overlay-dismiss"
+                  aria-label="Cerrar filtros"
+                  onClick={() => setFiltrosOrganizacionesMovilVisible(false)}
+                ></button>
+                <div className="superadmin-filtros-modal">
+                  <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+                    <h4 className="h6 mb-0">Filtros</h4>
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm admin-panel-close iasd-icon-btn-round"
+                      onClick={() => setFiltrosOrganizacionesMovilVisible(false)}
+                      aria-label="Cerrar filtros"
+                      title="Cerrar"
+                    >
+                      <i className="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <FiltrosOrganizacionesFields
+                    prefijo="mobile"
+                    filtrosTabla={filtrosTabla}
+                    cambiarFiltroTabla={cambiarFiltroTabla}
+                    camposOpciones={camposOpciones}
+                    distritosOpciones={distritosOpciones}
+                    opcionesAnioFiltro={opcionesAnioFiltro}
+                    organizacionesTablaOpciones={organizacionesTablaOpciones}
+                  />
+
+                  <div className="d-flex justify-content-end gap-2 mt-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary btn-sm admin-responsive-action-btn"
+                      onClick={limpiarFiltrosTabla}
+                    >
+                      <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
+                      <span className="admin-responsive-btn-label">Limpiar</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm admin-responsive-action-btn"
+                      onClick={() => setFiltrosOrganizacionesMovilVisible(false)}
+                    >
+                      <i className="bi bi-check2" aria-hidden="true"></i>
+                      <span className="admin-responsive-btn-label">Listo</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {cargandoLista ? (
               <div className="text-muted">Cargando organizaciones...</div>
-            ) : organizacionesFiltradas.length === 0 ? (
-              <div className="text-muted">No hay organizaciones para los filtros seleccionados.</div>
+            ) : organizacionesVisibles.length === 0 ? (
+              <div className="text-muted">
+                {busquedaOrganizaciones.trim()
+                  ? 'No hay organizaciones para esa búsqueda.'
+                  : 'No hay organizaciones para los filtros seleccionados.'}
+              </div>
             ) : (
-              <div className="superadmin-tabla-scroll">
-                <table className="table table-sm table-striped align-middle mb-0 superadmin-tabla">
+              <div className="table-responsive superadmin-tabla-scroll-x">
+                <div className="superadmin-tabla-scroll">
+                  <table className="table table-sm table-striped align-middle mb-0 superadmin-tabla">
                   <thead>
                     <tr>
                       <th>Campo</th>
@@ -1205,7 +1931,7 @@ export default function SuperadminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {organizacionesFiltradas.map((item) => {
+                    {organizacionesVisibles.map((item) => {
                       const filaSeleccionada = Number(organizacionSeleccionadaTabla?.id) === Number(item.id);
                       const estadoAdmin = obtenerEstadoAdminOrganizacion(item);
                       const estadoAdminConfig = obtenerConfigEstadoAdmin(estadoAdmin);
@@ -1322,12 +2048,55 @@ export default function SuperadminPage() {
                       );
                     })}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               </div>
             )}
+
+            <div className="d-md-none d-flex justify-content-end gap-2 mt-3 superadmin-organizaciones-mobile-actions">
+              <button
+                className="btn btn-outline-secondary btn-sm admin-responsive-action-btn superadmin-toolbar-action-btn"
+                type="button"
+                onClick={() => setFiltrosOrganizacionesMovilVisible(true)}
+                aria-label="Abrir filtros"
+                title="Abrir filtros"
+              >
+                <i className="bi bi-funnel" aria-hidden="true"></i>
+                <span className="admin-responsive-btn-label">Filtros</span>
+              </button>
+              <button
+                className="btn btn-outline-primary btn-sm admin-responsive-action-btn superadmin-toolbar-action-btn"
+                type="button"
+                onClick={recargarOrganizaciones}
+                disabled={cargandoLista}
+                aria-label="Actualizar lista"
+                title="Actualizar lista"
+              >
+                <i className="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                <span className="admin-responsive-btn-label">
+                  {cargandoLista ? 'Actualizando...' : 'Actualizar lista'}
+                </span>
+              </button>
+              <button
+                className="btn btn-outline-success btn-sm admin-responsive-action-btn superadmin-toolbar-action-btn"
+                type="button"
+                onClick={manejarExportarExcel}
+                disabled={organizacionesVisibles.length === 0 || exportandoExcel}
+                aria-label="Exportar Excel"
+                title="Exportar Excel"
+              >
+                <i className="bi bi-file-earmark-excel" aria-hidden="true"></i>
+                <span className="admin-responsive-btn-label">
+                  {exportandoExcel ? 'Exportando...' : 'Exportar Excel'}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 }
+
+
+

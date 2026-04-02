@@ -551,3 +551,31 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] Si un scroll interno ya funcionaba bien como invisible, conservar esa experiencia al refactorizar modales; no reintroducir barras visibles salvo que aporten claridad real.
 - [ ] El botón superior de `Cerrar sesión` puede cambiar por breakpoint: más cuadrado en escritorio y redondo en móvil si eso mejora la consistencia del topbar.
 - [ ] Si un chip de contexto en modal se monta con el contenido, aumentar el espacio del header de forma estructural (`margin-bottom`, `padding-right`, ancho del bloque principal), no solo moviendo la `X` unos píxeles.
+- [ ] En `Presentaciones`, los textos del detalle deben salir en lenguaje directo y entendible; no usar narrativas técnicas como `Métricas dinámicas destacadas`, `captación mensual`, `distribución geográfica` o `acciones sugeridas` automáticas.
+- [ ] Si un dato representa conteos de personas, cultos o visitas, no mostrarlo con decimales innecesarios.
+- [ ] Si una presentación antigua todavía trae secciones o textos legados, reconstruirla con la lógica vigente antes de mostrarla; no exponer al usuario final contenido viejo o inconsistente.
+- [ ] En `Superadmin`, escritorio y móvil no comparten exactamente el mismo topbar: en desktop `Campos y distritos` se unifica en un solo botón y panel; en móvil `Campos` y `Distritos` siguen separados.
+- [ ] Si un topbar del superadmin tiene vista activa, debe pintar estado fijo igual que `Administrador`; no dejar botones sin feedback visual cuando el panel ya está abierto.
+- [ ] `Crear nueva instancia` en desktop debe mantener texto visible; en móvil puede quedar icon-only si el breakpoint ya compacta el topbar.
+- [ ] No volver a exponer inputs de código manual para `Campo` o `Distrito` en UI de catálogo si el backend ya puede generarlos o resolverlos internamente.
+- [ ] El mantenimiento de cuentas de superadministración debe vivir dentro del módulo `Superadmin` con formulario + tabla propia, no mezclado con organizaciones ni con admins temporales.
+- [ ] Si una cuenta SUPERADMIN cambia su propia contraseña, la sesión debe cerrarse y pedir nuevo inicio de sesión; si solo cambia nombre/usuario, basta refrescar la sesión.
+- [ ] En `Superadmin`, los buscadores deben filtrar en tiempo real en memoria cuando el volumen lo permita: `Organizaciones` por nombre/correo asociado, `Superadmins` por nombre/usuario y `Distritos` por nombre.
+- [ ] Si un catálogo móvil ya tiene título en el panel principal (`Campos` o `Distritos`), no repetir el mismo título dentro de la tarjeta; esa duplicación roba altura sin aportar contexto.
+- [ ] En formularios pequeños de catálogo, los botones `Agregar` no deben ocupar todo el ancho en teléfono; si solo necesitan un icono, compactarlos y dejarlos icon-only en móvil.
+- [ ] `Campo` en `Superadmin` debe tratarse como dato corto: label `Nombre del Campo o misión`, placeholder `Asociación Norte CR` y límite de 35 caracteres en alta/edición.
+- [ ] En teléfono, el mantenimiento de `Superadmins` debe seguir el patrón de `Usuarios` del módulo administrador: dos vistas compactas con botones tipo tabs (`Formulario`/`Superadmins`) en vez de dejar formulario y tabla apilados.
+- [ ] En ese modo móvil, ocultar el título largo `Mantenimiento de superadministradores`, reducir la nota de expiración a una ayuda breve y dejar `Nombre` como label corto en lugar de `Nombre completo`.
+- [ ] Si un submódulo interno de móvil abre ya posicionado en una vista (`Superadmins` desde topbar, por ejemplo), el botón/tab interno equivalente debe venir claramente coloreado como activo; no dejarlo neutro al primer render.
+- [ ] Si un buscador reusable no muestra completo su placeholder en móvil o en headers muy apretados, acortar el texto antes de ensanchar todo el toolbar.
+- [ ] No cargar listados protegidos de `Superadmin` por defecto si la vista todavía no está abierta; hacer la carga perezosa evita ruido, llamadas duplicadas y falsos `401` en consola.
+- [ ] Si un mantenimiento muestra formulario + tabla al mismo tiempo en escritorio, no repetir tabs internos de móvil (`Formulario` / `Lista`) dentro del panel; esos tabs solo deben existir en teléfono.
+- [ ] Cuando dos tarjetas hermanas comparten altura visual en escritorio (`Campos` y `Distritos`, por ejemplo), no subir una tabla por tener buscador en el header y la otra no; reservar cabeceras equivalentes antes de tocar la altura de las tablas.
+- [ ] En `Superadmin`, `Campos`, `Distritos` y `Organizaciones` no deben volver al scroll “diagonal”: usar wrapper horizontal externo + wrapper vertical interno, igual que en las tablas buenas de `Administrador`.
+- [ ] Si una acción es “agregar” dentro del mismo módulo (`Crear instancia`, `Agregar campo`, `Agregar distrito`), en móvil debe conservar el mismo gesto visual: mismo icono base y misma familia de botón, no una variante distinta por sección.
+- [ ] Esa misma consistencia de `Agregar` aplica también al mantenimiento de `Superadmins`: no mezclar `Crear` con otro icono si el patrón aprobado del módulo ya es `Agregar` + `bi-plus-lg`.
+- [ ] En `Organizaciones registradas`, el badge de conteo no debe competir con el buscador móvil; mover el conteo junto al título y abreviarlo en teléfono (`x/y`) antes de permitir que empuje acciones o reabra scroll vertical innecesario.
+- [ ] En `Organizaciones registradas` móvil, si los filtros siguen siendo importantes para entender qué se está viendo, deben quedar visibles; no esconderlos detrás de un botón/modal si eso solo desplaza el problema.
+- [ ] En ese mismo caso, las acciones secundarias (`Actualizar`, `Excel`) pueden bajar al pie de la tabla en móvil para liberar el header; el buscador arriba debe quedar solo y respirado.
+- [ ] Si la versión visible de filtros en móvil termina recargando demasiado la pantalla, volver al botón/modal es válido, pero el botón `Filtros` debe quedar junto a `Actualizar`, no aislado, y `Excel` no debe duplicarse también en el header de escritorio.
+- [ ] En `Superadmin`, cuando un buscador comparte fila con badges o contadores (`Distritos`, `Superadmins`), el contador debe tener altura visual compatible con el input o moverse fuera del bloque; no dejarlo encogido ni desalineado.

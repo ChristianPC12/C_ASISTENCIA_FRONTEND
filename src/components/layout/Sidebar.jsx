@@ -15,8 +15,11 @@ import {
   EVENT_COMPARACIONES_ABRIR_VISITAS,
   EVENT_ESTADISTICAS_ABRIR_TABLA,
   EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA,
+  EVENT_SUPERADMIN_ABRIR_GESTION_CATALOGOS,
   EVENT_SUPERADMIN_ABRIR_GESTION_CAMPOS,
-  EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS
+  EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS,
+  EVENT_SUPERADMIN_ABRIR_SUPERADMINS,
+  EVENT_SUPERADMIN_VISTA_ACTIVA
 } from '../../config/events';
 
 /**
@@ -29,6 +32,7 @@ import {
 export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [abierto, setAbierto] = useState(false);
   const [adminVistaActiva, setAdminVistaActiva] = useState('RESUMEN');
+  const [superadminVistaActiva, setSuperadminVistaActiva] = useState('ORGANIZACIONES');
   const location = useLocation();
   const { requiereSetup } = useSetupStatus();
   const { tenant, esAdminTemporal, diasRestantesPassword } = useAuth();
@@ -77,13 +81,33 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     };
   }, []);
 
+  useEffect(() => {
+    const manejarVistaActivaSuperadmin = (event) => {
+      const vista = String(event?.detail?.vista || 'ORGANIZACIONES');
+      setSuperadminVistaActiva(vista);
+    };
+
+    window.addEventListener(EVENT_SUPERADMIN_VISTA_ACTIVA, manejarVistaActivaSuperadmin);
+    return () => {
+      window.removeEventListener(EVENT_SUPERADMIN_VISTA_ACTIVA, manejarVistaActivaSuperadmin);
+    };
+  }, []);
+
   const adminVistaTopbar = enPantallaAdministrador ? adminVistaActiva : 'RESUMEN';
   const claseBotonTopbarAdmin = (vista) => (
     `sidebar-topbar-metric-btn ${adminVistaTopbar === vista ? 'is-active' : ''}`
   );
+  const superadminVistaTopbar = enPantallaSuperadmin ? superadminVistaActiva : 'ORGANIZACIONES';
+  const claseBotonTopbarSuperadmin = (activo) => (
+    `sidebar-topbar-metric-btn ${activo ? 'is-active' : ''}`
+  );
 
   const abrirPanelNuevaInstancia = () => {
     window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_CREAR_INSTANCIA));
+  };
+
+  const abrirPanelGestionCatalogos = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_GESTION_CATALOGOS));
   };
 
   const abrirPanelGestionCampos = () => {
@@ -92,6 +116,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirPanelGestionDistritos = () => {
     window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_GESTION_DISTRITOS));
+  };
+
+  const abrirPanelSuperadmins = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_SUPERADMIN_ABRIR_SUPERADMINS));
   };
 
   const abrirPanelCultos = () => {
@@ -258,33 +286,58 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               <>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn"
+                  className={`${claseBotonTopbarSuperadmin(
+                    superadminVistaTopbar === 'CATALOGOS'
+                    || superadminVistaTopbar === 'CAMPOS'
+                    || superadminVistaTopbar === 'DISTRITOS'
+                  )} d-none d-md-inline-flex`}
+                  onClick={abrirPanelGestionCatalogos}
+                  aria-label="Gestionar campos y distritos"
+                  title="Gestionar campos y distritos"
+                >
+                  <i className="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span>Campos y distritos</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarSuperadmin(superadminVistaTopbar === 'CAMPOS')} d-md-none`}
                   onClick={abrirPanelGestionCampos}
                   aria-label="Gestionar campos"
                   title="Gestionar campos"
                 >
                   <i className="bi bi-diagram-3" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Campos</span>
+                  <span className="visually-hidden">Campos</span>
                 </button>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn"
+                  className={`${claseBotonTopbarSuperadmin(superadminVistaTopbar === 'DISTRITOS')} d-md-none`}
                   onClick={abrirPanelGestionDistritos}
                   aria-label="Gestionar distritos"
                   title="Gestionar distritos"
                 >
                   <i className="bi bi-geo-alt" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Distritos</span>
+                  <span className="visually-hidden">Distritos</span>
                 </button>
                 <button
                   type="button"
-                  className="sidebar-topbar-plus"
+                  className={claseBotonTopbarSuperadmin(superadminVistaTopbar === 'SUPERADMINS')}
+                  onClick={abrirPanelSuperadmins}
+                  aria-label="Mantenimiento de superadministradores"
+                  title="Mantenimiento de superadministradores"
+                >
+                  <i className="bi bi-person-gear" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Superadmins</span>
+                </button>
+                <button
+                  type="button"
+                  className={claseBotonTopbarSuperadmin(superadminVistaTopbar === 'CREAR_INSTANCIA')}
                   onClick={abrirPanelNuevaInstancia}
                   aria-label="Crear nueva instancia"
                   title="Crear nueva instancia"
                 >
                   <i className="bi bi-plus-lg" aria-hidden="true"></i>
-                  <span className="visually-hidden">Crear nueva instancia</span>
+                  <span className="d-none d-md-inline">Crear nueva instancia</span>
+                  <span className="visually-hidden d-md-none">Crear nueva instancia</span>
                 </button>
               </>
             )}

@@ -9,6 +9,14 @@ const superadminApi = {
   crearAdminTemporal: (organizacionId, payload) => (
     ApiCliente.post(`/v2/superadmin/organizaciones/${organizacionId}/admin-temporal`, payload)
   ),
+  listarSuperadmins: () => ApiCliente.get('/v2/superadmin/usuarios-superadmin'),
+  crearSuperadmin: (payload) => ApiCliente.post('/v2/superadmin/usuarios-superadmin', payload),
+  actualizarSuperadmin: (usuarioId, payload) => (
+    ApiCliente.put(`/v2/superadmin/usuarios-superadmin/${usuarioId}`, payload)
+  ),
+  actualizarPasswordSuperadmin: (usuarioId, payload) => (
+    ApiCliente.put(`/v2/superadmin/usuarios-superadmin/${usuarioId}/password`, payload)
+  ),
   listarCampos: () => ApiCliente.get('/v2/superadmin/campos'),
   crearCampo: (payload) => ApiCliente.post('/v2/superadmin/campos', payload),
   actualizarCampo: (codigo, payload) => ApiCliente.put(`/v2/superadmin/campos/${encodeURIComponent(codigo)}`, payload),

@@ -1248,28 +1248,21 @@ export function useSuperadminOrganizaciones() {
     cargarOrganizaciones
   ]);
 
-  const crearCampoCatalogo = useCallback(async (codigoRaw, nombreRaw) => {
-    const codigo = normalizarCodigoCampo(codigoRaw);
+  const crearCampoCatalogo = useCallback(async (nombreRaw) => {
     const etiqueta = normalizarTextoCorto(nombreRaw, 80);
-
-    if (!codigo || !CAMPO_CODIGO_REGEX.test(codigo)) {
-      notificarError('El código del campo debe tener 2 a 10 caracteres alfanuméricos.');
-      return false;
-    }
 
     if (etiqueta.length < 3) {
       notificarError('El nombre del campo debe tener al menos 3 caracteres.');
       return false;
     }
 
-    if (camposOpciones.some((item) => item.valor === codigo)) {
-      notificarError('Ese código de campo ya existe.');
+    if (camposOpciones.some((item) => normalizarNombreClave(item.etiqueta) === normalizarNombreClave(etiqueta))) {
+      notificarError('Ya existe un campo con ese nombre.');
       return false;
     }
 
     try {
       const res = await superadminApi.crearCampo({
-        codigo,
         nombre: etiqueta,
         activo: true
       });

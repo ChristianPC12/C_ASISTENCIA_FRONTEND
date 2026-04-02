@@ -275,3 +275,54 @@ Rutas activas:
   - `Cerrar sesión` superior usa geometría más cuadrada en escritorio y redonda en móvil,
   - el botón `Cerrar sesión` del sidebar de escritorio se estiliza con icono y mejor jerarquía visual,
   - `Detalle estadístico` reserva más espacio en header para que chips como `Culto Sábado` no se monten con el contenido.
+- Ajuste de `Presentaciones` (2026-04-01):
+  - el detalle ya no depende de narrativa técnica heredada (`kpis_clave`, conclusiones/acciones, métricas dinámicas destacadas),
+  - el backend reconstruye presentaciones legadas al leerlas usando los filtros originales y un corte por `creado_en`,
+  - los conteos de personas/cultos/visitas se presentan sin decimales innecesarios,
+  - la sección de `Permanencia` y las procedencias/visitas dinámicas se recalculan con todas las métricas activas del período.
+- Ajuste reciente en `Superadmin` (2026-04-02):
+  - topbar con estado activo propio via `EVENT_SUPERADMIN_VISTA_ACTIVA`,
+  - botón nuevo para mantenimiento de superadministradores,
+  - `Campos + Distritos` unificados en escritorio y separados en móvil,
+  - `Crear nueva instancia` con texto en desktop e icon-only en móvil,
+  - formularios de catálogo sin código manual visible,
+  - placeholders de catálogo fijados en `Asociación Multi` y `Guanacaste 2`.
+- Ajuste técnico asociado:
+  - `useSuperadminUsuarios` centraliza listado/creación/edición/cambio de contraseña de cuentas SUPERADMIN,
+  - `SuperadminPage` ya no mezcla el mantenimiento de superadmins con la tabla general de organizaciones,
+  - el patrón visual de botones y cierres del superadmin sigue la misma convención responsive del resto del sistema.
+- Ajuste fino posterior en `Superadmin` (2026-04-02, segunda pasada):
+  - `Campos` ahora usa label `Nombre del Campo o misión`, placeholder `Asociación Norte CR` y límite de 35 caracteres,
+  - `Organizaciones registradas` agrega buscador reusable en tiempo real por nombre o correo asociado,
+  - `Distritos` agrega buscador propio en tiempo real por nombre, mientras `Campos` se mantiene sin buscador por ser un catálogo corto,
+  - el mantenimiento de `Superadmins` agrega buscador por nombre o usuario y, en móvil, cambia a un patrón de dos vistas (`Formulario` / `Superadmins`) para evitar scroll excesivo,
+  - en teléfono se oculta el título largo del mantenimiento y se compactan la nota de expiración, los botones `Agregar` y las tablas de catálogos.
+- Ajuste fino final en `Superadmin` (2026-04-02, tercera pasada):
+  - `Campos` y `Distritos` vuelven a arrancar a la misma altura visual reservando una cabecera equivalente,
+  - el buscador de `Superadmins` mantiene la búsqueda por nombre o usuario, pero con placeholder corto (`Buscar por nombre`) para no romper el header,
+  - los tabs internos móviles de `Superadmins` ahora sí muestran el estado activo con color fijo desde el primer render,
+  - el listado de superadministradores ya no se carga al montar toda la pantalla: se carga solo cuando la vista está abierta, lo que reduce consultas innecesarias y evita `401` ruidosos en consola,
+  - el export Excel de organizaciones recuperó su nombre dinámico correcto.
+- Ajuste fino extra en `Superadmin` (2026-04-02, cuarta pasada):
+  - en escritorio se mantiene visible la vista completa de `Superadmins` sin repetir abajo los tabs internos de móvil,
+  - la cabecera de `Campos` reserva el mismo peso visual que `Distritos` para que ambas tablas arranquen alineadas,
+  - el copy visible del mantenimiento se simplifica (`Superadmins`, `Nombre`, `Usuarios`) para evitar repeticiones innecesarias del término `superadministrador`.
+- Ajuste fino extra en `Superadmin` (2026-04-02, quinta pasada):
+  - el campo `Usuario` del formulario de superadmins vuelve al mismo ancho visual que `Nombre`,
+  - `Campos`, `Distritos` y `Organizaciones` usan ya el patrón de scroll serio con wrapper horizontal externo y scroll vertical interno,
+  - en móvil, las acciones de `Organizaciones registradas` pasan a icon-only y los botones de `Agregar` del módulo comparten una misma línea visual.
+- Ajuste fino extra en `Superadmin` (2026-04-02, sexta pasada):
+  - `Campos`, `Distritos` y la tabla de `Superadmins` usan el mismo split de scroll que `Administrador`, eliminando el efecto de tabla “suelta” o diagonal,
+  - el formulario de mantenimiento de `Superadmins` conserva el patrón `Agregar` + `bi-plus-lg`, alineado con `Campos`, `Distritos` y las demás altas del módulo,
+  - en `Organizaciones registradas`, el badge de conteo sube junto al título y en móvil se acorta a `x/y`, liberando espacio real para buscador y acciones,
+  - el placeholder del buscador de organizaciones se compacta a `Buscar por nombre o correo` y la tabla reduce su ancho mínimo móvil para recortar scroll innecesario sin perder columnas.
+- Ajuste fino extra en `Superadmin` (2026-04-02, séptima pasada):
+  - el scroll horizontal de `Campos`, `Distritos`, `Superadmins` y `Organizaciones` vuelve a apoyarse en wrappers con ancho por contenido (`width:max-content` + `min-width:100%`), que era lo que faltaba para que el lateral funcionara otra vez,
+  - en `Organizaciones registradas`, el header de escritorio se divide en título/conteo, buscador y acciones para evitar que el buscador se monte con `Actualizar lista`,
+  - en móvil, los filtros de organizaciones vuelven a ser visibles dentro del módulo y las acciones `Actualizar`/`Excel` bajan al pie de la tabla para no saturar la cabecera,
+  - en `Distritos` y en la lista de `Superadmins`, los contadores salen del bloque del buscador para que el input respire y deje de verse desordenado.
+- Ajuste fino extra en `Superadmin` (2026-04-02, octava pasada):
+  - el patrón móvil de `Organizaciones registradas` se reequilibra: los filtros vuelven al botón/modal, `Filtros` queda junto a `Actualizar`, y el export duplicado se elimina del header de escritorio,
+  - las tablas de `Campos`, `Distritos`, `Superadmins` y `Organizaciones` pasan a usar wrappers `table-responsive` más el split horizontal/vertical ya aprobado para recuperar el scroll lateral,
+  - en `Campos` se elimina el contador por innecesario; en `Distritos` y `Superadmins` los contadores se alinean mejor con el buscador y en `Superadmins` el segundo badge pasa a `Registrados: N`,
+  - los botones del formulario de superadmins dejan de estirarse en grid y vuelven a quedar juntos, a la misma línea visual del patrón esperado.

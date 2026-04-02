@@ -174,3 +174,10 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en m贸
 - La forma de botones icon-only tambi閚 puede cambiar por breakpoint: desktop puede conservar geometr韆 m醩 cuadrada y m髒il priorizar redondos para limpieza visual.
 - El mismo control puede tener distinta geometr韆 seg鷑 breakpoint si mantiene coherencia con su contexto: logout superior m醩 cuadrado en desktop, m醩 redondo en celular.
 - Cuando un header de modal tiene t韙ulo + chips + cierre absoluto, la separaci髇 visual debe venir del layout del header, no de empujar el contenido de abajo a ciegas.
+
+### D20) Superadmin con topbar adaptado por breakpoint
+- En `Superadmin`, escritorio puede unificar `Campos y distritos` porque ambos cat谩logos son peque帽os y caben bien en una sola vista.
+- En m贸vil, esos mismos cat谩logos deben seguir separados para no abrir un panel excesivamente largo.
+- Si el bot贸n de acci贸n principal (`Crear nueva instancia`) necesita contexto en escritorio, mostrar texto; en m贸vil basta icon-only.
+- El mantenimiento de superadministradores debe sentirse como un panel propio del m贸dulo, no como un detalle secundario perdido dentro de organizaciones.
+- Los formularios de cat谩logos peque帽os deben ocultar cualquier campo t茅cnico irrelevante (`c贸digo`) y priorizar solo el dato que el usuario entiende (`nombre`).

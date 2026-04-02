@@ -521,25 +521,275 @@ a:hover {
   white-space: nowrap;
 }
 
+.iasd-search-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 38px;
+  min-width: 0;
+  width: 100%;
+  padding: 0 0.72rem;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.iasd-search-input i {
+  flex-shrink: 0;
+  color: var(--iasd-texto-sec);
+  font-size: 0.9rem;
+}
+
+.iasd-search-input .form-control {
+  min-width: 0;
+  border: none;
+  box-shadow: none !important;
+  background: transparent;
+  padding: 0;
+}
+
+.iasd-search-input .form-control:focus {
+  border: none;
+  box-shadow: none !important;
+}
+
 .superadmin-tabla-scroll {
   position: relative;
   max-height: clamp(340px, 52vh, 560px);
-  overflow: auto;
+  width: fit-content;
+  min-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+}
+
+.superadmin-tabla-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: auto;
 }
 
 .superadmin-tabla {
+  width: 100%;
   min-width: 1120px;
   margin-bottom: 0 !important;
 }
 
 .superadmin-metricas-tabla-wrap {
   max-height: clamp(220px, 36vh, 360px);
+  width: fit-content;
+  min-width: 100%;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+}
+
+.superadmin-catalogos-grid {
+  align-items: start;
+}
+
+.superadmin-catalogo-card {
+  height: 100%;
+  padding: 1rem;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.superadmin-mantenimiento-form {
+  min-height: 100%;
+}
+
+.superadmin-mantenimiento-copy {
+  min-width: 0;
+}
+
+.superadmin-maint-note {
+  font-size: 0.78rem;
+  line-height: 1.28;
+}
+
+.superadmin-search {
+  width: min(100%, 18rem);
+}
+
+.superadmin-search-organizaciones {
+  width: min(100%, 20rem);
+}
+
+.superadmin-catalogo-title-row {
+  min-height: 38px;
+}
+
+.superadmin-catalogo-head-tools {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.superadmin-catalogo-form {
+  align-items: end;
+}
+
+.superadmin-catalogo-form {
+  --superadmin-catalogo-control-height: calc(1.5em + 0.5rem + 2px);
+}
+
+.superadmin-catalogo-form .form-control-sm {
+  height: var(--superadmin-catalogo-control-height);
+  min-height: var(--superadmin-catalogo-control-height);
+}
+
+.superadmin-catalogo-add-btn {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 0.25rem 0.5rem;
+  min-width: 8.75rem;
+  min-height: var(--superadmin-catalogo-control-height);
+  height: var(--superadmin-catalogo-control-height);
+}
+
+.superadmin-catalogo-tabla-wrap,
+.superadmin-superadmins-tabla-wrap {
+  background: #ffffff;
+}
+
+.superadmin-catalogo-tabla-wrap thead th,
+.superadmin-superadmins-tabla-wrap thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background-color: var(--iasd-azul);
+  box-shadow: inset 0 -1px 0 var(--iasd-azul-hover);
+}
+
+.superadmin-catalogo-tabla {
+  width: 100%;
+  min-width: 24rem;
+  table-layout: auto;
+}
+
+.superadmin-catalogo-tabla-wrap td:first-child .form-control {
+  min-width: 14rem;
+}
+
+.superadmin-superadmins-tabla-wrap {
+  max-height: clamp(260px, 42vh, 420px);
+}
+
+.superadmin-superadmins-tabla-wrap .table {
+  width: 100%;
+  min-width: 33rem;
+  table-layout: auto;
+}
+
+.superadmin-mobile-switch {
+  display: none !important;
+}
+
+.superadmin-mobile-panel {
+  display: block;
+}
+
+.superadmin-maint-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.superadmin-form-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: flex-start;
+  gap: 0.75rem;
+}
+
+.superadmin-form-estado-block {
+  width: min(100%, 11rem);
+}
+
+.superadmin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 0.6rem;
+  margin-left: 0;
+}
+
+.superadmin-form-action-btn {
+  min-width: 8.75rem;
+  width: auto;
+}
+
+.superadmin-toolbar-action-btn {
+  min-width: 0;
+}
+
+.superadmin-organizaciones-search-wrap {
+  min-width: 0;
+  flex: 0 1 21rem;
+}
+
+.superadmin-organizaciones-head-tools {
+  min-width: 0;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.superadmin-organizaciones-title-wrap {
+  min-width: 0;
+}
+
+.superadmin-organizaciones-count {
+  white-space: nowrap;
+}
+
+.superadmin-count-chip {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.superadmin-organizaciones-filtros-mobile,
+.superadmin-organizaciones-mobile-actions {
+  display: none;
+}
+
+.superadmin-filtros-modal {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 0.95rem;
+  padding: 1rem;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+}
+
+.superadmin-estado-col {
+  align-self: end;
+}
+
+.superadmin-col-acciones {
+  width: 10.75rem;
+}
+
+.superadmin-col-accion {
+  width: 6rem;
 }
 
 .superadmin-tabla thead th {
@@ -548,6 +798,46 @@ a:hover {
   z-index: 3;
   background-color: var(--iasd-azul);
   box-shadow: inset 0 -1px 0 var(--iasd-azul-hover);
+}
+
+.superadmin-tabla thead th:nth-child(1),
+.superadmin-tabla tbody td:nth-child(1) {
+  min-width: 7.5rem;
+}
+
+.superadmin-tabla thead th:nth-child(2),
+.superadmin-tabla tbody td:nth-child(2) {
+  min-width: 8rem;
+}
+
+.superadmin-tabla thead th:nth-child(3),
+.superadmin-tabla tbody td:nth-child(3) {
+  min-width: 6.5rem;
+}
+
+.superadmin-tabla thead th:nth-child(4),
+.superadmin-tabla tbody td:nth-child(4) {
+  min-width: 11rem;
+}
+
+.superadmin-tabla thead th:nth-child(5),
+.superadmin-tabla tbody td:nth-child(5) {
+  min-width: 5.75rem;
+}
+
+.superadmin-tabla thead th:nth-child(6),
+.superadmin-tabla tbody td:nth-child(6) {
+  min-width: 11rem;
+}
+
+.superadmin-tabla thead th:nth-child(7),
+.superadmin-tabla tbody td:nth-child(7) {
+  min-width: 8rem;
+}
+
+.superadmin-tabla thead th:nth-child(8),
+.superadmin-tabla tbody td:nth-child(8) {
+  min-width: 5.5rem;
 }
 
 .admin-setup-hero {
@@ -853,7 +1143,7 @@ a:hover {
   outline: none;
 }
 
-.admin-panel-header-top .admin-usuarios-switch-btn.is-active {
+.admin-usuarios-switch-btn.is-active {
   background: #ffffff;
   color: var(--iasd-azul);
   border-color: #f4c95d;
@@ -1511,6 +1801,16 @@ a:hover {
     min-width: 29rem;
   }
 
+  .superadmin-catalogo-tabla-wrap .table {
+    width: max-content;
+    min-width: 22rem;
+  }
+
+  .superadmin-superadmins-tabla-wrap .table {
+    width: max-content;
+    min-width: 29rem;
+  }
+
   .admin-setup-tabla-wrap-procedencias .table {
     width: max-content;
     min-width: 20rem;
@@ -1536,6 +1836,142 @@ a:hover {
 
   .admin-usuarios-switch-btn {
     flex: 1 1 calc(50% - 0.6rem);
+  }
+
+  .superadmin-maint-title {
+    display: none;
+  }
+
+  .superadmin-maint-note {
+    font-size: 0.72rem;
+    line-height: 1.2;
+    max-width: 13rem;
+  }
+
+  .superadmin-mobile-switch {
+    display: flex !important;
+  }
+
+  .superadmin-mobile-panel {
+    display: none;
+  }
+
+  .superadmin-mobile-panel.is-active {
+    display: block;
+  }
+
+  .superadmin-search-organizaciones,
+  .superadmin-search-sm {
+    width: 100%;
+  }
+
+  .superadmin-catalogo-head-tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .superadmin-catalogo-head-tools .superadmin-search {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .superadmin-catalogo-card {
+    padding: 0.85rem;
+  }
+
+  .superadmin-maint-header-actions {
+    width: auto;
+    justify-content: flex-end;
+  }
+
+  .superadmin-form-actions {
+    width: auto;
+    margin-left: 0;
+  }
+
+  .superadmin-form-toolbar {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .superadmin-form-estado-block {
+    width: 100%;
+  }
+
+  .superadmin-catalogo-add-btn {
+    width: var(--superadmin-catalogo-control-height);
+    min-width: var(--superadmin-catalogo-control-height);
+    height: var(--superadmin-catalogo-control-height);
+    padding: 0;
+    border-radius: 0.6rem;
+  }
+
+  .superadmin-catalogo-add-btn .admin-responsive-btn-label {
+    display: none;
+  }
+
+  .superadmin-catalogo-tabla-wrap td:first-child .form-control {
+    min-width: 11rem;
+  }
+
+  .superadmin-catalogo-tabla {
+    width: max-content;
+    min-width: 24rem;
+  }
+
+  .superadmin-organizaciones-filtros-desktop {
+    display: none;
+  }
+
+  .superadmin-organizaciones-search-wrap {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .superadmin-organizaciones-head-tools {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.45rem;
+  }
+
+  .superadmin-organizaciones-search-wrap .superadmin-search-organizaciones {
+    width: 100%;
+  }
+
+  .superadmin-organizaciones-title-wrap {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .superadmin-organizaciones-count {
+    font-size: 0.72rem;
+  }
+
+  .superadmin-organizaciones-filtros-mobile {
+    display: block;
+  }
+
+  .superadmin-organizaciones-filtros-mobile .form-label {
+    font-size: 0.72rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .superadmin-organizaciones-mobile-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .superadmin-organizaciones-mobile-actions .superadmin-toolbar-action-btn {
+    flex: 0 0 auto;
+  }
+
+  .superadmin-tabla {
+    width: max-content;
+    min-width: 58rem;
+  }
+
+  .superadmin-count-chip {
+    min-height: 36px;
   }
 
   .admin-info-switch {
@@ -3094,6 +3530,11 @@ a:hover {
     padding: 0;
     border-radius: 999px;
   }
+
+  .superadmin-col-acciones,
+  .superadmin-col-accion {
+    width: 6.5rem;
+  }
 }
 
 /* ==============================================
@@ -3359,14 +3800,81 @@ a:hover {
   resize: vertical;
 }
 
+.presentaciones-top-row > [class*='col-'] {
+  display: flex;
+}
+
+.presentaciones-filtros-card,
+.presentaciones-historial-card {
+  width: 100%;
+  border: 1px solid rgba(0, 51, 102, 0.08);
+}
+
+.presentaciones-filtros-card .card-body,
+.presentaciones-historial-card .card-body {
+  padding: 0.95rem 1rem;
+}
+
+.presentaciones-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.presentaciones-card-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.68rem;
+  border-radius: 999px;
+  background: rgba(0, 51, 102, 0.06);
+  color: var(--iasd-azul);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.presentaciones-filtros-card .form-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--iasd-texto-sec);
+}
+
+.presentaciones-detalle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 38px;
+}
+
+.presentaciones-lista-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .presentaciones-lista-scroll {
-  max-height: 560px;
+  max-height: clamp(300px, 44vh, 390px);
   overflow-y: auto;
   overscroll-behavior: contain;
+  padding-right: 0.12rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.presentaciones-lista-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .presentacion-item {
-  border-left: 3px solid transparent;
+  border: 1px solid rgba(0, 51, 102, 0.08) !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 0.85rem !important;
+  padding: 0.8rem 0.9rem;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
 }
 
 .presentacion-item:disabled {
@@ -3375,21 +3883,135 @@ a:hover {
 }
 
 .presentacion-item-activo {
-  border-left-color: var(--iasd-dorado);
-  background: rgba(0, 51, 102, 0.08);
+  border-left-color: var(--iasd-dorado) !important;
+  background: rgba(0, 51, 102, 0.08) !important;
 }
 
 .presentacion-item-resumen {
   font-size: 0.84rem;
 }
 
-.presentacion-detalle-head {
-  border-bottom: 1px solid var(--iasd-borde);
-  padding-bottom: 0.75rem;
+.presentacion-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.presentacion-modal-dismiss {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: transparent;
+}
+
+.presentacion-modal-iasd {
+  position: relative;
+  width: min(1120px, 100%);
+  max-height: min(88vh, 920px);
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.25);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.presentacion-modal-head {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.15rem;
+}
+
+.presentacion-modal-head-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 4.25rem;
+}
+
+.presentacion-modal-head-main h5 {
+  color: var(--iasd-azul);
+  font-weight: 700;
+}
+
+.presentacion-modal-head-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+.presentacion-modal-head-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(0, 51, 102, 0.08);
+  color: var(--iasd-azul);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.presentacion-modal-head-actions {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  z-index: 3;
+}
+
+.presentacion-modal-close {
+  top: auto;
+  right: auto;
+}
+
+.presentacion-modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: 0.2rem;
+  padding-right: 0.15rem;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.presentacion-modal-body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.presentacion-secciones-panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.presentacion-seccion-shell {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.12rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.presentacion-seccion-shell::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .presentacion-seccion {
   border-left: 4px solid var(--iasd-dorado);
+}
+
+.presentacion-seccion .card-body {
+  padding: 0.95rem 1rem;
 }
 
 .presentacion-seccion-titulo {
@@ -3398,10 +4020,63 @@ a:hover {
   margin-bottom: 0.6rem;
 }
 
+.presentacion-carousel-btn {
+  border-color: rgba(0, 51, 102, 0.14);
+  background: #ffffff;
+  color: var(--iasd-azul);
+}
+
+.presentacion-carousel-btn:hover,
+.presentacion-carousel-btn:focus-visible {
+  border-color: rgba(0, 51, 102, 0.28);
+  background: rgba(0, 51, 102, 0.05);
+  color: var(--iasd-azul);
+}
+
 @media (max-width: 768px) {
   .prompt-floating-btn {
     right: 0.85rem;
     bottom: 0.85rem;
     min-width: 116px;
+  }
+
+  .presentaciones-filtros-card .card-body,
+  .presentaciones-historial-card .card-body,
+  .presentacion-modal-iasd {
+    padding: 0.85rem;
+  }
+
+  .presentaciones-detalle-btn {
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+    border-radius: 999px;
+  }
+
+  .presentaciones-detalle-btn-label {
+    display: none;
+  }
+
+  .presentaciones-lista-scroll {
+    max-height: 15.5rem;
+  }
+
+  .presentacion-modal-head {
+    margin-bottom: 1rem;
+  }
+
+  .presentacion-modal-head-main {
+    padding-right: 4rem;
+  }
+
+  .presentacion-modal-head-chip {
+    font-size: 0.76rem;
+  }
+
+  .presentacion-seccion-shell {
+    max-height: 17.5rem;
   }
 }
