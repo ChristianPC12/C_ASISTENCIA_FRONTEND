@@ -225,6 +225,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             className="btn btn-outline-light btn-sm w-100 mt-2 sidebar-logout-btn d-none d-md-inline-flex justify-content-center align-items-center"
             onClick={onCerrarSesion}
           >
+            <i className="bi bi-box-arrow-right" aria-hidden="true"></i>
             Cerrar sesión
           </button>
         </div>

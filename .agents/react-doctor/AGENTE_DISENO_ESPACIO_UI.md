@@ -172,3 +172,5 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mÃ³
 - Si un modal muestra chips de contexto bajo el título, no basta con empujar la `X`; el bloque del título/chips debe reservarse su propio ancho para que el contenido respire y no se vea montado.
 - En desktop, no esconder tablas grandes si todavía caben bien y eran parte del flujo principal; reservar la estrategia de tabla-por-modal para móvil cuando el viewport realmente lo justifica.
 - La forma de botones icon-only también puede cambiar por breakpoint: desktop puede conservar geometría más cuadrada y móvil priorizar redondos para limpieza visual.
+- El mismo control puede tener distinta geometría según breakpoint si mantiene coherencia con su contexto: logout superior más cuadrado en desktop, más redondo en celular.
+- Cuando un header de modal tiene título + chips + cierre absoluto, la separación visual debe venir del layout del header, no de empujar el contenido de abajo a ciegas.

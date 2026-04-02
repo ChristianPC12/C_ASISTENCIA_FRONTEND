@@ -549,3 +549,5 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] En headers de modales con chips/contexto y una `X` absoluta, el bloque principal debe reservar ancho real (`flex:1` + `max-width`) para que el contenido no se monte con la acción de cierre ni con el body que viene debajo.
 - [ ] Si una vista cambia por breakpoint, documentar explícitamente el contrato: escritorio puede mantener tabla visible y botones cuadrados; móvil puede ocultar tabla y usar icon-only redondos. No mezclar ambos comportamientos en todos los tamaños.
 - [ ] Si un scroll interno ya funcionaba bien como invisible, conservar esa experiencia al refactorizar modales; no reintroducir barras visibles salvo que aporten claridad real.
+- [ ] El botón superior de `Cerrar sesión` puede cambiar por breakpoint: más cuadrado en escritorio y redondo en móvil si eso mejora la consistencia del topbar.
+- [ ] Si un chip de contexto en modal se monta con el contenido, aumentar el espacio del header de forma estructural (`margin-bottom`, `padding-right`, ancho del bloque principal), no solo moviendo la `X` unos píxeles.

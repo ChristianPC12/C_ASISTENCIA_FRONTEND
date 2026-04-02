@@ -271,3 +271,7 @@ Rutas activas:
   - en móvil la tabla principal sigue oculta y se accede por modal/contextual,
   - los botones icon-only recuperan forma cuadrada en desktop y permanecen redondos solo en celular,
   - el scroll del body de modales analíticos vuelve a ser invisible.
+- Pulido visual adicional:
+  - `Cerrar sesión` superior usa geometría más cuadrada en escritorio y redonda en móvil,
+  - el botón `Cerrar sesión` del sidebar de escritorio se estiliza con icono y mejor jerarquía visual,
+  - `Detalle estadístico` reserva más espacio en header para que chips como `Culto Sábado` no se monten con el contenido.
