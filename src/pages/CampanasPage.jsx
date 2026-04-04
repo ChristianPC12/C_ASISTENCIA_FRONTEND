@@ -2,13 +2,14 @@ import { useState, useMemo, useEffect } from 'react';
 import SearchInput from '../components/ui/SearchInput';
 import { useCampanas } from '../hooks/useCampanas';
 import CampanaFormModal from '../components/campanas/CampanaFormModal';
-import { EVENT_CAMPANAS_ABRIR_NUEVA } from '../config/events';
+import CampanaSelectorModal from '../components/campanas/CampanaSelectorModal';
+import CampanaDetalleModal from '../components/campanas/CampanaDetalleModal';
+import { EVENT_CAMPANAS_ABRIR_NUEVA, EVENT_CAMPANAS_ABRIR_SELECTOR } from '../config/events';
 
 const TIPO_OPCIONES = [
   { valor: 'SEMANA_EVANGELISTICA', etiqueta: 'Semana evangelística' },
   { valor: 'CAMPANA_2_SEMANAS', etiqueta: 'Campaña 2 semanas' },
-  { valor: 'CAMPANA_ESPECIAL', etiqueta: 'Campaña especial' },
-  { valor: 'SERIE_CORTA', etiqueta: 'Serie corta' }
+  { valor: 'OTRO', etiqueta: 'Otro' }
 ];
 
 const ESTADO_CAMPANA_OPCIONES = [
@@ -726,6 +727,8 @@ function DetalleCampana(props) {
 export default function CampanasPage() {
   const [mostrarExtraCampana, setMostrarExtraCampana] = useState(false);
   const [mostrarModalCampana, setMostrarModalCampana] = useState(false);
+  const [mostrarDetalleModal, setMostrarDetalleModal] = useState(false);
+  const [mostrarSelectorModal, setMostrarSelectorModal] = useState(false);
 
   useEffect(() => {
     const manejarAbrirNuevaCampana = () => {
@@ -736,6 +739,17 @@ export default function CampanasPage() {
     window.addEventListener(EVENT_CAMPANAS_ABRIR_NUEVA, manejarAbrirNuevaCampana);
     return () => {
       window.removeEventListener(EVENT_CAMPANAS_ABRIR_NUEVA, manejarAbrirNuevaCampana);
+    };
+  }, []);
+
+  useEffect(() => {
+    const manejarAbrirSelector = () => {
+      setMostrarSelectorModal(true);
+    };
+
+    window.addEventListener(EVENT_CAMPANAS_ABRIR_SELECTOR, manejarAbrirSelector);
+    return () => {
+      window.removeEventListener(EVENT_CAMPANAS_ABRIR_SELECTOR, manejarAbrirSelector);
     };
   }, []);
 
@@ -814,15 +828,6 @@ export default function CampanasPage() {
                   </select>
                 </div>
                 <div className="col-6 col-lg-2">
-                  <label className="form-label form-label-sm">Responsable</label>
-                  <select className="form-select form-select-sm" value={filtros.responsable_usuario_id} onChange={(e) => cambiarFiltro('responsable_usuario_id', e.target.value)}>
-                    <option value="">Todos</option>
-                    {usuarios.map((usuario) => (
-                      <option key={usuario.id} value={usuario.id}>{usuario.nombre_completo}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-6 col-lg-2">
                   <label className="form-label form-label-sm">Desde</label>
                   <input type="date" className="form-control form-control-sm" value={filtros.fecha_desde} onChange={(e) => cambiarFiltro('fecha_desde', e.target.value)} />
                 </div>
@@ -873,8 +878,8 @@ export default function CampanasPage() {
                       {campanas.map((item) => (
                         <tr key={item.id} className={seleccionadaId === item.id ? 'table-active' : ''}>
                           <td>
-                            <button type="button" className="btn btn-link p-0 text-start text-decoration-none fw-semibold" onClick={() => setSeleccionadaId(item.id)}>
-                              {item.nombre}
+                            <button type="button" className="btn btn-link p-0 text-start text-decoration-none fw-semibold" onClick={() => { setSeleccionadaId(item.id); setMostrarDetalleModal(true); }}>
+                              {item.lema}
                             </button>
                             <div className="small text-muted">{formatearFecha(item.fecha_inicio)} al {formatearFecha(item.fecha_fin)}</div>
                           </td>
@@ -899,36 +904,6 @@ export default function CampanasPage() {
             </div>
           </div>
         </div>
-
-        <div className="col-12 col-xxl-8">
-          {!detalle ? (
-            <DetalleVacio />
-          ) : (
-            <DetalleCampana
-              detalle={detalle}
-              cargandoDetalle={cargandoDetalle}
-              detalleVista={detalleVista}
-              setDetalleVista={setDetalleVista}
-              recargar={recargar}
-              sesionForm={sesionForm}
-              setSesionForm={setSesionForm}
-              asistenteForm={asistenteForm}
-              setAsistenteForm={setAsistenteForm}
-              asistenciaForm={asistenciaForm}
-              setAsistenciaForm={setAsistenciaForm}
-              decisionForm={decisionForm}
-              setDecisionForm={setDecisionForm}
-              asistentesOpciones={asistentesOpciones}
-              sesionesOpciones={sesionesOpciones}
-              guardarSesion={guardarSesion}
-              guardarAsistente={guardarAsistente}
-              guardarAsistencia={guardarAsistencia}
-              convertirAsistenteAEstudio={convertirAsistenteAEstudio}
-              convirtiendoAsistenteId={convirtiendoAsistenteId}
-              guardarDecision={guardarDecision}
-            />
-          )}
-        </div>
       </div>
 
       <CampanaFormModal
@@ -939,9 +914,68 @@ export default function CampanasPage() {
         setForm={setCampanaForm}
         onGuardar={guardarYCerrarCampana}
         guardando={guardando}
-        usuarios={usuarios}
         mostrarExtra={mostrarExtraCampana}
         setMostrarExtra={setMostrarExtraCampana}
+      />
+
+      <CampanaSelectorModal
+        mostrar={mostrarSelectorModal}
+        campanas={campanas}
+        onCerrar={() => setMostrarSelectorModal(false)}
+        onSeleccionar={(id) => {
+          setSeleccionadaId(id);
+          setMostrarSelectorModal(false);
+          setMostrarDetalleModal(true);
+        }}
+      />
+
+      <CampanaDetalleModal
+        mostrar={mostrarDetalleModal}
+        onCerrar={() => setMostrarDetalleModal(false)}
+        detalle={detalle}
+        cargandoDetalle={cargandoDetalle}
+        detalleVista={detalleVista}
+        setDetalleVista={setDetalleVista}
+        onEditarCampana={(item) => {
+          editarCampana(item);
+          setMostrarModalCampana(true);
+          setMostrarDetalleModal(false);
+        }}
+        resumenComponent={
+          <ResumenCampana detalle={detalle} />
+        }
+        sesionesComponent={
+          <SesionesCampana
+            detalle={detalle}
+            sesionForm={sesionForm}
+            setSesionForm={setSesionForm}
+            guardarSesion={guardarSesion}
+          />
+        }
+        asistentesComponent={
+          <AsistentesCampana
+            detalle={detalle}
+            asistentesOpciones={asistentesOpciones}
+            sesionesOpciones={sesionesOpciones}
+            asistenteForm={asistenteForm}
+            setAsistenteForm={setAsistenteForm}
+            asistenciaForm={asistenciaForm}
+            setAsistenciaForm={setAsistenciaForm}
+            guardarAsistente={guardarAsistente}
+            guardarAsistencia={guardarAsistencia}
+            convertirAsistenteAEstudio={convertirAsistenteAEstudio}
+            convirtiendoAsistenteId={convirtiendoAsistenteId}
+          />
+        }
+        decisionesComponent={
+          <DecisionesCampana
+            detalle={detalle}
+            asistentesOpciones={asistentesOpciones}
+            decisionForm={decisionForm}
+            setDecisionForm={setDecisionForm}
+            guardarDecision={guardarDecision}
+          />
+        }
       />
     </div>
   );

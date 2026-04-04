@@ -11,6 +11,7 @@ import {
   EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA,
   EVENT_CAMPANAS_ABRIR_NUEVA,
+  EVENT_CAMPANAS_ABRIR_SELECTOR,
   EVENT_COMPARACIONES_ABRIR_TABLA,
   EVENT_COMPARACIONES_ABRIR_DETALLE,
   EVENT_COMPARACIONES_ABRIR_VISITAS,
@@ -162,6 +163,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirNuevaCampana = () => {
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_NUEVA));
+  };
+
+  const abrirSelectorCampana = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_SELECTOR));
   };
 
   let enlaces = [];
@@ -452,16 +457,28 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               </button>
             )}
             {enPantallaCampanas && (
-              <button
-                type="button"
-                className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
-                onClick={abrirNuevaCampana}
-                aria-label="Nueva Campaña"
-                title="Nueva Campaña"
-              >
-                <i className="bi bi-plus-lg" aria-hidden="true"></i>
-                <span className="d-none d-md-inline">Nueva Campaña</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
+                  onClick={abrirNuevaCampana}
+                  aria-label="Nueva Campaña"
+                  title="Nueva Campaña"
+                >
+                  <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Nueva Campaña</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
+                  onClick={abrirSelectorCampana}
+                  aria-label="Ver Campaña"
+                  title="Ver Campaña"
+                >
+                  <i className="bi bi-folder2-open" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Ver Campaña</span>
+                </button>
+              </>
             )}
             <button
               type="button"

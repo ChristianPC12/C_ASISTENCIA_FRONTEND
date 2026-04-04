@@ -16,3 +16,4 @@ export const EVENT_COMPARACIONES_ABRIR_TABLA = 'comparaciones:abrir-tabla';
 export const EVENT_COMPARACIONES_ABRIR_DETALLE = 'comparaciones:abrir-detalle';
 export const EVENT_COMPARACIONES_ABRIR_VISITAS = 'comparaciones:abrir-visitas';
 export const EVENT_CAMPANAS_ABRIR_NUEVA = 'campanas:abrir-nueva';
+export const EVENT_CAMPANAS_ABRIR_SELECTOR = 'campanas:abrir-selector';

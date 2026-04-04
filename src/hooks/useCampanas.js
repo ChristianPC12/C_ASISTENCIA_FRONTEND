@@ -1,19 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import campanaApi from '../api/campanaApi';
-import usuarioApi from '../api/usuarioApi';
 import { confirmar, notificarError, notificarExito } from '../utils/notify';
 
 const FORM_CAMPANA_INICIAL = {
-  nombre: '',
   lema: '',
   tipo: 'SEMANA_EVANGELISTICA',
   fecha_inicio: '',
   fecha_fin: '',
   lugar: '',
   predicador: '',
-  responsable_usuario_id: '',
+  responsable: '',
   descripcion: '',
-  estado: 'BORRADOR',
   observaciones: ''
 };
 
@@ -69,7 +66,6 @@ export function useCampanas() {
   });
   const [dashboard, setDashboard] = useState({});
   const [campanas, setCampanas] = useState([]);
-  const [usuarios, setUsuarios] = useState([]);
   const [seleccionadaId, setSeleccionadaId] = useState(null);
   const [detalle, setDetalle] = useState(null);
   const [cargando, setCargando] = useState(false);
@@ -83,17 +79,6 @@ export function useCampanas() {
   const [decisionForm, setDecisionForm] = useState(FORM_DECISION_INICIAL);
   const [detalleVista, setDetalleVista] = useState('RESUMEN');
   const [convirtiendoAsistenteId, setConvirtiendoAsistenteId] = useState(null);
-
-  const cargarUsuarios = useCallback(async () => {
-    try {
-      const res = await usuarioApi.listar();
-      if (res?.exito) {
-        setUsuarios(res.datos || []);
-      }
-    } catch {
-      setUsuarios([]);
-    }
-  }, []);
 
   const cargarDashboard = useCallback(async () => {
     try {
@@ -149,10 +134,6 @@ export function useCampanas() {
   }, []);
 
   useEffect(() => {
-    cargarUsuarios();
-  }, [cargarUsuarios]);
-
-  useEffect(() => {
     cargarDashboard();
     cargarCampanas();
   }, [cargarDashboard, cargarCampanas]);
@@ -168,16 +149,14 @@ export function useCampanas() {
   const editarCampana = useCallback((item) => {
     setEditandoCampanaId(item.id);
     setCampanaForm({
-      nombre: item.nombre || '',
       lema: item.lema || '',
       tipo: item.tipo || 'SEMANA_EVANGELISTICA',
       fecha_inicio: item.fecha_inicio || '',
       fecha_fin: item.fecha_fin || '',
       lugar: item.lugar || '',
       predicador: item.predicador || '',
-      responsable_usuario_id: item.responsable_usuario_id ? String(item.responsable_usuario_id) : '',
+      responsable: item.responsable || '',
       descripcion: item.descripcion || '',
-      estado: item.estado || 'BORRADOR',
       observaciones: item.observaciones || ''
     });
   }, []);
@@ -192,7 +171,7 @@ export function useCampanas() {
     try {
       const payload = {
         ...campanaForm,
-        responsable_usuario_id: campanaForm.responsable_usuario_id || null
+        nombre: campanaForm.lema
       };
 
       const res = editandoCampanaId
@@ -335,7 +314,6 @@ export function useCampanas() {
     filtros,
     dashboard,
     campanas,
-    usuarios,
     seleccionadaId,
     setSeleccionadaId,
     detalle,
