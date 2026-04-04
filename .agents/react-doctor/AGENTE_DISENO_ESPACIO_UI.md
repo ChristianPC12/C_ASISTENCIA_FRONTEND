@@ -181,3 +181,15 @@ Mantener una UI limpia, profesional y eficiente en espacio, especialmente en mó
 - Si el botón de acción principal (`Crear nueva instancia`) necesita contexto en escritorio, mostrar texto; en móvil basta icon-only.
 - El mantenimiento de superadministradores debe sentirse como un panel propio del módulo, no como un detalle secundario perdido dentro de organizaciones.
 - Los formularios de catálogos pequeños deben ocultar cualquier campo técnico irrelevante (`código`) y priorizar solo el dato que el usuario entiende (`nombre`).
+- En modulos misioneros nuevos, la prioridad espacial es operativa: filtros compactos, KPIs cortos y un panel de detalle con vistas internas. El usuario no debe bajar toda la pagina para registrar una noche, un asistente o una decision.
+- Si un modulo nuevo necesita varias tablas (`Campanas`), usar alturas fijas razonables con scroll interno invisible y header sticky; reservar el scroll de pagina para cambios de seccion, no para perseguir filas.
+- En desktop, un layout 4/8 o 5/7 con columna izquierda de captura y columna derecha de detalle suele resolver mejor estos modulos que una pila larga de cards del mismo peso.
+- En modulos de seguimiento pastoral como `Estudios Biblicos`, la prioridad de espacio es operativa: filtros compactos, KPIs cortos y un panel de detalle que concentre sesiones, decisiones y asignaciones sin sacar al usuario de contexto.
+- Si una columna izquierda mezcla formulario y listado, mantener la derecha como zona de lectura/accion y no repartir el ancho en tres bloques pequenos; el patron 4/8 o similar sigue siendo el mas util.
+- Cuando un modulo nuevo hereda la estructura de `Campanas`, puede reutilizar la misma densidad visual y el mismo tipo de scroll interno; no hace falta redisenar si el patron ya resolvio usabilidad real.
+- En `Pequenas Congregaciones (PC)`, el detalle debe sentirse como una consola de seguimiento del grupo: resumen corto arriba y tabs internas para participantes, reuniones, resultados y liderazgo; no apilar secciones largas que obliguen a perder contexto.
+- En modulos misioneros donde una reunion tenga asistencia por persona (`PC`, futuras `Campanas` mas profundas), reservar altura fija para la tabla interna y mantener el scroll invisible; el usuario debe sentir registro rapido, no una pagina que se estira.- En `Juntas de Iglesia`, la columna izquierda debe concentrar captura y listado; la derecha debe quedar para el detalle vivo de la junta con tabs internas (`Resumen`, `Agenda`, `Pendientes`, `Acta`).
+- Si una vista de secretaria necesita agenda y votos a la vez, resolverlos dentro del mismo detalle con tablas de altura fija y scroll interno; no abrir otra pantalla para votar un punto.
+## Nota de accion cruzada
+- En tablas operativas largas, acciones de integracion como 'A estudio' deben usar patron compacto de tabla para no romper ancho ni forzar scroll extra innecesario.
+

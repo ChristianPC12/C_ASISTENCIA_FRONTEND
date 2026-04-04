@@ -326,3 +326,42 @@ Rutas activas:
   - las tablas de `Campos`, `Distritos`, `Superadmins` y `Organizaciones` pasan a usar wrappers `table-responsive` más el split horizontal/vertical ya aprobado para recuperar el scroll lateral,
   - en `Campos` se elimina el contador por innecesario; en `Distritos` y `Superadmins` los contadores se alinean mejor con el buscador y en `Superadmins` el segundo badge pasa a `Registrados: N`,
   - los botones del formulario de superadmins dejan de estirarse en grid y vuelven a quedar juntos, a la misma línea visual del patrón esperado.
+- Modulo nuevo en progreso: `Campanas` (2026-04-02).
+  - Backend base listo con CRUD tenant-aware, dashboard, sesiones, asistentes, asistencia por noche y decisiones.
+  - Frontend ya expone ruta `/campanas`, item de sidebar y pantalla operativa con tres capas claras: filtros/KPIs, formulario/listado y detalle por vistas (`Resumen`, `Sesiones`, `Asistentes`, `Decisiones`).
+  - El detalle usa scroll interno y tablas con header sticky para no alargar toda la pantalla; las tablas mantienen wrapper horizontal externo y vertical interno.
+  - `Campanas` queda como primer modulo misionero conectado a la nueva entidad compartida `contactos_misioneros`, preparando conversion futura a estudios biblicos y seguimiento.
+- Modulo nuevo operativo: `Estudios Biblicos` (2026-04-03).
+  - Ruta activa `/estudios-biblicos` con acceso desde sidebar para `ADMIN` y `SECRETARIO` bajo setup inicial completo.
+  - La pantalla reutiliza el patron operativo aprobado en `Campanas`: filtros + KPIs arriba, formulario/listado a la izquierda y detalle accionable a la derecha.
+  - El detalle se resuelve en una sola tarjeta con vistas internas (`Resumen`, `Sesiones`, `Decisiones`, `Asignacion`) para evitar scroll de pagina innecesario.
+  - Las tablas del modulo usan el mismo split ya aprobado: wrapper horizontal externo, scroll vertical interno y header sticky.
+  - El formulario cubre alta/edicion de estudio, incluyendo origen, modalidad, instructores, responsable, material, avance y motivo de pausa/cierre.
+  - La vista de detalle ya registra sesiones, decisiones con seguimiento y reasignaciones sin salir de la pantalla principal.
+- Modulo nuevo operativo: `Pequenas Congregaciones (PC)` (2026-04-03).
+  - Ruta activa `/pequenas-congregaciones` con acceso desde sidebar para `ADMIN` y `SECRETARIO`.
+  - La pantalla mantiene el mismo patron operativo de `Campanas` y `Estudios Biblicos`: filtros y KPIs arriba, formulario/listado a la izquierda y detalle accionable a la derecha.
+  - El detalle se concentra en una sola tarjeta con vistas internas (`Resumen`, `Participantes`, `Reuniones`, `Resultados`, `Liderazgo`) para no volver a un flujo largo de cards apiladas.
+  - Las tablas internas del modulo nacen con split de scroll horizontal externo + vertical interno y header sticky, igual que el patron ya aprobado en `Administrador`.
+  - El formulario principal cubre alta/edicion de la PC, incluyendo barrio/comunidad, direccion, lideres, anfitrion, fecha de inicio, dia/hora de reunion, meta trimestral, observaciones y relacion con una PC madre.
+  - La vista de detalle ya permite registrar participantes, reuniones, asistencia por reunion, resultados ministeriales y cambios de liderazgo sin salir de la misma pantalla.
+- Modulo nuevo operativo: `Juntas de Iglesia` (2026-04-03).
+  - Ruta activa `/juntas-iglesia` con acceso desde sidebar para `ADMIN` y `SECRETARIO`.
+  - La pantalla sigue el mismo patron operativo de los modulos misioneros nuevos: filtros y KPIs arriba, formulario/listado a la izquierda y detalle accionable a la derecha.
+  - El detalle se resuelve con vistas internas (`Resumen`, `Agenda`, `Pendientes`, `Acta`) para conservar contexto de secretaria sin obligar a saltar entre pantallas.
+  - La vista de agenda ya permite registrar puntos, votos y acuerdos dentro de la misma tarjeta de detalle.
+  - El modulo ya expone listado de pendientes historicos, timeline basico y acta resumida construida desde los puntos registrados.
+
+## 2026-04-03 - Integracion directa Campanas y PC hacia Estudios Biblicos
+- Se agrego conversion directa desde asistentes de campana hacia estudio biblico.
+- Se agrego conversion directa desde participantes de PC hacia estudio biblico.
+- Frontend: botones 'A estudio' en tablas de asistentes y participantes con refresh de detalle y dashboard.
+- Backend: endpoints POST /campanas/asistentes/{id}/convertir-estudio y POST /pequenas-congregaciones/participantes/{id}/convertir-estudio.
+- La conversion actualiza el modulo origen: campana marca seguimiento ESTUDIO_BIBLICO y registra decision automatica; PC registra resultado ESTUDIO_BIBLICO_GENERADO.
+- Smoke test HTTP validado con usuario smoke_admin_modulos en organizacion 61.
+
+
+## 2026-04-04 - Ajuste de estabilidad en Juntas
+- Se recompuso src/pages/JuntasIglesiaPage.jsx porque parte del bloque de agenda quedo absorbido dentro de KpiCard, causando ReferenceError: BotonAccion is not defined en runtime.
+- Se restauraron BotonAccion, TablaShell, DetalleVacio, ResumenJunta y AgendaJunta como componentes propios.
+

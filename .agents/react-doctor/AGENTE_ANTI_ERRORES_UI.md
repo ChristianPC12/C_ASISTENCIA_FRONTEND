@@ -579,3 +579,18 @@ Evitar repetir errores de ejecuciÃ³n y de UX en mÃ³dulos futuros, especialme
 - [ ] En ese mismo caso, las acciones secundarias (`Actualizar`, `Excel`) pueden bajar al pie de la tabla en móvil para liberar el header; el buscador arriba debe quedar solo y respirado.
 - [ ] Si la versión visible de filtros en móvil termina recargando demasiado la pantalla, volver al botón/modal es válido, pero el botón `Filtros` debe quedar junto a `Actualizar`, no aislado, y `Excel` no debe duplicarse también en el header de escritorio.
 - [ ] En `Superadmin`, cuando un buscador comparte fila con badges o contadores (`Distritos`, `Superadmins`), el contador debe tener altura visual compatible con el input o moverse fuera del bloque; no dejarlo encogido ni desalineado.
+- [ ] En modulos operativos nuevos como `Campanas`, mantener la jerarquia aprobada del sistema: filtros y KPIs arriba, formulario/listado a la izquierda y detalle accionable a la derecha; no reinventar layouts si ya existe un patron funcional.
+- [ ] Cuando una pantalla mezcla formularios y tablas largas (`Campanas`, `PC`, `Estudios`), las tablas deben usar split de scroll horizontal externo + vertical interno desde la primera implementacion; no esperar a que reaparezca el problema de tabla "suelta".
+- [ ] Si un detalle tiene varias capas funcionales (`Resumen`, `Sesiones`, `Asistentes`, `Decisiones`), resolverlas como vistas internas/tabs compactos en la misma tarjeta antes de apilar bloques eternos uno debajo del otro.
+- [ ] En modulos nuevos de seguimiento (`Campanas`, `Estudios Biblicos`, futuros `PC`), mantener el patron operativo aprobado: filtros/KPIs arriba, formulario/listado a la izquierda y detalle con tabs a la derecha. No volver a apilar cards largas como flujo principal.
+- [ ] Si un detalle nuevo necesita varias capas funcionales (`Resumen`, `Sesiones`, `Decisiones`, `Asignacion`), resolverlas dentro de una sola tarjeta con tabs compactos antes de abrir multiples paneles o scroll de pagina.
+- [ ] Las tablas internas de modulos misioneros deben nacer con el mismo split que ya funciona en `Administrador`: wrapper horizontal externo, wrapper vertical interno y header sticky. No esperar a que reaparezca el scroll diagonal para corregirlo.
+- [ ] En `Pequenas Congregaciones (PC)`, no repartir reuniones, participantes, resultados y liderazgo en tarjetas separadas apiladas; resolver todo dentro del detalle con vistas internas para conservar el contexto operativo.
+- [ ] Si una reunion de `PC` necesita registrar asistencia por participante, mantener la carga dentro de la misma vista de detalle y no obligar al usuario a navegar a otra pantalla o modal secundario.
+- [ ] En `Juntas de Iglesia`, no separar `Agenda`, `Pendientes`, `Acta` y `Resumen` en cuatro pantallas distintas; deben vivir como vistas internas del mismo detalle para que secretaría no pierda el hilo de la junta seleccionada.
+- [ ] Si un modulo administrativo nuevo registra acuerdos o votos (`Juntas`), el formulario del voto debe quedar en el mismo contexto del punto y de la lista de agenda; no abrir otra pantalla secundaria para algo que se resuelve mejor in-place.
+
+## Regla nueva - conversiones misioneras
+- Si una accion crea un recurso en otro modulo (por ejemplo Campana o PC hacia Estudio Biblico), el boton debe refrescar origen y destino visible inmediato.
+- No dejar una conversion solo como POST exitoso silencioso: debe refrescar detalle, contadores y estado del registro origen.
+

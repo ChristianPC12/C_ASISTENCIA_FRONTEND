@@ -4033,6 +4033,163 @@ a:hover {
   color: var(--iasd-azul);
 }
 
+/* ==============================================
+   Campanas
+   ============================================== */
+
+.campanas-top-row > [class*='col-'] {
+  display: flex;
+}
+
+.campanas-filtros-card,
+.campanas-form-card,
+.campanas-lista-card,
+.campanas-detalle-card,
+.campanas-kpi-card,
+.campanas-section-card {
+  width: 100%;
+  border: 1px solid rgba(0, 51, 102, 0.08);
+}
+
+.campanas-form-card .card-body,
+.campanas-filtros-card .card-body,
+.campanas-detalle-card .card-body {
+  padding: 0.95rem 1rem;
+}
+
+.campanas-lista-card .card-body,
+.campanas-section-card .card-body {
+  padding: 0.95rem 1rem;
+}
+
+.campanas-kpi-card .card-body {
+  padding-inline: 1rem;
+}
+
+.campanas-detalle-card .card-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.campanas-vista-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.campanas-detalle-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.15rem;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.campanas-detalle-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.campanas-table-shell {
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.75rem;
+  background: #ffffff;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.campanas-table-scroll {
+  max-height: clamp(16rem, 33vh, 22rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.campanas-table-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.campanas-table-shell table {
+  width: 100%;
+  min-width: 100%;
+  margin-bottom: 0;
+}
+
+.campanas-table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  box-shadow: inset 0 -1px 0 rgba(0, 51, 102, 0.08);
+}
+
+.campanas-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.campanas-resumen-grid > div,
+.campanas-chip-row {
+  min-width: 0;
+}
+
+.campanas-meta-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--iasd-texto-sec);
+  margin-bottom: 0.28rem;
+}
+
+.campanas-resumen-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.campanas-chip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.campanas-section-title {
+  color: var(--iasd-azul);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.campanas-lista-table .btn-link {
+  font-size: 0.95rem;
+}
+
+.campanas-sesiones-table {
+  min-width: 52rem;
+}
+
+.campanas-asistentes-table {
+  min-width: 58rem;
+}
+
+.campanas-decisiones-table {
+  min-width: 48rem;
+}
+
+.campanas-lista-table {
+  min-width: 40rem;
+}
+
 @media (max-width: 768px) {
   .prompt-floating-btn {
     right: 0.85rem;
@@ -4078,5 +4235,532 @@ a:hover {
 
   .presentacion-seccion-shell {
     max-height: 17.5rem;
+  }
+
+  .campanas-filtros-card .card-body,
+  .campanas-form-card .card-body,
+  .campanas-lista-card .card-body,
+  .campanas-detalle-card .card-body,
+  .campanas-section-card .card-body {
+    padding: 0.85rem;
+  }
+
+  .campanas-resumen-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .campanas-chip-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .campanas-table-shell table {
+    width: max-content;
+  }
+
+  .campanas-lista-table {
+    min-width: 42rem;
+  }
+
+  .campanas-sesiones-table {
+    min-width: 46rem;
+  }
+
+  .campanas-asistentes-table {
+    min-width: 56rem;
+  }
+
+  .campanas-decisiones-table {
+    min-width: 42rem;
+  }
+}
+
+/* ==============================================
+   Estudios Biblicos
+   ============================================== */
+
+.estudios-top-row > [class*='col-'] {
+  display: flex;
+}
+
+.estudios-filtros-card,
+.estudios-form-card,
+.estudios-lista-card,
+.estudios-detalle-card,
+.estudios-kpi-card,
+.estudios-section-card {
+  width: 100%;
+  border: 1px solid rgba(0, 51, 102, 0.08);
+}
+
+.estudios-form-card .card-body,
+.estudios-filtros-card .card-body,
+.estudios-detalle-card .card-body,
+.estudios-lista-card .card-body,
+.estudios-section-card .card-body {
+  padding: 0.95rem 1rem;
+}
+
+.estudios-kpi-card .card-body {
+  padding-inline: 1rem;
+}
+
+.estudios-detalle-card .card-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.estudios-vista-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.estudios-detalle-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.15rem;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.estudios-detalle-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.estudios-table-shell {
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.75rem;
+  background: #ffffff;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.estudios-table-scroll {
+  max-height: clamp(16rem, 33vh, 22rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.estudios-table-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.estudios-table-shell table {
+  width: 100%;
+  min-width: 100%;
+  margin-bottom: 0;
+}
+
+.estudios-table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+  box-shadow: inset 0 -1px 0 rgba(0, 51, 102, 0.08);
+}
+
+.estudios-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.estudios-resumen-grid > div,
+.estudios-chip-row {
+  min-width: 0;
+}
+
+.estudios-meta-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--iasd-texto-sec);
+  margin-bottom: 0.28rem;
+}
+
+.estudios-resumen-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.estudios-chip-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.estudios-section-title {
+  color: var(--iasd-azul);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.estudios-lista-table .btn-link {
+  font-size: 0.95rem;
+}
+
+.estudios-lista-table {
+  min-width: 42rem;
+}
+
+.estudios-sesiones-table {
+  min-width: 48rem;
+}
+
+.estudios-decisiones-table {
+  min-width: 44rem;
+}
+
+.estudios-asignaciones-table {
+  min-width: 46rem;
+}
+
+@media (max-width: 768px) {
+  .estudios-filtros-card .card-body,
+  .estudios-form-card .card-body,
+  .estudios-lista-card .card-body,
+  .estudios-detalle-card .card-body,
+  .estudios-section-card .card-body {
+    padding: 0.85rem;
+  }
+
+  .estudios-resumen-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .estudios-chip-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .estudios-table-shell table {
+    width: max-content;
+  }
+
+  .estudios-lista-table {
+    min-width: 39rem;
+  }
+
+  .estudios-sesiones-table {
+    min-width: 44rem;
+  }
+
+  .estudios-decisiones-table {
+    min-width: 40rem;
+  }
+
+  .estudios-asignaciones-table {
+    min-width: 42rem;
+  }
+}
+
+.pcs-top-row > [class*='col-'] {
+  display: flex;
+}
+
+.pcs-filtros-card,
+.pcs-form-card,
+.pcs-lista-card,
+.pcs-detalle-card,
+.pcs-kpi-card,
+.pcs-section-card {
+  border-radius: 1rem;
+}
+
+.pcs-form-card .card-body,
+.pcs-filtros-card .card-body,
+.pcs-detalle-card .card-body,
+.pcs-lista-card .card-body,
+.pcs-section-card .card-body {
+  padding: 1rem;
+}
+
+.pcs-detalle-card .card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.pcs-vista-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.pcs-detalle-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.pcs-table-shell {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.pcs-table-scroll {
+  max-height: 20rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.pcs-table-shell table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.pcs-table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--iasd-accent);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.pcs-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.pcs-meta-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.pcs-section-title {
+  color: var(--iasd-azul);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.pcs-lista-table,
+.pcs-participantes-table,
+.pcs-reuniones-table,
+.pcs-resultados-table,
+.pcs-liderazgo-table {
+  min-width: 42rem;
+}
+
+@media (max-width: 768px) {
+  .pcs-filtros-card .card-body,
+  .pcs-form-card .card-body,
+  .pcs-lista-card .card-body,
+  .pcs-detalle-card .card-body,
+  .pcs-section-card .card-body {
+    padding: 0.85rem;
+  }
+
+  .pcs-table-shell table {
+    width: max-content;
+  }
+
+  .pcs-lista-table,
+  .pcs-participantes-table,
+  .pcs-reuniones-table,
+  .pcs-resultados-table,
+  .pcs-liderazgo-table {
+    min-width: 56rem;
+  }
+}
+
+.juntas-top-row > [class*='col-'] {
+  display: flex;
+}
+
+.juntas-filtros-card,
+.juntas-form-card,
+.juntas-lista-card,
+.juntas-detalle-card,
+.juntas-kpi-card,
+.juntas-section-card {
+  border-radius: 1rem;
+}
+
+.juntas-form-card .card-body,
+.juntas-filtros-card .card-body,
+.juntas-detalle-card .card-body,
+.juntas-lista-card .card-body,
+.juntas-section-card .card-body {
+  padding: 1rem;
+}
+
+.juntas-detalle-card .card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.juntas-vista-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.juntas-detalle-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.juntas-lista-scroll {
+  min-height: 0;
+}
+
+.juntas-table-shell {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.9rem;
+  overflow: hidden;
+  background: #fff;
+}
+
+.juntas-table-scroll {
+  max-height: 20rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.juntas-table-shell table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.juntas-table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--iasd-accent);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.juntas-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+}
+
+.juntas-meta-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.juntas-section-title {
+  color: var(--iasd-azul);
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+
+.juntas-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.juntas-timeline-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+}
+
+.juntas-timeline-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: var(--iasd-accent);
+  margin-top: 0.35rem;
+}
+
+.juntas-acta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.juntas-acta-item {
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  border: 1px solid var(--bs-border-color);
+}
+
+.juntas-empty-detail {
+  min-height: 24rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: #6c757d;
+  gap: 0.75rem;
+}
+
+.juntas-empty-detail i {
+  font-size: 2rem;
+  color: var(--iasd-accent);
+}
+
+.juntas-lista-table,
+.juntas-puntos-table,
+.juntas-votaciones-table,
+.juntas-pendientes-table {
+  min-width: 46rem;
+}
+
+@media (max-width: 768px) {
+  .juntas-filtros-card .card-body,
+  .juntas-form-card .card-body,
+  .juntas-lista-card .card-body,
+  .juntas-detalle-card .card-body,
+  .juntas-section-card .card-body {
+    padding: 0.85rem;
+  }
+
+  .juntas-table-shell table {
+    width: max-content;
+  }
+
+  .juntas-resumen-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .juntas-lista-table,
+  .juntas-puntos-table,
+  .juntas-votaciones-table,
+  .juntas-pendientes-table {
+    min-width: 58rem;
   }
 }

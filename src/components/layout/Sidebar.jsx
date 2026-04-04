@@ -173,7 +173,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
       { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
       { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
-      { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' }
+      { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' },
+      { ruta: '/campanas', etiqueta: 'Campañas', icono: 'bi-megaphone' },
+      { ruta: '/estudios-biblicos', etiqueta: 'Estudios Bíblicos', icono: 'bi-journal-bookmark' },
+      { ruta: '/pequenas-congregaciones', etiqueta: 'Pequeñas Congregaciones (PC)', icono: 'bi-house-heart' },
+      { ruta: '/juntas-iglesia', etiqueta: 'Juntas de Iglesia', icono: 'bi-people-fill' }
     ];
 
   }

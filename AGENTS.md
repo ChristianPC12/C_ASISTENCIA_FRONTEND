@@ -70,3 +70,10 @@ Si una tarea toca contrato, auth, roles o modelo de datos, reflejar el cambio ta
 ## Nota operativa
 
 El siguiente bloque de trabajo lo define el owner funcional segun prioridad de modulo.
+
+## Estado actual de modulos misioneros (2026-04-04)
+- Ya existen y estan conectados en frontend: Campanas, Estudios Biblicos, Pequenas Congregaciones (PC) y Juntas de Iglesia.
+- Ya existe integracion directa desde Campanas y PC hacia Estudios Biblicos mediante accion 'A estudio'.
+- Si otro chat recibe la instruccion 'estudia los agents', debe entender que el siguiente trabajo natural es refinar reportes/exportaciones, endurecer smoke tests funcionales y seguir integraciones entre modulos sin redisenar la UI.
+- Antes de proponer cambios visuales, revisar primero si el patron ya existe en Administrador, Registros, Estadisticas o Comparaciones.
+
