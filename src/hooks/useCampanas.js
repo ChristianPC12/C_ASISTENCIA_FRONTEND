@@ -47,6 +47,7 @@ const FORM_ASISTENCIA_INICIAL = {
   hora_llegada: '',
   puntual: false,
   elegible_premio: false,
+  asistio: true,
   observaciones: ''
 };
 

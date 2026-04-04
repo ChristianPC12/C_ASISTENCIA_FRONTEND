@@ -4175,15 +4175,15 @@ a:hover {
 }
 
 .campanas-sesiones-table {
-  min-width: 52rem;
+  min-width: 34rem;
 }
 
 .campanas-asistentes-table {
-  min-width: 58rem;
+  min-width: 38rem;
 }
 
 .campanas-decisiones-table {
-  min-width: 48rem;
+  min-width: 28rem;
 }
 
 .campanas-lista-table {
@@ -4264,15 +4264,15 @@ a:hover {
   }
 
   .campanas-sesiones-table {
-    min-width: 46rem;
+    min-width: 30rem;
   }
 
   .campanas-asistentes-table {
-    min-width: 56rem;
+    min-width: 34rem;
   }
 
   .campanas-decisiones-table {
-    min-width: 42rem;
+    min-width: 24rem;
   }
 }
 

@@ -1,3 +1,4 @@
+import { useState, useMemo, useEffect } from 'react';
 import SearchInput from '../components/ui/SearchInput';
 import { useCampanas } from '../hooks/useCampanas';
 
@@ -317,18 +318,15 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
                 <thead>
                   <tr>
                     <th>Fecha</th>
-                    <th>Hora</th>
                     <th>Tema</th>
-                    <th>Predicador</th>
-                    <th>Registros</th>
-                    <th>Puntuales</th>
                     <th>Estado</th>
+                    <th className="text-center">Asistencia</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sesiones.length === 0 && (
                     <tr>
-                      <td colSpan="7" className="text-center text-muted py-4">
+                      <td colSpan="4" className="text-center text-muted py-4">
                         Todavía no hay noches registradas para esta campaña.
                       </td>
                     </tr>
@@ -336,12 +334,17 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
                   {sesiones.map((item) => (
                     <tr key={item.id}>
                       <td>{formatearFecha(item.fecha)}</td>
-                      <td>{formatearHora(item.hora_inicio)}</td>
-                      <td>{item.tema_titulo}</td>
-                      <td>{item.predicador_noche || '-'}</td>
-                      <td>{Number(item.total_registros || 0).toLocaleString('es-CR')}</td>
-                      <td>{Number(item.total_puntuales || 0).toLocaleString('es-CR')}</td>
+                      <td>
+                        <div className="fw-semibold">{item.tema_titulo}</div>
+                        <small className="text-muted">{item.predicador_noche || 'Sin predicador'}</small>
+                      </td>
                       <td><span className={`badge ${claseEstado(item.estado_sesion)}`}>{item.estado_sesion}</span></td>
+                      <td className="text-center">
+                        <div className="small">
+                          <strong>{Number(item.total_registros || 0).toLocaleString('es-CR')}</strong>
+                          <span className="text-muted"> / {Number(item.total_puntuales || 0).toLocaleString('es-CR')}</span>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -367,45 +370,107 @@ function AsistentesCampana({
   convertirAsistenteAEstudio,
   convirtiendoAsistenteId
 }) {
+  const [mostrarMasAsistente, setMostrarMasAsistente] = useState(false);
   const asistentes = detalle?.asistentes || [];
+
+  const sesionActiva = useMemo(() => {
+    const hoy = new Date().toISOString().slice(0, 10);
+    return sesionesOpciones.find(s => s.fecha === hoy && s.estado_sesion !== 'CANCELADA')
+      || sesionesOpciones.find(s => s.estado_sesion === 'PROGRAMADA')
+      || sesionesOpciones[0]
+      || null;
+  }, [sesionesOpciones]);
+
+  useEffect(() => {
+    if (!asistenciaForm.sesion_id && sesionActiva) {
+      setAsistenciaForm(prev => ({ ...prev, sesion_id: String(sesionActiva.id) }));
+    }
+  }, [sesionActiva, asistenciaForm.sesion_id, setAsistenciaForm]);
 
   return (
     <div className="campanas-detalle-scroll">
-      <div className="row g-3 mb-3">
-        <div className="col-12 col-xl-7">
-          <div className="card shadow-sm campanas-section-card h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-                <h6 className="campanas-section-title mb-0">Registrar asistente</h6>
-                <BotonAccion icono="bi-plus-lg" label="Agregar asistente" onClick={guardarAsistente} />
-              </div>
+      <div className="card shadow-sm campanas-section-card mb-3">
+        <div className="card-body">
+          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+            <h6 className="campanas-section-title mb-0">Asistencia rápida</h6>
+            <BotonAccion icono="bi-check2-square" label="Guardar asistencia" onClick={guardarAsistencia} />
+          </div>
 
-              <div className="row g-3">
-                <div className="col-12 col-lg-6">
-                  <label className="form-label form-label-sm">Nombre</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} />
-                </div>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label form-label-sm">Teléfono</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} />
-                </div>
-                <div className="col-12 col-lg-6">
+          <div className="row g-2 align-items-end">
+            <div className="col-12 col-md-3">
+              <label className="form-label form-label-sm">Sesión</label>
+              <select className="form-select form-select-sm" value={asistenciaForm.sesion_id} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, sesion_id: e.target.value }))}>
+                <option value="">Seleccione</option>
+                {sesionesOpciones.map((sesion) => (
+                  <option key={sesion.id} value={sesion.id}>{formatearFecha(sesion.fecha)} - {sesion.tema_titulo}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-12 col-md-3">
+              <label className="form-label form-label-sm">Asistente</label>
+              <select className="form-select form-select-sm" value={asistenciaForm.campana_asistente_id} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, campana_asistente_id: e.target.value }))}>
+                <option value="">Seleccione</option>
+                {asistentesOpciones.map((asistente) => (
+                  <option key={asistente.id} value={asistente.id}>{asistente.nombre_snapshot}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-12 col-md-2">
+              <label className="form-label form-label-sm">Hora</label>
+              <input type="time" className="form-control form-control-sm" value={asistenciaForm.hora_llegada} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, hora_llegada: e.target.value }))} />
+            </div>
+            <div className="col-6 col-md-2">
+              <div className="form-check mt-3">
+                <input className="form-check-input" type="checkbox" id="campana-puntual-quick" checked={Boolean(asistenciaForm.puntual)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, puntual: e.target.checked }))} />
+                <label className="form-check-label small" htmlFor="campana-puntual-quick">Puntual</label>
+              </div>
+            </div>
+            <div className="col-6 col-md-2">
+              <div className="form-check mt-3">
+                <input className="form-check-input" type="checkbox" id="campana-premio-quick" checked={Boolean(asistenciaForm.elegible_premio)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, elegible_premio: e.target.checked }))} />
+                <label className="form-check-label small" htmlFor="campana-premio-quick">Premio</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card shadow-sm campanas-section-card mb-3">
+        <div className="card-body">
+          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+            <h6 className="campanas-section-title mb-0">Registrar asistente</h6>
+            <BotonAccion icono="bi-plus-lg" label="Agregar asistente" onClick={guardarAsistente} />
+          </div>
+
+          <div className="row g-3">
+            <div className="col-12 col-md-6">
+              <label className="form-label form-label-sm">Nombre</label>
+              <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} />
+            </div>
+            <div className="col-12 col-md-3">
+              <label className="form-label form-label-sm">Tipo</label>
+              <select className="form-select form-select-sm" value={asistenteForm.tipo_asistente} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, tipo_asistente: e.target.value }))}>
+                {TIPO_ASISTENTE_OPCIONES.map((opcion) => (
+                  <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-12 col-md-3">
+              <label className="form-label form-label-sm">Teléfono</label>
+              <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} />
+            </div>
+
+            {mostrarMasAsistente && (
+              <>
+                <div className="col-12 col-md-6">
                   <label className="form-label form-label-sm">Correo</label>
                   <input className="form-control form-control-sm" value={asistenteForm.correo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, correo: e.target.value }))} />
                 </div>
-                <div className="col-12 col-lg-6">
+                <div className="col-12 col-md-6">
                   <label className="form-label form-label-sm">Procedencia</label>
                   <input className="form-control form-control-sm" value={asistenteForm.procedencia} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, procedencia: e.target.value }))} />
                 </div>
-                <div className="col-12 col-lg-4">
-                  <label className="form-label form-label-sm">Tipo</label>
-                  <select className="form-select form-select-sm" value={asistenteForm.tipo_asistente} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, tipo_asistente: e.target.value }))}>
-                    {TIPO_ASISTENTE_OPCIONES.map((opcion) => (
-                      <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-lg-4">
+                <div className="col-12 col-md-4">
                   <label className="form-label form-label-sm">Clasificación</label>
                   <select className="form-select form-select-sm" value={asistenteForm.clasificacion_etaria} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, clasificacion_etaria: e.target.value }))}>
                     {ETARIA_OPCIONES.map((opcion) => (
@@ -413,7 +478,7 @@ function AsistentesCampana({
                     ))}
                   </select>
                 </div>
-                <div className="col-12 col-lg-4">
+                <div className="col-12 col-md-4">
                   <label className="form-label form-label-sm">Seguimiento</label>
                   <select className="form-select form-select-sm" value={asistenteForm.estado_seguimiento} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, estado_seguimiento: e.target.value }))}>
                     {ESTADO_SEGUIMIENTO_OPCIONES.map((opcion) => (
@@ -421,77 +486,26 @@ function AsistentesCampana({
                     ))}
                   </select>
                 </div>
-                <div className="col-12 col-lg-6">
+                <div className="col-12 col-md-4">
                   <label className="form-label form-label-sm">Dirección</label>
                   <input className="form-control form-control-sm" value={asistenteForm.direccion} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, direccion: e.target.value }))} />
                 </div>
-                <div className="col-12 col-lg-6">
+                <div className="col-12 col-md-6">
                   <label className="form-label form-label-sm">Barrio / comunidad</label>
                   <input className="form-control form-control-sm" value={asistenteForm.barrio_comunidad} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, barrio_comunidad: e.target.value }))} />
                 </div>
-                <div className="col-12">
+                <div className="col-12 col-md-6">
                   <label className="form-label form-label-sm">Observaciones</label>
                   <input className="form-control form-control-sm" value={asistenteForm.observaciones} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              </>
+            )}
 
-        <div className="col-12 col-xl-5">
-          <div className="card shadow-sm campanas-section-card h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-                <h6 className="campanas-section-title mb-0">Registrar noche</h6>
-                <BotonAccion icono="bi-check2-square" label="Guardar asistencia" onClick={guardarAsistencia} />
-              </div>
-
-              <div className="row g-3">
-                <div className="col-12">
-                  <label className="form-label form-label-sm">Sesión</label>
-                  <select className="form-select form-select-sm" value={asistenciaForm.sesion_id} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, sesion_id: e.target.value }))}>
-                    <option value="">Seleccione</option>
-                    {sesionesOpciones.map((sesion) => (
-                      <option key={sesion.id} value={sesion.id}>{formatearFecha(sesion.fecha)} - {sesion.tema_titulo}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12">
-                  <label className="form-label form-label-sm">Asistente</label>
-                  <select className="form-select form-select-sm" value={asistenciaForm.campana_asistente_id} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, campana_asistente_id: e.target.value }))}>
-                    <option value="">Seleccione</option>
-                    {asistentesOpciones.map((asistente) => (
-                      <option key={asistente.id} value={asistente.id}>{asistente.nombre_snapshot}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label form-label-sm">Hora de llegada</label>
-                  <input type="time" className="form-control form-control-sm" value={asistenciaForm.hora_llegada} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, hora_llegada: e.target.value }))} />
-                </div>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label form-label-sm">Observaciones</label>
-                  <input className="form-control form-control-sm" value={asistenciaForm.observaciones} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
-                </div>
-                <div className="col-6">
-                  <div className="form-check mt-2">
-                    <input className="form-check-input" type="checkbox" id="campana-asistio" checked={Boolean(asistenciaForm.asistio)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, asistio: e.target.checked }))} />
-                    <label className="form-check-label" htmlFor="campana-asistio">Asistió</label>
-                  </div>
-                </div>
-                <div className="col-6">
-                  <div className="form-check mt-2">
-                    <input className="form-check-input" type="checkbox" id="campana-puntual" checked={Boolean(asistenciaForm.puntual)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, puntual: e.target.checked }))} />
-                    <label className="form-check-label" htmlFor="campana-puntual">Puntual</label>
-                  </div>
-                </div>
-                <div className="col-12">
-                  <div className="form-check">
-                    <input className="form-check-input" type="checkbox" id="campana-premio" checked={Boolean(asistenciaForm.elegible_premio)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, elegible_premio: e.target.checked }))} />
-                    <label className="form-check-label" htmlFor="campana-premio">Elegible para premio</label>
-                  </div>
-                </div>
-              </div>
+            <div className="col-12">
+              <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarMasAsistente(!mostrarMasAsistente)}>
+                <i className={`bi ${mostrarMasAsistente ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
+                <span>{mostrarMasAsistente ? 'Menos datos del asistente' : 'Más datos del asistente'}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -506,18 +520,15 @@ function AsistentesCampana({
                   <tr>
                     <th>Nombre</th>
                     <th>Tipo</th>
-                    <th>Clasificación</th>
-                    <th>Procedencia</th>
-                    <th>Noches</th>
-                    <th>Puntuales</th>
+                    <th className="text-center">Asistencia</th>
                     <th>Seguimiento</th>
-                    <th>Acciones</th>
+                    <th className="text-end">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {asistentes.length === 0 && (
                     <tr>
-                      <td colSpan="8" className="text-center text-muted py-4">
+                      <td colSpan="5" className="text-center text-muted py-4">
                         No hay asistentes registrados todavía.
                       </td>
                     </tr>
@@ -528,13 +539,12 @@ function AsistentesCampana({
                         <div className="fw-semibold">{item.nombre_snapshot}</div>
                         <small className="text-muted">{item.telefono_snapshot || item.contacto_telefono || '-'}</small>
                       </td>
-                      <td>{item.tipo_asistente}</td>
-                      <td>{etiquetaEtaria(item.clasificacion_etaria)}</td>
-                      <td>{item.procedencia || '-'}</td>
-                      <td>{Number(item.total_noches || 0).toLocaleString('es-CR')}</td>
-                      <td>{Number(item.total_puntuales || 0).toLocaleString('es-CR')}</td>
+                      <td><span className="badge text-bg-light border">{item.tipo_asistente}</span></td>
+                      <td className="text-center">
+                        <small>{Number(item.total_noches || 0).toLocaleString('es-CR')} · {Number(item.total_puntuales || 0).toLocaleString('es-CR')}</small>
+                      </td>
                       <td><span className={`badge ${claseEstado(item.estado_seguimiento)}`}>{item.estado_seguimiento}</span></td>
-                      <td>
+                      <td className="text-end">
                         {puedeConvertirAsistente(item) ? (
                           <button
                             type="button"
@@ -603,11 +613,7 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
               <label className="form-label form-label-sm">Fecha y hora</label>
               <input type="datetime-local" className="form-control form-control-sm" value={decisionForm.fecha_decision} onChange={(e) => setDecisionForm((prev) => ({ ...prev, fecha_decision: e.target.value }))} />
             </div>
-            <div className="col-12 col-lg-6">
-              <label className="form-label form-label-sm">Etiqueta visible</label>
-              <input className="form-control form-control-sm" value={decisionForm.decision_etiqueta} onChange={(e) => setDecisionForm((prev) => ({ ...prev, decision_etiqueta: e.target.value }))} />
-            </div>
-            <div className="col-12 col-lg-6">
+            <div className="col-12 col-lg-12">
               <label className="form-label form-label-sm">Observaciones</label>
               <input className="form-control form-control-sm" value={decisionForm.observaciones} onChange={(e) => setDecisionForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
             </div>
@@ -622,29 +628,27 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
               <table className="table table-sm align-middle mb-0 campanas-decisiones-table">
                 <thead>
                   <tr>
-                    <th>Fecha</th>
                     <th>Persona</th>
                     <th>Decisión</th>
-                    <th>Observaciones</th>
+                    <th>Fecha</th>
                   </tr>
                 </thead>
                 <tbody>
                   {decisiones.length === 0 && (
                     <tr>
-                      <td colSpan="4" className="text-center text-muted py-4">
+                      <td colSpan="3" className="text-center text-muted py-4">
                         Todavía no hay decisiones registradas para esta campaña.
                       </td>
                     </tr>
                   )}
                   {decisiones.map((item) => (
                     <tr key={item.id}>
-                      <td>{formatearFechaHora(item.fecha_decision)}</td>
                       <td>{item.nombre_snapshot}</td>
                       <td>
                         <div className="fw-semibold">{item.decision_etiqueta}</div>
                         <small className="text-muted">{item.decision_clave}</small>
                       </td>
-                      <td>{item.observaciones || '-'}</td>
+                      <td><small>{formatearFechaHora(item.fecha_decision)}</small></td>
                     </tr>
                   ))}
                 </tbody>
@@ -718,6 +722,8 @@ function DetalleCampana(props) {
 }
 
 export default function CampanasPage() {
+  const [mostrarExtraCampana, setMostrarExtraCampana] = useState(false);
+
   const {
     filtros,
     dashboard,
@@ -869,22 +875,34 @@ export default function CampanasPage() {
                   <label className="form-label form-label-sm">Predicador</label>
                   <input className="form-control form-control-sm" value={campanaForm.predicador} onChange={(e) => setCampanaForm((prev) => ({ ...prev, predicador: e.target.value }))} />
                 </div>
+
+                {mostrarExtraCampana && (
+                  <>
+                    <div className="col-12">
+                      <label className="form-label form-label-sm">Responsable</label>
+                      <select className="form-select form-select-sm" value={campanaForm.responsable_usuario_id} onChange={(e) => setCampanaForm((prev) => ({ ...prev, responsable_usuario_id: e.target.value }))}>
+                        <option value="">Sin responsable</option>
+                        {usuarios.map((usuario) => (
+                          <option key={usuario.id} value={usuario.id}>{usuario.nombre_completo}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label form-label-sm">Descripción</label>
+                      <textarea className="form-control form-control-sm" rows="2" value={campanaForm.descripcion} onChange={(e) => setCampanaForm((prev) => ({ ...prev, descripcion: e.target.value }))} />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label form-label-sm">Observaciones</label>
+                      <textarea className="form-control form-control-sm" rows="2" value={campanaForm.observaciones} onChange={(e) => setCampanaForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
+                    </div>
+                  </>
+                )}
+
                 <div className="col-12">
-                  <label className="form-label form-label-sm">Responsable</label>
-                  <select className="form-select form-select-sm" value={campanaForm.responsable_usuario_id} onChange={(e) => setCampanaForm((prev) => ({ ...prev, responsable_usuario_id: e.target.value }))}>
-                    <option value="">Sin responsable</option>
-                    {usuarios.map((usuario) => (
-                      <option key={usuario.id} value={usuario.id}>{usuario.nombre_completo}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12">
-                  <label className="form-label form-label-sm">Descripción</label>
-                  <textarea className="form-control form-control-sm" rows="2" value={campanaForm.descripcion} onChange={(e) => setCampanaForm((prev) => ({ ...prev, descripcion: e.target.value }))} />
-                </div>
-                <div className="col-12">
-                  <label className="form-label form-label-sm">Observaciones</label>
-                  <textarea className="form-control form-control-sm" rows="2" value={campanaForm.observaciones} onChange={(e) => setCampanaForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
+                  <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarExtraCampana(!mostrarExtraCampana)}>
+                    <i className={`bi ${mostrarExtraCampana ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
+                    <span>{mostrarExtraCampana ? 'Menos detalles' : 'Más detalles'}</span>
+                  </button>
                 </div>
               </div>
             </div>
