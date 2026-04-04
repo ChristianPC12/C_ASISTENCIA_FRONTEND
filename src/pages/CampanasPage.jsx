@@ -175,9 +175,13 @@ function BotonAccion({ icono, label, onClick, disabled = false, outline = false 
 
 function ResumenCampana({ detalle }) {
   const resumen = detalle?.resumen || {};
+  const topVisitas = (detalle?.asistentes || [])
+    .filter(a => a.tipo_asistente !== 'MIEMBRO')
+    .sort((a, b) => (b.total_noches || 0) - (a.total_noches || 0))
+    .slice(0, 5);
 
   return (
-    <div className="campanas-detalle-scroll">
+    <>
       <div className="row g-3 mb-3">
         <KpiCard label="Sesiones" value={resumen.total_sesiones} icon="bi-calendar-event" />
         <KpiCard label="Asistentes" value={resumen.total_asistentes} icon="bi-people" />
@@ -210,10 +214,6 @@ function ResumenCampana({ detalle }) {
                 <div>
                   <span className="campanas-meta-label">Responsable</span>
                   <strong>{detalle.responsable_usuario_nombre || 'Sin responsable'}</strong>
-                </div>
-                <div>
-                  <span className="campanas-meta-label">Miembros</span>
-                  <strong>{Number(resumen.total_miembros || 0).toLocaleString('es-CR')}</strong>
                 </div>
               </div>
 
@@ -252,27 +252,52 @@ function ResumenCampana({ detalle }) {
                   <strong>{Number(resumen.total_visitas || 0).toLocaleString('es-CR')}</strong>
                 </div>
                 <div className="campanas-chip-row">
-                  <span className="campanas-meta-label">Miembros registrados</span>
-                  <strong>{Number(resumen.total_miembros || 0).toLocaleString('es-CR')}</strong>
-                </div>
-                <div className="campanas-chip-row">
                   <span className="campanas-meta-label">Decisiones espirituales</span>
                   <strong>{Number(resumen.total_decisiones || 0).toLocaleString('es-CR')}</strong>
                 </div>
+                {topVisitas.length > 0 && (
+                  <div className="mt-3">
+                    <div className="campanas-meta-label mb-2">Visitas frecuentes</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {topVisitas.map(v => (
+                        <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span className="small">{v.nombre_snapshot}</span>
+                          <span className="badge bg-primary-subtle text-primary-emphasis">{v.total_noches} noches</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
+}
+
+function calcularDiasCampana(fechaInicio, fechaFin) {
+  if (!fechaInicio || !fechaFin) return [];
+  const inicio = new Date(fechaInicio + 'T00:00:00');
+  const fin = new Date(fechaFin + 'T00:00:00');
+  const dias = [];
+  let current = new Date(inicio);
+  let num = 1;
+  while (current <= fin) {
+    dias.push({ numero: num, fecha: current.toISOString().split('T')[0] });
+    current.setDate(current.getDate() + 1);
+    num++;
+  }
+  return dias;
 }
 
 function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) {
   const sesiones = detalle?.sesiones || [];
+  const diasCampana = calcularDiasCampana(detalle?.fecha_inicio, detalle?.fecha_fin);
 
   return (
-    <div className="campanas-detalle-scroll">
+    <>
       <div className="card shadow-sm campanas-section-card mb-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
@@ -281,31 +306,22 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
           </div>
 
           <div className="row g-3">
-            <div className="col-6 col-lg-3">
-              <label className="form-label form-label-sm">Fecha</label>
-              <input type="date" className="form-control form-control-sm" value={sesionForm.fecha} onChange={(e) => setSesionForm((prev) => ({ ...prev, fecha: e.target.value }))} />
-            </div>
-            <div className="col-6 col-lg-3">
-              <label className="form-label form-label-sm">Hora</label>
-              <input type="time" className="form-control form-control-sm" value={sesionForm.hora_inicio} onChange={(e) => setSesionForm((prev) => ({ ...prev, hora_inicio: e.target.value }))} />
-            </div>
-            <div className="col-12 col-lg-6">
-              <label className="form-label form-label-sm">Tema</label>
-              <input className="form-control form-control-sm" value={sesionForm.tema_titulo} onChange={(e) => setSesionForm((prev) => ({ ...prev, tema_titulo: e.target.value }))} />
-            </div>
-            <div className="col-12 col-lg-6">
-              <label className="form-label form-label-sm">Predicador de la noche</label>
-              <input className="form-control form-control-sm" value={sesionForm.predicador_noche} onChange={(e) => setSesionForm((prev) => ({ ...prev, predicador_noche: e.target.value }))} />
-            </div>
             <div className="col-12 col-lg-3">
-              <label className="form-label form-label-sm">Estado</label>
-              <select className="form-select form-select-sm" value={sesionForm.estado_sesion} onChange={(e) => setSesionForm((prev) => ({ ...prev, estado_sesion: e.target.value }))}>
-                {ESTADO_SESION_OPCIONES.map((opcion) => (
-                  <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+              <label className="form-label form-label-sm">Día</label>
+              <select className="form-select form-select-sm" value={sesionForm.fecha} onChange={(e) => setSesionForm((prev) => ({ ...prev, fecha: e.target.value }))}>
+                <option value="">Seleccione un día</option>
+                {diasCampana.map((dia) => (
+                  <option key={dia.fecha} value={dia.fecha}>
+                    Día {dia.numero} · {formatearFecha(dia.fecha)}
+                  </option>
                 ))}
               </select>
             </div>
             <div className="col-12 col-lg-9">
+              <label className="form-label form-label-sm">Tema</label>
+              <input className="form-control form-control-sm" value={sesionForm.tema_titulo} onChange={(e) => setSesionForm((prev) => ({ ...prev, tema_titulo: e.target.value }))} />
+            </div>
+            <div className="col-12">
               <label className="form-label form-label-sm">Observaciones</label>
               <input className="form-control form-control-sm" value={sesionForm.observaciones} onChange={(e) => setSesionForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
             </div>
@@ -320,7 +336,7 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
               <table className="table table-sm align-middle mb-0 campanas-sesiones-table">
                 <thead>
                   <tr>
-                    <th>Fecha</th>
+                    <th>Día</th>
                     <th>Tema</th>
                     <th>Estado</th>
                     <th className="text-center">Asistencia</th>
@@ -334,9 +350,11 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
                       </td>
                     </tr>
                   )}
-                  {sesiones.map((item) => (
+                  {sesiones.map((item) => {
+                    const diaNum = diasCampana.find(d => d.fecha === item.fecha)?.numero || '-';
+                    return (
                     <tr key={item.id}>
-                      <td>{formatearFecha(item.fecha)}</td>
+                      <td>Día {diaNum} · {formatearFecha(item.fecha)}</td>
                       <td>
                         <div className="fw-semibold">{item.tema_titulo}</div>
                         <small className="text-muted">{item.predicador_noche || 'Sin predicador'}</small>
@@ -349,14 +367,15 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -391,7 +410,7 @@ function AsistentesCampana({
   }, [sesionActiva, asistenciaForm.sesion_id, setAsistenciaForm]);
 
   return (
-    <div className="campanas-detalle-scroll">
+    <>
       <div className="card shadow-sm campanas-section-card mb-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
@@ -570,7 +589,7 @@ function AsistentesCampana({
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -578,7 +597,7 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
   const decisiones = detalle?.decisiones || [];
 
   return (
-    <div className="campanas-detalle-scroll">
+    <>
       <div className="card shadow-sm campanas-section-card mb-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
@@ -660,7 +679,7 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

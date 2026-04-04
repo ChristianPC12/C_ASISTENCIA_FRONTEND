@@ -8,6 +8,7 @@ const FORM_CAMPANA_INICIAL = {
   fecha_inicio: '',
   fecha_fin: '',
   lugar: '',
+  hora: '',
   predicador: '',
   responsable: '',
   descripcion: '',
@@ -16,11 +17,8 @@ const FORM_CAMPANA_INICIAL = {
 
 const FORM_SESION_INICIAL = {
   fecha: '',
-  hora_inicio: '',
   tema_titulo: '',
-  predicador_noche: '',
-  observaciones: '',
-  estado_sesion: 'PROGRAMADA'
+  observaciones: ''
 };
 
 const FORM_ASISTENTE_INICIAL = {
@@ -154,6 +152,7 @@ export function useCampanas() {
       fecha_inicio: item.fecha_inicio || '',
       fecha_fin: item.fecha_fin || '',
       lugar: item.lugar || '',
+      hora: item.hora || '',
       predicador: item.predicador || '',
       responsable: item.responsable || '',
       descripcion: item.descripcion || '',
@@ -171,7 +170,8 @@ export function useCampanas() {
     try {
       const payload = {
         ...campanaForm,
-        nombre: campanaForm.lema
+        nombre: campanaForm.lema,
+        estado: 'BORRADOR'
       };
 
       const res = editandoCampanaId
@@ -219,7 +219,13 @@ export function useCampanas() {
   const guardarSesion = useCallback(async () => {
     if (!seleccionadaId) return;
     try {
-      const res = await campanaApi.crearSesion(seleccionadaId, sesionForm);
+      const payload = {
+        ...sesionForm,
+        hora_inicio: detalle?.hora || '',
+        estado_sesion: 'PROGRAMADA',
+        predicador_noche: detalle?.predicador || ''
+      };
+      const res = await campanaApi.crearSesion(seleccionadaId, payload);
       if (res?.exito) {
         notificarExito(res.mensaje || 'Sesi\u00f3n creada correctamente.');
         setSesionForm(FORM_SESION_INICIAL);
@@ -230,7 +236,7 @@ export function useCampanas() {
     } catch (error) {
       notificarError(error?.mensaje || 'No se pudo guardar la sesi\u00f3n.');
     }
-  }, [seleccionadaId, sesionForm, cargarDetalle, cargarDashboard, cargarCampanas]);
+  }, [seleccionadaId, sesionForm, detalle, cargarDetalle, cargarDashboard, cargarCampanas]);
 
   const guardarAsistente = useCallback(async () => {
     if (!seleccionadaId) return;

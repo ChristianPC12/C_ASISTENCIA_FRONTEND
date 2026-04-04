@@ -27,6 +27,7 @@ const claseEstado = (estado) => {
 
 export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSeleccionar }) {
   const [filtroAnio, setFiltroAnio] = useState('');
+  const [busqueda, setBusqueda] = useState('');
 
   const anios = useMemo(() => {
     const unique = new Set(campanas.map(c => c.fecha_inicio?.substring(0, 4)).filter(Boolean));
@@ -37,6 +38,12 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
     if (!filtroAnio) return campanas;
     return campanas.filter(c => c.fecha_inicio?.startsWith(filtroAnio));
   }, [campanas, filtroAnio]);
+
+  const campanasFinal = useMemo(() => {
+    if (!busqueda.trim()) return campanasFiltradasPorAnio;
+    const q = busqueda.toLowerCase();
+    return campanasFiltradasPorAnio.filter(c => c.lema?.toLowerCase().includes(q));
+  }, [campanasFiltradasPorAnio, busqueda]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -56,6 +63,12 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
       setFiltroAnio(anios[0]);
     }
   }, [mostrar, anios, filtroAnio]);
+
+  useEffect(() => {
+    if (!mostrar) {
+      setBusqueda('');
+    }
+  }, [mostrar]);
 
   if (!mostrar) return null;
 
@@ -77,16 +90,25 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
               </option>
             ))}
           </select>
+
+          <label className="form-label form-label-sm mt-2">Buscar por lema</label>
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Escribe el tema o lema..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', marginTop: '1rem' }}>
-          {campanasFiltradasPorAnio.length === 0 ? (
+          {campanasFinal.length === 0 ? (
             <div className="text-center text-muted py-4">
-              <p>No hay campañas para el año seleccionado</p>
+              <p>No hay campañas {busqueda ? 'que coincidan' : 'para el año seleccionado'}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {campanasFiltradasPorAnio.map((campana) => (
+              {campanasFinal.map((campana) => (
                 <div
                   key={campana.id}
                   onClick={() => {

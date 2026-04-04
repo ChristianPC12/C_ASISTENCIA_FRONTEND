@@ -1,5 +1,5 @@
 import { Modal } from 'bootstrap';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const TIPO_OPCIONES = [
   { valor: 'SEMANA_EVANGELISTICA', etiqueta: 'Semana evangelística' },
@@ -29,6 +29,7 @@ export default function CampanaFormModal({
 }) {
   const modalRef = useRef(null);
   const modalInstance = useRef(null);
+  const [errorFecha, setErrorFecha] = useState('');
 
   useEffect(() => {
     if (!modalRef.current) return;
@@ -62,6 +63,11 @@ export default function CampanaFormModal({
     setForm((prev) => ({ ...prev, fecha_fin: fechaCalculada }));
   }, [form.tipo, form.fecha_inicio, setForm]);
 
+  // Limpiar error de fecha al cambiar fecha_inicio o tipo
+  useEffect(() => {
+    setErrorFecha('');
+  }, [form.fecha_inicio, form.tipo]);
+
   return (
     <div
       ref={modalRef}
@@ -94,6 +100,7 @@ export default function CampanaFormModal({
                   value={form.lema}
                   onChange={(e) => setForm((prev) => ({ ...prev, lema: e.target.value }))}
                   placeholder="Lema o tema principal"
+                  maxLength={120}
                   required
                 />
               </div>
@@ -131,19 +138,40 @@ export default function CampanaFormModal({
                   type="date"
                   className="form-control form-control-sm"
                   value={form.fecha_fin}
-                  onChange={(e) => setForm((prev) => ({ ...prev, fecha_fin: e.target.value }))}
+                  onChange={(e) => {
+                    const nuevaFecha = e.target.value;
+                    if (form.tipo === 'OTRO' && form.fecha_inicio && nuevaFecha < form.fecha_inicio) {
+                      setErrorFecha('La fecha de fin no puede ser anterior a la de inicio');
+                    } else {
+                      setErrorFecha('');
+                    }
+                    setForm((prev) => ({ ...prev, fecha_fin: nuevaFecha }));
+                  }}
                   disabled={form.tipo !== 'OTRO'}
                   readOnly={form.tipo !== 'OTRO'}
                 />
+                {errorFecha && <div className="text-danger small mt-1">{errorFecha}</div>}
               </div>
 
-              <div className="col-6">
+              <div className="col-12">
                 <label className="form-label form-label-sm">Lugar <span className="text-danger">*</span></label>
                 <input
                   className="form-control form-control-sm"
                   value={form.lugar}
                   onChange={(e) => setForm((prev) => ({ ...prev, lugar: e.target.value }))}
                   placeholder="Lugar de la campaña"
+                  maxLength={100}
+                  required
+                />
+              </div>
+
+              <div className="col-6">
+                <label className="form-label form-label-sm">Hora <span className="text-danger">*</span></label>
+                <input
+                  type="time"
+                  className="form-control form-control-sm"
+                  value={form.hora}
+                  onChange={(e) => setForm((prev) => ({ ...prev, hora: e.target.value }))}
                   required
                 />
               </div>
@@ -155,6 +183,7 @@ export default function CampanaFormModal({
                   value={form.predicador}
                   onChange={(e) => setForm((prev) => ({ ...prev, predicador: e.target.value }))}
                   placeholder="Predicador principal"
+                  maxLength={80}
                   required
                 />
               </div>
@@ -166,6 +195,7 @@ export default function CampanaFormModal({
                   value={form.responsable}
                   onChange={(e) => setForm((prev) => ({ ...prev, responsable: e.target.value }))}
                   placeholder="Nombre de la persona responsable"
+                  maxLength={80}
                   required
                 />
               </div>
@@ -180,6 +210,7 @@ export default function CampanaFormModal({
                       value={form.descripcion}
                       onChange={(e) => setForm((prev) => ({ ...prev, descripcion: e.target.value }))}
                       placeholder="Descripción detallada de la campaña"
+                      maxLength={500}
                     />
                   </div>
 
@@ -191,6 +222,7 @@ export default function CampanaFormModal({
                       value={form.observaciones}
                       onChange={(e) => setForm((prev) => ({ ...prev, observaciones: e.target.value }))}
                       placeholder="Notas adicionales"
+                      maxLength={400}
                     />
                   </div>
                 </>
@@ -224,8 +256,14 @@ export default function CampanaFormModal({
             <button
               type="button"
               className="btn btn-primary btn-sm admin-responsive-action-btn"
-              onClick={onGuardar}
-              disabled={guardando}
+              onClick={() => {
+                if (form.tipo === 'OTRO' && form.fecha_fin && form.fecha_inicio && form.fecha_fin < form.fecha_inicio) {
+                  setErrorFecha('La fecha de fin no puede ser anterior a la de inicio');
+                  return;
+                }
+                onGuardar();
+              }}
+              disabled={guardando || !!errorFecha}
             >
               <i className={`bi ${editandoId ? 'bi-floppy' : 'bi-plus-lg'}`} aria-hidden="true"></i>
               <span className="admin-responsive-btn-label">{editandoId ? 'Guardar' : 'Agregar'}</span>
