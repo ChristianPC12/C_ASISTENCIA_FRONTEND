@@ -100,7 +100,7 @@ export default function CampanaFormModal({
                   value={form.lema}
                   onChange={(e) => setForm((prev) => ({ ...prev, lema: e.target.value }))}
                   placeholder="Lema o tema principal"
-                  maxLength={120}
+                  maxLength={60}
                   required
                 />
               </div>
@@ -153,14 +153,14 @@ export default function CampanaFormModal({
                 {errorFecha && <div className="text-danger small mt-1">{errorFecha}</div>}
               </div>
 
-              <div className="col-12">
+              <div className="col-6">
                 <label className="form-label form-label-sm">Lugar <span className="text-danger">*</span></label>
                 <input
                   className="form-control form-control-sm"
                   value={form.lugar}
                   onChange={(e) => setForm((prev) => ({ ...prev, lugar: e.target.value }))}
                   placeholder="Lugar de la campaña"
-                  maxLength={100}
+                  maxLength={45}
                   required
                 />
               </div>
@@ -183,7 +183,7 @@ export default function CampanaFormModal({
                   value={form.predicador}
                   onChange={(e) => setForm((prev) => ({ ...prev, predicador: e.target.value }))}
                   placeholder="Predicador principal"
-                  maxLength={80}
+                  maxLength={40}
                   required
                 />
               </div>
@@ -195,7 +195,7 @@ export default function CampanaFormModal({
                   value={form.responsable}
                   onChange={(e) => setForm((prev) => ({ ...prev, responsable: e.target.value }))}
                   placeholder="Nombre de la persona responsable"
-                  maxLength={80}
+                  maxLength={40}
                   required
                 />
               </div>
@@ -222,7 +222,7 @@ export default function CampanaFormModal({
                       value={form.observaciones}
                       onChange={(e) => setForm((prev) => ({ ...prev, observaciones: e.target.value }))}
                       placeholder="Notas adicionales"
-                      maxLength={400}
+                      maxLength={60}
                     />
                   </div>
                 </>

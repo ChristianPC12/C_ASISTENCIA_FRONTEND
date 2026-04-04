@@ -80,7 +80,8 @@ export function useCampanas() {
 
   const cargarDashboard = useCallback(async () => {
     try {
-      const res = await campanaApi.dashboard(filtros);
+      const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v !== ''));
+      const res = await campanaApi.dashboard(params);
       if (res?.exito) {
         setDashboard(res.datos?.item || {});
       }
@@ -93,7 +94,8 @@ export function useCampanas() {
   const cargarCampanas = useCallback(async () => {
     setCargando(true);
     try {
-      const res = await campanaApi.listar(filtros);
+      const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v !== ''));
+      const res = await campanaApi.listar(params);
       if (res?.exito) {
         const items = res.datos?.items || [];
         setCampanas(items);
@@ -168,10 +170,17 @@ export function useCampanas() {
   const guardarCampana = useCallback(async () => {
     setGuardando(true);
     try {
+      const calcularEstadoCampana = (fechaInicio, fechaFin) => {
+        const hoy = new Date().toISOString().split('T')[0];
+        if (!fechaInicio || hoy < fechaInicio) return 'POR_INICIAR';
+        if (!fechaFin || hoy <= fechaFin) return 'ACTIVA';
+        return 'FINALIZADA';
+      };
+
       const payload = {
         ...campanaForm,
         nombre: campanaForm.lema,
-        estado: 'BORRADOR'
+        estado: calcularEstadoCampana(campanaForm.fecha_inicio, campanaForm.fecha_fin)
       };
 
       const res = editandoCampanaId
@@ -195,14 +204,14 @@ export function useCampanas() {
     }
   }, [campanaForm, editandoCampanaId, resetCampanaForm, cargarDashboard, cargarCampanas]);
 
-  const archivarCampana = useCallback(async (id) => {
-    const ok = await confirmar('Esta campa\u00f1a se archivar\u00e1. \u00bfDesea continuar?');
+  const eliminarCampana = useCallback(async (id) => {
+    const ok = await confirmar('\u00bfEst\u00e1 seguro de que desea eliminar esta campa\u00f1a? Esta acci\u00f3n no se puede deshacer.');
     if (!ok) return;
 
     try {
       const res = await campanaApi.eliminar(id);
       if (res?.exito) {
-        notificarExito(res.mensaje || 'Campa\u00f1a archivada.');
+        notificarExito(res.mensaje || 'Campa\u00f1a eliminada.');
         if (seleccionadaId === id) {
           setSeleccionadaId(null);
           setDetalle(null);
@@ -212,7 +221,7 @@ export function useCampanas() {
         resetCampanaForm();
       }
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo archivar la campa\u00f1a.');
+      notificarError(error?.mensaje || 'No se pudo eliminar la campa\u00f1a.');
     }
   }, [seleccionadaId, cargarDashboard, cargarCampanas, resetCampanaForm]);
 
@@ -346,7 +355,7 @@ export function useCampanas() {
     editarCampana,
     resetCampanaForm,
     guardarCampana,
-    archivarCampana,
+    eliminarCampana,
     guardarSesion,
     guardarAsistente,
     guardarAsistencia,

@@ -14,10 +14,9 @@ const TIPO_OPCIONES = [
 
 const ESTADO_CAMPANA_OPCIONES = [
   { valor: '', etiqueta: 'Todos los estados' },
-  { valor: 'BORRADOR', etiqueta: 'Borrador' },
+  { valor: 'POR_INICIAR', etiqueta: 'Por iniciar' },
   { valor: 'ACTIVA', etiqueta: 'Activa' },
-  { valor: 'FINALIZADA', etiqueta: 'Finalizada' },
-  { valor: 'ARCHIVADA', etiqueta: 'Archivada' }
+  { valor: 'FINALIZADA', etiqueta: 'Finalizada' }
 ];
 
 const ESTADO_SESION_OPCIONES = [
@@ -115,20 +114,28 @@ function claseEstado(estado) {
     case 'CONTACTADO':
     case 'ESTUDIO_BIBLICO':
       return 'bg-success-subtle text-success-emphasis border-success-subtle';
-    case 'BORRADOR':
+    case 'POR_INICIAR':
     case 'PROGRAMADA':
     case 'PENDIENTE':
       return 'bg-warning-subtle text-warning-emphasis border-warning-subtle';
     case 'FINALIZADA':
     case 'CERRADO':
       return 'bg-primary-subtle text-primary-emphasis border-primary-subtle';
-    case 'ARCHIVADA':
     case 'CANCELADA':
     case 'NO_LOCALIZABLE':
       return 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle';
     default:
       return 'bg-light text-dark border';
   }
+}
+
+function etiquetaEstado(estado) {
+  const etiquetas = {
+    POR_INICIAR: 'Por iniciar',
+    ACTIVA: 'Activa',
+    FINALIZADA: 'Finalizada'
+  };
+  return etiquetas[estado] || estado || '-';
 }
 
 function KpiCard({ label, value, icon }) {
@@ -319,11 +326,11 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
             </div>
             <div className="col-12 col-lg-9">
               <label className="form-label form-label-sm">Tema</label>
-              <input className="form-control form-control-sm" value={sesionForm.tema_titulo} onChange={(e) => setSesionForm((prev) => ({ ...prev, tema_titulo: e.target.value }))} />
+              <input className="form-control form-control-sm" value={sesionForm.tema_titulo} onChange={(e) => setSesionForm((prev) => ({ ...prev, tema_titulo: e.target.value }))} maxLength={45} />
             </div>
             <div className="col-12">
               <label className="form-label form-label-sm">Observaciones</label>
-              <input className="form-control form-control-sm" value={sesionForm.observaciones} onChange={(e) => setSesionForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
+              <input className="form-control form-control-sm" value={sesionForm.observaciones} onChange={(e) => setSesionForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={60} />
             </div>
           </div>
         </div>
@@ -467,7 +474,7 @@ function AsistentesCampana({
           <div className="row g-3">
             <div className="col-12 col-md-6">
               <label className="form-label form-label-sm">Nombre</label>
-              <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} />
+              <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} maxLength={45} />
             </div>
             <div className="col-12 col-md-3">
               <label className="form-label form-label-sm">Tipo</label>
@@ -479,7 +486,7 @@ function AsistentesCampana({
             </div>
             <div className="col-12 col-md-3">
               <label className="form-label form-label-sm">Teléfono</label>
-              <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} />
+              <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
             </div>
 
             {mostrarMasAsistente && (
@@ -637,7 +644,7 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
             </div>
             <div className="col-12 col-lg-12">
               <label className="form-label form-label-sm">Observaciones</label>
-              <input className="form-control form-control-sm" value={decisionForm.observaciones} onChange={(e) => setDecisionForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
+              <input className="form-control form-control-sm" value={decisionForm.observaciones} onChange={(e) => setDecisionForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={60} />
             </div>
           </div>
         </div>
@@ -803,7 +810,7 @@ export default function CampanasPage() {
     editarCampana,
     resetCampanaForm,
     guardarCampana,
-    archivarCampana,
+    eliminarCampana,
     guardarSesion,
     guardarAsistente,
     guardarAsistencia,
@@ -828,7 +835,7 @@ export default function CampanasPage() {
       <div className="row g-3 mb-3 campanas-top-row">
         <div className="col-12 col-xxl-7">
           <div className="card shadow-sm h-100 campanas-filtros-card">
-            <div className="card-body">
+            <div className="card-body" style={{ overflow: 'visible' }}>
               <div className="row g-2 align-items-end">
                 <div className="col-12 col-lg-4">
                   <SearchInput
@@ -884,6 +891,7 @@ export default function CampanasPage() {
                       <tr>
                         <th>Campaña</th>
                         <th>Estado</th>
+                        <th>Predicador</th>
                         <th>Días</th>
                         <th className="text-end">Acciones</th>
                       </tr>
@@ -891,25 +899,32 @@ export default function CampanasPage() {
                     <tbody>
                       {!cargando && campanas.length === 0 && (
                         <tr>
-                          <td colSpan="4" className="text-center text-muted py-4">No hay campañas registradas todavía.</td>
+                          <td colSpan="5" className="text-center text-muted py-4">No hay campañas registradas todavía.</td>
                         </tr>
                       )}
                       {campanas.map((item) => (
-                        <tr key={item.id} className={seleccionadaId === item.id ? 'table-active' : ''}>
+                        <tr key={item.id} className={seleccionadaId === item.id ? 'table-active' : ''} style={{ cursor: 'pointer' }} onClick={() => { setSeleccionadaId(item.id); setMostrarDetalleModal(true); }}>
                           <td>
-                            <button type="button" className="btn btn-link p-0 text-start text-decoration-none fw-semibold" onClick={() => { setSeleccionadaId(item.id); setMostrarDetalleModal(true); }}>
+                            <button type="button" className="btn btn-link p-0 text-start text-decoration-none fw-semibold" onClick={(e) => { e.stopPropagation(); }}>
                               {item.lema}
                             </button>
                             <div className="small text-muted">{formatearFecha(item.fecha_inicio)} al {formatearFecha(item.fecha_fin)}</div>
                           </td>
-                          <td><span className={`badge ${claseEstado(item.estado)}`}>{item.estado}</span></td>
+                          <td><span className={`badge ${claseEstado(item.estado)}`}>{etiquetaEstado(item.estado)}</span></td>
+                          <td><span className="small">{item.predicador || '-'}</span></td>
                           <td>{Number(item.total_sesiones || 0).toLocaleString('es-CR')}</td>
                           <td className="text-end">
                             <div className="d-inline-flex gap-2">
-                              <button type="button" className="btn btn-outline-primary btn-sm admin-table-icon-btn" onClick={() => editarCampana(item)} title="Editar">
-                                <i className="bi bi-pencil-square" aria-hidden="true"></i>
-                              </button>
-                              <button type="button" className="btn btn-outline-danger btn-sm admin-table-icon-btn" onClick={() => archivarCampana(item.id)} title="Archivar">
+                              {(() => {
+                                const hoy = new Date().toISOString().split('T')[0];
+                                if (item.fecha_fin && hoy > item.fecha_fin) return null;
+                                return (
+                                  <button type="button" className="btn btn-outline-primary btn-sm admin-table-icon-btn" onClick={(e) => { e.stopPropagation(); editarCampana(item); setMostrarModalCampana(true); }} title="Editar">
+                                    <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                                  </button>
+                                );
+                              })()}
+                              <button type="button" className="btn btn-outline-danger btn-sm admin-table-icon-btn" onClick={(e) => { e.stopPropagation(); eliminarCampana(item.id); }} title="Eliminar">
                                 <i className="bi bi-trash" aria-hidden="true"></i>
                               </button>
                             </div>

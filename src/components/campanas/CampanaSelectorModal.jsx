@@ -15,35 +15,64 @@ const etiquetaTipoCampana = (tipo) => {
   return tipos[tipo] || tipo;
 };
 
+const etiquetaEstado = (estado) => {
+  const etiquetas = {
+    'ACTIVA': 'Activa',
+    'POR_INICIAR': 'Por iniciar',
+    'FINALIZADA': 'Finalizada'
+  };
+  return etiquetas[estado] || estado;
+};
+
 const claseEstado = (estado) => {
   const clases = {
     'ACTIVA': 'bg-success-subtle text-success-emphasis border-success-subtle',
-    'BORRADOR': 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
-    'FINALIZADA': 'bg-primary-subtle text-primary-emphasis border-primary-subtle',
-    'ARCHIVADA': 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle'
+    'POR_INICIAR': 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
+    'FINALIZADA': 'bg-primary-subtle text-primary-emphasis border-primary-subtle'
   };
   return clases[estado] || 'bg-light text-dark border';
 };
 
 export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSeleccionar }) {
-  const [filtroAnio, setFiltroAnio] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [mostrarOpciones, setMostrarOpciones] = useState(false);
+  const [filtroAnio, setFiltroAnio] = useState('');
+  const [filtroMes, setFiltroMes] = useState('');
+  const [filtroDesdeFecha, setFiltroDesdeFecha] = useState('');
+  const [filtroHastaFecha, setFiltroHastaFecha] = useState('');
 
   const anios = useMemo(() => {
     const unique = new Set(campanas.map(c => c.fecha_inicio?.substring(0, 4)).filter(Boolean));
     return Array.from(unique).sort((a, b) => b - a);
   }, [campanas]);
 
-  const campanasFiltradasPorAnio = useMemo(() => {
-    if (!filtroAnio) return campanas;
-    return campanas.filter(c => c.fecha_inicio?.startsWith(filtroAnio));
-  }, [campanas, filtroAnio]);
+  const campanasFiltradasPorBusqueda = useMemo(() => {
+    if (!busqueda.trim()) return campanas;
+    const q = busqueda.toLowerCase();
+    return campanas.filter(c => c.lema?.toLowerCase().includes(q));
+  }, [campanas, busqueda]);
 
   const campanasFinal = useMemo(() => {
-    if (!busqueda.trim()) return campanasFiltradasPorAnio;
-    const q = busqueda.toLowerCase();
-    return campanasFiltradasPorAnio.filter(c => c.lema?.toLowerCase().includes(q));
-  }, [campanasFiltradasPorAnio, busqueda]);
+    let resultado = campanasFiltradasPorBusqueda;
+
+    if (filtroAnio) {
+      resultado = resultado.filter(c => c.fecha_inicio?.startsWith(filtroAnio));
+    }
+
+    if (filtroMes) {
+      resultado = resultado.filter(c => c.fecha_inicio?.startsWith(filtroAnio + '-' + filtroMes));
+    }
+
+    if (filtroDesdeFecha) {
+      resultado = resultado.filter(c => c.fecha_inicio >= filtroDesdeFecha);
+    }
+
+    if (filtroHastaFecha) {
+      resultado = resultado.filter(c => c.fecha_fin <= filtroHastaFecha);
+    }
+
+    return resultado;
+  }, [campanasFiltradasPorBusqueda, filtroAnio, filtroMes, filtroDesdeFecha, filtroHastaFecha]);
 
   useEffect(() => {
     const handleEscape = (e) => {
@@ -59,14 +88,13 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
   }, [mostrar, onCerrar]);
 
   useEffect(() => {
-    if (mostrar && anios.length > 0 && !filtroAnio) {
-      setFiltroAnio(anios[0]);
-    }
-  }, [mostrar, anios, filtroAnio]);
-
-  useEffect(() => {
     if (!mostrar) {
       setBusqueda('');
+      setMostrarOpciones(false);
+      setFiltroAnio('');
+      setFiltroMes('');
+      setFiltroDesdeFecha('');
+      setFiltroHastaFecha('');
     }
   }, [mostrar]);
 
@@ -77,34 +105,88 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
       <div className="prompt-modal-iasd" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #e0e0e0' }}>
           <h5 className="mb-3">Seleccionar campaña</h5>
-          <label className="form-label form-label-sm">Año</label>
-          <select
-            className="form-select form-select-sm"
-            value={filtroAnio}
-            onChange={(e) => setFiltroAnio(e.target.value)}
-          >
-            <option value="">-- Todos los años --</option>
-            {anios.map((anio) => (
-              <option key={anio} value={anio}>
-                {anio}
-              </option>
-            ))}
-          </select>
-
-          <label className="form-label form-label-sm mt-2">Buscar por lema</label>
+          <label className="form-label form-label-sm">Buscar por lema</label>
           <input
             type="text"
             className="form-control form-control-sm"
-            placeholder="Escribe el tema o lema..."
+            placeholder="Escribe el lema o tema..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
+
+          {mostrarOpciones && (
+            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e0e0e0' }}>
+              <div className="row g-2">
+                <div className="col-6">
+                  <label className="form-label form-label-sm">Año</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={filtroAnio}
+                    onChange={(e) => { setFiltroAnio(e.target.value); setFiltroMes(''); }}
+                  >
+                    <option value="">Todos</option>
+                    {anios.map((anio) => (
+                      <option key={anio} value={anio}>
+                        {anio}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-6">
+                  <label className="form-label form-label-sm">Mes</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={filtroMes}
+                    disabled={!filtroAnio}
+                    onChange={(e) => setFiltroMes(e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
+                      <option key={mes} value={String(mes).padStart(2, '0')}>
+                        {String(mes).padStart(2, '0')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-6">
+                  <label className="form-label form-label-sm">Desde</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={filtroDesdeFecha}
+                    onChange={(e) => setFiltroDesdeFecha(e.target.value)}
+                  />
+                </div>
+                <div className="col-6">
+                  <label className="form-label form-label-sm">Hasta</label>
+                  <input
+                    type="date"
+                    className="form-control form-control-sm"
+                    value={filtroHastaFecha}
+                    onChange={(e) => setFiltroHastaFecha(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted mt-2"
+            onClick={() => setMostrarOpciones(!mostrarOpciones)}
+          >
+            <i
+              className={`bi ${mostrarOpciones ? 'bi-chevron-up' : 'bi-chevron-down'}`}
+              aria-hidden="true"
+            ></i>
+            <span>{mostrarOpciones ? 'Ocultar' : 'Opciones adicionales'}</span>
+          </button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', marginTop: '1rem' }}>
           {campanasFinal.length === 0 ? (
             <div className="text-center text-muted py-4">
-              <p>No hay campañas {busqueda ? 'que coincidan' : 'para el año seleccionado'}</p>
+              <p>No hay campañas que coincidan con los filtros</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -145,7 +227,7 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
                         className={`badge ${claseEstado(campana.estado)}`}
                         style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem' }}
                       >
-                        {campana.estado}
+                        {etiquetaEstado(campana.estado)}
                       </span>
                       <span
                         className="badge bg-secondary-subtle text-secondary-emphasis border-secondary-subtle"
@@ -163,7 +245,7 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
 
         <div style={{ paddingTop: '1rem', borderTop: '1px solid #e0e0e0', textAlign: 'right' }}>
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn btn-outline-secondary btn-sm"
             onClick={onCerrar}
           >
             Cerrar
