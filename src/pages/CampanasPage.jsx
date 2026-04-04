@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import SearchInput from '../components/ui/SearchInput';
 import { useCampanas } from '../hooks/useCampanas';
+import CampanaFormModal from '../components/campanas/CampanaFormModal';
+import { EVENT_CAMPANAS_ABRIR_NUEVA } from '../config/events';
 
 const TIPO_OPCIONES = [
   { valor: 'SEMANA_EVANGELISTICA', etiqueta: 'Semana evangelística' },
@@ -57,7 +59,7 @@ const DECISION_OPCIONES = [
 
 const DETALLE_VISTAS = [
   { valor: 'RESUMEN', etiqueta: 'Resumen', icono: 'bi-card-text' },
-  { valor: 'SESIONES', etiqueta: 'Sesiones', icono: 'bi-calendar-event' },
+  { valor: 'SESIONES', etiqueta: 'Días', icono: 'bi-calendar-event' },
   { valor: 'ASISTENTES', etiqueta: 'Asistentes', icono: 'bi-people' },
   { valor: 'DECISIONES', etiqueta: 'Decisiones', icono: 'bi-check2-circle' }
 ];
@@ -723,6 +725,19 @@ function DetalleCampana(props) {
 
 export default function CampanasPage() {
   const [mostrarExtraCampana, setMostrarExtraCampana] = useState(false);
+  const [mostrarModalCampana, setMostrarModalCampana] = useState(false);
+
+  useEffect(() => {
+    const manejarAbrirNuevaCampana = () => {
+      setMostrarModalCampana(true);
+      resetCampanaForm();
+    };
+
+    window.addEventListener(EVENT_CAMPANAS_ABRIR_NUEVA, manejarAbrirNuevaCampana);
+    return () => {
+      window.removeEventListener(EVENT_CAMPANAS_ABRIR_NUEVA, manejarAbrirNuevaCampana);
+    };
+  }, []);
 
   const {
     filtros,
@@ -763,6 +778,17 @@ export default function CampanasPage() {
     convertirAsistenteAEstudio,
     recargar
   } = useCampanas();
+
+  const cerrarModalCampana = () => {
+    setMostrarModalCampana(false);
+  };
+
+  const guardarYCerrarCampana = async () => {
+    await guardarCampana();
+    if (!editandoCampanaId) {
+      setMostrarModalCampana(false);
+    }
+  };
 
   return (
     <div className="container-fluid py-3 py-lg-4">
@@ -820,94 +846,7 @@ export default function CampanasPage() {
       </div>
 
       <div className="row g-3">
-        <div className="col-12 col-xxl-4">
-          <div className="card shadow-sm mb-3 campanas-form-card">
-            <div className="card-header bg-white d-flex align-items-center justify-content-between gap-2 flex-wrap">
-              <div>
-                <h5 className="mb-0">{editandoCampanaId ? 'Editar campaña' : 'Nueva campaña'}</h5>
-                <small className="text-muted">Registro operativo para campaña evangelística</small>
-              </div>
-              <div className="d-flex gap-2">
-                <BotonAccion icono={editandoCampanaId ? 'bi-floppy' : 'bi-plus-lg'} label={editandoCampanaId ? 'Actualizar' : 'Agregar'} onClick={guardarCampana} disabled={guardando} />
-                <BotonAccion icono="bi-arrow-counterclockwise" label="Limpiar" onClick={resetCampanaForm} outline />
-              </div>
-            </div>
-
-            <div className="card-body">
-              <div className="row g-3">
-                <div className="col-12">
-                  <label className="form-label form-label-sm">Nombre</label>
-                  <input className="form-control form-control-sm" value={campanaForm.nombre} onChange={(e) => setCampanaForm((prev) => ({ ...prev, nombre: e.target.value }))} />
-                </div>
-                <div className="col-12">
-                  <label className="form-label form-label-sm">Lema</label>
-                  <input className="form-control form-control-sm" value={campanaForm.lema} onChange={(e) => setCampanaForm((prev) => ({ ...prev, lema: e.target.value }))} />
-                </div>
-                <div className="col-6">
-                  <label className="form-label form-label-sm">Tipo</label>
-                  <select className="form-select form-select-sm" value={campanaForm.tipo} onChange={(e) => setCampanaForm((prev) => ({ ...prev, tipo: e.target.value }))}>
-                    {TIPO_OPCIONES.map((opcion) => (
-                      <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-6">
-                  <label className="form-label form-label-sm">Estado</label>
-                  <select className="form-select form-select-sm" value={campanaForm.estado} onChange={(e) => setCampanaForm((prev) => ({ ...prev, estado: e.target.value }))}>
-                    {ESTADO_CAMPANA_OPCIONES.filter((opcion) => opcion.valor).map((opcion) => (
-                      <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-6">
-                  <label className="form-label form-label-sm">Fecha inicio</label>
-                  <input type="date" className="form-control form-control-sm" value={campanaForm.fecha_inicio} onChange={(e) => setCampanaForm((prev) => ({ ...prev, fecha_inicio: e.target.value }))} />
-                </div>
-                <div className="col-6">
-                  <label className="form-label form-label-sm">Fecha fin</label>
-                  <input type="date" className="form-control form-control-sm" value={campanaForm.fecha_fin} onChange={(e) => setCampanaForm((prev) => ({ ...prev, fecha_fin: e.target.value }))} />
-                </div>
-                <div className="col-6">
-                  <label className="form-label form-label-sm">Lugar</label>
-                  <input className="form-control form-control-sm" value={campanaForm.lugar} onChange={(e) => setCampanaForm((prev) => ({ ...prev, lugar: e.target.value }))} />
-                </div>
-                <div className="col-6">
-                  <label className="form-label form-label-sm">Predicador</label>
-                  <input className="form-control form-control-sm" value={campanaForm.predicador} onChange={(e) => setCampanaForm((prev) => ({ ...prev, predicador: e.target.value }))} />
-                </div>
-
-                {mostrarExtraCampana && (
-                  <>
-                    <div className="col-12">
-                      <label className="form-label form-label-sm">Responsable</label>
-                      <select className="form-select form-select-sm" value={campanaForm.responsable_usuario_id} onChange={(e) => setCampanaForm((prev) => ({ ...prev, responsable_usuario_id: e.target.value }))}>
-                        <option value="">Sin responsable</option>
-                        {usuarios.map((usuario) => (
-                          <option key={usuario.id} value={usuario.id}>{usuario.nombre_completo}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label form-label-sm">Descripción</label>
-                      <textarea className="form-control form-control-sm" rows="2" value={campanaForm.descripcion} onChange={(e) => setCampanaForm((prev) => ({ ...prev, descripcion: e.target.value }))} />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label form-label-sm">Observaciones</label>
-                      <textarea className="form-control form-control-sm" rows="2" value={campanaForm.observaciones} onChange={(e) => setCampanaForm((prev) => ({ ...prev, observaciones: e.target.value }))} />
-                    </div>
-                  </>
-                )}
-
-                <div className="col-12">
-                  <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarExtraCampana(!mostrarExtraCampana)}>
-                    <i className={`bi ${mostrarExtraCampana ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
-                    <span>{mostrarExtraCampana ? 'Menos detalles' : 'Más detalles'}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
+        <div className="col-12">
           <div className="card shadow-sm campanas-lista-card">
             <div className="card-header bg-white d-flex align-items-center justify-content-between gap-2">
               <h5 className="mb-0">Campañas registradas</h5>
@@ -921,7 +860,7 @@ export default function CampanasPage() {
                       <tr>
                         <th>Campaña</th>
                         <th>Estado</th>
-                        <th>Sesiones</th>
+                        <th>Días</th>
                         <th className="text-end">Acciones</th>
                       </tr>
                     </thead>
@@ -943,11 +882,11 @@ export default function CampanasPage() {
                           <td>{Number(item.total_sesiones || 0).toLocaleString('es-CR')}</td>
                           <td className="text-end">
                             <div className="d-inline-flex gap-2">
-                              <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => editarCampana(item)} title="Editar">
-                                <i className="bi bi-pencil" aria-hidden="true"></i>
+                              <button type="button" className="btn btn-outline-primary btn-sm admin-table-icon-btn" onClick={() => editarCampana(item)} title="Editar">
+                                <i className="bi bi-pencil-square" aria-hidden="true"></i>
                               </button>
-                              <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => archivarCampana(item.id)} title="Archivar">
-                                <i className="bi bi-archive" aria-hidden="true"></i>
+                              <button type="button" className="btn btn-outline-danger btn-sm admin-table-icon-btn" onClick={() => archivarCampana(item.id)} title="Archivar">
+                                <i className="bi bi-trash" aria-hidden="true"></i>
                               </button>
                             </div>
                           </td>
@@ -991,6 +930,19 @@ export default function CampanasPage() {
           )}
         </div>
       </div>
+
+      <CampanaFormModal
+        mostrar={mostrarModalCampana}
+        onCerrar={cerrarModalCampana}
+        editandoId={editandoCampanaId}
+        form={campanaForm}
+        setForm={setCampanaForm}
+        onGuardar={guardarYCerrarCampana}
+        guardando={guardando}
+        usuarios={usuarios}
+        mostrarExtra={mostrarExtraCampana}
+        setMostrarExtra={setMostrarExtraCampana}
+      />
     </div>
   );
 }

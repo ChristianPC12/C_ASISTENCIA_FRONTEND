@@ -10,6 +10,7 @@ import {
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
   EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA,
+  EVENT_CAMPANAS_ABRIR_NUEVA,
   EVENT_COMPARACIONES_ABRIR_TABLA,
   EVENT_COMPARACIONES_ABRIR_DETALLE,
   EVENT_COMPARACIONES_ABRIR_VISITAS,
@@ -57,6 +58,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
   const enPantallaEstadisticas = esRutaActiva('/estadisticas');
   const enPantallaComparaciones = esRutaActiva('/comparaciones');
+  const enPantallaCampanas = esRutaActiva('/campanas');
   const tenantSesion = tenant || usuario?.tenant || {};
   const campoSesion = String(
     tenantSesion?.campo_nombre || tenantSesion?.campo || usuario?.campo_nombre || usuario?.campo || ''
@@ -156,6 +158,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirTablaEstadisticas = () => {
     window.dispatchEvent(new CustomEvent(EVENT_ESTADISTICAS_ABRIR_TABLA));
+  };
+
+  const abrirNuevaCampana = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_NUEVA));
   };
 
   let enlaces = [];
@@ -443,6 +449,18 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               >
                 <i className="bi bi-table" aria-hidden="true"></i>
                 <span className="visually-hidden">Ver tabla de estadísticas</span>
+              </button>
+            )}
+            {enPantallaCampanas && (
+              <button
+                type="button"
+                className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
+                onClick={abrirNuevaCampana}
+                aria-label="Nueva Campaña"
+                title="Nueva Campaña"
+              >
+                <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                <span className="d-none d-md-inline">Nueva Campaña</span>
               </button>
             )}
             <button

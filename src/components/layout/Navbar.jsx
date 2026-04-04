@@ -6,8 +6,9 @@ import { ROLES } from '../../config/constants';
  * Props:
  *  - usuario: objeto con datos del usuario autenticado
  *  - onCerrarSesion: funcion para cerrar sesion
+ *  - onNuevaCampana: funcion para abrir modal de nueva campaña (opcional)
  */
-export default function Navbar({ usuario, onCerrarSesion }) {
+export default function Navbar({ usuario, onCerrarSesion, onNuevaCampana }) {
   const location = useLocation();
 
   const esRutaActiva = (ruta) => location.pathname === ruta;
@@ -63,8 +64,18 @@ export default function Navbar({ usuario, onCerrarSesion }) {
           </ul>
 
           {/* Info del usuario y logout */}
-          <div className="d-flex align-items-center">
-            <span className="navbar-text me-3 d-flex align-items-center">
+          <div className="d-flex align-items-center gap-2">
+            {onNuevaCampana && (
+              <button
+                className="btn btn-primary btn-sm d-flex align-items-center gap-1"
+                onClick={onNuevaCampana}
+                title="Nueva Campaña"
+              >
+                <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                <span className="d-none d-sm-inline">Nueva Campaña</span>
+              </button>
+            )}
+            <span className="navbar-text me-2 d-flex align-items-center">
               <span className="me-2">{usuario?.nombre_completo}</span>
               <span className="badge bg-secondary" style={{ fontSize: '0.7rem' }}>
                 {usuario?.rol}
