@@ -171,7 +171,7 @@ export function useCampanas() {
     setGuardando(true);
     try {
       const calcularEstadoCampana = (fechaInicio, fechaFin) => {
-        const hoy = new Date().toISOString().split('T')[0];
+        const hoy = new Date().toLocaleDateString('en-CA');
         if (!fechaInicio || hoy < fechaInicio) return 'POR_INICIAR';
         if (!fechaFin || hoy <= fechaFin) return 'ACTIVA';
         return 'FINALIZADA';

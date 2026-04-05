@@ -981,7 +981,7 @@ export default function CampanasPage() {
                           <td className="text-end">
                             <div className="d-inline-flex gap-2">
                               {(() => {
-                                const hoy = new Date().toISOString().split('T')[0];
+                                const hoy = new Date().toLocaleDateString('en-CA');
                                 if (item.fecha_fin && hoy > item.fecha_fin) return null;
                                 return (
                                   <button type="button" className="btn btn-outline-primary btn-sm admin-table-icon-btn" onClick={(e) => { e.stopPropagation(); editarCampana(item); setMostrarModalCampana(true); }} title="Editar">

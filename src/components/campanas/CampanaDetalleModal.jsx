@@ -16,6 +16,7 @@ export default function CampanaDetalleModal({
 }) {
   const modalRef = useRef(null);
   const modalInstance = useRef(null);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     if (!modalRef.current) return;
@@ -30,6 +31,18 @@ export default function CampanaDetalleModal({
       modalInstance.current.hide();
     }
   }, [mostrar]);
+
+  useEffect(() => {
+    if (mostrar && scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [mostrar]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [detalleVista]);
 
   if (!detalle) return null;
 
@@ -86,7 +99,7 @@ export default function CampanaDetalleModal({
             </div>
 
             {/* Contenido de la tab actual */}
-            <div className="campanas-detalle-scroll">
+            <div className="campanas-detalle-scroll" ref={scrollRef}>
               {cargandoDetalle && (
                 <div className="d-flex justify-content-center py-4">
                   <div className="spinner-border text-primary" role="status">

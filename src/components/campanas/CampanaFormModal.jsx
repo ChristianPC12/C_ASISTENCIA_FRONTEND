@@ -138,7 +138,7 @@ export default function CampanaFormModal({
                   value={form.fecha_inicio}
                   onChange={(e) => {
                     const val = e.target.value;
-                    const hoy = new Date().toISOString().split('T')[0];
+                    const hoy = new Date().toLocaleDateString('en-CA');
                     if (!editandoId && val && val < hoy) {
                       setErrorFechaInicio('No se pueden registrar campañas con fecha de inicio en el pasado.');
                     } else {
