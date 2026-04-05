@@ -211,7 +211,7 @@ export function useCampanas() {
     try {
       const res = await campanaApi.eliminar(id);
       if (res?.exito) {
-        notificarExito(res.mensaje || 'Campa\u00f1a eliminada.');
+        notificarExito('Campaña eliminada correctamente.');
         if (seleccionadaId === id) {
           setSeleccionadaId(null);
           setDetalle(null);

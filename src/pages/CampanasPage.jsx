@@ -303,9 +303,29 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
   const sesiones = detalle?.sesiones || [];
   const diasCampana = calcularDiasCampana(detalle?.fecha_inicio, detalle?.fecha_fin);
 
+  const hoy = new Date().toISOString().split('T')[0];
+  const estado = detalle?.estado;
+  let puedeManejar = false;
+  if (estado === 'ACTIVA') {
+    puedeManejar = true;
+  } else if (estado === 'FINALIZADA' && detalle?.fecha_fin) {
+    const fechaLimite = new Date(detalle.fecha_fin + 'T00:00:00');
+    fechaLimite.setDate(fechaLimite.getDate() + 7);
+    puedeManejar = fechaLimite >= new Date(hoy + 'T00:00:00');
+  }
+
   return (
     <>
-      <div className="card shadow-sm campanas-section-card mb-3">
+      {!puedeManejar && (
+        <div className="alert alert-info py-2 small mb-3" role="alert">
+          <i className="bi bi-info-circle me-2" aria-hidden="true"></i>
+          {estado === 'POR_INICIAR'
+            ? 'Las funciones de registro estarán disponibles cuando la campaña esté activa.'
+            : 'Esta campaña ha finalizado. Solo se puede consultar su información.'}
+        </div>
+      )}
+      {puedeManejar && (
+        <div className="card shadow-sm campanas-section-card mb-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
             <h6 className="campanas-section-title mb-0">Registrar noche o sesión</h6>
@@ -335,6 +355,7 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion }) 
           </div>
         </div>
       </div>
+      )}
 
       <div className="card shadow-sm campanas-section-card">
         <div className="card-body p-0">
@@ -416,9 +437,30 @@ function AsistentesCampana({
     }
   }, [sesionActiva, asistenciaForm.sesion_id, setAsistenciaForm]);
 
+  const hoy = new Date().toISOString().split('T')[0];
+  const estado = detalle?.estado;
+  let puedeManejar = false;
+  if (estado === 'ACTIVA') {
+    puedeManejar = true;
+  } else if (estado === 'FINALIZADA' && detalle?.fecha_fin) {
+    const fechaLimite = new Date(detalle.fecha_fin + 'T00:00:00');
+    fechaLimite.setDate(fechaLimite.getDate() + 7);
+    puedeManejar = fechaLimite >= new Date(hoy + 'T00:00:00');
+  }
+
   return (
     <>
-      <div className="card shadow-sm campanas-section-card mb-3">
+      {!puedeManejar && (
+        <div className="alert alert-info py-2 small mb-3" role="alert">
+          <i className="bi bi-info-circle me-2" aria-hidden="true"></i>
+          {estado === 'POR_INICIAR'
+            ? 'Las funciones de registro estarán disponibles cuando la campaña esté activa.'
+            : 'Esta campaña ha finalizado. Solo se puede consultar su información.'}
+        </div>
+      )}
+      {puedeManejar && (
+        <>
+        <div className="card shadow-sm campanas-section-card mb-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
             <h6 className="campanas-section-title mb-0">Asistencia rápida</h6>
@@ -539,6 +581,8 @@ function AsistentesCampana({
           </div>
         </div>
       </div>
+      </>
+      )}
 
       <div className="card shadow-sm campanas-section-card">
         <div className="card-body p-0">
@@ -603,9 +647,29 @@ function AsistentesCampana({
 function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecisionForm, guardarDecision }) {
   const decisiones = detalle?.decisiones || [];
 
+  const hoy = new Date().toISOString().split('T')[0];
+  const estado = detalle?.estado;
+  let puedeManejar = false;
+  if (estado === 'ACTIVA') {
+    puedeManejar = true;
+  } else if (estado === 'FINALIZADA' && detalle?.fecha_fin) {
+    const fechaLimite = new Date(detalle.fecha_fin + 'T00:00:00');
+    fechaLimite.setDate(fechaLimite.getDate() + 7);
+    puedeManejar = fechaLimite >= new Date(hoy + 'T00:00:00');
+  }
+
   return (
     <>
-      <div className="card shadow-sm campanas-section-card mb-3">
+      {!puedeManejar && (
+        <div className="alert alert-info py-2 small mb-3" role="alert">
+          <i className="bi bi-info-circle me-2" aria-hidden="true"></i>
+          {estado === 'POR_INICIAR'
+            ? 'Las funciones de registro estarán disponibles cuando la campaña esté activa.'
+            : 'Esta campaña ha finalizado. Solo se puede consultar su información.'}
+        </div>
+      )}
+      {puedeManejar && (
+        <div className="card shadow-sm campanas-section-card mb-3">
         <div className="card-body">
           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
             <h6 className="campanas-section-title mb-0">Registrar decisión o seguimiento</h6>
@@ -649,6 +713,7 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
           </div>
         </div>
       </div>
+      )}
 
       <div className="card shadow-sm campanas-section-card">
         <div className="card-body p-0">

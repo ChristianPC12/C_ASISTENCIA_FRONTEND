@@ -30,6 +30,7 @@ export default function CampanaFormModal({
   const modalRef = useRef(null);
   const modalInstance = useRef(null);
   const [errorFecha, setErrorFecha] = useState('');
+  const [errorFechaInicio, setErrorFechaInicio] = useState('');
 
   useEffect(() => {
     if (!modalRef.current) return;
@@ -67,6 +68,14 @@ export default function CampanaFormModal({
   useEffect(() => {
     setErrorFecha('');
   }, [form.fecha_inicio, form.tipo]);
+
+  // Limpiar errores al abrir/cerrar modal
+  useEffect(() => {
+    if (!mostrar) {
+      setErrorFecha('');
+      setErrorFechaInicio('');
+    }
+  }, [mostrar]);
 
   return (
     <div
@@ -127,9 +136,19 @@ export default function CampanaFormModal({
                   type="date"
                   className="form-control form-control-sm"
                   value={form.fecha_inicio}
-                  onChange={(e) => setForm((prev) => ({ ...prev, fecha_inicio: e.target.value }))}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const hoy = new Date().toISOString().split('T')[0];
+                    if (!editandoId && val && val < hoy) {
+                      setErrorFechaInicio('No se pueden registrar campañas con fecha de inicio en el pasado.');
+                    } else {
+                      setErrorFechaInicio('');
+                    }
+                    setForm((prev) => ({ ...prev, fecha_inicio: val }));
+                  }}
                   required
                 />
+                {errorFechaInicio && <div className="text-danger small mt-1">{errorFechaInicio}</div>}
               </div>
 
               <div className="col-6">
@@ -210,7 +229,7 @@ export default function CampanaFormModal({
                       value={form.descripcion}
                       onChange={(e) => setForm((prev) => ({ ...prev, descripcion: e.target.value }))}
                       placeholder="Descripción detallada de la campaña"
-                      maxLength={500}
+                      maxLength={60}
                     />
                   </div>
 
@@ -222,7 +241,7 @@ export default function CampanaFormModal({
                       value={form.observaciones}
                       onChange={(e) => setForm((prev) => ({ ...prev, observaciones: e.target.value }))}
                       placeholder="Notas adicionales"
-                      maxLength={60}
+                      maxLength={50}
                     />
                   </div>
                 </>
@@ -263,7 +282,7 @@ export default function CampanaFormModal({
                 }
                 onGuardar();
               }}
-              disabled={guardando || !!errorFecha}
+              disabled={guardando || !!errorFecha || !!errorFechaInicio}
             >
               <i className={`bi ${editandoId ? 'bi-floppy' : 'bi-plus-lg'}`} aria-hidden="true"></i>
               <span className="admin-responsive-btn-label">{editandoId ? 'Guardar' : 'Agregar'}</span>
