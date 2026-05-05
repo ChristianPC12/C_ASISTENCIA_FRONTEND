@@ -2,12 +2,16 @@
 export const ROLES = {
   ADMIN: 'ADMIN',
   SECRETARIO: 'SECRETARIO',
-  SUPERADMIN: 'SUPERADMIN'
+  SUPERADMIN: 'SUPERADMIN',
+  MINISTERIO_PERSONAL: 'MINISTERIO_PERSONAL',
+  INSTRUCTOR_BIBLICO: 'INSTRUCTOR_BIBLICO'
 };
 
 export const ROL_OPCIONES = [
   { valor: 1, etiqueta: 'Administrador' },
-  { valor: 2, etiqueta: 'Secretario/a' }
+  { valor: 2, etiqueta: 'Secretario/a' },
+  { valor: 4, etiqueta: 'Ministerios Personales' },
+  { valor: 5, etiqueta: 'Instructor bíblico' }
 ];
 
 // Cultos (se cargan del backend, pero utiles para referencia)
@@ -74,6 +78,7 @@ export const USUARIO_FORM_INICIAL = {
   id: null,
   nombre_completo: '',
   usuario: '',
+  cargo: '',
   password: '',
   password_confirmacion: '',
   rol_id: 2,

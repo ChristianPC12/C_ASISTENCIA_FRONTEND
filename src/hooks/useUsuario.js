@@ -8,7 +8,9 @@ import { useAuth } from './useAuth';
 
 const ROL_ID_TO_NOMBRE = {
   1: 'ADMIN',
-  2: 'SECRETARIO'
+  2: 'SECRETARIO',
+  4: 'MINISTERIO_PERSONAL',
+  5: 'INSTRUCTOR_BIBLICO'
 };
 
 const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
@@ -17,7 +19,9 @@ const CUPOS_FIJOS_SISTEMA = {
   SECRETARIO: 2,
   MINISTERIO_PERSONAL: 2,
   MINISTERIO_PERSONALES: 2,
-  MINISTERIOS_PERSONALES: 2
+  MINISTERIOS_PERSONALES: 2,
+  INSTRUCTOR_BIBLICO: 50,
+  INSTRUCTORES_BIBLICOS: 50
 };
 
 function normalizarRolNombre(rolNombre) {
@@ -240,6 +244,7 @@ export function useUsuario() {
       const datos = sanitizarObjeto({
         nombre_completo: formulario.nombre_completo,
         usuario: formulario.usuario,
+        cargo: formulario.cargo,
         rol_id: Number(formulario.rol_id),
         ...(formulario.password ? { password: formulario.password } : {}),
         ...(esEdicion ? { activo: formulario.activo } : {})
@@ -310,6 +315,7 @@ export function useUsuario() {
       id: usuario.id,
       nombre_completo: usuario.nombre_completo,
       usuario: usuario.usuario,
+      cargo: usuario.cargo || '',
       password: '',
       password_confirmacion: '',
       rol_id: usuario.rol_id,

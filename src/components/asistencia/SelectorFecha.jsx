@@ -147,7 +147,9 @@ export default function SelectorFecha({
   className = '',
   placeholder = 'Seleccionar fecha',
   nombreDia = '',
-  id = 'fecha'
+  id = 'fecha',
+  permitirFuturo = false,
+  zIndexPopover = 1050
 }) {
   const fechasOcupadas = new Set(fechasDeshabilitadas);
   const hoy = new Date();
@@ -189,6 +191,11 @@ export default function SelectorFecha({
   };
 
   const mesSiguiente = () => {
+    if (permitirFuturo) {
+      if (mesVista === 11) { setMesVista(0); setAnioVista(a => a + 1); }
+      else { setMesVista(m => m + 1); }
+      return;
+    }
     // No permitir avanzar mas alla del mes actual
     const ahora = new Date();
     const mesActual = ahora.getMonth();
@@ -197,7 +204,6 @@ export default function SelectorFecha({
     let nuevoAnio = anioVista;
     if (mesVista === 11) { nuevoMes = 0; nuevoAnio = anioVista + 1; }
     else { nuevoMes = mesVista + 1; }
-    // Bloquear si el nuevo mes/anio supera el actual
     if (nuevoAnio > anioActual || (nuevoAnio === anioActual && nuevoMes > mesActual)) {
       return;
     }
@@ -258,9 +264,14 @@ export default function SelectorFecha({
     onChange('');
   };
 
-  const textoMostrado = value
+  const fechaObjeto = value
     ? new Date(anioVista, fechaSeleccionada?.mes ?? 0, fechaSeleccionada?.dia ?? 1)
-        .toLocaleDateString('es-CR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : null;
+  const textoMostrado = fechaObjeto
+    ? fechaObjeto.toLocaleDateString('es-CR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    : '';
+  const textoMostradoCorto = fechaObjeto
+    ? fechaObjeto.toLocaleDateString('es-CR', { year: 'numeric', month: '2-digit', day: '2-digit' })
     : '';
 
   const celdas = generarDias();
@@ -280,8 +291,13 @@ export default function SelectorFecha({
           userSelect: 'none'
         }}
       >
-        <span className={value ? 'text-dark' : 'text-muted'}>
-          {value ? textoMostrado : placeholder}
+        <span className={value ? 'text-dark' : 'text-muted'} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {value ? (
+            <>
+              <span className="d-none d-md-inline">{textoMostrado}</span>
+              <span className="d-md-none">{textoMostradoCorto}</span>
+            </>
+          ) : placeholder}
         </span>
         <span className="d-flex align-items-center gap-1">
           {value && !disabled && (
@@ -306,7 +322,7 @@ export default function SelectorFecha({
           className="card shadow selector-fecha-popover"
           style={{
             position: 'absolute',
-            zIndex: 1050,
+            zIndex: zIndexPopover,
             top: '100%',
             left: 0,
             marginTop: '4px'
@@ -319,8 +335,10 @@ export default function SelectorFecha({
               onAnterior={mesAnterior}
               onSiguiente={mesSiguiente}
               deshabilitarSiguiente={
-                anioVista > hoy.getFullYear() ||
-                (anioVista === hoy.getFullYear() && mesVista >= hoy.getMonth())
+                !permitirFuturo && (
+                  anioVista > hoy.getFullYear() ||
+                  (anioVista === hoy.getFullYear() && mesVista >= hoy.getMonth())
+                )
               }
             />
 

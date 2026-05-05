@@ -54,6 +54,13 @@ const FORM_DECISION_INICIAL = {
   observaciones: ''
 };
 
+const calcularEstadoCampana = (fechaInicio, fechaFin) => {
+  const hoy = new Date().toLocaleDateString('en-CA');
+  if (!fechaInicio || hoy < fechaInicio) return 'POR_INICIAR';
+  if (!fechaFin || hoy <= fechaFin) return 'ACTIVA';
+  return 'FINALIZADA';
+};
+
 export function useCampanas() {
   const [filtros, setFiltros] = useState({
     q: '',
@@ -70,6 +77,7 @@ export function useCampanas() {
   const [cargandoDetalle, setCargandoDetalle] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [editandoCampanaId, setEditandoCampanaId] = useState(null);
+  const [editandoSesionId, setEditandoSesionId] = useState(null);
   const [campanaForm, setCampanaForm] = useState(FORM_CAMPANA_INICIAL);
   const [sesionForm, setSesionForm] = useState(FORM_SESION_INICIAL);
   const [asistenteForm, setAsistenteForm] = useState(FORM_ASISTENTE_INICIAL);
@@ -97,7 +105,10 @@ export function useCampanas() {
       const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v !== ''));
       const res = await campanaApi.listar(params);
       if (res?.exito) {
-        const items = res.datos?.items || [];
+        const items = (res.datos?.items || []).map((item) => ({
+          ...item,
+          estado: calcularEstadoCampana(item.fecha_inicio, item.fecha_fin)
+        }));
         setCampanas(items);
         setSeleccionadaId((prev) => {
           if (items.length === 0) return null;
@@ -123,7 +134,11 @@ export function useCampanas() {
     try {
       const res = await campanaApi.obtenerPorId(id);
       if (res?.exito) {
-        setDetalle(res.datos?.item || null);
+        const item = res.datos?.item || null;
+        if (item) {
+          item.estado = calcularEstadoCampana(item.fecha_inicio, item.fecha_fin);
+        }
+        setDetalle(item);
       }
     } catch (error) {
       setDetalle(null);
@@ -167,16 +182,23 @@ export function useCampanas() {
     setCampanaForm(FORM_CAMPANA_INICIAL);
   }, []);
 
+  const editarSesion = useCallback((sesion) => {
+    setEditandoSesionId(sesion.id);
+    setSesionForm({
+      fecha: sesion.fecha || '',
+      tema_titulo: sesion.tema_titulo || '',
+      observaciones: sesion.observaciones || ''
+    });
+  }, []);
+
+  const resetSesionForm = useCallback(() => {
+    setEditandoSesionId(null);
+    setSesionForm(FORM_SESION_INICIAL);
+  }, []);
+
   const guardarCampana = useCallback(async () => {
     setGuardando(true);
     try {
-      const calcularEstadoCampana = (fechaInicio, fechaFin) => {
-        const hoy = new Date().toLocaleDateString('en-CA');
-        if (!fechaInicio || hoy < fechaInicio) return 'POR_INICIAR';
-        if (!fechaFin || hoy <= fechaFin) return 'ACTIVA';
-        return 'FINALIZADA';
-      };
-
       const payload = {
         ...campanaForm,
         nombre: campanaForm.lema,
@@ -194,15 +216,19 @@ export function useCampanas() {
         await cargarDashboard();
         await cargarCampanas();
         if (item?.id) {
+          await cargarDetalle(item.id);
           setSeleccionadaId(item.id);
+          return item.id;
         }
       }
+      return null;
     } catch (error) {
       notificarError(error?.mensaje || 'No se pudo guardar la campa\u00f1a.');
+      return null;
     } finally {
       setGuardando(false);
     }
-  }, [campanaForm, editandoCampanaId, resetCampanaForm, cargarDashboard, cargarCampanas]);
+  }, [campanaForm, editandoCampanaId, resetCampanaForm, cargarDashboard, cargarCampanas, cargarDetalle]);
 
   const eliminarCampana = useCallback(async (id) => {
     const ok = await confirmar('\u00bfEst\u00e1 seguro de que desea eliminar esta campa\u00f1a? Esta acci\u00f3n no se puede deshacer.');
@@ -234,18 +260,20 @@ export function useCampanas() {
         estado_sesion: 'PROGRAMADA',
         predicador_noche: detalle?.predicador || ''
       };
-      const res = await campanaApi.crearSesion(seleccionadaId, payload);
+      const res = editandoSesionId
+        ? await campanaApi.actualizarSesion(editandoSesionId, payload)
+        : await campanaApi.crearSesion(seleccionadaId, payload);
       if (res?.exito) {
-        notificarExito(res.mensaje || 'Sesi\u00f3n creada correctamente.');
-        setSesionForm(FORM_SESION_INICIAL);
+        notificarExito(res.mensaje || (editandoSesionId ? 'Sesión actualizada correctamente.' : 'Sesión creada correctamente.'));
+        resetSesionForm();
         await cargarDetalle(seleccionadaId);
         await cargarDashboard();
         await cargarCampanas();
       }
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo guardar la sesi\u00f3n.');
+      notificarError(error?.mensaje || 'No se pudo guardar la sesión.');
     }
-  }, [seleccionadaId, sesionForm, detalle, cargarDetalle, cargarDashboard, cargarCampanas]);
+  }, [seleccionadaId, sesionForm, detalle, editandoSesionId, resetSesionForm, cargarDetalle, cargarDashboard, cargarCampanas]);
 
   const guardarAsistente = useCallback(async () => {
     if (!seleccionadaId) return;
@@ -263,10 +291,44 @@ export function useCampanas() {
     }
   }, [seleccionadaId, asistenteForm, cargarDetalle, cargarDashboard, cargarCampanas]);
 
+  const eliminarAsistente = useCallback(async (asistenteId) => {
+    if (!seleccionadaId || !asistenteId) return;
+    try {
+      const res = await campanaApi.eliminarAsistente(asistenteId);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Asistente eliminado correctamente.');
+        await cargarDetalle(seleccionadaId);
+        await cargarDashboard();
+        await cargarCampanas();
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo eliminar el asistente.');
+    }
+  }, [seleccionadaId, cargarDetalle, cargarDashboard, cargarCampanas]);
+
+  const entregarPremios = useCallback(async (asistenteId) => {
+    if (!asistenteId) return;
+    try {
+      const res = await campanaApi.entregarPremios(asistenteId);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Premios entregados correctamente.');
+        if (seleccionadaId) {
+          await cargarDetalle(seleccionadaId);
+          await cargarDashboard();
+          await cargarCampanas();
+        }
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo entregar los premios.');
+    }
+  }, [seleccionadaId, cargarDetalle, cargarDashboard, cargarCampanas]);
+
   const guardarAsistencia = useCallback(async () => {
-    if (!asistenciaForm.sesion_id) return;
+    if (!asistenciaForm.sesion_id) return null;
     try {
       const { sesion_id, ...payload } = asistenciaForm;
+      const teniaPremio = Boolean(asistenciaForm.elegible_premio);
+      const asistenteId = asistenciaForm.campana_asistente_id;
       const res = await campanaApi.registrarAsistenciaSesion(sesion_id, payload);
       if (res?.exito) {
         notificarExito(res.mensaje || 'Asistencia registrada correctamente.');
@@ -276,9 +338,12 @@ export function useCampanas() {
           await cargarDashboard();
           await cargarCampanas();
         }
+        return { asistenteId, teniaPremio };
       }
+      return null;
     } catch (error) {
       notificarError(error?.mensaje || 'No se pudo registrar la asistencia.');
+      return null;
     }
   }, [asistenciaForm, seleccionadaId, cargarDetalle, cargarDashboard, cargarCampanas]);
 
@@ -297,6 +362,25 @@ export function useCampanas() {
       notificarError(error?.mensaje || 'No se pudo registrar la decisi\u00f3n.');
     }
   }, [seleccionadaId, decisionForm, cargarDetalle, cargarDashboard, cargarCampanas]);
+
+  const eliminarDecision = useCallback(async (decisionId) => {
+    if (!decisionId) return;
+    const ok = await confirmar('\u00bfEst\u00e1 seguro de que desea eliminar esta decisi\u00f3n?');
+    if (!ok) return;
+    try {
+      const res = await campanaApi.eliminarDecision(decisionId);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Decisi\u00f3n eliminada correctamente.');
+        if (seleccionadaId) {
+          await cargarDetalle(seleccionadaId);
+          await cargarDashboard();
+          await cargarCampanas();
+        }
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo eliminar la decisi\u00f3n.');
+    }
+  }, [seleccionadaId, cargarDetalle, cargarDashboard, cargarCampanas]);
 
   const convertirAsistenteAEstudio = useCallback(async (asistente) => {
     if (!asistente?.id) return;
@@ -336,6 +420,7 @@ export function useCampanas() {
     cargandoDetalle,
     guardando,
     editandoCampanaId,
+    editandoSesionId,
     campanaForm,
     setCampanaForm,
     sesionForm,
@@ -354,12 +439,17 @@ export function useCampanas() {
     cambiarFiltro,
     editarCampana,
     resetCampanaForm,
+    editarSesion,
+    resetSesionForm,
     guardarCampana,
     eliminarCampana,
     guardarSesion,
     guardarAsistente,
+    eliminarAsistente,
+    entregarPremios,
     guardarAsistencia,
     guardarDecision,
+    eliminarDecision,
     convertirAsistenteAEstudio,
     recargar: async () => {
       await cargarDashboard();

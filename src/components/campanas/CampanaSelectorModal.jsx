@@ -104,7 +104,7 @@ export default function CampanaSelectorModal({ mostrar, campanas, onCerrar, onSe
     <div className="prompt-overlay-iasd">
       <div className="prompt-modal-iasd" style={{ maxHeight: '85vh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #e0e0e0' }}>
-          <h5 className="mb-3">Seleccionar campaña</h5>
+          <h5 className="mb-3" style={{ color: 'var(--iasd-azul)' }}>Seleccionar campaña</h5>
           <label className="form-label form-label-sm">Buscar por lema</label>
           <input
             type="text"

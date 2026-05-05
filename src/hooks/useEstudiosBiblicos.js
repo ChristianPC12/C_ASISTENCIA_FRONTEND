@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import estudioBiblicoApi from '../api/estudioBiblicoApi';
-import usuarioApi from '../api/usuarioApi';
 import campanaApi from '../api/campanaApi';
 import { confirmar, notificarError, notificarExito } from '../utils/notify';
 
@@ -22,6 +21,8 @@ const FORM_ESTUDIO_INICIAL = {
   leccion_actual: '',
   total_lecciones_completadas: 0,
   fecha_inicio: '',
+  frecuencia_periodo: 'SEMANA',
+  frecuencia_cantidad: 1,
   proxima_sesion: '',
   estado_general: 'NUEVO',
   observaciones: '',
@@ -36,6 +37,7 @@ const FORM_SESION_INICIAL = {
   dudas_surgidas: '',
   asistencia: 'SI',
   percepcion_avance: 'MEDIA',
+  progreso_bautismo: 0,
   proxima_accion: '',
   proxima_fecha_sugerida: '',
   responsable_usuario_id: ''
@@ -64,6 +66,29 @@ const FORM_ASIGNACION_INICIAL = {
   observaciones: ''
 };
 
+const FORM_INSTRUCTOR_INICIAL = {
+  id: null,
+  nombre_completo: '',
+  usuario: '',
+  password: '',
+  password_confirmacion: '',
+  cargo: '',
+  activo: true
+};
+
+const FORM_ASIGNAR_INICIAL = {
+  visita_id: '',
+  visita_nombre: '',
+  responsable_usuario_id: '',
+  fecha_inicio: new Date().toISOString().slice(0, 10),
+  frecuencia_periodo: 'SEMANA',
+  frecuencia_cantidad: 1,
+  modalidad: 'INDIVIDUAL',
+  material_estudio: '',
+  leccion_actual: '',
+  observaciones: ''
+};
+
 export function useEstudiosBiblicos() {
   const [filtros, setFiltros] = useState({
     q: '',
@@ -76,6 +101,7 @@ export function useEstudiosBiblicos() {
   const [dashboard, setDashboard] = useState({});
   const [estudios, setEstudios] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
+  const [instructores, setInstructores] = useState([]);
   const [campanas, setCampanas] = useState([]);
   const [seleccionadoId, setSeleccionadoId] = useState(null);
   const [detalle, setDetalle] = useState(null);
@@ -88,18 +114,24 @@ export function useEstudiosBiblicos() {
   const [sesionForm, setSesionForm] = useState(FORM_SESION_INICIAL);
   const [decisionForm, setDecisionForm] = useState(FORM_DECISION_INICIAL);
   const [asignacionForm, setAsignacionForm] = useState(FORM_ASIGNACION_INICIAL);
+  const [instructorForm, setInstructorForm] = useState(FORM_INSTRUCTOR_INICIAL);
+  const [asignarForm, setAsignarForm] = useState(FORM_ASIGNAR_INICIAL);
+  const [editandoInstructorId, setEditandoInstructorId] = useState(null);
 
   const cargarCatalogos = useCallback(async () => {
     try {
       const [resUsuarios, resCampanas] = await Promise.all([
-        usuarioApi.listar(),
+        estudioBiblicoApi.listarInstructores(),
         campanaApi.listar()
       ]);
 
-      setUsuarios(resUsuarios?.exito ? (resUsuarios.datos || []) : []);
+      const listaInstructores = resUsuarios?.exito ? (resUsuarios.datos?.items || []) : [];
+      setUsuarios(listaInstructores);
+      setInstructores(listaInstructores);
       setCampanas(resCampanas?.exito ? (resCampanas?.datos?.items || []) : []);
     } catch {
       setUsuarios([]);
+      setInstructores([]);
       setCampanas([]);
     }
   }, []);
@@ -220,6 +252,8 @@ export function useEstudiosBiblicos() {
       leccion_actual: item.leccion_actual || '',
       total_lecciones_completadas: Number(item.total_lecciones_completadas || 0),
       fecha_inicio: item.fecha_inicio || '',
+      frecuencia_periodo: item.frecuencia_periodo || 'SEMANA',
+      frecuencia_cantidad: Number(item.frecuencia_cantidad || 1),
       proxima_sesion: item.proxima_sesion ? String(item.proxima_sesion).slice(0, 16) : '',
       estado_general: item.estado_general || 'NUEVO',
       observaciones: item.observaciones || '',
@@ -235,7 +269,8 @@ export function useEstudiosBiblicos() {
         ...estudioForm,
         campana_origen_id: estudioForm.campana_origen_id || null,
         responsable_usuario_id: estudioForm.responsable_usuario_id || null,
-        total_lecciones_completadas: Number(estudioForm.total_lecciones_completadas || 0)
+        total_lecciones_completadas: Number(estudioForm.total_lecciones_completadas || 0),
+        frecuencia_cantidad: Number(estudioForm.frecuencia_cantidad || 1)
       };
 
       const res = editandoId
@@ -285,6 +320,7 @@ export function useEstudiosBiblicos() {
     try {
       const payload = {
         ...sesionForm,
+        progreso_bautismo: Number(sesionForm.progreso_bautismo || 0),
         responsable_usuario_id: sesionForm.responsable_usuario_id || null
       };
       const res = await estudioBiblicoApi.crearSesion(seleccionadoId, payload);
@@ -340,15 +376,189 @@ export function useEstudiosBiblicos() {
     }
   }, [seleccionadoId, asignacionForm, cargarDetalle, cargarDashboard, cargarEstudios]);
 
+  const resetInstructorForm = useCallback(() => {
+    setEditandoInstructorId(null);
+    setInstructorForm(FORM_INSTRUCTOR_INICIAL);
+  }, []);
+
+  const editarInstructor = useCallback((item) => {
+    setEditandoInstructorId(item.id);
+    setInstructorForm({
+      id: item.id,
+      nombre_completo: item.nombre_completo || '',
+      usuario: item.usuario || '',
+      password: '',
+      password_confirmacion: '',
+      cargo: item.cargo || '',
+      activo: item.activo ?? true
+    });
+  }, []);
+
+  const cargarInstructores = useCallback(async () => {
+    try {
+      const res = await estudioBiblicoApi.listarInstructores();
+      if (res?.exito) {
+        const items = res?.datos?.items || [];
+        setInstructores(items);
+        setUsuarios(items);
+      }
+    } catch {
+      setInstructores([]);
+      setUsuarios([]);
+    }
+  }, []);
+
+  const guardarInstructor = useCallback(async () => {
+    if (!instructorForm.nombre_completo.trim() || !instructorForm.usuario.trim() || !instructorForm.cargo.trim()) {
+      notificarError('Nombre, usuario y cargo son obligatorios.');
+      return false;
+    }
+    if (!editandoInstructorId && (!instructorForm.password || !instructorForm.password_confirmacion)) {
+      notificarError('La contraseña y su confirmación son obligatorias.');
+      return false;
+    }
+    if (instructorForm.password && instructorForm.password !== instructorForm.password_confirmacion) {
+      notificarError('Las contraseñas no coinciden.');
+      return false;
+    }
+
+    setGuardando(true);
+    try {
+      const payload = {
+        nombre_completo: instructorForm.nombre_completo,
+        usuario: instructorForm.usuario,
+        cargo: instructorForm.cargo,
+        ...(instructorForm.password ? { password: instructorForm.password } : {}),
+        activo: instructorForm.activo
+      };
+      const res = editandoInstructorId
+        ? await estudioBiblicoApi.actualizarInstructor(editandoInstructorId, payload)
+        : await estudioBiblicoApi.crearInstructor(payload);
+
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Instructor guardado correctamente.');
+        resetInstructorForm();
+        await cargarInstructores();
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo guardar el instructor.');
+    } finally {
+      setGuardando(false);
+    }
+    return false;
+  }, [instructorForm, editandoInstructorId, resetInstructorForm, cargarInstructores]);
+
+  const eliminarInstructor = useCallback(async (id) => {
+    const ok = await confirmar('Este instructor se desactivará. ¿Desea continuar?');
+    if (!ok) return false;
+    try {
+      const res = await estudioBiblicoApi.eliminarInstructor(id);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Instructor desactivado.');
+        await cargarInstructores();
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo desactivar el instructor.');
+    }
+    return false;
+  }, [cargarInstructores]);
+
+  const guardarAsignarEstudio = useCallback(async () => {
+    if (!asignarForm.visita_id) {
+      notificarError('Seleccione una visita.');
+      return false;
+    }
+    if (!asignarForm.responsable_usuario_id) {
+      notificarError('Seleccione un instructor responsable.');
+      return false;
+    }
+
+    setGuardando(true);
+    try {
+      const payload = {
+        ...asignarForm,
+        frecuencia_cantidad: Number(asignarForm.frecuencia_cantidad || 1)
+      };
+      const res = await estudioBiblicoApi.asignarDesdeVisita(payload);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Estudio asignado correctamente.');
+        setAsignarForm(FORM_ASIGNAR_INICIAL);
+        await Promise.all([cargarDashboard(), cargarEstudios()]);
+        const item = res?.datos?.item;
+        if (item?.id) setSeleccionadoId(item.id);
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo asignar el estudio.');
+    } finally {
+      setGuardando(false);
+    }
+    return false;
+  }, [asignarForm, cargarDashboard, cargarEstudios]);
+
+  const guardarSesionDirecta = useCallback(async (estudioId, form) => {
+    if (!estudioId) return false;
+    setGuardando(true);
+    try {
+      const payload = {
+        ...form,
+        progreso_bautismo: Number(form.progreso_bautismo || 0),
+        responsable_usuario_id: form.responsable_usuario_id || null
+      };
+      const res = await estudioBiblicoApi.crearSesion(estudioId, payload);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Sesión registrada correctamente.');
+        await Promise.all([cargarDashboard(), cargarEstudios()]);
+        if (seleccionadoId === estudioId) await cargarDetalle(estudioId);
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo registrar la sesión.');
+    } finally {
+      setGuardando(false);
+    }
+    return false;
+  }, [cargarDashboard, cargarEstudios, cargarDetalle, seleccionadoId]);
+
+  const cambiarEstadoEstudio = useCallback(async (id, estado, motivo = '') => {
+    try {
+      const res = await estudioBiblicoApi.cambiarEstado(id, {
+        estado_general: estado,
+        motivo_cierre_pausa: motivo
+      });
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Estado actualizado.');
+        await Promise.all([cargarDashboard(), cargarEstudios()]);
+        if (seleccionadoId === id) await cargarDetalle(id);
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo actualizar el estado.');
+    }
+    return false;
+  }, [cargarDashboard, cargarEstudios, cargarDetalle, seleccionadoId]);
+
   const asignaciones = useMemo(() => detalle?.asignaciones || [], [detalle]);
   const sesiones = useMemo(() => detalle?.sesiones || [], [detalle]);
   const decisiones = useMemo(() => detalle?.decisiones || [], [detalle]);
+
+  const recargar = useCallback(async () => {
+    await cargarDashboard();
+    await cargarEstudios();
+    await cargarInstructores();
+    if (seleccionadoId) {
+      await cargarDetalle(seleccionadoId);
+    }
+  }, [cargarDashboard, cargarEstudios, cargarInstructores, seleccionadoId, cargarDetalle]);
 
   return {
     filtros,
     dashboard,
     estudios,
     usuarios,
+    instructores,
     campanas,
     seleccionadoId,
     setSeleccionadoId,
@@ -367,6 +577,11 @@ export function useEstudiosBiblicos() {
     setDecisionForm,
     asignacionForm,
     setAsignacionForm,
+    instructorForm,
+    setInstructorForm,
+    asignarForm,
+    setAsignarForm,
+    editandoInstructorId,
     asignaciones,
     sesiones,
     decisiones,
@@ -378,12 +593,14 @@ export function useEstudiosBiblicos() {
     guardarSesion,
     guardarDecision,
     guardarAsignacion,
-    recargar: async () => {
-      await cargarDashboard();
-      await cargarEstudios();
-      if (seleccionadoId) {
-        await cargarDetalle(seleccionadoId);
-      }
-    }
+    cargarInstructores,
+    editarInstructor,
+    resetInstructorForm,
+    guardarInstructor,
+    eliminarInstructor,
+    guardarAsignarEstudio,
+    guardarSesionDirecta,
+    cambiarEstadoEstudio,
+    recargar
   };
 }

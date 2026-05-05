@@ -11,7 +11,16 @@ import {
   EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA,
   EVENT_CAMPANAS_ABRIR_NUEVA,
+  EVENT_CAMPANAS_ABRIR_LISTA,
   EVENT_CAMPANAS_ABRIR_SELECTOR,
+  EVENT_CAMPANAS_ABRIR_VISITAS,
+  EVENT_CAMPANAS_VISTA_ACTIVA,
+  EVENT_ESTUDIOS_ABRIR_ASIGNAR,
+  EVENT_ESTUDIOS_ABRIR_INSTRUCTORES,
+  EVENT_ESTUDIOS_ABRIR_LISTA,
+  EVENT_ESTUDIOS_ABRIR_REGISTRO,
+  EVENT_ESTUDIOS_ABRIR_VISITAS,
+  EVENT_ESTUDIOS_VISTA_ACTIVA,
   EVENT_COMPARACIONES_ABRIR_TABLA,
   EVENT_COMPARACIONES_ABRIR_DETALLE,
   EVENT_COMPARACIONES_ABRIR_VISITAS,
@@ -35,6 +44,8 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [abierto, setAbierto] = useState(false);
   const [adminVistaActiva, setAdminVistaActiva] = useState('RESUMEN');
   const [superadminVistaActiva, setSuperadminVistaActiva] = useState('ORGANIZACIONES');
+  const [campanasVistaActiva, setCampanasVistaActiva] = useState('CAMPANAS');
+  const [estudiosVistaActiva, setEstudiosVistaActiva] = useState('ESTUDIOS');
   const location = useLocation();
   const { requiereSetup } = useSetupStatus();
   const { tenant, esAdminTemporal, diasRestantesPassword } = useAuth();
@@ -55,11 +66,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const cerrarMenu = () => setAbierto(false);
   const esAdmin = usuario?.rol === ROLES.ADMIN;
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
+  const esInstructorBiblico = usuario?.rol === ROLES.INSTRUCTOR_BIBLICO;
+  const esMinisterioPersonal = usuario?.rol === ROLES.MINISTERIO_PERSONAL;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
   const enPantallaEstadisticas = esRutaActiva('/estadisticas');
   const enPantallaComparaciones = esRutaActiva('/comparaciones');
   const enPantallaCampanas = esRutaActiva('/campanas');
+  const enPantallaEstudios = esRutaActiva('/estudios-biblicos');
   const tenantSesion = tenant || usuario?.tenant || {};
   const campoSesion = String(
     tenantSesion?.campo_nombre || tenantSesion?.campo || usuario?.campo_nombre || usuario?.campo || ''
@@ -96,6 +110,30 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     };
   }, []);
 
+  useEffect(() => {
+    const manejarVistaActivaCampanas = (event) => {
+      const vista = String(event?.detail?.vista || 'CAMPANAS');
+      setCampanasVistaActiva(vista);
+    };
+
+    window.addEventListener(EVENT_CAMPANAS_VISTA_ACTIVA, manejarVistaActivaCampanas);
+    return () => {
+      window.removeEventListener(EVENT_CAMPANAS_VISTA_ACTIVA, manejarVistaActivaCampanas);
+    };
+  }, []);
+
+  useEffect(() => {
+    const manejarVistaActivaEstudios = (event) => {
+      const vista = String(event?.detail?.vista || 'ESTUDIOS');
+      setEstudiosVistaActiva(vista);
+    };
+
+    window.addEventListener(EVENT_ESTUDIOS_VISTA_ACTIVA, manejarVistaActivaEstudios);
+    return () => {
+      window.removeEventListener(EVENT_ESTUDIOS_VISTA_ACTIVA, manejarVistaActivaEstudios);
+    };
+  }, []);
+
   const adminVistaTopbar = enPantallaAdministrador ? adminVistaActiva : 'RESUMEN';
   const claseBotonTopbarAdmin = (vista) => (
     `sidebar-topbar-metric-btn ${adminVistaTopbar === vista ? 'is-active' : ''}`
@@ -103,6 +141,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const superadminVistaTopbar = enPantallaSuperadmin ? superadminVistaActiva : 'ORGANIZACIONES';
   const claseBotonTopbarSuperadmin = (activo) => (
     `sidebar-topbar-metric-btn ${activo ? 'is-active' : ''}`
+  );
+  const campanasVistaTopbar = enPantallaCampanas ? campanasVistaActiva : 'CAMPANAS';
+  const claseBotonTopbarCampanas = (vista) => (
+    `sidebar-topbar-metric-btn ${campanasVistaTopbar === vista ? 'is-active' : ''}`
+  );
+  const estudiosVistaTopbar = enPantallaEstudios ? estudiosVistaActiva : 'ESTUDIOS';
+  const claseBotonTopbarEstudios = (vista) => (
+    `sidebar-topbar-metric-btn ${estudiosVistaTopbar === vista ? 'is-active' : ''}`
   );
 
   const abrirPanelNuevaInstancia = () => {
@@ -165,8 +211,36 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_NUEVA));
   };
 
+  const abrirListaCampanas = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_LISTA));
+  };
+
   const abrirSelectorCampana = () => {
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_SELECTOR));
+  };
+
+  const abrirVisitasCampana = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_VISITAS));
+  };
+
+  const abrirVisitasEstudios = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_VISITAS));
+  };
+
+  const abrirListaEstudios = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_LISTA));
+  };
+
+  const abrirInstructoresEstudios = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_INSTRUCTORES));
+  };
+
+  const abrirAsignarEstudios = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_ASIGNAR));
+  };
+
+  const abrirRegistroEstudios = () => {
+    window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_REGISTRO));
   };
 
   let enlaces = [];
@@ -174,6 +248,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   if (esSuperadmin) {
     enlaces = [
       { ruta: '/superadmin', etiqueta: 'Superadministrador', icono: 'bi-shield-lock' }
+    ];
+  } else if (esInstructorBiblico || esMinisterioPersonal) {
+    enlaces = [
+      { ruta: '/estudios-biblicos', etiqueta: 'Estudios Bíblicos', icono: 'bi-journal-bookmark' }
     ];
   } else {
     enlaces = [
@@ -460,7 +538,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
               <>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
+                  className={`${claseBotonTopbarCampanas('NUEVA')} d-flex align-items-center gap-1`}
                   onClick={abrirNuevaCampana}
                   aria-label="Nueva Campaña"
                   title="Nueva Campaña"
@@ -470,7 +548,17 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 </button>
                 <button
                   type="button"
-                  className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
+                  className={`${claseBotonTopbarCampanas('CAMPANAS')} d-flex align-items-center gap-1`}
+                  onClick={abrirListaCampanas}
+                  aria-label="Campañas"
+                  title="Campañas"
+                >
+                  <i className="bi bi-megaphone" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Campañas</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarCampanas('VER_CAMPANA')} d-flex align-items-center gap-1`}
                   onClick={abrirSelectorCampana}
                   aria-label="Ver Campaña"
                   title="Ver Campaña"
@@ -478,7 +566,74 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-folder2-open" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Ver Campaña</span>
                 </button>
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarCampanas('VISITAS')} d-flex align-items-center gap-1`}
+                  onClick={abrirVisitasCampana}
+                  aria-label="Visitas"
+                  title="Visitas registradas"
+                >
+                  <i className="bi bi-people" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Visitas</span>
+                </button>
               </>
+            )}
+            {enPantallaEstudios && (
+              esInstructorBiblico ? (
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarEstudios('REGISTRO')} d-flex align-items-center gap-1`}
+                  onClick={abrirRegistroEstudios}
+                  aria-label="Registrar sesión"
+                  title="Registrar sesión"
+                >
+                  <i className="bi bi-journal-check" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Registrar sesión</span>
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={`${claseBotonTopbarEstudios('VISITAS')} d-flex align-items-center gap-1`}
+                    onClick={abrirVisitasEstudios}
+                    aria-label="Visitas"
+                    title="Visitas registradas"
+                  >
+                    <i className="bi bi-people" aria-hidden="true"></i>
+                    <span className="d-none d-md-inline">Visitas</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${claseBotonTopbarEstudios('ESTUDIOS')} d-flex align-items-center gap-1`}
+                    onClick={abrirListaEstudios}
+                    aria-label="Estudios bíblicos"
+                    title="Estudios bíblicos"
+                  >
+                    <i className="bi bi-journal-bookmark" aria-hidden="true"></i>
+                    <span className="d-none d-md-inline">Estudios Bíblicos</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${claseBotonTopbarEstudios('INSTRUCTORES')} d-flex align-items-center gap-1`}
+                    onClick={abrirInstructoresEstudios}
+                    aria-label="Instructores"
+                    title="Instructores"
+                  >
+                    <i className="bi bi-person-badge" aria-hidden="true"></i>
+                    <span className="d-none d-md-inline">Instructores</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`${claseBotonTopbarEstudios('ASIGNAR')} d-flex align-items-center gap-1`}
+                    onClick={abrirAsignarEstudios}
+                    aria-label="Asignar estudio"
+                    title="Asignar estudio"
+                  >
+                    <i className="bi bi-diagram-3" aria-hidden="true"></i>
+                    <span className="d-none d-md-inline">Asignar estudio</span>
+                  </button>
+                </>
+              )
             )}
             <button
               type="button"
@@ -509,5 +664,3 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     </div>
   );
 }
-
-

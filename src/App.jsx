@@ -37,9 +37,10 @@ function RouteFallback() {
 function AppContent() {
   const { usuario, estaAutenticado, esSuperadmin, esAdmin, cerrarSesion } = useAuth();
   const { requiereSetup } = useSetupStatus();
+  const esRolEstudios = [ROLES.MINISTERIO_PERSONAL, ROLES.INSTRUCTOR_BIBLICO].includes(usuario?.rol);
   const rutaInicio = esSuperadmin
     ? '/superadmin'
-    : (esAdmin && requiereSetup ? '/administrador' : '/registro');
+    : (esRolEstudios ? '/estudios-biblicos' : (esAdmin && requiereSetup ? '/administrador' : '/registro'));
 
   /* Resetear scroll al cambiar el estado de autenticacion */
   useEffect(() => {
@@ -175,7 +176,7 @@ function AppContent() {
             path="/estudios-biblicos"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO, ROLES.MINISTERIO_PERSONAL, ROLES.INSTRUCTOR_BIBLICO]}
                 requiereSetupInicial
                 nombreModulo="Estudios Biblicos"
               >

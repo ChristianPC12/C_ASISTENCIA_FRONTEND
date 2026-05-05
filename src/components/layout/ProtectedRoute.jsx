@@ -34,6 +34,8 @@ export default function ProtectedRoute({
       destino = '/superadmin';
     } else if (usuario?.rol === ROLES.ADMIN || usuario?.rol === ROLES.SECRETARIO) {
       destino = '/registro';
+    } else if ([ROLES.MINISTERIO_PERSONAL, ROLES.INSTRUCTOR_BIBLICO].includes(usuario?.rol)) {
+      destino = '/estudios-biblicos';
     }
     return <Navigate to={destino} replace />;
   }

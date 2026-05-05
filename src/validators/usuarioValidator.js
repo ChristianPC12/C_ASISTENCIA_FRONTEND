@@ -56,6 +56,11 @@ export function validarUsuario(datos, esEdicion = false) {
     errores.usuario = `El usuario no puede superar los ${LIMITES.USUARIO_MAX} caracteres.`;
   }
 
+  const cargo = recortar(datos.cargo || '');
+  if (cargo.length > 120) {
+    errores.cargo = 'El cargo no puede superar los 120 caracteres.';
+  }
+
   const password = datos.password || '';
   const passwordConfirmacion = datos.password_confirmacion || '';
 
@@ -76,7 +81,7 @@ export function validarUsuario(datos, esEdicion = false) {
     errores.password_confirmacion = 'Las contrase\u00f1as no coinciden.';
   }
 
-  if (!datos.rol_id || ![1, 2].includes(Number(datos.rol_id))) {
+  if (!datos.rol_id || ![1, 2, 4, 5].includes(Number(datos.rol_id))) {
     errores.rol_id = 'Debe seleccionar un rol v\u00e1lido.';
   }
 

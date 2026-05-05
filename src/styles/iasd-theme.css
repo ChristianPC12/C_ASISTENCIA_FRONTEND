@@ -4137,6 +4137,27 @@ a:hover {
   box-shadow: inset 0 -1px 0 rgba(0, 51, 102, 0.08);
 }
 
+.campanas-detalle-table-scroll {
+  overflow-x: auto !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.campanas-detalle-table-scroll .tabla-registros {
+  width: max-content;
+  table-layout: auto;
+}
+
+.campanas-detalle-table-scroll th,
+.campanas-detalle-table-scroll td {
+  white-space: nowrap;
+}
+
+.campanas-detalle-table-scroll td:first-child {
+  max-width: 15rem;
+  white-space: normal;
+}
+
 .campanas-resumen-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4182,15 +4203,15 @@ a:hover {
 }
 
 .campanas-sesiones-table {
-  min-width: 34rem;
+  min-width: 40rem;
 }
 
 .campanas-asistentes-table {
-  min-width: 38rem;
+  min-width: 36rem;
 }
 
 .campanas-decisiones-table {
-  min-width: 28rem;
+  min-width: 34rem;
 }
 
 .campanas-lista-table {
@@ -4271,15 +4292,15 @@ a:hover {
   }
 
   .campanas-sesiones-table {
-    min-width: 30rem;
+    min-width: 40rem;
   }
 
   .campanas-asistentes-table {
-    min-width: 34rem;
+    min-width: 36rem;
   }
 
   .campanas-decisiones-table {
-    min-width: 24rem;
+    min-width: 34rem;
   }
 }
 
@@ -4343,7 +4364,7 @@ a:hover {
 
 .estudios-table-shell {
   border: 1px solid var(--iasd-borde);
-  border-radius: 0.75rem;
+  border-radius: 0.5rem;
   background: #ffffff;
   overflow-x: auto;
   overflow-y: hidden;
@@ -4373,8 +4394,9 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #f8fafc;
-  box-shadow: inset 0 -1px 0 rgba(0, 51, 102, 0.08);
+  background: var(--iasd-azul);
+  color: #ffffff;
+  border-bottom: none;
 }
 
 .estudios-resumen-grid {
@@ -4390,9 +4412,9 @@ a:hover {
 
 .estudios-meta-label {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
   color: var(--iasd-texto-sec);
   margin-bottom: 0.28rem;
@@ -4415,10 +4437,6 @@ a:hover {
   color: var(--iasd-azul);
   font-weight: 700;
   margin-bottom: 0.8rem;
-}
-
-.estudios-lista-table .btn-link {
-  font-size: 0.95rem;
 }
 
 .estudios-lista-table {
@@ -4769,5 +4787,369 @@ a:hover {
   .juntas-votaciones-table,
   .juntas-pendientes-table {
     min-width: 58rem;
+  }
+}
+
+/* Animacion de resaltado al guardar campaña */
+@keyframes resaltarFila {
+  0%   { background-color: #fff3cd !important; }
+  25%  { background-color: #ffc107 !important; }
+  100% { background-color: transparent !important; }
+}
+
+.campana-resaltada {
+  animation: resaltarFila 2.5s ease-out forwards;
+}
+
+.visitas-filtros-card .form-label-sm,
+.visita-form-grid .form-label-sm {
+  margin-bottom: 0.2rem;
+}
+
+.visitas-filtros-card .iasd-search-input,
+.visitas-filtros-card .form-control-sm,
+.visitas-filtros-card .form-select-sm,
+.visitas-filtros-card .input-group-sm > .form-control,
+.visitas-filtros-card .input-group-sm > .btn,
+.visitas-filtros-card .btn.visitas-nueva-btn {
+  min-height: 31px;
+  height: 31px;
+}
+
+.visitas-filtros-card .iasd-search-input {
+  border-radius: 0.375rem;
+  padding: 0 0.6rem;
+}
+
+.visitas-filtros-card .iasd-search-input .form-control {
+  min-height: 0;
+  height: 100%;
+  font-size: 0.875rem;
+}
+
+.visitas-filtros-card .input-group-sm > .btn,
+.visitas-filtros-card .btn.visitas-nueva-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.visitas-filtros-card .btn.visitas-nueva-btn {
+  min-width: 31px;
+}
+
+.visita-form-grid .form-control-sm,
+.visita-form-grid .form-select-sm,
+.visita-form-grid .input-group-sm > .form-control,
+.visita-form-grid .input-group-sm > .btn {
+  min-height: 31px;
+  height: 31px;
+  font-size: 0.875rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.visita-form-grid .input-group-sm > .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+}
+
+.campanas-visitas-toolbar-actions {
+  min-height: 24px;
+}
+
+.campanas-visitas-toolbar-btn {
+  min-height: 24px;
+  height: 24px;
+  padding: 0 0.42rem;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.campanas-visitas-toolbar-btn i {
+  font-size: 0.82rem;
+}
+
+.campanas-visitas-total-badge {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .visitas-filtros-card .btn.visitas-nueva-btn {
+    width: 31px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.estudios-page .visitas-filtros-card .iasd-search-input,
+.estudios-page .visitas-filtros-card .form-control-sm,
+.estudios-page .visitas-filtros-card .form-select-sm,
+.estudios-page .visitas-filtros-card .input-group-sm > .form-control,
+.estudios-page .visitas-filtros-card .input-group-sm > .btn,
+.estudios-page .visitas-filtros-card .btn.visitas-nueva-btn {
+  min-height: 34px;
+  height: 34px;
+}
+
+.estudios-page .visitas-filtros-card .btn.visitas-nueva-btn {
+  min-width: 34px;
+}
+
+@media (max-width: 991.98px) {
+  .estudios-page .visitas-filtros-card .btn.visitas-nueva-btn {
+    width: 34px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .campanas-asistencia-toggle {
+    width: 100%;
+    min-height: 34px;
+    border: 0;
+    background: transparent;
+    color: var(--iasd-azul);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .campanas-asistencia-toggle > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .campanas-asistencia-panel.is-mobile-closed .campanas-asistencia-panel-body {
+    display: none;
+  }
+
+  .campanas-asistencia-panel.is-mobile-open .campanas-asistencia-panel-body {
+    display: block;
+    padding-top: 0.75rem;
+  }
+
+  .campanas-panel-mobile-action .admin-responsive-action-btn {
+    width: 100%;
+    height: 34px;
+    min-width: 0;
+    gap: 0.35rem;
+    border-radius: 0.45rem;
+  }
+
+  .campanas-panel-mobile-action .admin-responsive-btn-label {
+    display: inline;
+  }
+
+  .campanas-visitas-toolbar-actions {
+    gap: 0.35rem !important;
+  }
+
+  .campanas-visitas-toolbar-btn,
+  .campanas-visitas-total-badge {
+    min-height: 22px;
+    height: 22px;
+  }
+
+  .campanas-visitas-toolbar-btn {
+    padding-inline: 0.36rem;
+  }
+}
+
+.estudios-page .form-control-sm,
+.estudios-page .form-select-sm,
+.estudios-page .btn-sm {
+  min-height: 34px;
+}
+
+.estudios-page {
+  font-size: 0.95rem;
+}
+
+.estudios-page .form-label-sm {
+  color: var(--iasd-texto);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.estudios-page .table {
+  font-size: 0.875rem;
+}
+
+.estudios-kpi-label {
+  color: var(--iasd-texto-sec);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.estudios-kpi-value {
+  color: var(--iasd-texto);
+  font-size: 1.45rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.estudios-tabla-scroll {
+  max-height: clamp(300px, 44vh, 390px);
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.estudios-tabla-scroll .tabla-registros {
+  min-width: 46rem;
+}
+
+.estudios-lista-table {
+  min-width: 50rem;
+}
+
+.estudios-visita-link {
+  border: 0;
+  background: transparent;
+  color: var(--iasd-texto);
+  cursor: pointer;
+  font-size: 0.93rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0;
+  text-align: left;
+}
+
+.estudios-visita-link:hover,
+.estudios-visita-link:focus-visible {
+  color: var(--iasd-texto);
+  text-decoration: underline;
+}
+
+.estudios-instructores-resumen {
+  margin-left: 0;
+  max-width: none;
+}
+
+.estudios-instructores-table-wrap .table {
+  min-width: 52rem;
+}
+
+.estudios-instructor-toolbar-top {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.estudios-icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.estudios-detalle-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.estudios-detalle-row strong {
+  min-width: 0;
+  word-break: break-word;
+}
+
+.estudios-selector-scroll {
+  max-height: clamp(320px, 52vh, 520px);
+}
+
+.estudios-registro-list {
+  max-height: clamp(320px, 60vh, 560px);
+  overflow-y: auto;
+}
+
+.estudios-registro-item {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid #eef0f3;
+  background: #fff;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  color: #1f2937;
+}
+
+.estudios-registro-item:hover,
+.estudios-registro-item.is-active {
+  background: #eef6ff;
+}
+
+.estudios-registro-item span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.estudios-registro-item small {
+  color: #6c757d;
+}
+
+.estudios-progress-badge {
+  min-width: 48px;
+  text-align: center;
+}
+
+@media (max-width: 575.98px) {
+  .estudios-page .table {
+    font-size: 0.86rem;
+  }
+
+  .estudios-kpi-label {
+    font-size: 0.78rem;
+  }
+
+  .estudios-kpi-value {
+    font-size: 1.25rem;
+  }
+
+  .estudios-lista-table {
+    min-width: 48rem;
+  }
+
+  .estudios-instructor-toolbar-top {
+    grid-template-columns: 1fr;
+  }
+
+  .estudios-instructor-toolbar-top .usuario-form-actions {
+    justify-content: stretch;
+  }
+
+  .estudios-instructores-resumen {
+    margin-left: 0;
+    max-width: none;
+  }
+
+  .estudios-detalle-row {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
   }
 }
