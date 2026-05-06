@@ -1,8 +1,8 @@
 # Tickets de Escalabilidad Nacional (Frontend + Integracion)
 
 Fecha base: 2026-03-09  
-Ultima actualizacion: 2026-03-12  
-Estado global: F0..F7 cerradas en frontend, F8 pendiente (discovery futuro)
+Ultima actualizacion: 2026-05-06
+Estado global: F0..F7 cerradas en frontend, F8 en refinamiento funcional
 
 ## Convenciones
 
@@ -44,9 +44,9 @@ Reglas:
 | F7-T01 | F7 | P0 | [x] | Flujo UX de ADMIN temporal (vence en 5 dias) | F6-T02 |
 | F7-T02 | F7 | P0 | [x] | QA regresion + seguridad frontend (401/403/429) | F7-T01 |
 | F7-T03 | F7 | P0 | [x] | Checklist de salida a produccion nacional | F7-T02 |
-| F8-T01 | F8 | P2 | [ ] | Discovery UX para modulo Campanas | F7-T03 |
-| F8-T02 | F8 | P2 | [ ] | Discovery UX para Pequenas Congregaciones | F8-T01 |
-| F8-T03 | F8 | P2 | [ ] | Discovery UX para Estudios Biblicos | F8-T02 |
+| F8-T01 | F8 | P2 | [x] | Campanas operativo y pulido responsive base | F7-T03 |
+| F8-T02 | F8 | P2 | [x] | Pequenas Congregaciones operativo base | F8-T01 |
+| F8-T03 | F8 | P2 | [~] | Estudios Biblicos en pulido: instructores, asignacion y registro de sesiones | F8-T02 |
 
 ## Cierres historicos (2026-03-09)
 
@@ -114,7 +114,7 @@ Validaciones de cierre:
 
 ## Siguiente ticket recomendado
 
-- `F8-T01` (discovery UX de modulos futuros nacionales).
+- Continuar `F8-T03`: pruebas funcionales y pulido final de `Registrar sesion` para `INSTRUCTOR_BIBLICO`.
 
 ## Notas de pulido post-F7 (2026-03-12)
 
@@ -127,3 +127,21 @@ Validaciones de cierre:
   - uso de `categoria` en lugar de `depende_de_clave`/`regla_dependencia`/`orden`.
 - Documento de prevencion actualizado:
   - `.agents/react-doctor/AGENTE_ANTI_ERRORES_UI.md`.
+
+## Notas de continuidad F8 (2026-05-06)
+
+- `Campanas` queda marcado como operativo para esta etapa, con responsive de KPIs/filtros aprobado.
+- `Estudios Biblicos` queda como ticket activo:
+  - instructores como usuarios reales;
+  - asignacion multiple de visitas e instructores;
+  - tabla principal con estados reducidos;
+  - registro de sesion por instructor, con pendientes, justificaciones y estudios futuros.
+- Evidencia:
+  - `src/pages/CampanasPage.jsx`
+  - `src/components/campanas/VisitasGeneralView.jsx`
+  - `src/pages/EstudiosBiblicosPage.jsx`
+  - `src/hooks/useEstudiosBiblicos.js`
+  - `src/styles/iasd-theme.css`
+- Validacion reciente:
+  - `npm run build` OK;
+  - `react-doctor --diff` OK, 91/100 con advertencias conocidas.

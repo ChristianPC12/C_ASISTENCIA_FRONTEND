@@ -78,9 +78,13 @@ const FORM_INSTRUCTOR_INICIAL = {
 
 const FORM_ASIGNAR_INICIAL = {
   visita_id: '',
+  visita_ids: [],
   visita_nombre: '',
+  visitas: [],
   responsable_usuario_id: '',
-  fecha_inicio: new Date().toISOString().slice(0, 10),
+  responsable_usuario_ids: [],
+  responsables: [],
+  fecha_inicio: fechaLocalISO(),
   frecuencia_periodo: 'SEMANA',
   frecuencia_cantidad: 1,
   modalidad: 'INDIVIDUAL',
@@ -88,6 +92,115 @@ const FORM_ASIGNAR_INICIAL = {
   leccion_actual: '',
   observaciones: ''
 };
+
+const MS_DIA = 24 * 60 * 60 * 1000;
+const PERIODOS_FRECUENCIA = ['SEMANA', 'MES', 'TRIMESTRE'];
+const INSTRUCTOR_NOMBRE_MAX = 35;
+const ASIGNAR_OBSERVACIONES_MAX_CARACTERES = 110;
+const ASIGNAR_OBSERVACIONES_MAX_SALTOS = 3;
+
+function fechaLocalISO(fecha = new Date()) {
+  const copia = new Date(fecha.getTime());
+  copia.setMinutes(copia.getMinutes() - copia.getTimezoneOffset());
+  return copia.toISOString().slice(0, 10);
+}
+
+function parseFechaISO(valor) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(valor || ''));
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const fecha = new Date(year, month, day);
+
+  if (
+    Number.isNaN(fecha.getTime())
+    || fecha.getFullYear() !== year
+    || fecha.getMonth() !== month
+    || fecha.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return fecha;
+}
+
+function inicioDia(fecha) {
+  return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+}
+
+function finMes(fecha) {
+  return new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
+}
+
+function finTrimestre(fecha) {
+  const mesFinal = Math.floor(fecha.getMonth() / 3) * 3 + 2;
+  return new Date(fecha.getFullYear(), mesFinal + 1, 0);
+}
+
+function diasInclusivos(desde, hasta) {
+  return Math.max(0, Math.floor((inicioDia(hasta).getTime() - inicioDia(desde).getTime()) / MS_DIA) + 1);
+}
+
+function etiquetaPeriodo(periodo) {
+  if (periodo === 'MES') return 'mes';
+  if (periodo === 'TRIMESTRE') return 'trimestre';
+  return 'semana';
+}
+
+function maximoFrecuenciaDisponible(fechaInicio, periodo) {
+  const inicio = parseFechaISO(fechaInicio);
+  if (!inicio) return 0;
+
+  const periodoNormalizado = String(periodo || 'SEMANA').toUpperCase();
+  if (periodoNormalizado === 'SEMANA') {
+    return 7;
+  }
+
+  const cierre = periodoNormalizado === 'MES'
+    ? finMes(inicio)
+    : periodoNormalizado === 'TRIMESTRE'
+      ? finTrimestre(inicio)
+      : finMes(inicio);
+
+  return Math.min(31, diasInclusivos(inicio, cierre));
+}
+
+function validarFrecuenciaAsignar(form) {
+  const fechaInicio = parseFechaISO(form.fecha_inicio);
+  if (!fechaInicio) {
+    return 'La fecha de inicio es obligatoria.';
+  }
+
+  const hoy = inicioDia(parseFechaISO(fechaLocalISO()) || new Date());
+  if (inicioDia(fechaInicio) < hoy) {
+    return 'La fecha de inicio no puede ser anterior a hoy.';
+  }
+
+  const periodo = String(form.frecuencia_periodo || 'SEMANA').toUpperCase();
+  if (!PERIODOS_FRECUENCIA.includes(periodo)) {
+    return 'El periodo de frecuencia no es valido.';
+  }
+
+  const cantidad = Number(form.frecuencia_cantidad);
+  if (!Number.isInteger(cantidad) || cantidad < 1) {
+    return 'Indique una cantidad de veces valida.';
+  }
+
+  const maximo = maximoFrecuenciaDisponible(form.fecha_inicio, periodo);
+  if (cantidad > maximo) {
+    return `Para la ${etiquetaPeriodo(periodo)} seleccionada solo quedan ${maximo} dias disponibles desde la fecha de inicio. Ajuste "Veces" a ${maximo} o menos.`;
+  }
+
+  return '';
+}
+
+function limitarObservacionesAsignar(valor) {
+  const texto = String(valor || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lineas = texto.split('\n').slice(0, ASIGNAR_OBSERVACIONES_MAX_SALTOS + 1);
+  return lineas.join('\n').slice(0, ASIGNAR_OBSERVACIONES_MAX_CARACTERES);
+}
 
 export function useEstudiosBiblicos() {
   const [filtros, setFiltros] = useState({
@@ -413,6 +526,10 @@ export function useEstudiosBiblicos() {
       notificarError('Nombre, usuario y cargo son obligatorios.');
       return false;
     }
+    if (instructorForm.nombre_completo.trim().length > INSTRUCTOR_NOMBRE_MAX) {
+      notificarError(`El nombre del instructor no puede superar ${INSTRUCTOR_NOMBRE_MAX} caracteres.`);
+      return false;
+    }
     if (!editandoInstructorId && (!instructorForm.password || !instructorForm.password_confirmacion)) {
       notificarError('La contraseña y su confirmación son obligatorias.');
       return false;
@@ -425,7 +542,7 @@ export function useEstudiosBiblicos() {
     setGuardando(true);
     try {
       const payload = {
-        nombre_completo: instructorForm.nombre_completo,
+        nombre_completo: instructorForm.nombre_completo.trim().slice(0, INSTRUCTOR_NOMBRE_MAX),
         usuario: instructorForm.usuario,
         cargo: instructorForm.cargo,
         ...(instructorForm.password ? { password: instructorForm.password } : {}),
@@ -466,20 +583,44 @@ export function useEstudiosBiblicos() {
   }, [cargarInstructores]);
 
   const guardarAsignarEstudio = useCallback(async () => {
-    if (!asignarForm.visita_id) {
-      notificarError('Seleccione una visita.');
+    const visitaIds = Array.from(new Set([
+      ...(Array.isArray(asignarForm.visita_ids) ? asignarForm.visita_ids : []),
+      ...(asignarForm.visita_id ? [asignarForm.visita_id] : [])
+    ].filter(Boolean).map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0)));
+
+    const responsableIds = Array.from(new Set([
+      ...(Array.isArray(asignarForm.responsable_usuario_ids) ? asignarForm.responsable_usuario_ids : []),
+      ...(asignarForm.responsable_usuario_id ? [asignarForm.responsable_usuario_id] : [])
+    ].filter(Boolean).map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0)));
+
+    if (visitaIds.length === 0) {
+      notificarError('Seleccione al menos una visita.');
       return false;
     }
-    if (!asignarForm.responsable_usuario_id) {
-      notificarError('Seleccione un instructor responsable.');
+    if (responsableIds.length === 0) {
+      notificarError('Seleccione al menos un instructor responsable.');
       return false;
     }
+    const errorFrecuencia = validarFrecuenciaAsignar(asignarForm);
+    if (errorFrecuencia) {
+      notificarError(errorFrecuencia);
+      return false;
+    }
+    const observacionesAsignar = limitarObservacionesAsignar(asignarForm.observaciones);
 
     setGuardando(true);
     try {
+      const restoAsignarForm = { ...asignarForm };
+      delete restoAsignarForm.visitas;
+      delete restoAsignarForm.responsables;
       const payload = {
-        ...asignarForm,
-        frecuencia_cantidad: Number(asignarForm.frecuencia_cantidad || 1)
+        ...restoAsignarForm,
+        visita_id: visitaIds[0],
+        visita_ids: visitaIds,
+        responsable_usuario_id: responsableIds[0],
+        responsable_usuario_ids: responsableIds,
+        frecuencia_cantidad: Number(asignarForm.frecuencia_cantidad || 1),
+        observaciones: observacionesAsignar
       };
       const res = await estudioBiblicoApi.asignarDesdeVisita(payload);
       if (res?.exito) {

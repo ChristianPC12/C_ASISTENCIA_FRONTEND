@@ -56,11 +56,6 @@ export function validarUsuario(datos, esEdicion = false) {
     errores.usuario = `El usuario no puede superar los ${LIMITES.USUARIO_MAX} caracteres.`;
   }
 
-  const cargo = recortar(datos.cargo || '');
-  if (cargo.length > 120) {
-    errores.cargo = 'El cargo no puede superar los 120 caracteres.';
-  }
-
   const password = datos.password || '';
   const passwordConfirmacion = datos.password_confirmacion || '';
 

@@ -47,6 +47,8 @@ Backend:
 - `/comparaciones` `ADMIN/SECRETARIO` + requiere setup completo
 - `/presentaciones` `ADMIN/SECRETARIO` + requiere setup completo
 - `/usuarios` solo `ADMIN` + requiere setup completo
+- `/campanas` `ADMIN/SECRETARIO/MINISTERIO_PERSONAL` + requiere setup completo
+- `/estudios-biblicos` `ADMIN/MINISTERIO_PERSONAL/INSTRUCTOR_BIBLICO` + requiere setup completo
 
 ## 5) Auth y sesion
 
@@ -175,3 +177,65 @@ Actualizar este archivo cuando cambie:
 - rutas protegidas o roles,
 - endpoints consumidos por frontend,
 - setup/cupos/dinamismo tenant-aware.
+
+## 12) Modulos misioneros vigentes (actualizado 2026-05-06)
+
+### Campanas
+
+- Ruta frontend: `/campanas`.
+- Archivo principal: `src/pages/CampanasPage.jsx`.
+- Vista compartida de visitas: `src/components/campanas/VisitasGeneralView.jsx`.
+- Responsive aprobado:
+  - KPIs primero,
+  - filtros en boton/modal,
+  - tabla principal debajo.
+- Contrato consumido principal:
+  - `GET /campanas`
+  - `GET /campanas/dashboard`
+  - `GET /campanas/{id}`
+  - `POST /campanas`
+  - `PUT /campanas/{id}`
+  - `DELETE /campanas/{id}`
+  - `GET /campanas/visitas`
+  - `POST /campanas/visitas`
+  - `GET /campanas/visitas/similares`
+  - `POST /campanas/{id}/sesiones`
+  - `POST /campanas/sesiones/{id}/asistencia`
+
+### Estudios Biblicos
+
+- Ruta frontend: `/estudios-biblicos`.
+- Archivo principal: `src/pages/EstudiosBiblicosPage.jsx`.
+- Hook principal: `src/hooks/useEstudiosBiblicos.js`.
+- Roles:
+  - `MINISTERIO_PERSONAL` administra visitas, estudios, instructores y asignaciones.
+  - `INSTRUCTOR_BIBLICO` entra solo al flujo `Registrar sesion`.
+- Subvistas de owner/admin:
+  - `Visitas`
+  - `Estudios Biblicos`
+  - `Instructores`
+  - `Asignar estudio`
+- Subvista instructor:
+  - `Registrar sesion`
+- Contrato consumido principal:
+  - `GET /estudios-biblicos`
+  - `GET /estudios-biblicos/dashboard`
+  - `GET /estudios-biblicos/{id}`
+  - `POST /estudios-biblicos`
+  - `POST /estudios-biblicos/asignar`
+  - `PUT /estudios-biblicos/{id}`
+  - `POST /estudios-biblicos/{id}/estado`
+  - `POST /estudios-biblicos/{id}/sesiones`
+  - `POST /estudios-biblicos/{id}/decisiones`
+  - `POST /estudios-biblicos/{id}/asignaciones`
+  - `GET /estudios-biblicos/instructores`
+  - `POST /estudios-biblicos/instructores`
+  - `PUT /estudios-biblicos/instructores/{id}`
+
+Reglas visuales que no se deben perder:
+
+- Tablas con header sin card redundante cuando el modulo ya tiene contenedor padre.
+- KPIs compactos y consistentes entre `Campanas`, `Visitas` y `Estudios Biblicos`.
+- En telefono, liberar ancho de tabla moviendo filtros a boton/modal.
+- No usar headers internos redundantes dentro de tablas cuando ya existe titulo de modulo.
+- En `Registrar sesion`, los estados vacios deben llenar el alto disponible del card derecho.

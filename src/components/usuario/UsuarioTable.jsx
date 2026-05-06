@@ -76,7 +76,6 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Usuario</th>
-                  <th>Cargo</th>
                   <th className="text-center">Rol</th>
                   <th className="text-center">Estado</th>
                   <th className="text-center">Expira</th>
@@ -93,7 +92,6 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                       <td>{usr.id}</td>
                       <td className="fw-semibold">{usr.nombre_completo}</td>
                       <td>{usr.usuario}</td>
-                      <td>{usr.cargo || '-'}</td>
                       <td className="text-center">
                         <span className={`badge ${usr.rol === 'ADMIN' ? 'bg-primary' : 'bg-secondary'}`}>
                           {usr.rol}

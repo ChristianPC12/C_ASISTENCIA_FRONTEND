@@ -4443,6 +4443,113 @@ a:hover {
   min-width: 42rem;
 }
 
+.estudios-asignar-layout > [class*='col-'] {
+  display: flex;
+}
+
+.estudios-asignar-form-card {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.estudios-asignar-form-body,
+.estudios-asignar-form-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.estudios-asignar-form-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.estudios-asignar-observaciones {
+  min-height: 7.75rem;
+  resize: vertical;
+}
+
+.estudios-observacion-modal-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.estudios-visita-info-modal {
+  max-height: min(90vh, 680px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.estudios-visita-info-modal-head,
+.estudios-visita-info-modal-footer {
+  flex: 0 0 auto;
+  padding: 1rem 1.2rem;
+  background: #ffffff;
+}
+
+.estudios-visita-info-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 1.2rem;
+  overscroll-behavior: contain;
+}
+
+.estudios-asignar-submit {
+  margin-top: auto;
+}
+
+.estudios-selector-table {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.estudios-selector-table th:nth-child(1),
+.estudios-selector-table td:nth-child(1) {
+  width: auto;
+}
+
+.estudios-selector-table th:nth-child(2),
+.estudios-selector-table td:nth-child(2) {
+  width: 6rem;
+}
+
+.estudios-selector-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.estudios-selector-row {
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.estudios-selector-row.is-selected > * {
+  background-color: rgba(0, 51, 102, 0.08);
+}
+
+.estudios-selector-row.has-active-study > * {
+  background-color: rgba(108, 117, 125, 0.06);
+}
+
+.estudios-selection-carousel .btn {
+  width: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.estudios-selection-index {
+  min-width: 3rem;
+  justify-content: center;
+  font-size: 0.78rem;
+  color: var(--iasd-texto-sec);
+}
+
 .estudios-sesiones-table {
   min-width: 48rem;
 }
@@ -4476,6 +4583,11 @@ a:hover {
 
   .estudios-table-shell table {
     width: max-content;
+  }
+
+  .estudios-table-shell .estudios-selector-table {
+    width: 100%;
+    min-width: 100%;
   }
 
   .estudios-lista-table {
@@ -4840,6 +4952,45 @@ a:hover {
   min-width: 31px;
 }
 
+.mobile-filter-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.mobile-filter-sheet {
+  width: min(100%, 520px);
+  max-height: min(82vh, 680px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.28);
+}
+
+.mobile-filter-sheet-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid var(--iasd-borde);
+}
+
+.mobile-filter-sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
 .visita-form-grid .form-control-sm,
 .visita-form-grid .form-select-sm,
 .visita-form-grid .input-group-sm > .form-control,
@@ -4911,6 +5062,89 @@ a:hover {
 }
 
 @media (max-width: 767.98px) {
+  .visitas-filtros-card-desktop,
+  .estudios-filtros-card-desktop,
+  .campanas-filtros-card-desktop {
+    display: none;
+  }
+
+  .visitas-mobile-kpi-row,
+  .estudios-mobile-kpi-row,
+  .campanas-mobile-kpi-row {
+    flex-wrap: wrap;
+  }
+
+  .visitas-mobile-kpi-row .card-body,
+  .estudios-mobile-kpi-row .card-body,
+  .campanas-mobile-kpi-row .card-body {
+    min-height: 72px;
+    padding: 0.55rem 0.45rem !important;
+  }
+
+  .visitas-mobile-kpi-row .small,
+  .estudios-kpi-label,
+  .campanas-mobile-kpi-row .small {
+    font-size: 0.75rem !important;
+    line-height: 1.1;
+  }
+
+  .visitas-mobile-kpi-row .h5,
+  .estudios-kpi-value,
+  .campanas-mobile-kpi-row .h4 {
+    font-size: 1.05rem !important;
+    line-height: 1.1;
+  }
+
+  .visitas-mobile-kpi-actions {
+    flex-direction: row;
+  }
+
+  .visitas-mobile-kpi-actions .btn,
+  .estudios-mobile-filter-btn,
+  .campanas-mobile-filter-btn {
+    width: 28px !important;
+    height: 28px !important;
+    min-height: 28px !important;
+    padding: 0;
+    display: inline-flex !important;
+  }
+
+  .estudios-asignar-selector-col {
+    display: none !important;
+  }
+
+  .estudios-asignar-layout > .col-12.col-xl-4:not(.estudios-asignar-selector-col) {
+    width: 100%;
+  }
+
+  .estudios-asignar-mobile-picker-btn {
+    min-height: 28px !important;
+    height: 28px;
+    padding: 0 0.5rem;
+    gap: 0.35rem;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .estudios-asignar-mobile-picker-btn span {
+    font-size: 0.76rem;
+  }
+
+  .mobile-filter-sheet .estudios-section-card {
+    border: 0;
+    box-shadow: none !important;
+  }
+
+  .mobile-filter-sheet .estudios-section-card > .card-header {
+    display: none;
+  }
+
+  .mobile-filter-sheet .estudios-selector-scroll {
+    height: min(52vh, 420px);
+    max-height: min(52vh, 420px);
+  }
+
   .campanas-asistencia-toggle {
     width: 100%;
     min-height: 34px;
@@ -5020,6 +5254,11 @@ a:hover {
   min-width: 50rem;
 }
 
+.estudios-lista-table th:last-child,
+.estudios-lista-table td:last-child {
+  width: 11rem;
+}
+
 .estudios-visita-link {
   border: 0;
   background: transparent;
@@ -5044,7 +5283,7 @@ a:hover {
 }
 
 .estudios-instructores-table-wrap .table {
-  min-width: 52rem;
+  min-width: 64rem;
 }
 
 .estudios-instructor-toolbar-top {
@@ -5075,12 +5314,125 @@ a:hover {
 }
 
 .estudios-selector-scroll {
+  height: clamp(320px, 52vh, 520px);
   max-height: clamp(320px, 52vh, 520px);
 }
 
+.estudios-registro-layout {
+  align-items: flex-start;
+}
+
+.estudios-registro-layout > [class*="col-"] {
+  display: flex;
+  min-height: 0;
+}
+
+.estudios-registro-layout .card {
+  width: 100%;
+}
+
+.estudios-registro-card,
+.estudios-registro-form-card {
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.estudios-registro-card .card-header,
+.estudios-registro-form-card .card-header {
+  flex: 0 0 auto;
+}
+
+.estudios-registro-card > .card-header,
+.estudios-registro-form-card > .card-header {
+  padding-block: 0.62rem;
+}
+
+.estudios-registro-card .card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+
+.estudios-registro-form-card .card-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
 .estudios-registro-list {
-  max-height: clamp(320px, 60vh, 560px);
+  flex: 1 1 auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: clamp(300px, 52vh, 520px);
   overflow-y: auto;
+}
+
+.estudios-page-instructor[data-vista="REGISTRO"] {
+  min-height: 0;
+}
+
+.sidebar-layout-instructor-sin-header .estudios-page-instructor[data-vista="REGISTRO"] {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-layout {
+  min-height: 0;
+}
+
+.estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-form-card .card-body {
+  min-height: 0;
+}
+
+@media (min-width: 1200px) {
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-layout {
+    --estudios-registro-card-height: 620px;
+    align-items: flex-start;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-card,
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-form-card {
+    height: var(--estudios-registro-card-height);
+    max-height: var(--estudios-registro-card-height);
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-list {
+    height: 100%;
+    max-height: none;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-form-card .card-body {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1199.98px) {
+  .sidebar-layout-instructor-sin-header .estudios-page-instructor[data-vista="REGISTRO"] {
+    height: auto;
+    overflow: visible;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-layout {
+    flex: 0 0 auto;
+    height: auto;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-card {
+    height: clamp(200px, 28vh, 290px);
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-list {
+    height: 100%;
+    max-height: none;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-form-card .card-body {
+    overflow-y: visible;
+  }
 }
 
 .estudios-registro-item {
@@ -5088,7 +5440,7 @@ a:hover {
   border: 0;
   border-bottom: 1px solid #eef0f3;
   background: #fff;
-  padding: 0.85rem 1rem;
+  padding: 0.72rem 0.9rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5102,6 +5454,15 @@ a:hover {
   background: #eef6ff;
 }
 
+.estudios-registro-item.is-pending:not(.is-active) {
+  background: #fff8e1;
+  box-shadow: inset 3px 0 0 #d49b00;
+}
+
+.estudios-registro-item.is-pending:not(.is-active):hover {
+  background: #fff2c2;
+}
+
 .estudios-registro-item span {
   min-width: 0;
   display: flex;
@@ -5109,8 +5470,61 @@ a:hover {
   gap: 0.2rem;
 }
 
+.estudios-registro-item-meta {
+  flex: 0 0 auto;
+  align-items: flex-end;
+  color: #64748b;
+}
+
+.estudios-registro-pending-badge {
+  border: 1px solid #edc35f;
+  border-radius: 999px;
+  background: #fff3cd;
+  color: #7a5500;
+  font-size: 0.64rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.18rem 0.34rem;
+  text-transform: uppercase;
+}
+
+.estudios-registro-item.is-active .estudios-registro-item-meta {
+  color: #2f5f93;
+}
+
 .estudios-registro-item small {
   color: #6c757d;
+}
+
+.estudios-registro-item .estudios-registro-pending-badge {
+  color: #7a5500;
+}
+
+.estudios-registro-header-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.estudios-visita-carousel {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.estudios-visita-carousel h5 {
+  min-width: 0;
+  max-width: min(34rem, 56vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.estudios-visita-counter {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
 }
 
 .estudios-progress-badge {
@@ -5118,9 +5532,399 @@ a:hover {
   text-align: center;
 }
 
+.estudios-progreso-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.estudios-progreso-control {
+  min-height: calc(1.5em + 0.5rem + 2px);
+}
+
+.estudios-progreso-control .form-range {
+  margin: 0;
+}
+
+.estudios-periodos-panel {
+  border: 1px solid #e8edf3;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.58rem 0.65rem;
+}
+
+.estudios-periodo-actual-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.48rem;
+}
+
+.estudios-periodo-espera-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.72rem;
+}
+
+.estudios-periodo-espera-panel p {
+  margin: 0.1rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.estudios-periodo-actual-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.estudios-periodo-info-line {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.12rem 0.48rem;
+}
+
+.estudios-periodo-info-line > * {
+  white-space: nowrap;
+}
+
+.estudios-periodo-separador {
+  width: 1px;
+  height: 0.82rem;
+  background: #cbd5e1;
+  display: inline-block;
+}
+
+.estudios-periodo-actual-head strong {
+  color: #1f2937;
+  font-size: 0.98rem;
+}
+
+.estudios-periodo-actual-head small,
+.estudios-periodo-eyebrow {
+  color: #6b7280;
+  font-size: 0.78rem;
+}
+
+.estudios-periodo-eyebrow {
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.estudios-periodo-status {
+  flex: 0 0 auto;
+  width: fit-content;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  padding: 0.34rem 0.62rem;
+  border: 1px solid #e3e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.estudios-periodo-status span {
+  color: #6b7280;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.estudios-periodo-status strong {
+  font-size: 0.82rem;
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.estudios-periodo-status strong.is-clear {
+  color: #198754;
+}
+
+.estudios-periodo-status strong.is-pending {
+  color: #8a5a00;
+}
+
+.estudios-periodo-timeline {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(4rem, 1fr);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.05rem 0 0.12rem;
+  scrollbar-width: thin;
+}
+
+.estudios-periodo-step {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+  color: #6b7280;
+  isolation: isolate;
+}
+
+.estudios-periodo-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: calc(50% + 16px);
+  width: calc(100% - 32px);
+  height: 2px;
+  background: #d9e0ea;
+  z-index: 0;
+}
+
+.estudios-periodo-step-dot {
+  position: relative;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.estudios-periodo-step small {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.69rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estudios-periodo-step.is-registrado .estudios-periodo-step-dot {
+  border-color: #198754;
+  background: #198754;
+  color: #ffffff;
+}
+
+.estudios-periodo-step.is-justificado .estudios-periodo-step-dot {
+  border-color: #f0ad00;
+  background: #fff3cd;
+  color: #7a5500;
+}
+
+.estudios-periodo-step.is-pendiente .estudios-periodo-step-dot {
+  border-color: #cbd5e1;
+  background: #ffffff;
+  color: #94a3b8;
+}
+
+.estudios-periodo-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem 0.72rem;
+  color: #4b5563;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.estudios-periodo-resumen span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.estudios-periodo-resumen i {
+  font-size: 0.5rem;
+}
+
+.estudios-instructor-asistencia-note {
+  margin-bottom: 0.65rem;
+  padding: 0.48rem 0.62rem;
+  font-size: 0.78rem;
+  line-height: 1.28;
+}
+
+.estudios-registro-submit {
+  min-width: 10.5rem;
+}
+
+.estudios-registro-observaciones {
+  height: calc((1.18rem * 3) + 0.84rem + 2px);
+  padding-top: 0.42rem;
+  padding-bottom: 0.42rem;
+  line-height: 1.18rem;
+  resize: none;
+  overflow-y: auto;
+}
+
+.estudios-registro-state {
+  flex: 1 1 auto;
+  min-height: 13.5rem;
+  border: 1px solid #e8edf3;
+  border-radius: 8px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 1rem;
+  text-align: left;
+}
+
+.estudios-registro-state h6 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.98rem;
+}
+
+.estudios-registro-state p {
+  max-width: 28rem;
+  margin: 0.22rem 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.estudios-registro-state .btn {
+  margin-top: 0.65rem;
+}
+
+.estudios-registro-state-icon {
+  flex: 0 0 auto;
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #0d6efd;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.estudios-registro-state-clear .estudios-registro-state-icon {
+  color: #198754;
+}
+
+.estudios-registro-state-pending .estudios-registro-state-icon {
+  color: #8a5a00;
+}
+
+.estudios-registro-state-waiting .estudios-registro-state-icon,
+.estudios-periodo-espera-panel .estudios-registro-state-icon {
+  color: #6f42c1;
+}
+
 @media (max-width: 575.98px) {
   .estudios-page .table {
     font-size: 0.86rem;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] {
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.55rem !important;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-layout {
+    --bs-gutter-y: 0.65rem;
+  }
+
+  .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-card {
+    height: clamp(155px, 22vh, 220px);
+  }
+
+  .estudios-registro-card > .card-header,
+  .estudios-registro-form-card > .card-header {
+    padding: 0.52rem 0.72rem;
+  }
+
+  .estudios-visita-carousel {
+    flex-wrap: wrap;
+  }
+
+  .estudios-visita-carousel h5 {
+    max-width: 100%;
+    font-size: 1rem;
+  }
+
+  .estudios-registro-form-card > .card-body {
+    padding: 0.7rem;
+  }
+
+  .estudios-registro-form-card .row.g-3 {
+    --bs-gutter-y: 0.55rem;
+  }
+
+  .estudios-registro-form-card .mb-3 {
+    margin-bottom: 0.55rem !important;
+  }
+
+  .estudios-periodo-timeline {
+    grid-auto-columns: minmax(3.55rem, 1fr);
+  }
+
+  .estudios-periodos-panel {
+    padding: 0.48rem 0.55rem;
+  }
+
+  .estudios-periodo-actual-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 0.38rem;
+  }
+
+  .estudios-periodo-info-line {
+    gap: 0.08rem 0.34rem;
+  }
+
+  .estudios-periodo-separador {
+    height: 0.7rem;
+  }
+
+  .estudios-periodo-actual-head strong {
+    font-size: 0.88rem;
+  }
+
+  .estudios-periodo-actual-head small,
+  .estudios-periodo-eyebrow {
+    font-size: 0.68rem;
+  }
+
+  .estudios-periodo-status {
+    min-width: 0;
+    width: fit-content;
+    max-width: 100%;
+    align-self: flex-start;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .estudios-periodo-step small {
+    font-size: 0.65rem;
+  }
+
+  .estudios-periodo-resumen {
+    font-size: 0.7rem;
+  }
+
+  .estudios-periodo-espera-panel,
+  .estudios-registro-state {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .estudios-registro-state {
+    min-height: 10.5rem;
+    padding: 0.85rem;
   }
 
   .estudios-kpi-label {

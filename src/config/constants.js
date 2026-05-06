@@ -78,7 +78,6 @@ export const USUARIO_FORM_INICIAL = {
   id: null,
   nombre_completo: '',
   usuario: '',
-  cargo: '',
   password: '',
   password_confirmacion: '',
   rol_id: 2,

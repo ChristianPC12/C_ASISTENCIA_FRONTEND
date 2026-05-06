@@ -75,24 +75,6 @@ export default function UsuarioForm({
               )}
             </div>
 
-            <div className="col-md-6">
-              <label htmlFor="cargo_campo" className="form-label">Cargo</label>
-              <input
-                type="text"
-                id="cargo_campo"
-                name="cargo"
-                className={`form-control ${errores.cargo ? 'is-invalid' : ''}`}
-                value={formulario.cargo || ''}
-                onChange={manejarCambio}
-                placeholder="Pastor, laico, director..."
-                maxLength={120}
-                disabled={cargando}
-              />
-              {errores.cargo && (
-                <div className="invalid-feedback">{errores.cargo}</div>
-              )}
-            </div>
-
             {/* Contrasena */}
             <div className="col-md-6">
               <label htmlFor="password_campo" className="form-label">

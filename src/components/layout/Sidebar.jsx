@@ -74,6 +74,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const enPantallaComparaciones = esRutaActiva('/comparaciones');
   const enPantallaCampanas = esRutaActiva('/campanas');
   const enPantallaEstudios = esRutaActiva('/estudios-biblicos');
+  const ocultarHeaderInstructor = esInstructorBiblico && enPantallaEstudios;
   const tenantSesion = tenant || usuario?.tenant || {};
   const campoSesion = String(
     tenantSesion?.campo_nombre || tenantSesion?.campo || usuario?.campo_nombre || usuario?.campo || ''
@@ -272,7 +273,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   }
 
   return (
-    <div className="sidebar-layout">
+    <div className={`sidebar-layout ${ocultarHeaderInstructor ? 'sidebar-layout-instructor-sin-header' : ''}`}>
       {/* Overlay oscuro en mobile cuando el menu esta abierto */}
       {abierto && (
         <div
@@ -355,6 +356,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       {/* Contenido principal */}
       <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
+        {!ocultarHeaderInstructor && (
         <header className="sidebar-topbar">
           <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
             <span></span>
@@ -647,6 +649,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             </button>
           </div>
         </header>
+        )}
 
         {/* Contenido de la pagina */}
         <main className="sidebar-main">

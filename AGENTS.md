@@ -77,3 +77,30 @@ El siguiente bloque de trabajo lo define el owner funcional segun prioridad de m
 - Si otro chat recibe la instruccion 'estudia los agents', debe entender que el siguiente trabajo natural es refinar reportes/exportaciones, endurecer smoke tests funcionales y seguir integraciones entre modulos sin redisenar la UI.
 - Antes de proponer cambios visuales, revisar primero si el patron ya existe en Administrador, Registros, Estadisticas o Comparaciones.
 
+## Continuidad operativa actual (2026-05-06)
+
+Si otro chat recibe "ponte al tanto" o "continua desde donde quedamos", debe leer primero esta seccion y luego:
+
+1. `.agents/react-doctor/CONTEXTO_ACTUAL.md`
+2. `.agents/react-doctor/prompt_frontend.md`
+3. `C_ASISTENCIA_BACKEND/C_ASISTENCIA_BAKCEND/.agents/escalabilidad/CONTEXTO_ACTUAL_BACKEND_MULTIIGLESIA.md`
+
+Estado real del trabajo:
+
+- `Campanas` quedo practicamente cerrado para esta etapa funcional.
+  - Subvistas: `Campanas`, `Nueva campana`, `Ver campana` y `Visitas`.
+  - En responsive de telefono, KPIs primero, filtros en boton/modal y tabla liberada.
+  - La vista `Visitas` se reutiliza tambien desde `Estudios Biblicos`.
+- `Estudios Biblicos` es el modulo activo actual.
+  - Subvistas para ADMIN/MINISTERIO_PERSONAL: `Visitas`, `Estudios Biblicos`, `Instructores`, `Asignar estudio`.
+  - Subvista especial para `INSTRUCTOR_BIBLICO`: `Registrar sesion`.
+  - `Instructores` reutiliza el patron visual de `Administrador > Usuarios`; crea usuarios reales con rol `INSTRUCTOR_BIBLICO`.
+  - `Asignar estudio` permite multiples visitas y multiples instructores, evita duplicados activos, usa seleccion visual con fondo activo y accion de quitar.
+  - La tabla principal de estudios usa solo estados funcionales: `ASIGNADO`, `EN_PROCESO`, `PAUSADO`, `FINALIZADO`.
+  - En `Registrar sesion`, los instructores solo ven Estudios Biblicos y la pantalla de registro; no se oculta el sidebar, solo se compacto el header superior para ese contexto.
+  - El registro de sesion valida periodo actual, frecuencia semanal/mensual/trimestral, pendientes, justificaciones, fecha dentro del periodo y estudios futuros.
+  - Los estados vacios de registro (`estudios-registro-state-*`) deben ocupar todo el alto disponible del card derecho.
+- Ultima verificacion frontend:
+  - `npm run build` OK.
+  - `npx -y react-doctor@latest . --verbose --diff` OK, 91/100, con advertencias conocidas en `CampanasPage`, `Sidebar`, `VisitasGeneralView` y `EstudiosBiblicosPage`.
+

@@ -71,3 +71,29 @@ Actualizar estos archivos si cambia auth, rutas, endpoints, validaciones o prior
 - el estado `[ ]/[~]/[x]` coincide con codigo real
 - los tickets tienen dependencia y criterio de aceptacion claros
 - se deja visible el siguiente ticket recomendado
+
+## Continuidad rapida para chats nuevos (2026-05-06)
+
+Cuando el owner pida "ponte al tanto", el agente debe asumir que el foco ya no es F8 discovery sino refinamiento funcional de modulos misioneros, especialmente `Estudios Biblicos`.
+
+Lectura minima para continuar:
+
+1. `CONTEXTO_ACTUAL.md`, seccion `Continuidad Mayo 2026`.
+2. `prompt_frontend.md`, secciones de rutas y contratos de modulos misioneros.
+3. Backend: `.agents/escalabilidad/CONTEXTO_ACTUAL_BACKEND_MULTIIGLESIA.md`, seccion `Continuidad Mayo 2026`.
+
+Resumen de estado:
+
+- `Campanas` esta pulido en responsive para el boton principal y `Visitas`.
+- `VisitasGeneralView` es compartido por `Campanas` y `Estudios Biblicos`.
+- `EstudiosBiblicosPage` concentra:
+  - lista/filtros/KPIs,
+  - CRUD visual de instructores basado en `Administrador > Usuarios`,
+  - asignacion multiple de visitas e instructores,
+  - registro de sesion para rol `INSTRUCTOR_BIBLICO`.
+- Cualquier cambio React/CSS debe cerrar con:
+
+```bash
+npm run build
+npx -y react-doctor@latest . --verbose --diff
+```

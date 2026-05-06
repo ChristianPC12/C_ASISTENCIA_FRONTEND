@@ -303,15 +303,45 @@ function etiquetaEstado(estado) {
   return etiquetas[estado] || estado || '-';
 }
 
-function KpiCard({ label, value, icon }) {
+function KpiCard({ label, value, icon, action = null }) {
   return (
-    <div className="card shadow-sm campanas-kpi-card h-100">
-      <div className="card-body py-3">
-        <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-          <span className="small text-muted text-uppercase">{label}</span>
-          <i className={`bi ${icon} text-primary`} aria-hidden="true"></i>
+    <div className="col-6 col-lg-3">
+      <div className="card shadow-sm estudios-kpi-card h-100">
+        <div className="card-body py-3">
+          <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <span className="estudios-kpi-label">{label}</span>
+            <span className="d-inline-flex align-items-center gap-1">
+              {action}
+              <i className={`bi ${icon} text-primary ${action ? 'd-none d-md-inline-block' : ''}`} aria-hidden="true"></i>
+            </span>
+          </div>
+          <div className="estudios-kpi-value">{Number(value || 0).toLocaleString('es-CR')}</div>
         </div>
-        <div className="h4 mb-0">{Number(value || 0).toLocaleString('es-CR')}</div>
+      </div>
+    </div>
+  );
+}
+
+function CampanasFiltrosMobileSheet({ abierto, onCerrar, children }) {
+  if (!abierto) return null;
+
+  return (
+    <div
+      className="mobile-filter-overlay d-md-none"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCerrar();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCerrar();
+      }}
+      role="presentation"
+    >
+      <div className="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="Filtros de campañas">
+        <div className="mobile-filter-sheet-head">
+          <h5 className="mb-0">Filtros</h5>
+          <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
+        </div>
+        <div className="mobile-filter-sheet-body">{children}</div>
       </div>
     </div>
   );
@@ -2191,6 +2221,7 @@ export default function CampanasPage() {
   const [filtroAnio, setFiltroAnio] = useState('');
   const [filtroTrimestre, setFiltroTrimestre] = useState('');
   const [campanaInfoModal, setCampanaInfoModal] = useState(null);
+  const [mostrarFiltrosMovil, setMostrarFiltrosMovil] = useState(false);
 
   const notificarVistaActiva = useCallback((vista) => {
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_VISTA_ACTIVA, {
@@ -2395,9 +2426,31 @@ export default function CampanasPage() {
       )}
       {seccionActiva === 'CAMPANAS' && (
       <>
+      <div className="row g-2 g-md-3 mb-3 campanas-top-row campanas-mobile-kpi-row">
+        <KpiCard label="Campañas" value={dashboard.total_campanas} icon="bi-megaphone" />
+        <KpiCard label="Visitas" value={dashboard.total_visitas_unicas} icon="bi-person-plus" />
+        <KpiCard label="Bautismos" value={dashboard.total_bautismos_relacionados} icon="bi-droplet" />
+        <KpiCard
+          label="Estudios Bíblicos"
+          value={dashboard.total_estudios_derivados}
+          icon="bi-book"
+          action={(
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm rounded-circle d-md-none align-items-center justify-content-center campanas-mobile-filter-btn"
+              onClick={() => setMostrarFiltrosMovil(true)}
+              title="Filtros"
+              aria-label="Abrir filtros de campañas"
+            >
+              <i className="bi bi-funnel" aria-hidden="true"></i>
+            </button>
+          )}
+        />
+      </div>
+
       <div className="row g-3 mb-3 campanas-top-row">
         <div className="col-12">
-          <div className="card shadow-sm h-100 campanas-filtros-card">
+          <div className="card shadow-sm h-100 campanas-filtros-card campanas-filtros-card-desktop">
             <div className="card-body" style={{ overflow: 'visible' }}>
               <div className="row g-2 align-items-end">
                 <div className="col-12 col-lg-5">
@@ -2409,16 +2462,16 @@ export default function CampanasPage() {
                   />
                 </div>
                 <div className="col-12 col-sm-6 col-lg-3">
-                  <label className="form-label form-label-sm">Estado</label>
-                  <select className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
+                  <label htmlFor="campanas-estado" className="form-label form-label-sm">Estado</label>
+                  <select id="campanas-estado" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
                     {ESTADO_CAMPANA_OPCIONES.map((opcion) => (
                       <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
                     ))}
                   </select>
                 </div>
                 <div className="col-6 col-sm-3 col-lg-2">
-                  <label className="form-label form-label-sm">Año</label>
-                  <select className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
+                  <label htmlFor="campanas-anio" className="form-label form-label-sm">Año</label>
+                  <select id="campanas-anio" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
                     const nuevoAnio = e.target.value;
                     setFiltroAnio(nuevoAnio);
                     if (!nuevoAnio) setFiltroTrimestre('');
@@ -2432,8 +2485,8 @@ export default function CampanasPage() {
                   </select>
                 </div>
                 <div className="col-6 col-sm-3 col-lg-2">
-                  <label className="form-label form-label-sm">Trimestre</label>
-                  <select className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
+                  <label htmlFor="campanas-trimestre" className="form-label form-label-sm">Trimestre</label>
+                  <select id="campanas-trimestre" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
                     const nuevoTrimestre = e.target.value;
                     setFiltroTrimestre(nuevoTrimestre);
                     const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(filtroAnio, nuevoTrimestre);
@@ -2449,6 +2502,57 @@ export default function CampanasPage() {
             </div>
           </div>
         </div>
+
+        <CampanasFiltrosMobileSheet abierto={mostrarFiltrosMovil} onCerrar={() => setMostrarFiltrosMovil(false)}>
+          <div className="row g-2 align-items-end">
+            <div className="col-12">
+              <label htmlFor="campanas-mobile-busqueda" className="form-label form-label-sm">Buscar</label>
+              <SearchInput
+                id="campanas-mobile-busqueda"
+                value={filtros.q}
+                onChange={(valor) => cambiarFiltro('q', valor)}
+                placeholder="Buscar por nombre, lema o predicador"
+              />
+            </div>
+            <div className="col-12">
+              <label htmlFor="campanas-mobile-estado" className="form-label form-label-sm">Estado</label>
+              <select id="campanas-mobile-estado" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
+                {ESTADO_CAMPANA_OPCIONES.map((opcion) => (
+                  <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-6">
+              <label htmlFor="campanas-mobile-anio" className="form-label form-label-sm">Año</label>
+              <select id="campanas-mobile-anio" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
+                const nuevoAnio = e.target.value;
+                setFiltroAnio(nuevoAnio);
+                if (!nuevoAnio) setFiltroTrimestre('');
+                const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(nuevoAnio, nuevoAnio ? filtroTrimestre : '');
+                cambiarFiltro('fecha_desde', fecha_desde);
+                cambiarFiltro('fecha_hasta', fecha_hasta);
+              }}>
+                {ANIO_OPCIONES.map((opcion) => (
+                  <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-6">
+              <label htmlFor="campanas-mobile-trimestre" className="form-label form-label-sm">Trimestre</label>
+              <select id="campanas-mobile-trimestre" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
+                const nuevoTrimestre = e.target.value;
+                setFiltroTrimestre(nuevoTrimestre);
+                const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(filtroAnio, nuevoTrimestre);
+                cambiarFiltro('fecha_desde', fecha_desde);
+                cambiarFiltro('fecha_hasta', fecha_hasta);
+              }}>
+                {TRIMESTRE_OPCIONES.map((opcion) => (
+                  <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </CampanasFiltrosMobileSheet>
 
         <div className="col-12">
           <div className="card shadow-sm campanas-lista-card">
@@ -2517,13 +2621,6 @@ export default function CampanasPage() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="row g-3 mt-1">
-        <div className="col"><KpiCard label="Campañas" value={dashboard.total_campanas} icon="bi-megaphone" /></div>
-        <div className="col"><KpiCard label="Visitas" value={dashboard.total_visitas_unicas} icon="bi-person-plus" /></div>
-        <div className="col"><KpiCard label="Bautismos" value={dashboard.total_bautismos_relacionados} icon="bi-droplet" /></div>
-        <div className="col"><KpiCard label="Estudios Bíblicos" value={dashboard.total_estudios_derivados} icon="bi-book" /></div>
       </div>
 
       {campanaInfoModal && (

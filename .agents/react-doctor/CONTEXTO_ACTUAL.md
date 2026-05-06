@@ -365,3 +365,73 @@ Rutas activas:
 - Se recompuso src/pages/JuntasIglesiaPage.jsx porque parte del bloque de agenda quedo absorbido dentro de KpiCard, causando ReferenceError: BotonAccion is not defined en runtime.
 - Se restauraron BotonAccion, TablaShell, DetalleVacio, ResumenJunta y AgendaJunta como componentes propios.
 
+## Continuidad Mayo 2026 - Campanas y Estudios Biblicos
+
+### Estado de Campanas
+
+- `CampanasPage.jsx` ya tiene el flujo principal pulido para esta etapa.
+- El boton principal `Campanas` mantiene el orden responsive aprobado:
+  - KPIs arriba,
+  - filtros en boton/modal,
+  - tabla liberada debajo.
+- Los KPIs de `Campanas` y de `Visitas` usan el mismo patron visual aprobado en `Estudios Biblicos`.
+- La subvista `Visitas` comparte `VisitasGeneralView` y debe conservar:
+  - input/boton con altura consistente,
+  - telefonos Costa Rica `0000-0000` salvo modo internacional,
+  - detalle de visita sin mostrar campos vacios,
+  - modal de informacion con header/footer fijos y contenido con scroll interno.
+
+### Estado de Estudios Biblicos
+
+- Ruta activa: `/estudios-biblicos`.
+- Roles esperados:
+  - `ADMIN` y `MINISTERIO_PERSONAL`: ven `Visitas`, `Estudios Biblicos`, `Instructores`, `Asignar estudio`.
+  - `INSTRUCTOR_BIBLICO`: ve solo `Estudios Biblicos` con subvista `Registrar sesion`.
+- El sidebar/topbar usa eventos en `src/config/events.js` para abrir subvistas y pintar el boton activo.
+- `Instructores`:
+  - replica el patron de `Administrador > Usuarios`;
+  - crea/edita usuarios reales con rol `INSTRUCTOR_BIBLICO`;
+  - tabla esperada: ID, Nombre, Usuario, Cargo, Rol, Estado, Expira, Creado, Acciones;
+  - nombre maximo: 35 caracteres.
+- `Asignar estudio`:
+  - usa tres columnas en escritorio: seleccionar visita, formulario, seleccionar instructor;
+  - en telefono, seleccionar visita/instructor se abre desde botones junto al formulario;
+  - permite multiples visitas y multiples instructores responsables;
+  - al seleccionar, el registro se mueve arriba y muestra accion de quitar;
+  - no permite elegir visitas con estudio biblico activo y el mensaje debe nombrar cuales visitas lo bloquean;
+  - campos obligatorios: visitas, instructores, fecha de inicio, veces y periodo;
+  - observaciones opcional, maximo 110 caracteres y sin saltos de linea adicionales.
+- Tabla principal de estudios:
+  - estados funcionales unicos: `ASIGNADO`, `EN_PROCESO`, `PAUSADO`, `FINALIZADO`;
+  - KPIs deben actualizarse tambien al usar el buscador;
+  - tiene accion con signo de pregunta para mostrar observacion del estudio cuando exista.
+- `Registrar sesion` para `INSTRUCTOR_BIBLICO`:
+  - cards izquierdo/derecho deben compartir alto visual suficiente en PC;
+  - lista `Mis estudios` debe activar scroll interno cuando hay muchos estudios;
+  - estudios con pendientes tienen background distintivo y seleccionado conserva el azul aprobado;
+  - si el estudio aun no inicia, no hay botones de registrar/justificar/finalizar y se muestra estado de espera;
+  - si esta al dia, se ocultan `Registrar sesion` y `Justificar falta`, pero puede mantenerse `Finalizar estudio` cuando ya inicio;
+  - fecha y hora solo acepta fechas dentro del periodo actual;
+  - frecuencia valida sesiones por semana/mes/trimestre y no permite registrar mas de lo asignado;
+  - boton `Justificar falta` registra periodos vencidos justificables;
+  - avance general se relaciona con el slider `Cerca del bautismo`, pero el instructor puede ajustar manualmente el porcentaje;
+  - si hay multiples visitas, el encabezado usa carrusel con contador;
+  - si hay multiples instructores, cada instructor debe registrar su propia asistencia; el sistema deja claro si solo registro uno.
+
+### Archivos clave actuales
+
+- `src/pages/EstudiosBiblicosPage.jsx`
+- `src/hooks/useEstudiosBiblicos.js`
+- `src/pages/CampanasPage.jsx`
+- `src/components/campanas/VisitasGeneralView.jsx`
+- `src/components/layout/Sidebar.jsx`
+- `src/config/constants.js`
+- `src/config/events.js`
+- `src/styles/iasd-theme.css`
+
+### Verificacion vigente
+
+- `npm run build` OK.
+- `npx -y react-doctor@latest . --verbose --diff` OK, 91/100.
+- Advertencias abiertas conocidas: componentes grandes y temas de accesibilidad heredados principalmente en `CampanasPage`, `Sidebar`, `VisitasGeneralView` y `EstudiosBiblicosPage`.
+

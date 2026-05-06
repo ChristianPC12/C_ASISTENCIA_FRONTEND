@@ -1,8 +1,8 @@
 # Roadmap de Escalabilidad Nacional (IASD Costa Rica)
 
 Fecha base: 2026-03-09  
-Ultima actualizacion: 2026-03-10  
-Estado global frontend: F0..F7 cerradas, F8 pendiente
+Ultima actualizacion: 2026-05-06
+Estado global frontend: F0..F7 cerradas, F8 en refinamiento funcional
 
 ## 1) Objetivo del roadmap
 
@@ -42,7 +42,7 @@ No incluye:
 | F5 - Registro y analitica dinamica | P1 | [x] | Formularios/reportes dinamicos por tenant |
 | F6 - Cupos de usuarios por rol | P1 | [x] | UI de cupos y mensajes de excedente |
 | F7 - Hardening y salida frontend | P0 | [x] | QA seguridad + checklist salida frontend |
-| F8 - Modulos futuros nacionales | P2 | [ ] | Discovery UX de modulos nuevos |
+| F8 - Modulos misioneros nacionales | P2 | [~] | Campanas avanzado; Estudios Biblicos en pulido funcional |
 
 ## 4) Resumen operativo por fase cerrada
 
@@ -90,7 +90,8 @@ Toda actualizacion de auth/rutas/contrato debe reflejarse tambien en backend:
 - `C_ASISTENCIA_BAKCEND/.agents/escalabilidad/ROADMAP_BACKEND_MULTIIGLESIA.md`
 - `C_ASISTENCIA_BAKCEND/.agents/escalabilidad/TICKETS_BACKEND_MULTIIGLESIA.md`
 
-## 6) Siguiente fase
+## 6) Fase actual
 
-- F8 (discovery UX): Campanas, Pequenas Congregaciones, Estudios Biblicos.
-
+- F8 dejo de ser solo discovery: ya existen Campanas, Pequenas Congregaciones, Estudios Biblicos y Juntas.
+- Foco actual: pulido funcional de `Estudios Biblicos`, especialmente asignacion multiple, instructores y registro de sesiones.
+- `Campanas` queda como referencia visual/responsive aprobada junto con los KPIs y filtros compactos de `Estudios Biblicos`.

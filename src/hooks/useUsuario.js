@@ -244,7 +244,6 @@ export function useUsuario() {
       const datos = sanitizarObjeto({
         nombre_completo: formulario.nombre_completo,
         usuario: formulario.usuario,
-        cargo: formulario.cargo,
         rol_id: Number(formulario.rol_id),
         ...(formulario.password ? { password: formulario.password } : {}),
         ...(esEdicion ? { activo: formulario.activo } : {})
@@ -315,7 +314,6 @@ export function useUsuario() {
       id: usuario.id,
       nombre_completo: usuario.nombre_completo,
       usuario: usuario.usuario,
-      cargo: usuario.cargo || '',
       password: '',
       password_confirmacion: '',
       rol_id: usuario.rol_id,

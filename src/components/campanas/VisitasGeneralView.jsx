@@ -7,6 +7,8 @@ import VisitasPendientesModal from './VisitasPendientesModal';
 import CampanaFiltroModal from './CampanaFiltroModal';
 import VisitaDuplicadaWarningModal from './VisitaDuplicadaWarningModal';
 
+const CAMPANAS_VACIAS = [];
+
 const SEGUIMIENTO_OPCIONES = [
   { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
   { valor: 'CONTACTADO', etiqueta: 'Contactado' },
@@ -100,7 +102,150 @@ const validarPayloadVisita = (form) => {
   return '';
 };
 
-export default function VisitasGeneralView({ campanas = [] }) {
+function VisitasFiltrosContent({
+  idPrefix,
+  filtros,
+  cambiarFiltro,
+  etiquetaCampanaFiltro,
+  setMostrarFiltroCampana,
+  abrirNueva,
+  mostrarNuevaMovil = false
+}) {
+  return (
+    <div className="row g-2 align-items-end">
+      <div className="col-12 col-lg-4">
+        <label className="form-label form-label-sm" htmlFor={`${idPrefix}-busqueda`}>Buscar</label>
+        <div className="d-flex align-items-center gap-2">
+          <SearchInput
+            id={`${idPrefix}-busqueda`}
+            value={filtros.q}
+            onChange={(valor) => cambiarFiltro('q', valor)}
+            placeholder="Nombre, telefono o procedencia"
+            className="flex-grow-1 visitas-search-input"
+          />
+          <button
+            type="button"
+            className={`btn btn-primary visitas-nueva-btn align-items-center justify-content-center ${mostrarNuevaMovil ? 'd-flex' : 'd-lg-none d-flex'}`}
+            onClick={abrirNueva}
+            title="Registrar nueva visita"
+            aria-label="Registrar nueva visita"
+          >
+            <i className="bi bi-plus-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div className="col-12 col-lg-3">
+        <label className="form-label form-label-sm" htmlFor={`${idPrefix}-campana`}>Campana</label>
+        <div className="input-group input-group-sm">
+          <input
+            id={`${idPrefix}-campana`}
+            type="text"
+            className="form-control form-control-sm"
+            readOnly
+            value={etiquetaCampanaFiltro}
+            style={{ cursor: 'pointer', backgroundColor: '#fff' }}
+            onClick={() => setMostrarFiltroCampana(true)}
+          />
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => setMostrarFiltroCampana(true)}
+            title="Buscar campana"
+            aria-label="Buscar campana"
+          >
+            <i className="bi bi-search" aria-hidden="true"></i>
+          </button>
+          {filtros.campana_id && (
+            <button
+              type="button"
+              className="btn btn-outline-danger"
+              onClick={() => cambiarFiltro('campana_id', '')}
+              title="Quitar filtro"
+              aria-label="Quitar filtro de campana"
+            >
+              <i className="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="col-6 col-lg-2">
+        <label className="form-label form-label-sm" htmlFor={`${idPrefix}-seguimiento`}>Seguimiento</label>
+        <select id={`${idPrefix}-seguimiento`} className="form-select form-select-sm" value={filtros.estado_seguimiento} onChange={(e) => cambiarFiltro('estado_seguimiento', e.target.value)}>
+          <option value="">Todos</option>
+          {SEGUIMIENTO_OPCIONES.map(o => (
+            <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+          ))}
+        </select>
+      </div>
+      <div className="col-6 col-lg-2">
+        <label className="form-label form-label-sm" htmlFor={`${idPrefix}-clasificacion`}>Clasificacion</label>
+        <select id={`${idPrefix}-clasificacion`} className="form-select form-select-sm" value={filtros.clasificacion_etaria} onChange={(e) => cambiarFiltro('clasificacion_etaria', e.target.value)}>
+          <option value="">Todas</option>
+          {ETARIA_OPCIONES.map(o => (
+            <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
+          ))}
+        </select>
+      </div>
+      <div className={mostrarNuevaMovil ? 'd-none' : 'col-lg-1 d-none d-lg-flex'}>
+        <button
+          type="button"
+          className="btn btn-primary btn-sm visitas-nueva-btn w-100 d-flex align-items-center justify-content-center gap-1"
+          onClick={abrirNueva}
+          title="Registrar nueva visita"
+        >
+          <i className="bi bi-plus-lg" aria-hidden="true"></i>
+          <span>Nueva</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VisitasFiltrosMobileSheet({ abierto, onCerrar, children }) {
+  if (!abierto) return null;
+
+  return (
+    <div
+      className="mobile-filter-overlay d-md-none"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCerrar();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCerrar();
+      }}
+      role="presentation"
+    >
+      <div className="mobile-filter-sheet" role="dialog" aria-modal="true" aria-label="Filtros de visitas">
+        <div className="mobile-filter-sheet-head">
+          <h5 className="mb-0">Filtros</h5>
+          <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
+        </div>
+        <div className="mobile-filter-sheet-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function VisitasKpiCard({ label, value, icon, action = null, className = 'col-6 col-md-4' }) {
+  return (
+    <div className={className}>
+      <div className="card shadow-sm estudios-kpi-card h-100">
+        <div className="card-body py-3">
+          <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+            <span className="estudios-kpi-label">{label}</span>
+            <span className="d-inline-flex align-items-center gap-1 visitas-mobile-kpi-actions">
+              {action}
+              <i className={`bi ${icon} text-primary ${action ? 'd-none d-md-inline-block' : ''}`} aria-hidden="true"></i>
+            </span>
+          </div>
+          <div className="estudios-kpi-value">{Number(value || 0).toLocaleString('es-CR')}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
   const [items, setItems] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [filtros, setFiltros] = useState({ q: '', estado_seguimiento: '', clasificacion_etaria: '', campana_id: '' });
@@ -114,6 +259,7 @@ export default function VisitasGeneralView({ campanas = [] }) {
   const [campanasModal, setCampanasModal] = useState(null);
 
   const [mostrarFiltroCampana, setMostrarFiltroCampana] = useState(false);
+  const [mostrarFiltrosMovil, setMostrarFiltrosMovil] = useState(false);
   const [mostrarPendientes, setMostrarPendientes] = useState(false);
   const [marcandoId, setMarcandoId] = useState(null);
 
@@ -297,31 +443,15 @@ export default function VisitasGeneralView({ campanas = [] }) {
 
   return (
     <>
-      <div className="row g-2 mb-3 align-items-stretch">
-        <div className="col-6 col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body py-2 px-2 px-md-3">
-              <div className="small text-muted text-uppercase" style={{ fontSize: '0.7rem' }}>Total visitas</div>
-              <div className="h5 mb-0">{kpis.total}</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-6 col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body py-2 px-2 px-md-3">
-              <div className="small text-muted text-uppercase" style={{ fontSize: '0.7rem' }}>Fuera de campaña</div>
-              <div className="h5 mb-0">{kpis.independientes}</div>
-            </div>
-          </div>
-        </div>
+      <div className="row g-2 mb-3 align-items-stretch visitas-mobile-kpi-row">
+        <VisitasKpiCard label="Total visitas" value={kpis.total} icon="bi-people" />
+        <VisitasKpiCard label="Fuera de campaña" value={kpis.independientes} icon="bi-door-open" />
         <div className="col-12 col-md-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body py-2 px-2 px-md-3">
-              <div className="d-flex align-items-center justify-content-between gap-2">
-                <div>
-                  <div className="small text-muted text-uppercase" style={{ fontSize: '0.7rem' }}>Faltan por contactar</div>
-                  <div className="h5 mb-0">{kpis.pendientes.length}</div>
-                </div>
+          <div className="card shadow-sm estudios-kpi-card h-100">
+            <div className="card-body py-3">
+              <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                <span className="estudios-kpi-label">Faltan por contactar</span>
+                <span className="d-inline-flex align-items-center gap-1 visitas-mobile-kpi-actions">
                 {kpis.pendientes.length > 0 && (
                   <button
                     type="button"
@@ -334,17 +464,29 @@ export default function VisitasGeneralView({ campanas = [] }) {
                     <i className="bi bi-search" aria-hidden="true"></i>
                   </button>
                 )}
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm rounded-circle d-md-none align-items-center justify-content-center"
+                    style={{ width: '34px', height: '34px' }}
+                    onClick={() => setMostrarFiltrosMovil(true)}
+                    title="Filtros"
+                    aria-label="Abrir filtros de visitas"
+                  >
+                    <i className="bi bi-funnel" aria-hidden="true"></i>
+                  </button>
+                </span>
               </div>
+              <div className="estudios-kpi-value">{Number(kpis.pendientes.length || 0).toLocaleString('es-CR')}</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card shadow-sm mb-3 visitas-filtros-card">
+      <div className="card shadow-sm mb-3 visitas-filtros-card visitas-filtros-card-desktop">
         <div className="card-body py-2">
           <div className="row g-2 align-items-end">
             <div className="col-12 col-lg-4">
-              <label className="form-label form-label-sm">Buscar</label>
+              <label htmlFor="visitas-general-busqueda" className="form-label form-label-sm">Buscar</label>
               <div className="d-flex align-items-center gap-2">
                 <SearchInput
                   id="visitas-general-busqueda"
@@ -365,9 +507,10 @@ export default function VisitasGeneralView({ campanas = [] }) {
               </div>
             </div>
             <div className="col-12 col-lg-3">
-              <label className="form-label form-label-sm">Campaña</label>
+              <label htmlFor="visitas-general-campana" className="form-label form-label-sm">Campaña</label>
               <div className="input-group input-group-sm">
                 <input
+                  id="visitas-general-campana"
                   type="text"
                   className="form-control form-control-sm"
                   readOnly
@@ -398,8 +541,8 @@ export default function VisitasGeneralView({ campanas = [] }) {
               </div>
             </div>
             <div className="col-6 col-lg-2">
-              <label className="form-label form-label-sm">Seguimiento</label>
-              <select className="form-select form-select-sm" value={filtros.estado_seguimiento} onChange={(e) => cambiarFiltro('estado_seguimiento', e.target.value)}>
+              <label htmlFor="visitas-general-seguimiento" className="form-label form-label-sm">Seguimiento</label>
+              <select id="visitas-general-seguimiento" className="form-select form-select-sm" value={filtros.estado_seguimiento} onChange={(e) => cambiarFiltro('estado_seguimiento', e.target.value)}>
                 <option value="">Todos</option>
                 {SEGUIMIENTO_OPCIONES.map(o => (
                   <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
@@ -407,8 +550,8 @@ export default function VisitasGeneralView({ campanas = [] }) {
               </select>
             </div>
             <div className="col-6 col-lg-2">
-              <label className="form-label form-label-sm">Clasificación</label>
-              <select className="form-select form-select-sm" value={filtros.clasificacion_etaria} onChange={(e) => cambiarFiltro('clasificacion_etaria', e.target.value)}>
+              <label htmlFor="visitas-general-clasificacion" className="form-label form-label-sm">Clasificación</label>
+              <select id="visitas-general-clasificacion" className="form-select form-select-sm" value={filtros.clasificacion_etaria} onChange={(e) => cambiarFiltro('clasificacion_etaria', e.target.value)}>
                 <option value="">Todas</option>
                 {ETARIA_OPCIONES.map(o => (
                   <option key={o.valor} value={o.valor}>{o.etiqueta}</option>
@@ -429,6 +572,18 @@ export default function VisitasGeneralView({ campanas = [] }) {
           </div>
         </div>
       </div>
+
+      <VisitasFiltrosMobileSheet abierto={mostrarFiltrosMovil} onCerrar={() => setMostrarFiltrosMovil(false)}>
+        <VisitasFiltrosContent
+          idPrefix="visitas-general-mobile"
+          filtros={filtros}
+          cambiarFiltro={cambiarFiltro}
+          etiquetaCampanaFiltro={etiquetaCampanaFiltro}
+          setMostrarFiltroCampana={setMostrarFiltroCampana}
+          abrirNueva={abrirNueva}
+          mostrarNuevaMovil
+        />
+      </VisitasFiltrosMobileSheet>
 
       <div className="card shadow-sm">
         <div className="card-body p-0">
@@ -474,8 +629,8 @@ export default function VisitasGeneralView({ campanas = [] }) {
                         <span className="small text-muted">—</span>
                       ) : (
                         <div className="d-flex flex-wrap gap-1 align-items-center">
-                          {visibles.map((lema, i) => (
-                            <span key={i} className="badge bg-light text-dark border" style={{ whiteSpace: 'normal', textAlign: 'left' }}>{lema}</span>
+                          {visibles.map((lema) => (
+                            <span key={`${v.id}-${lema}`} className="badge bg-light text-dark border" style={{ whiteSpace: 'normal', textAlign: 'left' }}>{lema}</span>
                           ))}
                           {restantes > 0 && (
                             <button
@@ -537,8 +692,19 @@ export default function VisitasGeneralView({ campanas = [] }) {
       </div>
 
       {visitaDetalle && (
-        <div className="prompt-overlay-iasd" onClick={() => setVisitaDetalle(null)}>
-          <div className="prompt-modal-iasd" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '560px', width: '95%' }}>
+        <div
+          className="prompt-overlay-iasd"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setVisitaDetalle(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setVisitaDetalle(null);
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar detalle de la visita"
+        >
+          <div className="prompt-modal-iasd" role="dialog" aria-modal="true" style={{ maxWidth: '560px', width: '95%' }}>
             <div style={{ paddingBottom: '0.75rem', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h5 className="mb-0">Detalle de la visita</h5>
               <button type="button" className="btn-close" onClick={() => setVisitaDetalle(null)} aria-label="Cerrar"></button>
@@ -554,28 +720,39 @@ export default function VisitasGeneralView({ campanas = [] }) {
               </div>
             </div>
             <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e0e0e0', textAlign: 'right' }}>
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => setVisitaDetalle(null)}>Cerrar</button>
+              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setVisitaDetalle(null)}>Cerrar</button>
             </div>
           </div>
         </div>
       )}
 
       {campanasModal && (
-        <div className="prompt-overlay-iasd" onClick={() => setCampanasModal(null)}>
-          <div className="prompt-modal-iasd" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '95%' }}>
+        <div
+          className="prompt-overlay-iasd"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCampanasModal(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setCampanasModal(null);
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar campañas asistidas"
+        >
+          <div className="prompt-modal-iasd" role="dialog" aria-modal="true" style={{ maxWidth: '500px', width: '95%' }}>
             <div style={{ paddingBottom: '0.75rem', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h6 className="mb-0">Campañas asistidas por "{campanasModal.nombre}"</h6>
               <button type="button" className="btn-close" onClick={() => setCampanasModal(null)} aria-label="Cerrar"></button>
             </div>
             <div style={{ padding: '0.75rem 0', maxHeight: '50vh', overflowY: 'auto' }}>
               <ul className="list-group">
-                {campanasModal.lemas.map((lema, i) => (
-                  <li key={i} className="list-group-item small">{lema}</li>
+                {campanasModal.lemas.map((lema) => (
+                  <li key={`${campanasModal.nombre}-${lema}`} className="list-group-item small">{lema}</li>
                 ))}
               </ul>
             </div>
             <div style={{ paddingTop: '0.75rem', borderTop: '1px solid #e0e0e0', textAlign: 'right' }}>
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => setCampanasModal(null)}>Cerrar</button>
+              <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setCampanasModal(null)}>Cerrar</button>
             </div>
           </div>
         </div>
