@@ -3342,6 +3342,13 @@ a:hover {
   top: 0;
   z-index: 1000;
 }
+/* Ocultar la barra superior en pantallas de escritorio/tablet para instructores en vista de estudios.
+   Mantener visible en móvil. */
+@media (min-width: 768px) {
+  .sidebar-layout-instructor-sin-header .sidebar-topbar {
+    display: none;
+  }
+}
 .sidebar-topbar-acciones { margin-left: auto; display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; }
 .sidebar-topbar-usuario {
   margin-left: 0.7rem;
@@ -4514,7 +4521,7 @@ a:hover {
 
 .estudios-selector-table th:nth-child(2),
 .estudios-selector-table td:nth-child(2) {
-  width: 6rem;
+  width: 5.75rem;
 }
 
 .estudios-selector-actions {
@@ -4522,6 +4529,40 @@ a:hover {
   align-items: center;
   justify-content: flex-end;
   gap: 0.35rem;
+}
+
+.estudios-representante-badge {
+  font-size: 0.66rem;
+  line-height: 1;
+  padding: 0.28rem 0.42rem;
+}
+
+.estudios-representante-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  border: 1px solid rgba(0, 51, 102, 0.16);
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 0.55rem 0.7rem;
+}
+
+.estudios-representante-panel span {
+  color: var(--iasd-texto-sec);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.estudios-representante-panel strong {
+  color: var(--iasd-texto);
+  line-height: 1.2;
+}
+
+.estudios-representante-panel small {
+  color: var(--iasd-texto-sec);
+  line-height: 1.2;
 }
 
 .estudios-selector-row {
@@ -5256,7 +5297,25 @@ a:hover {
 
 .estudios-lista-table th:last-child,
 .estudios-lista-table td:last-child {
-  width: 11rem;
+  width: 4.75rem;
+  min-width: 4.75rem;
+}
+
+.estudios-acciones-row-active > td {
+  background: #edf5ff !important;
+  border-top-color: #d7e8ff;
+  border-bottom-color: #d7e8ff;
+}
+
+.estudios-acciones-row-active > td:first-child {
+  border-left: 3px solid var(--iasd-azul);
+  border-top-left-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+
+.estudios-acciones-row-active > td:last-child {
+  border-top-right-radius: 7px;
+  border-bottom-right-radius: 7px;
 }
 
 .estudios-visita-link {
@@ -5298,6 +5357,217 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.estudios-icon-btn.is-active {
+  background: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+  color: #ffffff;
+}
+
+.estudios-acciones-overlay {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+.estudios-acciones-modal {
+  max-width: 300px;
+  width: min(92vw, 300px);
+  padding: 1rem;
+}
+
+.estudios-acciones-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #edf1f7;
+}
+
+.estudios-acciones-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.estudios-sesiones-modal,
+.estudios-editar-modal {
+  width: min(95vw, 640px);
+  max-width: 640px;
+}
+
+.estudios-sesiones-modal-body {
+  max-height: min(56vh, 430px);
+  overflow: auto;
+  padding: 0.85rem 0;
+}
+
+.estudios-sesiones-periodo-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #e1e8f2;
+  border-radius: 8px;
+  background: #f8fbff;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.estudios-sesiones-periodo-main {
+  min-width: 0;
+  text-align: center;
+}
+
+.estudios-sesiones-periodo-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.estudios-sesiones-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.estudios-sesiones-resumen-grid > div {
+  border: 1px solid #e5ebf5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.55rem 0.4rem;
+  text-align: center;
+}
+
+.estudios-sesiones-resumen-grid span {
+  display: block;
+  color: var(--iasd-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.estudios-sesiones-resumen-grid strong {
+  color: var(--iasd-texto);
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.estudios-sesiones-responsables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.estudios-sesiones-representante-note {
+  margin-bottom: 0.75rem;
+}
+
+.estudios-sesiones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.estudios-sesion-item {
+  border: 1px solid #e1e8f2;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.75rem;
+}
+
+.estudios-sesion-item.is-registrada {
+  border-left: 4px solid #198754;
+}
+
+.estudios-sesion-item.is-justificada {
+  border-left: 4px solid #d39e00;
+}
+
+.estudios-sesion-item.is-incumplida {
+  border-left: 4px solid #dc3545;
+  background: #fff7f8;
+}
+
+.estudios-sesion-item.is-pendiente {
+  border-left: 4px solid #0dcaf0;
+  background: #f6fdff;
+}
+
+.estudios-sesion-item.is-por-iniciar {
+  border-left: 4px solid #6c757d;
+  background: #fafafa;
+}
+
+.estudios-sesion-item-head,
+.estudios-sesion-item-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.estudios-sesion-item-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  color: var(--iasd-muted);
+  font-size: 0.82rem;
+  margin-top: 0.35rem;
+}
+
+.estudios-sesion-item-meta span:not(:last-child)::after {
+  content: "/";
+  color: #b8c2d1;
+  margin-left: 0.5rem;
+}
+
+.estudios-sesion-item-meta-missing {
+  color: var(--iasd-azul);
+  font-weight: 700;
+}
+
+.estudios-sesion-progress {
+  margin-top: 0.55rem;
+}
+
+.estudios-sesion-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: var(--iasd-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.estudios-sesion-progress-track {
+  height: 0.42rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9eef6;
+}
+
+.estudios-sesion-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--iasd-azul), var(--iasd-celeste));
+}
+
+.estudios-sesion-item-text {
+  color: var(--iasd-texto);
+  font-size: 0.86rem;
+  margin-top: 0.45rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .estudios-detalle-row {
@@ -5422,7 +5692,7 @@ a:hover {
   }
 
   .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-card {
-    height: clamp(200px, 28vh, 290px);
+    height: clamp(280px, 38vh, 380px);
   }
 
   .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-list {
@@ -5838,7 +6108,7 @@ a:hover {
   }
 
   .estudios-page-instructor[data-vista="REGISTRO"] .estudios-registro-card {
-    height: clamp(155px, 22vh, 220px);
+    height: clamp(280px, 38vh, 380px);
   }
 
   .estudios-registro-card > .card-header,

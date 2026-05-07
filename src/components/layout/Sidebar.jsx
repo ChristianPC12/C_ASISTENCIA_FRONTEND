@@ -356,7 +356,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       {/* Contenido principal */}
       <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
-        {!ocultarHeaderInstructor && (
         <header className="sidebar-topbar">
           <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
             <span></span>
@@ -649,7 +648,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             </button>
           </div>
         </header>
-        )}
 
         {/* Contenido de la pagina */}
         <main className="sidebar-main">

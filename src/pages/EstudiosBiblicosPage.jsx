@@ -6,7 +6,7 @@ import campanaApi from '../api/campanaApi';
 import estudioBiblicoApi from '../api/estudioBiblicoApi';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../config/constants';
-import { notificarError } from '../utils/notify';
+import { notificarError, notificarExito } from '../utils/notify';
 import {
   EVENT_ESTUDIOS_ABRIR_ASIGNAR,
   EVENT_ESTUDIOS_ABRIR_INSTRUCTORES,
@@ -48,6 +48,11 @@ const AVANCE_GENERAL_INICIAL = 'RECEPTIVO';
 function progresoSugeridoAvance(valor, fallback = 0) {
   const opcion = AVANCE_GENERAL_OPCIONES.find((item) => item.valor === valor);
   return opcion ? opcion.progreso : fallback;
+}
+
+function etiquetaAvanceGeneral(valor) {
+  const opcion = AVANCE_GENERAL_OPCIONES.find((item) => item.valor === valor);
+  return opcion ? opcion.etiqueta : String(valor || '').replace(/_/g, ' ').toLowerCase();
 }
 
 const ESTADO_OPCIONES = [
@@ -473,7 +478,9 @@ function responsablesDetalleEstudio(estudio) {
       const responsable = {
         id: Number(item.responsable_usuario_id || item.id || 0),
         nombre: valorTexto(item, 'nombre_completo', 'responsable_usuario_nombre', 'usuario') || 'Instructor asignado',
-        usuario: valorTexto(item, 'usuario')
+        usuario: valorTexto(item, 'usuario'),
+        cargo: valorTexto(item, 'cargo'),
+        principal: Number(item.principal || 0) === 1 || Number(item.responsable_usuario_id || item.id || 0) === Number(estudio?.responsable_usuario_id || 0)
       };
       if (responsable.id > 0 || responsable.nombre) {
         lista.push(responsable);
@@ -487,12 +494,19 @@ function responsablesDetalleEstudio(estudio) {
   return [{
     id: responsableId,
     nombre: valorTexto(estudio, 'responsable_usuario_nombre') || 'Instructor asignado',
-    usuario: ''
+    usuario: '',
+    cargo: valorTexto(estudio, 'responsable_usuario_cargo'),
+    principal: true
   }];
 }
 
-function nombreUsuarioSesion(usuario) {
-  return valorTexto(usuario || {}, 'nombre_completo', 'usuario') || 'este instructor';
+function responsableRepresentanteEstudio(estudio) {
+  const responsables = responsablesDetalleEstudio(estudio);
+  const responsableId = Number(estudio?.responsable_usuario_id || 0);
+  return responsables.find((item) => Number(item.id || 0) === responsableId)
+    || responsables.find((item) => item.principal)
+    || responsables[0]
+    || null;
 }
 
 function estudioTienePendienteLista(estudio) {
@@ -524,6 +538,183 @@ function crearPasosPeriodoActual(periodo) {
     }
     return { id: `pendiente-${posicion}`, estado: 'pendiente', etiqueta: `Pendiente ${posicion}` };
   });
+}
+
+function porcentajeSesion(valor) {
+  const numero = Number(valor);
+  if (!Number.isFinite(numero)) return 0;
+  return Math.min(100, Math.max(0, Math.round(numero)));
+}
+
+function estadoCumplimientoPeriodo(periodo, periodoActual) {
+  if (!periodo) {
+    return {
+      clave: 'sin-periodo',
+      etiqueta: 'Sin periodo',
+      detalle: 'No hay un periodo disponible.',
+      badge: 'bg-secondary'
+    };
+  }
+
+  if (!periodoActual || periodo.indice > periodoActual.indice) {
+    return {
+      clave: 'por-iniciar',
+      etiqueta: 'Por iniciar',
+      detalle: 'Todavía no llega este periodo.',
+      badge: 'bg-secondary'
+    };
+  }
+
+  if (periodo.faltantes === 0 && periodo.justificadas > 0 && periodo.registradas < periodo.requeridas) {
+    return {
+      clave: 'justificado',
+      etiqueta: 'Justificado',
+      detalle: 'El periodo quedó cubierto con justificación.',
+      badge: 'bg-warning text-dark'
+    };
+  }
+
+  if (periodo.faltantes === 0) {
+    return {
+      clave: 'completo',
+      etiqueta: 'Al día',
+      detalle: 'El periodo tiene todos los registros esperados.',
+      badge: 'bg-success'
+    };
+  }
+
+  if (periodo.indice < periodoActual.indice) {
+    return {
+      clave: 'incumplido',
+      etiqueta: 'Incumplido',
+      detalle: 'El tiempo terminó y faltaron registros.',
+      badge: 'bg-danger'
+    };
+  }
+
+  return {
+    clave: 'pendiente',
+    etiqueta: 'Pendiente con tiempo',
+    detalle: 'El periodo actual todavía puede completarse.',
+    badge: 'bg-info text-dark'
+  };
+}
+
+function crearCumplimientoSesiones(estudio, sesiones, periodo, periodoActual) {
+  if (!periodo) return [];
+
+  const sesionesPeriodo = sesionesDePeriodo(sesiones, periodo)
+    .slice()
+    .sort((a, b) => {
+      const fechaA = crearFechaLocal(a?.fecha)?.getTime() || 0;
+      const fechaB = crearFechaLocal(b?.fecha)?.getTime() || 0;
+      return fechaA - fechaB;
+    });
+  const requeridas = Math.max(1, Number(estudio?.frecuencia_cantidad || 1));
+  const representante = responsableRepresentanteEstudio(estudio);
+  const representanteId = Number(representante?.id || estudio?.responsable_usuario_id || 0);
+  const estadoPeriodo = !periodoActual || periodo.indice > periodoActual.indice
+    ? { clave: 'por-iniciar' }
+    : periodo.indice < periodoActual.indice
+      ? { clave: 'incumplido' }
+      : { clave: 'pendiente' };
+  const sesionesRepresentante = representanteId > 0
+    ? sesionesPeriodo.filter((sesion) => Number(sesion?.responsable_usuario_id || 0) === representanteId)
+    : sesionesPeriodo;
+  const sesionesOtros = representanteId > 0
+    ? sesionesPeriodo.filter((sesion) => Number(sesion?.responsable_usuario_id || 0) !== representanteId)
+    : [];
+
+  const crearRegistrada = (sesion, index, responsableNombre = '', extra = false) => {
+    const justificada = esSesionJustificada(sesion);
+    const prefijo = extra
+      ? (justificada ? 'Justificación extra' : 'Sesión extra')
+      : (justificada ? 'Justificación' : 'Sesión');
+    return {
+      id: `sesion-${sesion.id || index}${extra ? '-extra' : ''}`,
+      tipo: justificada ? 'justificada' : 'registrada',
+      titulo: `${prefijo}${extra ? '' : ` ${index + 1}`}`,
+      responsableNombre,
+      extra,
+      sesion
+    };
+  };
+
+  const crearFaltante = (index, responsableNombre = '') => {
+    let tipo = 'pendiente';
+    let titulo = `Pendiente ${index + 1}`;
+    let detalle = responsableNombre
+      ? `${responsableNombre} todavía tiene tiempo para registrar esta sesión como representante.`
+      : 'Todavía hay tiempo para registrar esta sesión.';
+
+    if (estadoPeriodo.clave === 'incumplido') {
+      tipo = 'incumplida';
+      titulo = `No registrada ${index + 1}`;
+      detalle = responsableNombre
+        ? `${responsableNombre} no registró ni justificó dentro del periodo como representante.`
+        : 'El periodo venció sin registro ni justificación.';
+    } else if (estadoPeriodo.clave === 'por-iniciar') {
+      tipo = 'por-iniciar';
+      titulo = `Programada ${index + 1}`;
+      detalle = responsableNombre
+        ? `El registro de ${responsableNombre} todavía no ha iniciado.`
+        : 'El periodo todavía no ha iniciado.';
+    }
+
+    return {
+      id: `faltante-${periodo.indice}-${responsableNombre || 'general'}-${index}`,
+      tipo,
+      titulo,
+      detalle,
+      responsableNombre,
+      extra: false,
+      sesion: null
+    };
+  };
+
+  const responsableNombre = representante?.nombre || valorTexto(estudio, 'responsable_usuario_nombre') || '';
+  const registradas = sesionesRepresentante.slice(0, requeridas).map((sesion, index) => crearRegistrada(sesion, index, responsableNombre));
+  const pendientes = Math.max(0, requeridas - registradas.length);
+  const faltantes = Array.from({ length: pendientes }, (_, index) => crearFaltante(index, responsableNombre));
+  const extrasRepresentante = sesionesRepresentante.slice(requeridas).map((sesion, index) => crearRegistrada(sesion, index, responsableNombre, true));
+  const extrasOtros = sesionesOtros.map((sesion, index) => crearRegistrada(sesion, index, sesion.responsable_usuario_nombre || 'Instructor involucrado', true));
+
+  return [...registradas, ...faltantes, ...extrasRepresentante, ...extrasOtros];
+}
+
+function resumenCumplimientoSesiones(estudio, periodo, periodoActual, cumplimiento) {
+  if (!periodo) return null;
+  const requeridas = Math.max(1, Number(estudio?.frecuencia_cantidad || 1));
+  const cubiertasEsperadas = cumplimiento.filter((item) => !item.extra && (item.tipo === 'registrada' || item.tipo === 'justificada'));
+  const justificadas = cubiertasEsperadas.filter((item) => item.tipo === 'justificada').length;
+  const registradas = cubiertasEsperadas.length - justificadas;
+  const cubiertas = registradas + justificadas;
+  const faltantes = Math.max(0, requeridas - cubiertas);
+  const esActual = periodoActual && periodo.indice === periodoActual.indice;
+  const esVencido = periodoActual && periodo.indice < periodoActual.indice;
+  let estado = 'pendiente';
+
+  if (faltantes === 0 && justificadas > 0 && registradas < requeridas) {
+    estado = 'justificado';
+  } else if (faltantes === 0) {
+    estado = 'completo';
+  } else if (esVencido) {
+    estado = 'vencido';
+  } else if (esActual) {
+    estado = 'actual';
+  }
+
+  return {
+    ...periodo,
+    requeridas,
+    registradas,
+    justificadas,
+    cubiertas,
+    faltantes,
+    estado,
+    esActual,
+    esVencido
+  };
 }
 
 function KpiCard({ label, value, icon, action = null }) {
@@ -622,8 +813,8 @@ function ObservacionEstudioModal({ estudio, onCerrar }) {
       <div className="prompt-modal-iasd" role="dialog" aria-modal="true" style={{ maxWidth: '560px', width: '95%' }}>
         <div className="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom">
           <div>
-            <h5 className="mb-0">ObservaciÃ³n del estudio</h5>
-            <div className="small text-muted">{estudio.contacto_nombre || 'Estudio bÃ­blico'}</div>
+            <h5 className="mb-0">Observación del estudio</h5>
+            <div className="small text-muted">{estudio.contacto_nombre || 'Estudio bíblico'} - {etiquetaFrecuencia(estudio)}</div>
           </div>
           <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
         </div>
@@ -643,9 +834,9 @@ function DetalleVisitaModal({ estudio, onCerrar }) {
 
   const filas = [
     ['Nombre', estudio.contacto_nombre],
-    ['TelÃ©fono', estudio.contacto_telefono],
+    ['Teléfono', estudio.contacto_telefono],
     ['Correo', estudio.contacto_correo],
-    ['DirecciÃ³n', estudio.contacto_direccion],
+    ['Dirección', estudio.contacto_direccion],
     ['Barrio / comunidad', estudio.contacto_barrio_comunidad],
     ['Instructor', estudio.responsable_usuario_nombre],
     ['Cargo', estudio.responsable_usuario_cargo],
@@ -687,19 +878,508 @@ function DetalleVisitaModal({ estudio, onCerrar }) {
   );
 }
 
+function SesionesEstudioModal({ estudio, cargando, onCerrar }) {
+  const periodoActual = useMemo(() => obtenerPeriodoEstudio(estudio), [estudio]);
+  const [periodoIndice, setPeriodoIndice] = useState(0);
+
+  useEffect(() => {
+    setPeriodoIndice(periodoActual?.indice ?? 0);
+  }, [estudio?.id, periodoActual?.indice]);
+
+  if (!estudio) return null;
+  const sesiones = Array.isArray(estudio.sesiones) ? estudio.sesiones : [];
+  const maxPeriodoIndice = Math.max(0, Number(periodoActual?.indice ?? 0));
+  const indiceSeguro = Math.min(Math.max(0, periodoIndice), maxPeriodoIndice);
+  const periodoSeleccionado = obtenerPeriodoEstudioPorIndice(estudio, indiceSeguro);
+  const resumenPeriodo = periodoSeleccionado
+    ? resumenPeriodoEstudio(estudio, sesiones, periodoSeleccionado, periodoActual)
+    : null;
+  const cumplimiento = crearCumplimientoSesiones(estudio, sesiones, resumenPeriodo, periodoActual);
+  const resumenDirector = resumenCumplimientoSesiones(estudio, resumenPeriodo, periodoActual, cumplimiento);
+  const estadoPeriodo = estadoCumplimientoPeriodo(resumenDirector, periodoActual);
+  const responsables = responsablesDetalleEstudio(estudio);
+
+  return (
+    <div
+      className="prompt-overlay-iasd"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCerrar();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCerrar();
+      }}
+      role="presentation"
+    >
+      <div className="prompt-modal-iasd estudios-sesiones-modal" role="dialog" aria-modal="true" aria-labelledby="estudios-sesiones-title">
+        <div className="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom">
+          <div>
+            <h5 id="estudios-sesiones-title" className="mb-0">Sesiones registradas</h5>
+            <div className="small text-muted">{estudio.contacto_nombre || 'Estudio bíblico'} - {etiquetaFrecuencia(estudio)}</div>
+          </div>
+          <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
+        </div>
+        <div className="estudios-sesiones-modal-body">
+          {cargando && (
+            <div className="text-center text-muted py-4">Cargando sesiones...</div>
+          )}
+          {!cargando && (
+            <>
+              <div className="estudios-sesiones-periodo-panel">
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn"
+                  onClick={() => setPeriodoIndice((prev) => Math.max(0, prev - 1))}
+                  disabled={indiceSeguro <= 0}
+                  title="Periodo anterior"
+                  aria-label="Periodo anterior"
+                >
+                  <i className="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div className="estudios-sesiones-periodo-main">
+                  <div className="estudios-sesiones-periodo-title">
+                    <strong>{resumenDirector?.etiqueta || 'Periodo 1'}</strong>
+                    <span className={`badge ${estadoPeriodo.badge}`}>{estadoPeriodo.etiqueta}</span>
+                  </div>
+                  <div className="small text-muted">
+                    {resumenDirector
+                      ? `${formatearFechaDesdeDate(resumenDirector.inicio)} al ${formatearFechaDesdeDate(resumenDirector.fin)}`
+                      : 'Sin fechas definidas'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn"
+                  onClick={() => setPeriodoIndice((prev) => Math.min(maxPeriodoIndice, prev + 1))}
+                  disabled={indiceSeguro >= maxPeriodoIndice}
+                  title="Periodo siguiente"
+                  aria-label="Periodo siguiente"
+                >
+                  <i className="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+              </div>
+
+              <div className="estudios-sesiones-resumen-grid">
+                <div>
+                  <span>Esperadas</span>
+                  <strong>{resumenDirector?.requeridas ?? Number(estudio.frecuencia_cantidad || 1)}</strong>
+                </div>
+                <div>
+                  <span>Registradas</span>
+                  <strong>{resumenDirector?.registradas ?? 0}</strong>
+                </div>
+                <div>
+                  <span>Justificadas</span>
+                  <strong>{resumenDirector?.justificadas ?? 0}</strong>
+                </div>
+                <div>
+                  <span>Faltantes</span>
+                  <strong>{resumenDirector?.faltantes ?? Number(estudio.frecuencia_cantidad || 1)}</strong>
+                </div>
+              </div>
+
+              {responsables.length > 0 && (
+                <>
+                  <div className="estudios-sesiones-responsables">
+                    {responsables.map((responsable) => {
+                      const esRepresentante = responsable.principal || Number(responsable.id || 0) === Number(estudio.responsable_usuario_id || 0);
+                      return (
+                        <span key={`${responsable.id}-${responsable.nombre}`} className={`badge border ${esRepresentante ? 'text-bg-primary' : 'text-bg-light'}`}>
+                          {responsable.nombre}{esRepresentante ? ' - representante' : ''}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  {responsables.length > 1 && (
+                    <div className="small text-muted estudios-sesiones-representante-note">
+                      El representante registra por el estudio completo.
+                    </div>
+                  )}
+                </>
+              )}
+
+              <div className="estudios-sesiones-list">
+                {cumplimiento.map((item) => {
+                  const sesion = item.sesion;
+                  const progreso = porcentajeSesion(sesion?.progreso_bautismo);
+                  return (
+                    <article key={item.id} className={`estudios-sesion-item is-${item.tipo}`}>
+                      <div className="estudios-sesion-item-head">
+                        <strong>{item.titulo}</strong>
+                        <span className={`badge ${
+                          item.tipo === 'registrada' ? 'bg-success'
+                            : item.tipo === 'justificada' ? 'bg-warning text-dark'
+                              : item.tipo === 'incumplida' ? 'bg-danger'
+                                : item.tipo === 'por-iniciar' ? 'bg-secondary'
+                                  : 'bg-info text-dark'
+                        }`}>
+                          {item.tipo === 'registrada' ? 'Registrada'
+                            : item.tipo === 'justificada' ? 'Justificada'
+                              : item.tipo === 'incumplida' ? 'No registrada'
+                                : item.tipo === 'por-iniciar' ? 'Por iniciar'
+                                  : 'Pendiente'}
+                        </span>
+                      </div>
+                      {sesion ? (
+                        <>
+                          <div className="estudios-sesion-item-meta">
+                            <span>{formatearFechaHora(sesion.fecha)}</span>
+                            <span>{sesion.responsable_usuario_nombre || 'Sin instructor'}</span>
+                            {item.extra && <span>Registro adicional</span>}
+                            {sesion.tema_leccion && <span>{sesion.tema_leccion}</span>}
+                            {sesion.percepcion_avance && <span>{etiquetaAvanceGeneral(sesion.percepcion_avance)}</span>}
+                          </div>
+                          <div className="estudios-sesion-progress">
+                            <div className="estudios-sesion-progress-head">
+                              <span>Cerca del bautismo</span>
+                              <strong>{progreso}%</strong>
+                            </div>
+                            <div className="estudios-sesion-progress-track">
+                              <span style={{ width: `${progreso}%` }}></span>
+                            </div>
+                          </div>
+                          {(sesion.resumen_breve || sesion.dudas_surgidas) && (
+                            <p className="mb-0 estudios-sesion-item-text">{sesion.resumen_breve || sesion.dudas_surgidas}</p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {item.responsableNombre && (
+                            <div className="estudios-sesion-item-meta estudios-sesion-item-meta-missing">
+                              <span>{item.responsableNombre}</span>
+                            </div>
+                          )}
+                          <p className="mb-0 estudios-sesion-item-text">{item.detalle}</p>
+                        </>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+        <div className="pt-3 border-top text-end">
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onCerrar}>Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditarEstudioModal({ estudio, instructores, onCerrar, onGuardar }) {
+  const [form, setForm] = useState({
+    persona_nombre: '',
+    telefono: '',
+    correo: '',
+    direccion: '',
+    barrio_comunidad: '',
+    responsable_usuario_id: '',
+    fecha_inicio: '',
+    frecuencia_cantidad: 1,
+    frecuencia_periodo: 'SEMANA',
+    observaciones: ''
+  });
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+
+  useEffect(() => {
+    if (!estudio) return;
+    setForm({
+      persona_nombre: estudio.contacto_nombre || '',
+      telefono: estudio.contacto_telefono || '',
+      correo: estudio.contacto_correo || '',
+      direccion: estudio.contacto_direccion || '',
+      barrio_comunidad: estudio.contacto_barrio_comunidad || '',
+      responsable_usuario_id: estudio.responsable_usuario_id ? String(estudio.responsable_usuario_id) : '',
+      fecha_inicio: estudio.fecha_inicio || '',
+      frecuencia_cantidad: Number(estudio.frecuencia_cantidad || 1),
+      frecuencia_periodo: estudio.frecuencia_periodo || 'SEMANA',
+      observaciones: estudio.observaciones || ''
+    });
+  }, [estudio]);
+
+  if (!estudio) return null;
+
+  const cambiar = (campo, valor) => setForm((prev) => ({ ...prev, [campo]: valor }));
+
+  const guardar = async () => {
+    const nombre = form.persona_nombre.trim();
+    const fechaInicio = String(form.fecha_inicio || '').trim();
+    const cantidad = Number(form.frecuencia_cantidad);
+
+    if (!nombre) {
+      notificarError('El nombre de la visita es obligatorio.');
+      return;
+    }
+    if (!fechaInicio) {
+      notificarError('La fecha de inicio es obligatoria.');
+      return;
+    }
+    if (!Number.isInteger(cantidad) || cantidad < 1) {
+      notificarError('Indique una cantidad de veces válida.');
+      return;
+    }
+
+    setGuardandoEdicion(true);
+    try {
+      const ok = await onGuardar({
+        persona_nombre: nombre,
+        telefono: form.telefono.trim(),
+        correo: form.correo.trim(),
+        direccion: form.direccion.trim(),
+        barrio_comunidad: form.barrio_comunidad.trim(),
+        origen_clave: estudio.origen_clave || 'ESTUDIO_BIBLICO',
+        campana_origen_id: estudio.campana_origen_id || null,
+        responsable_usuario_id: form.responsable_usuario_id || null,
+        modalidad: estudio.modalidad || 'INDIVIDUAL',
+        material_estudio: estudio.material_estudio || '',
+        leccion_actual: estudio.leccion_actual || '',
+        total_lecciones_completadas: Number(estudio.total_lecciones_completadas || 0),
+        fecha_inicio: fechaInicio,
+        frecuencia_cantidad: cantidad,
+        frecuencia_periodo: form.frecuencia_periodo,
+        estado_general: estudio.estado_general || 'ASIGNADO',
+        observaciones: limitarObservacionesAsignar(form.observaciones),
+        motivo_cierre_pausa: estudio.motivo_cierre_pausa || ''
+      });
+      if (ok) onCerrar();
+    } finally {
+      setGuardandoEdicion(false);
+    }
+  };
+
+  return (
+    <div
+      className="prompt-overlay-iasd"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCerrar();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCerrar();
+      }}
+      role="presentation"
+    >
+      <div className="prompt-modal-iasd estudios-editar-modal" role="dialog" aria-modal="true" aria-labelledby="estudios-editar-title">
+        <div className="d-flex align-items-center justify-content-between gap-2 pb-3 border-bottom">
+          <div>
+            <h5 id="estudios-editar-title" className="mb-0">Editar estudio</h5>
+            <div className="small text-muted">{estudio.contacto_nombre || 'Estudio bíblico'}</div>
+          </div>
+          <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
+        </div>
+        <div className="row g-2 py-3">
+          <div className="col-12">
+            <label htmlFor="editar-estudio-nombre" className="form-label form-label-sm">Visita</label>
+            <input id="editar-estudio-nombre" className="form-control form-control-sm" value={form.persona_nombre} onChange={(e) => cambiar('persona_nombre', e.target.value)} maxLength={80} />
+          </div>
+          <div className="col-6">
+            <label htmlFor="editar-estudio-telefono" className="form-label form-label-sm">Teléfono</label>
+            <input id="editar-estudio-telefono" className="form-control form-control-sm" value={form.telefono} onChange={(e) => cambiar('telefono', e.target.value)} maxLength={30} />
+          </div>
+          <div className="col-6">
+            <label htmlFor="editar-estudio-instructor" className="form-label form-label-sm">Instructor</label>
+            <select id="editar-estudio-instructor" className="form-select form-select-sm" value={form.responsable_usuario_id} onChange={(e) => cambiar('responsable_usuario_id', e.target.value)}>
+              <option value="">Sin instructor</option>
+              {instructores.map((instructor) => (
+                <option key={instructor.id} value={instructor.id}>{instructor.nombre_completo}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-5">
+            <label htmlFor="editar-estudio-fecha" className="form-label form-label-sm">Inicio</label>
+            <input id="editar-estudio-fecha" type="date" className="form-control form-control-sm" value={form.fecha_inicio} onChange={(e) => cambiar('fecha_inicio', e.target.value)} />
+          </div>
+          <div className="col-3">
+            <label htmlFor="editar-estudio-veces" className="form-label form-label-sm">Veces</label>
+            <input id="editar-estudio-veces" type="number" min="1" max="31" className="form-control form-control-sm" value={form.frecuencia_cantidad} onChange={(e) => cambiar('frecuencia_cantidad', e.target.value)} />
+          </div>
+          <div className="col-4">
+            <label htmlFor="editar-estudio-periodo" className="form-label form-label-sm">Periodo</label>
+            <select id="editar-estudio-periodo" className="form-select form-select-sm" value={form.frecuencia_periodo} onChange={(e) => cambiar('frecuencia_periodo', e.target.value)}>
+              {FRECUENCIA_OPCIONES.map((opcion) => (
+                <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+              ))}
+            </select>
+          </div>
+          <div className="col-12">
+            <label htmlFor="editar-estudio-observaciones" className="form-label form-label-sm">Observaciones</label>
+            <textarea id="editar-estudio-observaciones" className="form-control form-control-sm" rows="3" value={limitarObservacionesAsignar(form.observaciones)} onChange={(e) => cambiar('observaciones', limitarObservacionesAsignar(e.target.value))} maxLength={ASIGNAR_OBSERVACIONES_MAX_CARACTERES} />
+          </div>
+        </div>
+        <div className="pt-3 border-top d-flex justify-content-end gap-2">
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={onCerrar} disabled={guardandoEdicion}>Cancelar</button>
+          <button type="button" className="btn btn-primary btn-sm" onClick={guardar} disabled={guardandoEdicion}>
+            {guardandoEdicion ? 'Guardando...' : 'Guardar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EstudioAccionesModal({
+  estudio,
+  onCerrar,
+  onVerSesiones,
+  onVerObservacion,
+  onVerVisita,
+  onEditar,
+  onEliminar,
+  onCambiarEstado
+}) {
+  if (!estudio) return null;
+  const estadoVista = normalizarEstadoEstudio(estudio.estado_general);
+  const cerrado = estadoVista === ESTADO_FINALIZADO;
+  const pausado = estadoVista === 'PAUSADO';
+  const tieneObservacion = tieneObservacionEstudio(estudio);
+
+  const ejecutarEstado = async (estado, motivo) => {
+    const ok = await onCambiarEstado(estudio, estado, motivo);
+    if (ok) onCerrar();
+  };
+
+  return (
+    <div
+      className="prompt-overlay-iasd estudios-acciones-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCerrar();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCerrar();
+      }}
+      role="presentation"
+    >
+      <div className="prompt-modal-iasd estudios-acciones-modal" role="dialog" aria-modal="true" aria-labelledby="estudios-acciones-title">
+        <div className="estudios-acciones-head">
+          <div>
+            <h5 id="estudios-acciones-title" className="mb-0">Acciones</h5>
+            <div className="small text-muted">{estudio.contacto_nombre || 'Estudio bíblico'}</div>
+          </div>
+          <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
+        </div>
+        <div className="estudios-acciones-grid">
+          <button type="button" className="btn btn-outline-info btn-sm rounded-circle estudios-icon-btn" onClick={() => onVerSesiones(estudio)} title="Ver sesiones" aria-label="Ver sesiones">
+            <i className="bi bi-clock-history" aria-hidden="true"></i>
+          </button>
+          <button type="button" className="btn btn-outline-primary btn-sm rounded-circle estudios-icon-btn" onClick={() => onVerObservacion(estudio)} disabled={!tieneObservacion} title={tieneObservacion ? 'Ver observación' : 'Sin observación'} aria-label={tieneObservacion ? 'Ver observación' : 'Sin observación'}>
+            <i className="bi bi-question-lg" aria-hidden="true"></i>
+          </button>
+          <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn" onClick={() => onVerVisita(estudio)} title="Ver visita" aria-label="Ver visita">
+            <i className="bi bi-search" aria-hidden="true"></i>
+          </button>
+          <button type="button" className="btn btn-outline-primary btn-sm rounded-circle estudios-icon-btn" onClick={() => onEditar(estudio)} title="Editar" aria-label="Editar estudio">
+            <i className="bi bi-pencil-square" aria-hidden="true"></i>
+          </button>
+          {cerrado ? (
+            <button type="button" className="btn btn-outline-success btn-sm rounded-circle estudios-icon-btn" onClick={() => { void ejecutarEstado('EN_PROCESO', 'Reactivado desde estudios bíblicos.'); }} title="Reactivar" aria-label="Reactivar estudio">
+              <i className="bi bi-arrow-clockwise" aria-hidden="true"></i>
+            </button>
+          ) : (
+            <>
+              {pausado ? (
+                <button type="button" className="btn btn-outline-success btn-sm rounded-circle estudios-icon-btn" onClick={() => { void ejecutarEstado('EN_PROCESO', 'Reanudado desde estudios bíblicos.'); }} title="Reanudar" aria-label="Reanudar estudio">
+                  <i className="bi bi-play-fill" aria-hidden="true"></i>
+                </button>
+              ) : (
+                <button type="button" className="btn btn-outline-warning btn-sm rounded-circle estudios-icon-btn" onClick={() => { void ejecutarEstado('PAUSADO', 'Pausado desde estudios bíblicos.'); }} title="Pausar" aria-label="Pausar estudio">
+                  <i className="bi bi-pause-fill" aria-hidden="true"></i>
+                </button>
+              )}
+              <button type="button" className="btn btn-outline-danger btn-sm rounded-circle estudios-icon-btn" onClick={() => { void ejecutarEstado(ESTADO_FINALIZADO, 'Finalizado desde estudios bíblicos.'); }} title="Finalizar" aria-label="Finalizar estudio">
+                <i className="bi bi-flag" aria-hidden="true"></i>
+              </button>
+            </>
+          )}
+          <button type="button" className="btn btn-outline-danger btn-sm rounded-circle estudios-icon-btn" onClick={() => onEliminar(estudio)} title="Eliminar" aria-label="Eliminar estudio">
+            <i className="bi bi-trash" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EstudiosMainView({
   filtros,
   cambiarFiltro,
   dashboard,
   estudios,
   cargando,
+  instructores,
   seleccionadoId,
   setSeleccionadoId,
-  cambiarEstadoEstudio
+  cambiarEstadoEstudio,
+  archivarEstudio,
+  recargar
 }) {
   const [detalleVisita, setDetalleVisita] = useState(null);
   const [observacionEstudio, setObservacionEstudio] = useState(null);
+  const [accionesEstudio, setAccionesEstudio] = useState(null);
+  const [editarEstudioModal, setEditarEstudioModal] = useState(null);
+  const [sesionesEstudio, setSesionesEstudio] = useState(null);
+  const [cargandoSesiones, setCargandoSesiones] = useState(false);
   const [mostrarFiltrosMovil, setMostrarFiltrosMovil] = useState(false);
+
+  const abrirAcciones = (item) => {
+    setSeleccionadoId(item.id);
+    setAccionesEstudio(item);
+  };
+
+  const abrirSesiones = async (item) => {
+    setAccionesEstudio(null);
+    setSesionesEstudio({ ...item, sesiones: [] });
+    setCargandoSesiones(true);
+    try {
+      const res = await estudioBiblicoApi.obtenerPorId(item.id);
+      if (res?.exito) {
+        setSesionesEstudio(res?.datos?.item || item);
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudieron cargar las sesiones del estudio.');
+      setSesionesEstudio(null);
+    } finally {
+      setCargandoSesiones(false);
+    }
+  };
+
+  const abrirObservacion = (item) => {
+    setAccionesEstudio(null);
+    if (tieneObservacionEstudio(item)) setObservacionEstudio(item);
+  };
+
+  const abrirVisita = (item) => {
+    setAccionesEstudio(null);
+    setDetalleVisita(item);
+  };
+
+  const abrirEditar = (item) => {
+    setAccionesEstudio(null);
+    setEditarEstudioModal(item);
+  };
+
+  const eliminarEstudio = async (item) => {
+    setAccionesEstudio(null);
+    await archivarEstudio(item.id);
+  };
+
+  const cambiarEstadoDesdeAcciones = async (item, estado, motivo) => {
+    return cambiarEstadoEstudio(item.id, estado, motivo);
+  };
+
+  const guardarEdicionEstudio = async (payload) => {
+    if (!editarEstudioModal?.id) return false;
+    try {
+      const res = await estudioBiblicoApi.actualizar(editarEstudioModal.id, payload);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Estudio actualizado correctamente.');
+        await recargar();
+        setSeleccionadoId(editarEstudioModal.id);
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo actualizar el estudio.');
+    }
+    return false;
+  };
 
   return (
     <>
@@ -734,7 +1414,7 @@ function EstudiosMainView({
                 id="estudios-busqueda"
                 value={filtros.q}
                 onChange={(valor) => cambiarFiltro('q', valor)}
-                placeholder="Visita, instructor, telÃ©fono o material"
+                placeholder="Visita, instructor, teléfono o material"
               />
             </div>
             <div className="col-6 col-lg-3">
@@ -771,7 +1451,7 @@ function EstudiosMainView({
                     <th>Instructor</th>
                     <th>Frecuencia</th>
                     <th>Inicio</th>
-                    <th>Ãšltima sesiÃ³n</th>
+                    <th>Última sesión</th>
                     <th>Estado</th>
                     <th className="text-start">Acciones</th>
                   </tr>
@@ -784,16 +1464,15 @@ function EstudiosMainView({
                     <tr><td colSpan="7" className="text-center text-muted py-4">No hay estudios con esos filtros.</td></tr>
                   )}
                   {!cargando && estudios.map((item) => {
-                    const estadoVista = normalizarEstadoEstudio(item.estado_general);
-                    const cerrado = estadoVista === ESTADO_FINALIZADO;
-                    const pausado = estadoVista === 'PAUSADO';
+                    const filaActiva = String(seleccionadoId || '') === String(item.id);
+                    const accionesActivas = String(accionesEstudio?.id || '') === String(item.id);
                     return (
-                      <tr key={item.id} className={seleccionadoId === item.id ? 'table-active' : ''}>
+                      <tr key={item.id} className={`${filaActiva ? 'table-active' : ''} ${accionesActivas ? 'estudios-acciones-row-active' : ''}`.trim()}>
                         <td>
                           <button type="button" className="estudios-visita-link" onClick={() => setSeleccionadoId(item.id)}>
                             {item.contacto_nombre}
                           </button>
-                          <div className="small text-muted">{item.contacto_telefono || 'Sin telÃ©fono'}</div>
+                          <div className="small text-muted">{item.contacto_telefono || 'Sin teléfono'}</div>
                         </td>
                         <td>
                           <div className="fw-semibold">{item.responsable_usuario_nombre || 'Sin instructor'}</div>
@@ -804,36 +1483,15 @@ function EstudiosMainView({
                         <td>{formatearFecha(item.fecha_ultima_sesion)}</td>
                         <td><span className={`badge ${claseEstado(item.estado_general)}`}>{etiquetaEstado(item.estado_general)}</span></td>
                         <td className="text-start">
-                          <div className="d-inline-flex gap-2">
-                            {tieneObservacionEstudio(item) && (
-                              <button type="button" className="btn btn-outline-primary btn-sm rounded-circle estudios-icon-btn" onClick={() => setObservacionEstudio(item)} title="Ver observaciÃ³n" aria-label="Ver observaciÃ³n del estudio">
-                                <i className="bi bi-question-lg" aria-hidden="true"></i>
-                              </button>
-                            )}
-                            <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn" onClick={() => setDetalleVisita(item)} title="Ver visita" aria-label="Ver visita">
-                              <i className="bi bi-search" aria-hidden="true"></i>
-                            </button>
-                            {cerrado ? (
-                              <button type="button" className="btn btn-outline-success btn-sm rounded-circle estudios-icon-btn" onClick={() => cambiarEstadoEstudio(item.id, 'EN_PROCESO', 'Reactivado desde estudios bÃ­blicos.')} title="Reactivar" aria-label="Reactivar estudio">
-                                <i className="bi bi-arrow-clockwise" aria-hidden="true"></i>
-                              </button>
-                            ) : (
-                              <>
-                                {pausado ? (
-                                  <button type="button" className="btn btn-outline-success btn-sm rounded-circle estudios-icon-btn" onClick={() => cambiarEstadoEstudio(item.id, 'EN_PROCESO', 'Reanudado desde estudios bÃ­blicos.')} title="Reanudar" aria-label="Reanudar estudio">
-                                    <i className="bi bi-play-fill" aria-hidden="true"></i>
-                                  </button>
-                                ) : (
-                                  <button type="button" className="btn btn-outline-warning btn-sm rounded-circle estudios-icon-btn" onClick={() => cambiarEstadoEstudio(item.id, 'PAUSADO', 'Pausado desde estudios bÃ­blicos.')} title="Pausar" aria-label="Pausar estudio">
-                                    <i className="bi bi-pause-fill" aria-hidden="true"></i>
-                                  </button>
-                                )}
-                                <button type="button" className="btn btn-outline-danger btn-sm rounded-circle estudios-icon-btn" onClick={() => cambiarEstadoEstudio(item.id, ESTADO_FINALIZADO, 'Finalizado desde estudios bÃ­blicos.')} title="Finalizar" aria-label="Finalizar estudio">
-                                  <i className="bi bi-flag" aria-hidden="true"></i>
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          <button
+                            type="button"
+                            className={`btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn ${accionesActivas ? 'is-active' : ''}`}
+                            onClick={() => abrirAcciones(item)}
+                            title="Acciones del estudio"
+                            aria-label={`Abrir acciones de ${item.contacto_nombre || 'este estudio'}`}
+                          >
+                            <i className="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                          </button>
                         </td>
                       </tr>
                     );
@@ -846,6 +1504,23 @@ function EstudiosMainView({
 
       <DetalleVisitaModal estudio={detalleVisita} onCerrar={() => setDetalleVisita(null)} />
       <ObservacionEstudioModal estudio={observacionEstudio} onCerrar={() => setObservacionEstudio(null)} />
+      <SesionesEstudioModal estudio={sesionesEstudio} cargando={cargandoSesiones} onCerrar={() => setSesionesEstudio(null)} />
+      <EditarEstudioModal
+        estudio={editarEstudioModal}
+        instructores={instructores}
+        onCerrar={() => setEditarEstudioModal(null)}
+        onGuardar={guardarEdicionEstudio}
+      />
+      <EstudioAccionesModal
+        estudio={accionesEstudio}
+        onCerrar={() => setAccionesEstudio(null)}
+        onVerSesiones={(item) => { void abrirSesiones(item); }}
+        onVerObservacion={abrirObservacion}
+        onVerVisita={abrirVisita}
+        onEditar={abrirEditar}
+        onEliminar={(item) => { void eliminarEstudio(item); }}
+        onCambiarEstado={cambiarEstadoDesdeAcciones}
+      />
     </>
   );
 }
@@ -854,7 +1529,7 @@ function InstructorPanelHeader({ seccionActiva, editandoInstructorId, onMostrarL
   return (
     <div className="card-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
       <div className="admin-panel-header-top">
-        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Instructores bÃ­blicos</h5>
+        <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Instructores bíblicos</h5>
         <div className="admin-panel-header-actions">
           <button
             type="button"
@@ -1014,16 +1689,16 @@ function InstructorFormPanel({
             </div>
             <div className="col-md-6">
               <label htmlFor="instructor-password" className="form-label">
-                {editandoInstructorId ? 'Nueva contraseÃ±a ' : 'ContraseÃ±a '}
+                {editandoInstructorId ? 'Nueva contraseña ' : 'Contraseña '}
                 {requeridoPassword && <span className="text-danger" aria-hidden="true">*</span>}
                 {editandoInstructorId && <small className="text-muted">(opcional)</small>}
               </label>
-              <input ref={refs.password} id="instructor-password" type="password" className={`form-control ${errores.password ? 'is-invalid' : ''}`} value={instructorForm.password} onChange={(e) => cambiar('password', e.target.value)} placeholder={editandoInstructorId ? 'Nueva contraseÃ±a' : 'ContraseÃ±a'} minLength={12} maxLength={64} autoComplete="new-password" disabled={guardando} />
+              <input ref={refs.password} id="instructor-password" type="password" className={`form-control ${errores.password ? 'is-invalid' : ''}`} value={instructorForm.password} onChange={(e) => cambiar('password', e.target.value)} placeholder={editandoInstructorId ? 'Nueva contraseña' : 'Contraseña'} minLength={12} maxLength={64} autoComplete="new-password" disabled={guardando} />
               {errores.password ? <div className="invalid-feedback">{errores.password}</div> : <div className="form-text">Debe contener 12-64 caracteres.</div>}
             </div>
             <div className="col-md-6">
-              <label htmlFor="instructor-password-confirmacion" className="form-label">Confirmar contraseÃ±a {requeridoPassword && <span className="text-danger" aria-hidden="true">*</span>}</label>
-              <input ref={refs.password_confirmacion} id="instructor-password-confirmacion" type="password" className={`form-control ${errores.password_confirmacion ? 'is-invalid' : ''}`} value={instructorForm.password_confirmacion} onChange={(e) => cambiar('password_confirmacion', e.target.value)} placeholder="Repita la contraseÃ±a" minLength={12} maxLength={64} autoComplete="new-password" disabled={guardando} />
+              <label htmlFor="instructor-password-confirmacion" className="form-label">Confirmar contraseña {requeridoPassword && <span className="text-danger" aria-hidden="true">*</span>}</label>
+              <input ref={refs.password_confirmacion} id="instructor-password-confirmacion" type="password" className={`form-control ${errores.password_confirmacion ? 'is-invalid' : ''}`} value={instructorForm.password_confirmacion} onChange={(e) => cambiar('password_confirmacion', e.target.value)} placeholder="Repita la contraseña" minLength={12} maxLength={64} autoComplete="new-password" disabled={guardando} />
               {errores.password_confirmacion && <div className="invalid-feedback">{errores.password_confirmacion}</div>}
             </div>
             <div className="col-12">
@@ -1121,10 +1796,10 @@ function InstructoresView({
     if (nombreInstructor.length > INSTRUCTOR_NOMBRE_MAX) nuevosErrores.nombre_completo = `El nombre no puede superar ${INSTRUCTOR_NOMBRE_MAX} caracteres.`;
     if (!String(instructorForm.usuario || '').trim()) nuevosErrores.usuario = 'El usuario es obligatorio.';
     if (!String(instructorForm.cargo || '').trim()) nuevosErrores.cargo = 'El cargo es obligatorio.';
-    if (requeridoPassword && !password) nuevosErrores.password = 'La contraseÃ±a es obligatoria.';
-    if (requeridoPassword && !confirmacion) nuevosErrores.password_confirmacion = 'Confirme la contraseÃ±a.';
+    if (requeridoPassword && !password) nuevosErrores.password = 'La contraseña es obligatoria.';
+    if (requeridoPassword && !confirmacion) nuevosErrores.password_confirmacion = 'Confirme la contraseña.';
     if (password && password.length < 12) nuevosErrores.password = 'Use al menos 12 caracteres.';
-    if ((password || confirmacion) && password !== confirmacion) nuevosErrores.password_confirmacion = 'Las contraseÃ±as no coinciden.';
+    if ((password || confirmacion) && password !== confirmacion) nuevosErrores.password_confirmacion = 'Las contraseñas no coinciden.';
 
     return nuevosErrores;
   };
@@ -1223,7 +1898,7 @@ function VisitaSelector({ seleccionadaId, onSeleccionar }) {
       </div>
       <div className="card-body">
         <label htmlFor="estudios-visitas-selector" className="form-label form-label-sm">Buscar</label>
-        <SearchInput id="estudios-visitas-selector" value={q} onChange={setQ} placeholder="Nombre, telÃ©fono o procedencia" />
+        <SearchInput id="estudios-visitas-selector" value={q} onChange={setQ} placeholder="Nombre, teléfono o procedencia" />
       </div>
       <div className="card-body p-0">
         <div className="estudios-table-shell">
@@ -1243,7 +1918,7 @@ function VisitaSelector({ seleccionadaId, onSeleccionar }) {
                   <tr key={item.id} className={String(seleccionadaId) === String(item.id) ? 'table-active' : ''}>
                     <td>
                       <div className="fw-semibold">{item.nombre_snapshot}</div>
-                      <div className="small text-muted">{item.telefono_snapshot || item.procedencia || 'Sin telÃ©fono'}</div>
+                      <div className="small text-muted">{item.telefono_snapshot || item.procedencia || 'Sin teléfono'}</div>
                     </td>
                     <td><span className="badge text-bg-light border">{item.estado_seguimiento || '-'}</span></td>
                     <td className="text-end">
@@ -1346,7 +2021,7 @@ function DetalleVisitaAsignarModal({ visita, onCerrar }) {
     ['Direccion', valorTexto(visita, 'direccion', 'contacto_direccion')],
     ['Barrio / comunidad', valorTexto(visita, 'barrio_comunidad', 'contacto_barrio_comunidad')],
     ['Seguimiento', etiquetaSeguimientoVisita(visita.estado_seguimiento), true],
-    ['CampaÃ±a', valorTexto(visita, 'campana_lema', 'campana_nombre'), true],
+    ['Campaña', valorTexto(visita, 'campana_lema', 'campana_nombre'), true],
     ['Observaciones', valorTexto(visita, 'observaciones')],
     ['Registrada', formatearFechaHora(visita.creado_en), true],
     ['Actualizada', formatearFechaHora(visita.actualizado_en), true]
@@ -1367,7 +2042,7 @@ function DetalleVisitaAsignarModal({ visita, onCerrar }) {
     >
       <div className="prompt-modal-iasd estudios-visita-info-modal" role="dialog" aria-modal="true" style={{ maxWidth: '600px', width: '95%' }}>
         <div className="estudios-visita-info-modal-head d-flex align-items-center justify-content-between gap-2 border-bottom">
-          <h5 className="mb-0">InformaciÃ³n de la visita</h5>
+          <h5 className="mb-0">Información de la visita</h5>
           <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar"></button>
         </div>
         <div className="estudios-visita-info-modal-body d-flex flex-column gap-2">
@@ -1450,7 +2125,7 @@ function VisitaSelectorMultiple({ seleccionadas, onToggle, onVerDetalle }) {
                       </td>
                       <td className="text-end">
                         <div className="estudios-selector-actions">
-                          <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn" onClick={() => onVerDetalle(item)} title="InformaciÃ³n" aria-label="Ver informacion de la visita">
+                          <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn" onClick={() => onVerDetalle(item)} title="Información" aria-label="Ver informacion de la visita">
                             <i className="bi bi-search" aria-hidden="true"></i>
                           </button>
                           <button type="button" className={`btn btn-sm rounded-circle estudios-icon-btn ${seleccionada ? 'btn-danger' : tieneEstudioActivo ? 'btn-outline-secondary' : 'btn-outline-primary'}`} onClick={() => onToggle(item)} title={tieneEstudioActivo ? 'Ya tiene estudio activo' : seleccionada ? 'Quitar' : 'Seleccionar'} aria-label={tieneEstudioActivo ? 'Visita con estudio activo' : seleccionada ? 'Quitar visita' : 'Seleccionar visita'}>
@@ -1470,7 +2145,7 @@ function VisitaSelectorMultiple({ seleccionadas, onToggle, onVerDetalle }) {
   );
 }
 
-function InstructorSelectorMultiple({ instructores, seleccionados, onToggle }) {
+function InstructorSelectorMultiple({ instructores, seleccionados, representanteId, onRepresentante, onToggle }) {
   const [q, setQ] = useState('');
   const seleccionadosIds = useMemo(() => new Set((seleccionados || []).map((item) => String(item.id))), [seleccionados]);
   const items = useMemo(() => {
@@ -1505,16 +2180,33 @@ function InstructorSelectorMultiple({ instructores, seleccionados, onToggle }) {
                 {items.length === 0 && <tr><td colSpan="2" className="text-muted py-4 ps-3">No hay instructores con ese criterio.</td></tr>}
                 {itemsOrdenados.map((item) => {
                   const seleccionado = seleccionadosIds.has(String(item.id));
+                  const esRepresentante = seleccionado && String(representanteId || '') === String(item.id);
                   return (
                     <tr key={item.id} className={`estudios-selector-row ${seleccionado ? 'table-active is-selected' : ''}`}>
                       <td>
-                        <div className="fw-semibold">{item.nombre_completo}</div>
+                        <div className="d-flex align-items-center gap-2 flex-wrap">
+                          <span className="fw-semibold">{item.nombre_completo}</span>
+                          {esRepresentante && <span className="badge text-bg-primary estudios-representante-badge">Representante</span>}
+                        </div>
                         <div className="small text-muted">{item.cargo || item.usuario || 'Instructor biblico'}</div>
                       </td>
                       <td className="text-end">
-                        <button type="button" className={`btn btn-sm rounded-circle estudios-icon-btn ${seleccionado ? 'btn-danger' : 'btn-outline-primary'}`} onClick={() => onToggle(item)} title={seleccionado ? 'Quitar' : 'Seleccionar'} aria-label={seleccionado ? 'Quitar instructor' : 'Seleccionar instructor'}>
-                          <i className={`bi ${seleccionado ? 'bi-x-lg' : 'bi-check2'}`} aria-hidden="true"></i>
-                        </button>
+                        <div className="estudios-selector-actions">
+                          {seleccionado && (
+                            <button
+                              type="button"
+                              className={`btn btn-sm rounded-circle estudios-icon-btn ${esRepresentante ? 'btn-warning' : 'btn-outline-warning'}`}
+                              onClick={() => onRepresentante(item)}
+                              title={esRepresentante ? 'Instructor representante' : 'Marcar como representante'}
+                              aria-label={esRepresentante ? 'Instructor representante' : 'Marcar como representante'}
+                            >
+                              <i className="bi bi-person-check" aria-hidden="true"></i>
+                            </button>
+                          )}
+                          <button type="button" className={`btn btn-sm rounded-circle estudios-icon-btn ${seleccionado ? 'btn-danger' : 'btn-outline-primary'}`} onClick={() => onToggle(item)} title={seleccionado ? 'Quitar' : 'Seleccionar'} aria-label={seleccionado ? 'Quitar instructor' : 'Seleccionar instructor'}>
+                            <i className={`bi ${seleccionado ? 'bi-x-lg' : 'bi-check2'}`} aria-hidden="true"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1564,6 +2256,36 @@ function ResumenSeleccionAsignar({ id, singular, plural, items, getLabel, action
   );
 }
 
+function RepresentanteAsignar({ instructores, value, onChange }) {
+  if (instructores.length === 0) return null;
+
+  const representante = instructores.find((item) => String(item.id) === String(value)) || instructores[0];
+  if (instructores.length === 1) {
+    return (
+      <div className="estudios-representante-panel">
+        <span>Representante</span>
+        <strong>{representante.nombre_completo || representante.usuario || `Instructor ${representante.id}`}</strong>
+        <small>Este instructor firmara por el estudio.</small>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <label htmlFor="asignar-representante" className="form-label form-label-sm">
+        Instructor representante <span className="text-danger" aria-hidden="true">*</span>
+      </label>
+      <select id="asignar-representante" className="form-select form-select-sm" value={value || ''} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Seleccione representante</option>
+        {instructores.map((item) => (
+          <option key={item.id} value={item.id}>{item.nombre_completo || item.usuario || `Instructor ${item.id}`}</option>
+        ))}
+      </select>
+      <div className="form-text">Solo el representante registrara las sesiones; el registro cuenta por todo el estudio.</div>
+    </div>
+  );
+}
+
 function alternarSeleccionAsignar(lista, item) {
   const id = String(item.id);
   return lista.some((actual) => String(actual.id) === id)
@@ -1600,7 +2322,18 @@ function AsignarEstudioMultipleView({ asignarForm, setAsignarForm, instructores,
       ...prev,
       responsables: siguientes,
       responsable_usuario_ids: ids,
-      responsable_usuario_id: ids[0] || ''
+      responsable_usuario_id: ids.some((id) => String(id) === String(prev.responsable_usuario_id))
+        ? prev.responsable_usuario_id
+        : ids[0] || ''
+    }));
+  };
+
+  const cambiarRepresentante = (instructor) => {
+    const id = typeof instructor === 'object' ? instructor.id : instructor;
+    if (!id) return;
+    setAsignarForm((prev) => ({
+      ...prev,
+      responsable_usuario_id: id
     }));
   };
 
@@ -1645,8 +2378,8 @@ function AsignarEstudioMultipleView({ asignarForm, setAsignarForm, instructores,
               <div className="col-12">
                 <ResumenSeleccionAsignar
                   id="asignar-instructor"
-                  singular="Instructor responsable"
-                  plural="Instructores responsables"
+                  singular="Instructor involucrado"
+                  plural="Instructores involucrados"
                   items={instructoresSeleccionados}
                   getLabel={(item) => item.nombre_completo || item.usuario || `Instructor ${item.id}`}
                   action={(
@@ -1655,6 +2388,13 @@ function AsignarEstudioMultipleView({ asignarForm, setAsignarForm, instructores,
                       <span>Seleccionar</span>
                     </button>
                   )}
+                />
+              </div>
+              <div className="col-12">
+                <RepresentanteAsignar
+                  instructores={instructoresSeleccionados}
+                  value={asignarForm.responsable_usuario_id}
+                  onChange={cambiarRepresentante}
                 />
               </div>
               <div className="col-12 col-md-5">
@@ -1692,6 +2432,8 @@ function AsignarEstudioMultipleView({ asignarForm, setAsignarForm, instructores,
         <InstructorSelectorMultiple
           instructores={instructores}
           seleccionados={instructoresSeleccionados}
+          representanteId={asignarForm.responsable_usuario_id}
+          onRepresentante={cambiarRepresentante}
           onToggle={(instructor) => cambiarInstructores(alternarSeleccionAsignar(instructoresSeleccionados, instructor))}
         />
       </div>
@@ -1713,6 +2455,8 @@ function AsignarEstudioMultipleView({ asignarForm, setAsignarForm, instructores,
         <InstructorSelectorMultiple
           instructores={instructores}
           seleccionados={instructoresSeleccionados}
+          representanteId={asignarForm.responsable_usuario_id}
+          onRepresentante={cambiarRepresentante}
           onToggle={(instructor) => cambiarInstructores(alternarSeleccionAsignar(instructoresSeleccionados, instructor))}
         />
       </MobileFilterSheet>
@@ -1901,9 +2645,10 @@ function RegistroSesionesView({ estudios, guardarSesionDirecta, cambiarEstadoEst
   const visitasCarrusel = useMemo(() => visitasDetalleEstudio(estudioActual), [estudioActual]);
   const visitaCarruselActual = visitasCarrusel[visitaIndice] || visitasCarrusel[0] || null;
   const responsablesEstudio = useMemo(() => responsablesDetalleEstudio(estudioActual), [estudioActual]);
-  const otrosResponsables = useMemo(() => (
-    responsablesEstudio.filter((item) => Number(item.id) !== Number(usuario?.id || 0))
-  ), [responsablesEstudio, usuario?.id]);
+  const representanteEstudio = useMemo(() => responsableRepresentanteEstudio(estudioActual), [estudioActual]);
+  const instructoresInvolucrados = useMemo(() => (
+    responsablesEstudio.filter((item) => Number(item.id || 0) !== Number(representanteEstudio?.id || 0))
+  ), [responsablesEstudio, representanteEstudio?.id]);
   const estudioYaInicio = Boolean(estudioActual && resumenRegistro.periodoActual);
   const hayPendientesRegistro = estudioYaInicio && resumenRegistro.pendientes.length > 0;
   const hayPendienteActual = Boolean(periodoActualVista && periodoActualVista.faltantes > 0);
@@ -2169,12 +2914,10 @@ function RegistroSesionesView({ estudios, guardarSesionDirecta, cambiarEstadoEst
               </div>
             )}
 
-            {puedeRegistrarSesion && responsablesEstudio.length > 1 && (
-              <div className="alert alert-warning estudios-instructor-asistencia-note" role="status">
-                <strong>Asistencia individual:</strong> este registro quedara a nombre de {nombreUsuarioSesion(usuario)}.
-                {otrosResponsables.length > 0 && (
-                  <span> Faltaria registrar a {otrosResponsables.map((item) => item.nombre).join(', ')} si tambien asistieron.</span>
-                )}
+            {puedeRegistrarSesion && instructoresInvolucrados.length > 0 && (
+              <div className="alert alert-info estudios-instructor-asistencia-note" role="status">
+                <strong>Representante:</strong> tu registro cuenta por el estudio completo.
+                <span> Involucrados: {instructoresInvolucrados.map((item) => item.nombre).join(', ')}.</span>
               </div>
             )}
 
@@ -2349,6 +3092,7 @@ export default function EstudiosBiblicosPage() {
     eliminarInstructor,
     guardarAsignarEstudio,
     guardarSesionDirecta,
+    archivarEstudio,
     cambiarEstadoEstudio,
     recargar
   } = useEstudiosBiblicos();
@@ -2438,9 +3182,12 @@ export default function EstudiosBiblicosPage() {
         dashboard={dashboard}
         estudios={estudios}
         cargando={cargando}
+        instructores={instructores}
         seleccionadoId={seleccionadoId}
         setSeleccionadoId={setSeleccionadoId}
         cambiarEstadoEstudio={cambiarEstadoEstudio}
+        archivarEstudio={archivarEstudio}
+        recargar={recargar}
       />
     );
   })();

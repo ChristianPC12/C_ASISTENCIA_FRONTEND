@@ -409,7 +409,7 @@ export function useEstudiosBiblicos() {
 
   const archivarEstudio = useCallback(async (id) => {
     const ok = await confirmar('Este estudio bíblico se archivará. ¿Desea continuar?');
-    if (!ok) return;
+    if (!ok) return false;
 
     try {
       const res = await estudioBiblicoApi.eliminar(id);
@@ -422,10 +422,12 @@ export function useEstudiosBiblicos() {
         await cargarDashboard();
         await cargarEstudios();
         resetEstudioForm();
+        return true;
       }
     } catch (error) {
       notificarError(error?.mensaje || 'No se pudo archivar el estudio bíblico.');
     }
+    return false;
   }, [seleccionadoId, cargarDashboard, cargarEstudios, resetEstudioForm]);
 
   const guardarSesion = useCallback(async () => {
@@ -601,6 +603,11 @@ export function useEstudiosBiblicos() {
       notificarError('Seleccione al menos un instructor responsable.');
       return false;
     }
+    const representanteId = Number(asignarForm.responsable_usuario_id || 0);
+    if (!Number.isFinite(representanteId) || representanteId <= 0 || !responsableIds.includes(representanteId)) {
+      notificarError('Seleccione el instructor representante del estudio.');
+      return false;
+    }
     const errorFrecuencia = validarFrecuenciaAsignar(asignarForm);
     if (errorFrecuencia) {
       notificarError(errorFrecuencia);
@@ -613,12 +620,16 @@ export function useEstudiosBiblicos() {
       const restoAsignarForm = { ...asignarForm };
       delete restoAsignarForm.visitas;
       delete restoAsignarForm.responsables;
+      const responsableIdsOrdenados = [
+        representanteId,
+        ...responsableIds.filter((id) => id !== representanteId)
+      ];
       const payload = {
         ...restoAsignarForm,
         visita_id: visitaIds[0],
         visita_ids: visitaIds,
-        responsable_usuario_id: responsableIds[0],
-        responsable_usuario_ids: responsableIds,
+        responsable_usuario_id: representanteId,
+        responsable_usuario_ids: responsableIdsOrdenados,
         frecuencia_cantidad: Number(asignarForm.frecuencia_cantidad || 1),
         observaciones: observacionesAsignar
       };
