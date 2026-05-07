@@ -4706,6 +4706,25 @@ a:hover {
   flex-direction: column;
 }
 
+.juntas-page[data-vista='JUNTAS'] .juntas-form-card,
+.juntas-page[data-vista='JUNTAS'] .juntas-detalle-card {
+  display: none;
+}
+
+.juntas-page[data-vista='MODERADORES'] .juntas-filtros-card,
+.juntas-page[data-vista='MODERADORES'] .juntas-top-row,
+.juntas-page[data-vista='MODERADORES'] .juntas-lista-card,
+.juntas-page[data-vista='MODERADORES'] .juntas-detalle-card {
+  display: none;
+}
+
+.juntas-page[data-vista='SECRETARIAS'] .juntas-filtros-card,
+.juntas-page[data-vista='SECRETARIAS'] .juntas-top-row,
+.juntas-page[data-vista='SECRETARIAS'] .juntas-form-card,
+.juntas-page[data-vista='SECRETARIAS'] .juntas-lista-card {
+  display: none;
+}
+
 .juntas-vista-tabs {
   display: flex;
   gap: 0.5rem;

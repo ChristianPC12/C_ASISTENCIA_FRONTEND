@@ -57,7 +57,6 @@ const REFERENCIA_MODULO_OPCIONES = [
   { valor: '', etiqueta: 'Sin vínculo' },
   { valor: 'CAMPANAS', etiqueta: 'Campañas' },
   { valor: 'ESTUDIOS_BIBLICOS', etiqueta: 'Estudios Bíblicos' },
-  { valor: 'PC', etiqueta: 'Pequeñas Congregaciones' },
   { valor: 'ASISTENCIA', etiqueta: 'Asistencia' },
   { valor: 'OTRO', etiqueta: 'Otro' }
 ];
@@ -68,6 +67,10 @@ const DETALLE_VISTAS = [
   { valor: 'PENDIENTES', etiqueta: 'Pendientes', icono: 'bi-hourglass-split' },
   { valor: 'ACTA', etiqueta: 'Acta', icono: 'bi-journal-richtext' }
 ];
+
+const VISTA_JUNTAS = 'JUNTAS';
+const VISTA_MODERADORES = 'MODERADORES';
+const VISTA_SECRETARIAS = 'SECRETARIAS';
 
 function formatearFecha(valor) {
   if (!valor) return '-';
@@ -649,11 +652,49 @@ export default function JuntasIglesiaPage() {
     prepararVotacion,
     guardarVotacion,
     editarVotacion,
-    resetVotacionForm
+    resetVotacionForm,
+    inicializarJuntaNueva
   } = useJuntasIglesia();
 
+  const [vistaActiva, setVistaActiva] = useState(VISTA_JUNTAS);
+
+  const abrirVistaJuntas = useCallback(() => setVistaActiva(VISTA_JUNTAS), []);
+  const abrirVistaModeradores = useCallback(() => setVistaActiva(VISTA_MODERADORES), []);
+  const abrirVistaSecretarias = useCallback(() => setVistaActiva(VISTA_SECRETARIAS), []);
+  const abrirNuevaJunta = useCallback(() => {
+    inicializarJuntaNueva();
+    setVistaActiva(VISTA_MODERADORES);
+  }, [inicializarJuntaNueva]);
+  const editarDesdeJuntas = useCallback((item) => {
+    editarJunta(item);
+    setVistaActiva(VISTA_MODERADORES);
+  }, [editarJunta]);
+  const irASecretariasConJunta = useCallback((item) => {
+    setSeleccionadaId(item.id);
+    setDetalleVista('RESUMEN');
+    setVistaActiva(VISTA_SECRETARIAS);
+  }, [setSeleccionadaId, setDetalleVista]);
+
   return (
-    <div className="container-fluid py-3 juntas-page">
+    <div className="container-fluid py-3 juntas-page" data-vista={vistaActiva}>
+      <div className="d-flex flex-wrap gap-2 mb-3 juntas-vista-switcher">
+        <button type="button" className={`btn btn-sm ${vistaActiva === VISTA_JUNTAS ? 'btn-primary' : 'btn-outline-primary'}`} onClick={abrirVistaJuntas}>
+          <i className="bi bi-list-ul me-1" aria-hidden="true"></i>
+          Juntas
+        </button>
+        <button type="button" className={`btn btn-sm ${vistaActiva === VISTA_MODERADORES ? 'btn-primary' : 'btn-outline-primary'}`} onClick={abrirVistaModeradores}>
+          <i className="bi bi-people-fill me-1" aria-hidden="true"></i>
+          Moderadores
+        </button>
+        <button type="button" className={`btn btn-sm ${vistaActiva === VISTA_SECRETARIAS ? 'btn-primary' : 'btn-outline-primary'}`} onClick={abrirVistaSecretarias}>
+          <i className="bi bi-journal-richtext me-1" aria-hidden="true"></i>
+          Secretarías
+        </button>
+        <button type="button" className="btn btn-sm btn-success ms-auto" onClick={abrirNuevaJunta}>
+          <i className="bi bi-plus-circle me-1" aria-hidden="true"></i>
+          Nueva junta
+        </button>
+      </div>
       <div className="card shadow-sm juntas-filtros-card mb-3">
         <div className="card-body">
           <div className="row g-3 align-items-end">
@@ -731,36 +772,19 @@ export default function JuntasIglesiaPage() {
                   <label className="form-label small">Final</label>
                   <input type="time" className="form-control form-control-sm" value={juntaForm.hora_fin} onChange={(e) => setJuntaForm((prev) => ({ ...prev, hora_fin: e.target.value }))} />
                 </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label small">Tipo</label>
-                  <select className="form-select form-select-sm" value={juntaForm.tipo} onChange={(e) => setJuntaForm((prev) => ({ ...prev, tipo: e.target.value }))}>
-                    {TIPO_JUNTA_OPCIONES.filter((item) => item.valor).map((item) => <option key={item.valor} value={item.valor}>{item.etiqueta}</option>)}
-                  </select>
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label small">Estado</label>
-                  <select className="form-select form-select-sm" value={juntaForm.estado} onChange={(e) => setJuntaForm((prev) => ({ ...prev, estado: e.target.value }))}>
-                    {ESTADO_JUNTA_OPCIONES.filter((item) => item.valor).map((item) => <option key={item.valor} value={item.valor}>{item.etiqueta}</option>)}
-                  </select>
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label small">Junta anterior</label>
-                  <select className="form-select form-select-sm" value={juntaForm.junta_anterior_id} onChange={(e) => setJuntaForm((prev) => ({ ...prev, junta_anterior_id: e.target.value }))}>
-                    <option value="">Sin referencia</option>
-                    {juntas.filter((item) => item.id !== editandoJuntaId).map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {formatearFecha(item.fecha)} · {item.tipo}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <div className="col-12 col-md-6">
                   <label className="form-label small">Moderador</label>
-                  <input type="text" className="form-control form-control-sm" value={juntaForm.moderador} onChange={(e) => setJuntaForm((prev) => ({ ...prev, moderador: e.target.value }))} />
+                  <select className="form-select form-select-sm" value={juntaForm.moderador} onChange={(e) => setJuntaForm((prev) => ({ ...prev, moderador: e.target.value }))}>
+                    <option value="">Seleccione</option>
+                    {usuarios.map((usuario) => <option key={`mod-${usuario.id}`} value={usuario.nombre_usuario}>{usuario.nombre_usuario}</option>)}
+                  </select>
                 </div>
                 <div className="col-12 col-md-6">
                   <label className="form-label small">Secretaría</label>
-                  <input type="text" className="form-control form-control-sm" value={juntaForm.secretario} onChange={(e) => setJuntaForm((prev) => ({ ...prev, secretario: e.target.value }))} />
+                  <select className="form-select form-select-sm" value={juntaForm.secretario} onChange={(e) => setJuntaForm((prev) => ({ ...prev, secretario: e.target.value }))}>
+                    <option value="">Seleccione</option>
+                    {usuarios.map((usuario) => <option key={`sec-${usuario.id}`} value={usuario.nombre_usuario}>{usuario.nombre_usuario}</option>)}
+                  </select>
                 </div>
                 <div className="col-12">
                   <label className="form-label small">Quórum</label>
@@ -771,8 +795,12 @@ export default function JuntasIglesiaPage() {
                   <textarea className="form-control form-control-sm" rows="3" value={juntaForm.resumen_general} onChange={(e) => setJuntaForm((prev) => ({ ...prev, resumen_general: e.target.value }))}></textarea>
                 </div>
                 <div className="col-12">
-                  <label className="form-label small">Observaciones</label>
-                  <textarea className="form-control form-control-sm" rows="3" value={juntaForm.observaciones_generales} onChange={(e) => setJuntaForm((prev) => ({ ...prev, observaciones_generales: e.target.value }))}></textarea>
+                  <div className="alert alert-light border mb-0 py-2 small juntas-junta-anterior-info">
+                    <strong>Junta anterior:</strong>{' '}
+                    {juntaForm.junta_anterior_id
+                      ? `${formatearFecha(juntas.find((item) => String(item.id) === String(juntaForm.junta_anterior_id))?.fecha)} · ${juntas.find((item) => String(item.id) === String(juntaForm.junta_anterior_id))?.tipo || '-'}`
+                      : 'Se asignará automáticamente'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -799,7 +827,7 @@ export default function JuntasIglesiaPage() {
                     {juntas.map((item) => (
                       <tr key={item.id} className={item.id === seleccionadaId ? 'table-active' : ''}>
                         <td>
-                          <button type="button" className="btn btn-link btn-sm text-decoration-none px-0 juntas-link-btn" onClick={() => setSeleccionadaId(item.id)}>
+                          <button type="button" className="btn btn-link btn-sm text-decoration-none px-0 juntas-link-btn" onClick={() => irASecretariasConJunta(item)}>
                             {formatearFecha(item.fecha)}
                           </button>
                         </td>
@@ -808,7 +836,7 @@ export default function JuntasIglesiaPage() {
                         <td>{Number(item.total_puntos || 0).toLocaleString('es-CR')}</td>
                         <td>
                           <div className="d-flex gap-2">
-                            <BotonAccion icono="bi-pencil-square" label="Editar" outline onClick={() => editarJunta(item)} />
+                            <BotonAccion icono="bi-pencil-square" label="Editar" outline onClick={() => editarDesdeJuntas(item)} />
                             <BotonAccion icono="bi-archive" label="Archivar" onClick={() => archivarJunta(item)} />
                           </div>
                         </td>

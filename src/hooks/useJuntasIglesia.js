@@ -198,8 +198,11 @@ export function useJuntasIglesia() {
 
   const resetJuntaForm = useCallback(() => {
     setEditandoJuntaId(null);
-    setJuntaForm(FORM_JUNTA_INICIAL);
-  }, []);
+    setJuntaForm((prev) => ({
+      ...FORM_JUNTA_INICIAL,
+      junta_anterior_id: juntas[0]?.id || prev.junta_anterior_id || ''
+    }));
+  }, [juntas]);
 
   const editarJunta = useCallback((item) => {
     setEditandoJuntaId(item.id);
@@ -217,6 +220,14 @@ export function useJuntasIglesia() {
       junta_anterior_id: item.junta_anterior_id || ''
     });
   }, []);
+
+  const inicializarJuntaNueva = useCallback(() => {
+    setEditandoJuntaId(null);
+    setJuntaForm({
+      ...FORM_JUNTA_INICIAL,
+      junta_anterior_id: juntas[0]?.id || ''
+    });
+  }, [juntas]);
 
   const resetPuntoForm = useCallback(() => {
     setEditandoPuntoId(null);
@@ -409,6 +420,7 @@ export function useJuntasIglesia() {
     guardarJunta,
     editarJunta,
     resetJuntaForm,
+    inicializarJuntaNueva,
     archivarJunta,
     guardarPunto,
     editarPunto,

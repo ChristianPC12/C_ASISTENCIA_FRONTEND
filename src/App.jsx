@@ -184,8 +184,6 @@ function AppContent() {
             }
           />
 
-          {/* Pequeñas Congregaciones module removed */}
-
           <Route
             path="/juntas-iglesia"
             element={
