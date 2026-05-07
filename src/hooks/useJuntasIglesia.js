@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import campanaApi from '../api/campanaApi';
 import estudioBiblicoApi from '../api/estudioBiblicoApi';
 import juntaApi from '../api/juntaApi';
-import pcApi from '../api/pcApi';
 import usuarioApi from '../api/usuarioApi';
 import { confirmar, notificarError, notificarExito } from '../utils/notify';
 
@@ -69,7 +68,7 @@ export function useJuntasIglesia() {
   const [pendientes, setPendientes] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [campanas, setCampanas] = useState([]);
-  const [pcs, setPcs] = useState([]);
+  
   const [estudios, setEstudios] = useState([]);
   const [seleccionadaId, setSeleccionadaId] = useState(null);
   const [detalle, setDetalle] = useState(null);
@@ -86,21 +85,18 @@ export function useJuntasIglesia() {
 
   const cargarCatalogos = useCallback(async () => {
     try {
-      const [resUsuarios, resCampanas, resPcs, resEstudios] = await Promise.all([
+      const [resUsuarios, resCampanas, resEstudios] = await Promise.all([
         usuarioApi.listar(),
         campanaApi.listar(),
-        pcApi.listar(),
         estudioBiblicoApi.listar()
       ]);
 
       setUsuarios(resUsuarios?.exito ? (resUsuarios.datos || []) : []);
       setCampanas(resCampanas?.exito ? (resCampanas?.datos?.items || []) : []);
-      setPcs(resPcs?.exito ? (resPcs?.datos?.items || []) : []);
       setEstudios(resEstudios?.exito ? (resEstudios?.datos?.items || []) : []);
     } catch {
       setUsuarios([]);
       setCampanas([]);
-      setPcs([]);
       setEstudios([]);
     }
   }, []);
@@ -380,11 +376,10 @@ export function useJuntasIglesia() {
 
   const referenciasPorModulo = useMemo(() => ({
     CAMPANAS: campanas.map((item) => ({ id: item.id, nombre: item.nombre || `Campaña #${item.id}` })),
-    PC: pcs.map((item) => ({ id: item.id, nombre: item.nombre_pc || `PC #${item.id}` })),
     ESTUDIOS_BIBLICOS: estudios.map((item) => ({ id: item.id, nombre: item.persona_nombre || `Estudio #${item.id}` })),
     ASISTENCIA: [],
     OTRO: []
-  }), [campanas, pcs, estudios]);
+  }), [campanas, estudios]);
 
   return {
     filtros,
