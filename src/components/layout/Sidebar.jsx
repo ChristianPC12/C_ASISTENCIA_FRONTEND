@@ -266,7 +266,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' },
       { ruta: '/campanas', etiqueta: 'Campañas', icono: 'bi-megaphone' },
       { ruta: '/estudios-biblicos', etiqueta: 'Estudios Bíblicos', icono: 'bi-journal-bookmark' },
-      { ruta: '/pequenas-congregaciones', etiqueta: 'Pequeñas Congregaciones (PC)', icono: 'bi-house-heart' },
       { ruta: '/juntas-iglesia', etiqueta: 'Juntas de Iglesia', icono: 'bi-people-fill' }
     ];
 
@@ -318,16 +317,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           )}
 
           {enlaces.map((enlace) => (
-            <Link
-              key={enlace.ruta}
-              to={enlace.ruta}
-              className={`sidebar-link ${esRutaActiva(enlace.ruta) ? 'sidebar-link-activo' : ''}`}
-              onClick={cerrarMenu}
-            >
-              <i className={`bi ${enlace.icono} sidebar-link-icono`}></i>
-              {enlace.etiqueta}
-            </Link>
-          ))}
+                <Link
+                  key={enlace.ruta}
+                  to={enlace.ruta}
+                  className={`sidebar-link ${esRutaActiva(enlace.ruta) ? 'sidebar-link-activo' : ''}`}
+                  onClick={cerrarMenu}
+                >
+                  <i className={`bi ${enlace.icono} sidebar-link-icono`}></i>
+                  {enlace.etiqueta}
+                </Link>
+              ))}
         </nav>
 
         {/* Info del usuario al fondo */}

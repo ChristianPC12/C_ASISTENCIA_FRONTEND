@@ -16,7 +16,6 @@ const ComparacionesPage = lazy(() => import('./pages/ComparacionesPage'));
 const PresentacionesPage = lazy(() => import('./pages/PresentacionesPage'));
 const CampanasPage = lazy(() => import('./pages/CampanasPage'));
 const EstudiosBiblicosPage = lazy(() => import('./pages/EstudiosBiblicosPage'));
-const PequenasCongregacionesPage = lazy(() => import('./pages/PequenasCongregacionesPage'));
 const JuntasIglesiaPage = lazy(() => import('./pages/JuntasIglesiaPage'));
 const SuperadminPage = lazy(() => import('./pages/SuperadminPage'));
 const AdministradorPage = lazy(() => import('./pages/AdministradorPage'));
@@ -185,18 +184,7 @@ function AppContent() {
             }
           />
 
-          <Route
-            path="/pequenas-congregaciones"
-            element={
-              <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
-                requiereSetupInicial
-                nombreModulo="Pequeñas Congregaciones"
-              >
-                <PequenasCongregacionesPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Pequeñas Congregaciones module removed */}
 
           <Route
             path="/juntas-iglesia"
