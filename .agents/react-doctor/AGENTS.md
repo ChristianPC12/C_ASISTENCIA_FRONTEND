@@ -15,7 +15,8 @@ sin perder trazabilidad entre frontend y backend.
 2. `ROADMAP_ESCALABILIDAD_NACIONAL.md`
 3. `TICKETS_ESCALABILIDAD_NACIONAL.md`
 4. `prompt_frontend.md`
-5. `SKILL.md`
+5. `PATRON_SCROLL_TABLAS.md`
+6. `SKILL.md`
 
 ## Modo de arranque obligatorio (discovery-first)
 
@@ -79,8 +80,9 @@ Cuando el owner pida "ponte al tanto", el agente debe asumir que el foco ya no e
 Lectura minima para continuar:
 
 1. `CONTEXTO_ACTUAL.md`, seccion `Continuidad Mayo 2026`.
-2. `prompt_frontend.md`, secciones de rutas y contratos de modulos misioneros.
-3. Backend: `.agents/escalabilidad/CONTEXTO_ACTUAL_BACKEND_MULTIIGLESIA.md`, seccion `Continuidad Mayo 2026`.
+2. `PATRON_SCROLL_TABLAS.md`, regla de wrappers horizontal/vertical para tablas operativas.
+3. `prompt_frontend.md`, secciones de rutas y contratos de modulos misioneros.
+4. Backend: `.agents/escalabilidad/CONTEXTO_ACTUAL_BACKEND_MULTIIGLESIA.md`, seccion `Continuidad Mayo 2026`.
 
 Resumen de estado:
 

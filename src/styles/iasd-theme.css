@@ -3421,6 +3421,22 @@ a:hover {
 .sidebar-topbar-metric-btn i {
   font-size: 0.85rem;
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .sidebar-topbar-metric-btn:not(.is-active):hover {
+    background: #ffffff;
+    color: var(--iasd-azul);
+    border-color: var(--iasd-borde);
+    box-shadow: none;
+  }
+
+  .campanas-vista-tabs .btn-outline-primary:hover {
+    background: #ffffff;
+    color: var(--iasd-azul);
+    border-color: var(--iasd-azul);
+    box-shadow: none;
+  }
+}
 .sidebar-topbar-plus {
   width: 32px;
   height: 32px;
@@ -4055,6 +4071,12 @@ a:hover {
   display: flex;
 }
 
+.campanas-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
 .campanas-filtros-card,
 .campanas-form-card,
 .campanas-lista-card,
@@ -4078,6 +4100,10 @@ a:hover {
 
 .campanas-kpi-card .card-body {
   padding-inline: 1rem;
+}
+
+.campanas-kpi-card {
+  min-width: 0;
 }
 
 .campanas-detalle-card .card-body {
@@ -4109,18 +4135,28 @@ a:hover {
 }
 
 .campanas-table-shell {
+  width: 100%;
+  max-width: 100%;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.75rem;
   background: #ffffff;
   overflow-x: auto;
   overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
 }
 
 .campanas-table-scroll {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
   max-height: clamp(16rem, 33vh, 22rem);
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  touch-action: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -4145,13 +4181,38 @@ a:hover {
 }
 
 .campanas-detalle-table-scroll {
-  overflow-x: auto !important;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  max-height: clamp(300px, 44vh, 390px);
   overflow-y: auto;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  touch-action: auto;
+}
+
+.campanas-lista-table-scroll {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  overflow-x: hidden !important;
+  touch-action: auto;
+}
+
+.campanas-detalle-table-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
 }
 
 .campanas-detalle-table-scroll .tabla-registros {
-  width: max-content;
+  width: 100%;
+  min-width: 100%;
   table-layout: auto;
 }
 
@@ -4210,19 +4271,19 @@ a:hover {
 }
 
 .campanas-sesiones-table {
-  min-width: 40rem;
+  min-width: max(100%, 40rem);
 }
 
 .campanas-asistentes-table {
-  min-width: 36rem;
+  min-width: max(100%, 36rem);
 }
 
 .campanas-decisiones-table {
-  min-width: 34rem;
+  min-width: max(100%, 34rem);
 }
 
 .campanas-lista-table {
-  min-width: 40rem;
+  min-width: max(100%, 52rem);
 }
 
 @media (max-width: 768px) {
@@ -4290,8 +4351,18 @@ a:hover {
     gap: 0.35rem;
   }
 
+  .campanas-table-scroll,
+  .campanas-detalle-table-scroll,
+  .campanas-lista-table-scroll {
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: contain;
+  }
+
   .campanas-table-shell table {
-    width: max-content;
+    width: 100%;
   }
 
   .campanas-lista-table {
@@ -4370,18 +4441,28 @@ a:hover {
 }
 
 .estudios-table-shell {
+  width: 100%;
+  max-width: 100%;
   border: 1px solid var(--iasd-borde);
   border-radius: 0.5rem;
   background: #ffffff;
   overflow-x: auto;
   overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
 }
 
 .estudios-table-scroll {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
   max-height: clamp(16rem, 33vh, 22rem);
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  touch-action: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -4623,7 +4704,7 @@ a:hover {
   }
 
   .estudios-table-shell table {
-    width: max-content;
+    width: 100%;
   }
 
   .estudios-table-shell .estudios-selector-table {
@@ -4924,6 +5005,25 @@ a:hover {
   min-width: 31px;
 }
 
+.visitas-tabla-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  touch-action: auto;
+}
+
+.visitas-tabla-scroll-y {
+  max-height: clamp(300px, 44vh, 390px);
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  touch-action: auto;
+}
+
+.visitas-tabla-registros {
+  min-width: 720px;
+  font-size: 0.875rem;
+}
+
 .mobile-filter-overlay {
   position: fixed;
   inset: 0;
@@ -4961,6 +5061,35 @@ a:hover {
   min-height: 0;
   overflow-y: auto;
   padding: 1rem;
+}
+
+.visitas-filtros-content-mobile .iasd-search-input,
+.visitas-filtros-content-mobile .form-control-sm,
+.visitas-filtros-content-mobile .form-select-sm,
+.visitas-filtros-content-mobile .input-group-sm > .form-control,
+.visitas-filtros-content-mobile .input-group-sm > .btn,
+.visitas-filtros-content-mobile .btn.visitas-nueva-btn {
+  min-height: 38px;
+  height: 38px;
+  line-height: 1.25;
+}
+
+.visitas-filtros-content-mobile .iasd-search-input {
+  border-radius: 0.375rem;
+  padding: 0 0.6rem;
+}
+
+.visitas-filtros-content-mobile .iasd-search-input .form-control {
+  min-height: 0;
+  height: 100%;
+  font-size: 0.875rem;
+}
+
+.visitas-filtros-content-mobile .btn.visitas-nueva-btn {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+  display: inline-flex;
 }
 
 .visita-form-grid .form-control-sm,
@@ -5046,11 +5175,32 @@ a:hover {
     flex-wrap: wrap;
   }
 
+  .campanas-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
   .visitas-mobile-kpi-row .card-body,
   .estudios-mobile-kpi-row .card-body,
   .campanas-mobile-kpi-row .card-body {
     min-height: 72px;
     padding: 0.55rem 0.45rem !important;
+  }
+
+  .campanas-mobile-kpi-row .estudios-kpi-label {
+    font-size: 0.58rem !important;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .campanas-mobile-kpi-row .estudios-kpi-value {
+    font-size: 0.95rem !important;
+    line-height: 1.05;
+  }
+
+  .campanas-mobile-kpi-row .bi.text-primary {
+    font-size: 0.8rem;
   }
 
   .visitas-mobile-kpi-row .small,
@@ -5090,13 +5240,15 @@ a:hover {
   }
 
   .estudios-asignar-mobile-picker-btn {
-    min-height: 28px !important;
-    height: 28px;
-    padding: 0 0.5rem;
+    min-height: 34px !important;
+    height: 34px;
+    padding: 0 0.72rem;
     gap: 0.35rem;
     display: inline-flex !important;
     align-items: center;
     justify-content: center;
+    border-radius: 999px;
+    box-shadow: 0 0.35rem 0.85rem rgba(0, 51, 102, 0.12);
   }
 
   .estudios-asignar-mobile-picker-btn span {
@@ -5214,12 +5366,32 @@ a:hover {
 
 .estudios-tabla-scroll {
   max-height: clamp(300px, 44vh, 390px);
-  overflow-x: auto;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  touch-action: auto;
+}
+
+.estudios-tabla-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
 }
 
 .estudios-tabla-scroll .tabla-registros {
   min-width: 46rem;
+}
+
+.estudios-resumen-seleccion-head {
+  margin-bottom: 0.35rem;
 }
 
 .estudios-lista-table {
@@ -5517,6 +5689,19 @@ a:hover {
 .estudios-selector-scroll {
   height: clamp(320px, 52vh, 520px);
   max-height: clamp(320px, 52vh, 520px);
+}
+
+.estudios-table-scroll.estudios-selector-scroll {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.estudios-table-shell .estudios-selector-table {
+  width: 100%;
+  min-width: 100%;
+  table-layout: fixed;
 }
 
 .estudios-registro-layout {

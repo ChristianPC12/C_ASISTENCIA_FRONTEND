@@ -305,18 +305,16 @@ function etiquetaEstado(estado) {
 
 function KpiCard({ label, value, icon, action = null }) {
   return (
-    <div className="col-6 col-lg-3">
-      <div className="card shadow-sm estudios-kpi-card h-100">
-        <div className="card-body py-3">
-          <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-            <span className="estudios-kpi-label">{label}</span>
-            <span className="d-inline-flex align-items-center gap-1">
-              {action}
-              <i className={`bi ${icon} text-primary ${action ? 'd-none d-md-inline-block' : ''}`} aria-hidden="true"></i>
-            </span>
-          </div>
-          <div className="estudios-kpi-value">{Number(value || 0).toLocaleString('es-CR')}</div>
+    <div className="card shadow-sm estudios-kpi-card campanas-kpi-card h-100">
+      <div className="card-body py-3">
+        <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+          <span className="estudios-kpi-label">{label}</span>
+          <span className="d-inline-flex align-items-center gap-1">
+            {action}
+            <i className={`bi ${icon} text-primary ${action ? 'd-none d-md-inline-block' : ''}`} aria-hidden="true"></i>
+          </span>
         </div>
+        <div className="estudios-kpi-value">{Number(value || 0).toLocaleString('es-CR')}</div>
       </div>
     </div>
   );
@@ -400,9 +398,17 @@ function ResumenCampana({ detalle, setDetalleVista, setAsistenteResaltadoId }) {
   return (
     <>
       <div className="row g-2 g-md-3 mb-3">
-        <div className="col-4"><KpiCard label="Sesiones" value={resumen.total_sesiones} icon="bi-calendar-event" /></div>
-        <div className="col-4"><KpiCard label="Visitas" value={resumen.total_visitas} icon="bi-person-plus" /></div>
-        <div className="col-4"><KpiCard label="Decisiones" value={resumen.total_decisiones} icon="bi-heart" /></div>
+        <div className="col-12 col-sm-4">
+          <KpiCard label="Sesiones" value={resumen.total_sesiones} icon="bi-calendar-event" />
+        </div>
+
+        <div className="col-12 col-sm-4">
+          <KpiCard label="Visitas" value={resumen.total_visitas} icon="bi-person-plus" />
+        </div>
+
+        <div className="col-12 col-sm-4">
+          <KpiCard label="Decisiones" value={resumen.total_decisiones} icon="bi-heart" />
+        </div>
       </div>
 
       <div className="row g-2 mb-3 d-xl-none">
@@ -742,70 +748,71 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion, ed
       )}
       {puedeManejar && (
         <div className="card shadow-sm campanas-section-card mb-3" ref={formEditarRef}>
-        <div className="card-body">
-          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-            <h6 className="campanas-section-title mb-0">{editandoSesionId ? 'Editar noche o sesión' : 'Registrar noche o sesión'}</h6>
-            <div className="d-flex gap-2">
-              {editandoSesionId && (
-                <BotonAccion icono="bi-x-lg" label="Cancelar" onClick={resetSesionForm} outline />
-              )}
-              <BotonAccion icono={editandoSesionId ? 'bi-floppy' : 'bi-plus-lg'} label={editandoSesionId ? 'Actualizar sesión' : 'Agregar sesión'} onClick={guardarSesion} />
+          <div className="card-body">
+            <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+              <h6 className="campanas-section-title mb-0">{editandoSesionId ? 'Editar noche o sesión' : 'Registrar noche o sesión'}</h6>
+              <div className="d-flex gap-2">
+                {editandoSesionId && (
+                  <BotonAccion icono="bi-x-lg" label="Cancelar" onClick={resetSesionForm} outline />
+                )}
+                <BotonAccion icono={editandoSesionId ? 'bi-floppy' : 'bi-plus-lg'} label={editandoSesionId ? 'Actualizar sesión' : 'Agregar sesión'} onClick={guardarSesion} />
+              </div>
             </div>
-          </div>
 
-          <div className="row g-3">
-            <div className="col-12 col-lg-3">
-              <label className="form-label form-label-sm">Día</label>
-              <select className="form-select form-select-sm" value={sesionForm.fecha} onChange={(e) => setSesionForm((prev) => ({ ...prev, fecha: e.target.value }))}>
-                <option value="">Seleccione un día</option>
-                {diasCampana.map((dia) => {
-                  const yaRegistrado = sesiones.some(s => s.fecha === dia.fecha);
-                  return (
-                    <option key={dia.fecha} value={dia.fecha} disabled={yaRegistrado}>
-                      Día {dia.numero} · {formatearFecha(dia.fecha)} {yaRegistrado ? '(ya registrado)' : ''}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-            <div className="col-12 col-lg-9">
-              <label className="form-label form-label-sm">Tema</label>
-              <input className="form-control form-control-sm" value={sesionForm.tema_titulo} onChange={(e) => setSesionForm((prev) => ({ ...prev, tema_titulo: e.target.value }))} maxLength={45} />
-            </div>
-            <div className="col-12">
-              <label className="form-label form-label-sm">Observaciones</label>
-              <input className="form-control form-control-sm" value={sesionForm.observaciones} onChange={(e) => setSesionForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={60} />
+            <div className="row g-3">
+              <div className="col-12 col-lg-3">
+                <label className="form-label form-label-sm">Día</label>
+                <select className="form-select form-select-sm" value={sesionForm.fecha} onChange={(e) => setSesionForm((prev) => ({ ...prev, fecha: e.target.value }))}>
+                  <option value="">Seleccione un día</option>
+                  {diasCampana.map((dia) => {
+                    const yaRegistrado = sesiones.some(s => s.fecha === dia.fecha);
+                    return (
+                      <option key={dia.fecha} value={dia.fecha} disabled={yaRegistrado}>
+                        Día {dia.numero} · {formatearFecha(dia.fecha)} {yaRegistrado ? '(ya registrado)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div className="col-12 col-lg-9">
+                <label className="form-label form-label-sm">Tema</label>
+                <input className="form-control form-control-sm" value={sesionForm.tema_titulo} onChange={(e) => setSesionForm((prev) => ({ ...prev, tema_titulo: e.target.value }))} maxLength={45} />
+              </div>
+              <div className="col-12">
+                <label className="form-label form-label-sm">Observaciones</label>
+                <input className="form-control form-control-sm" value={sesionForm.observaciones} onChange={(e) => setSesionForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={60} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
       )}
 
       <div className="card shadow-sm campanas-section-card">
         <div className="card-body p-0">
-          <div className="tabla-registros-scroll campanas-detalle-table-scroll" style={{ overflowX: 'auto' }}>
+          <div className="campanas-detalle-table-scroll-x">
+          <div className="tabla-registros-scroll campanas-detalle-table-scroll">
             <table className="table table-striped table-hover align-middle mb-0 tabla-registros campanas-sesiones-table">
-                <thead className="tabla-registros-thead">
+              <thead className="tabla-registros-thead">
+                <tr>
+                  <th>Día</th>
+                  <th>Tema</th>
+                  <th>Estado</th>
+                  <th className="text-center">Visitas</th>
+                  <th className="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sesiones.length === 0 && (
                   <tr>
-                    <th>Día</th>
-                    <th>Tema</th>
-                    <th>Estado</th>
-                    <th className="text-center">Visitas</th>
-                    <th className="text-end">Acciones</th>
+                    <td colSpan="5" className="text-center text-muted py-4">
+                      Todavía no hay noches registradas para esta campaña.
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {sesiones.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="text-center text-muted py-4">
-                        Todavía no hay noches registradas para esta campaña.
-                      </td>
-                    </tr>
-                  )}
-                  {sesiones.map((item) => {
-                    const diaNum = diasCampana.find(d => d.fecha === item.fecha)?.numero || '-';
-                    const estadoCalculado = item.fecha < hoy ? 'TERMINADO' : item.fecha === hoy ? 'EN CURSO' : 'PROGRAMADA';
-                    return (
+                )}
+                {sesiones.map((item) => {
+                  const diaNum = diasCampana.find(d => d.fecha === item.fecha)?.numero || '-';
+                  const estadoCalculado = item.fecha < hoy ? 'TERMINADO' : item.fecha === hoy ? 'EN CURSO' : 'PROGRAMADA';
+                  return (
                     <tr key={item.id}>
                       <td>Día {diaNum} · {formatearFecha(item.fecha)}</td>
                       <td>
@@ -834,25 +841,26 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion, ed
                             </button>
                           )}
                           {item.fecha >= hoy && (
-                          <button
-                            type="button"
-                            className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
-                            style={{ width: '34px', height: '34px' }}
-                            onClick={() => editarSesion(item)}
-                            title="Editar noche o sesión"
-                            aria-label="Editar noche o sesión"
-                          >
-                            <i className="bi bi-pencil-square" aria-hidden="true"></i>
-                          </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
+                              style={{ width: '34px', height: '34px' }}
+                              onClick={() => editarSesion(item)}
+                              title="Editar noche o sesión"
+                              aria-label="Editar noche o sesión"
+                            >
+                              <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                            </button>
                           )}
                         </div>
                       </td>
                     </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          </div>
         </div>
       </div>
 
@@ -959,162 +967,162 @@ function AsistentesCampana({
       )}
       {puedeManejar && sesionActiva && (
         <>
-        <div className="card shadow-sm campanas-section-card mb-3">
-        <div className="card-body">
-          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-            <h6 className="campanas-section-title mb-0">Asistencia rápida</h6>
-            <BotonAccion icono="bi-check2-square" label="Guardar asistencia" onClick={guardarAsistenciaConResaltado} disabled={!asistenciaForm.sesion_id || !asistenciaForm.campana_asistente_id || !asistenciaForm.hora_llegada} />
-          </div>
-
-          <div className="row g-2 align-items-end">
-            <div className="col-12 col-md">
-              <label className="form-label form-label-sm">Sesión</label>
-              <div className="d-flex gap-1">
-                <input
-                  type="text"
-                  className="form-control form-control-sm text-center"
-                  value={(() => {
-                    if (!asistenciaForm.sesion_id) return '';
-                    const sesionSel = sesionesOpciones.find(s => String(s.id) === String(asistenciaForm.sesion_id));
-                    if (!sesionSel) return '';
-                    const diasCampanaAux = calcularDiasCampana(detalle?.fecha_inicio, detalle?.fecha_fin);
-                    const diaNum = diasCampanaAux.find(d => d.fecha === sesionSel.fecha)?.numero || '-';
-                    return `Día ${diaNum}`;
-                  })()}
-                  readOnly
-                  style={{ width: '65px', flexShrink: 0 }}
-                />
-                <select className="form-select form-select-sm" value={asistenciaForm.sesion_id} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, sesion_id: e.target.value }))}>
-                  <option value="">Seleccione</option>
-                  {sesionesOpciones.map((sesion) => {
-                    const esHoy = sesion.fecha === hoy;
-                    return (
-                      <option key={sesion.id} value={sesion.id} disabled={!esHoy}>
-                        {formatearFecha(sesion.fecha)} - {sesion.tema_titulo}{!esHoy ? ' (bloqueado)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
+          <div className="card shadow-sm campanas-section-card mb-3">
+            <div className="card-body">
+              <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+                <h6 className="campanas-section-title mb-0">Asistencia rápida</h6>
+                <BotonAccion icono="bi-check2-square" label="Guardar asistencia" onClick={guardarAsistenciaConResaltado} disabled={!asistenciaForm.sesion_id || !asistenciaForm.campana_asistente_id || !asistenciaForm.hora_llegada} />
               </div>
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label form-label-sm">Visita</label>
-              <SelectorVisita
-                opciones={asistentesOpciones}
-                value={asistenciaForm.campana_asistente_id}
-                onChange={(val) => setAsistenciaForm((prev) => ({ ...prev, campana_asistente_id: val }))}
-              />
-            </div>
-            <div className="col-12 col-md-2">
-              <label className="form-label form-label-sm">Hora</label>
-              <input type="time" className="form-control form-control-sm" value={asistenciaForm.hora_llegada} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, hora_llegada: e.target.value }))} />
-            </div>
-            <div className="col-6 col-md-1">
-              <div className="form-check mt-3">
-                <input className="form-check-input" type="checkbox" id="campana-puntual-quick" checked={Boolean(asistenciaForm.puntual)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, puntual: e.target.checked }))} />
-                <label className="form-check-label small" htmlFor="campana-puntual-quick">Puntual</label>
-              </div>
-            </div>
-            <div className="col-6 col-md-1">
-              <div className="form-check mt-3">
-                <input className="form-check-input" type="checkbox" id="campana-premio-quick" checked={Boolean(asistenciaForm.elegible_premio)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, elegible_premio: e.target.checked }))} />
-                <label className="form-check-label small" htmlFor="campana-premio-quick">Premio</label>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="card shadow-sm campanas-section-card mb-3">
-        <div className="card-body">
-          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-            <h6 className="campanas-section-title mb-0">Registrar visita</h6>
-            <BotonAccion icono="bi-plus-lg" label="Agregar visita" onClick={guardarAsistenteConValidacion} />
-          </div>
-
-          <div className="row g-3">
-            <div className="col-12 col-md-6">
-              <label className="form-label form-label-sm">Nombre</label>
-              <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} maxLength={45} />
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label form-label-sm">Tipo</label>
-              <select className="form-select form-select-sm" value={asistenteForm.tipo_asistente} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, tipo_asistente: e.target.value }))}>
-                {TIPO_ASISTENTE_OPCIONES.map((opcion) => (
-                  <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label form-label-sm">Teléfono</label>
-              <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
-            </div>
-
-            {mostrarMasAsistente && (
-              <>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Correo</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.correo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, correo: e.target.value }))} maxLength={80} />
+              <div className="row g-2 align-items-end">
+                <div className="col-12 col-md">
+                  <label className="form-label form-label-sm">Sesión</label>
+                  <div className="d-flex gap-1">
+                    <input
+                      type="text"
+                      className="form-control form-control-sm text-center"
+                      value={(() => {
+                        if (!asistenciaForm.sesion_id) return '';
+                        const sesionSel = sesionesOpciones.find(s => String(s.id) === String(asistenciaForm.sesion_id));
+                        if (!sesionSel) return '';
+                        const diasCampanaAux = calcularDiasCampana(detalle?.fecha_inicio, detalle?.fecha_fin);
+                        const diaNum = diasCampanaAux.find(d => d.fecha === sesionSel.fecha)?.numero || '-';
+                        return `Día ${diaNum}`;
+                      })()}
+                      readOnly
+                      style={{ width: '65px', flexShrink: 0 }}
+                    />
+                    <select className="form-select form-select-sm" value={asistenciaForm.sesion_id} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, sesion_id: e.target.value }))}>
+                      <option value="">Seleccione</option>
+                      {sesionesOpciones.map((sesion) => {
+                        const esHoy = sesion.fecha === hoy;
+                        return (
+                          <option key={sesion.id} value={sesion.id} disabled={!esHoy}>
+                            {formatearFecha(sesion.fecha)} - {sesion.tema_titulo}{!esHoy ? ' (bloqueado)' : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
                 </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Procedencia</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.procedencia} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, procedencia: e.target.value }))} maxLength={60} />
+                <div className="col-12 col-md-3">
+                  <label className="form-label form-label-sm">Visita</label>
+                  <SelectorVisita
+                    opciones={asistentesOpciones}
+                    value={asistenciaForm.campana_asistente_id}
+                    onChange={(val) => setAsistenciaForm((prev) => ({ ...prev, campana_asistente_id: val }))}
+                  />
                 </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label form-label-sm">Clasificación</label>
-                  <select className="form-select form-select-sm" value={asistenteForm.clasificacion_etaria} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, clasificacion_etaria: e.target.value }))}>
-                    {ETARIA_OPCIONES.map((opcion) => (
-                      <option key={opcion.valor || 'ninguna'} value={opcion.valor}>{opcion.etiqueta}</option>
+                <div className="col-12 col-md-2">
+                  <label className="form-label form-label-sm">Hora</label>
+                  <input type="time" className="form-control form-control-sm" value={asistenciaForm.hora_llegada} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, hora_llegada: e.target.value }))} />
+                </div>
+                <div className="col-6 col-md-1">
+                  <div className="form-check mt-3">
+                    <input className="form-check-input" type="checkbox" id="campana-puntual-quick" checked={Boolean(asistenciaForm.puntual)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, puntual: e.target.checked }))} />
+                    <label className="form-check-label small" htmlFor="campana-puntual-quick">Puntual</label>
+                  </div>
+                </div>
+                <div className="col-6 col-md-1">
+                  <div className="form-check mt-3">
+                    <input className="form-check-input" type="checkbox" id="campana-premio-quick" checked={Boolean(asistenciaForm.elegible_premio)} onChange={(e) => setAsistenciaForm((prev) => ({ ...prev, elegible_premio: e.target.checked }))} />
+                    <label className="form-check-label small" htmlFor="campana-premio-quick">Premio</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card shadow-sm campanas-section-card mb-3">
+            <div className="card-body">
+              <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+                <h6 className="campanas-section-title mb-0">Registrar visita</h6>
+                <BotonAccion icono="bi-plus-lg" label="Agregar visita" onClick={guardarAsistenteConValidacion} />
+              </div>
+
+              <div className="row g-3">
+                <div className="col-12 col-md-6">
+                  <label className="form-label form-label-sm">Nombre</label>
+                  <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} maxLength={45} />
+                </div>
+                <div className="col-12 col-md-3">
+                  <label className="form-label form-label-sm">Tipo</label>
+                  <select className="form-select form-select-sm" value={asistenteForm.tipo_asistente} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, tipo_asistente: e.target.value }))}>
+                    {TIPO_ASISTENTE_OPCIONES.map((opcion) => (
+                      <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
                     ))}
                   </select>
                 </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label form-label-sm">Seguimiento</label>
-                  {asistenteForm.estado_seguimiento === 'OTROS' ? (
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={seguimientoPersonalizado}
-                      onChange={(e) => setSeguimientoPersonalizado(e.target.value)}
-                      placeholder="Especifique el estado de seguimiento"
-                      maxLength={30}
-                    />
-                  ) : (
-                    <select className="form-select form-select-sm" value={asistenteForm.estado_seguimiento} onChange={(e) => {
-                      setAsistenteForm((prev) => ({ ...prev, estado_seguimiento: e.target.value }));
-                      setSeguimientoPersonalizado('');
-                    }}>
-                      {ESTADO_SEGUIMIENTO_OPCIONES.map((opcion) => (
-                        <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-                      ))}
-                    </select>
-                  )}
+                <div className="col-12 col-md-3">
+                  <label className="form-label form-label-sm">Teléfono</label>
+                  <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
                 </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label form-label-sm">Dirección</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.direccion} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, direccion: e.target.value }))} maxLength={120} />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Barrio / comunidad</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.barrio_comunidad} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, barrio_comunidad: e.target.value }))} maxLength={60} />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Observaciones</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.observaciones} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={150} />
-                </div>
-              </>
-            )}
 
-            <div className="col-12">
-              <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarMasAsistente(!mostrarMasAsistente)}>
-                <i className={`bi ${mostrarMasAsistente ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
-                <span>{mostrarMasAsistente ? 'Menos datos de la visita' : 'Más datos de la visita'}</span>
-              </button>
+                {mostrarMasAsistente && (
+                  <>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label form-label-sm">Correo</label>
+                      <input className="form-control form-control-sm" value={asistenteForm.correo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, correo: e.target.value }))} maxLength={80} />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label form-label-sm">Procedencia</label>
+                      <input className="form-control form-control-sm" value={asistenteForm.procedencia} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, procedencia: e.target.value }))} maxLength={60} />
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <label className="form-label form-label-sm">Clasificación</label>
+                      <select className="form-select form-select-sm" value={asistenteForm.clasificacion_etaria} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, clasificacion_etaria: e.target.value }))}>
+                        {ETARIA_OPCIONES.map((opcion) => (
+                          <option key={opcion.valor || 'ninguna'} value={opcion.valor}>{opcion.etiqueta}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <label className="form-label form-label-sm">Seguimiento</label>
+                      {asistenteForm.estado_seguimiento === 'OTROS' ? (
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={seguimientoPersonalizado}
+                          onChange={(e) => setSeguimientoPersonalizado(e.target.value)}
+                          placeholder="Especifique el estado de seguimiento"
+                          maxLength={30}
+                        />
+                      ) : (
+                        <select className="form-select form-select-sm" value={asistenteForm.estado_seguimiento} onChange={(e) => {
+                          setAsistenteForm((prev) => ({ ...prev, estado_seguimiento: e.target.value }));
+                          setSeguimientoPersonalizado('');
+                        }}>
+                          {ESTADO_SEGUIMIENTO_OPCIONES.map((opcion) => (
+                            <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    <div className="col-12 col-md-4">
+                      <label className="form-label form-label-sm">Dirección</label>
+                      <input className="form-control form-control-sm" value={asistenteForm.direccion} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, direccion: e.target.value }))} maxLength={120} />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label form-label-sm">Barrio / comunidad</label>
+                      <input className="form-control form-control-sm" value={asistenteForm.barrio_comunidad} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, barrio_comunidad: e.target.value }))} maxLength={60} />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label form-label-sm">Observaciones</label>
+                      <input className="form-control form-control-sm" value={asistenteForm.observaciones} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={150} />
+                    </div>
+                  </>
+                )}
+
+                <div className="col-12">
+                  <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarMasAsistente(!mostrarMasAsistente)}>
+                    <i className={`bi ${mostrarMasAsistente ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
+                    <span>{mostrarMasAsistente ? 'Menos datos de la visita' : 'Más datos de la visita'}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-      </>
+        </>
       )}
 
       <div className="card shadow-sm campanas-section-card">
@@ -1145,52 +1153,52 @@ function AsistentesCampana({
                     const pendientes = Number(item.total_premios_pendientes || 0);
                     const totalPremios = Number(item.total_premios || 0);
                     return (
-                    <tr key={item.id} ref={item.id === asistenteResaltadoId ? resaltadoCallbackRef : null}>
-                      <td>
-                        <div className="fw-semibold">{item.nombre_snapshot}</div>
-                        <small className="text-muted">{item.telefono_snapshot || item.contacto_telefono || '-'}</small>
-                      </td>
-                      <td><span className="badge text-bg-light border">{item.tipo_asistente}</span></td>
-                      <td className="text-center">
-                        <small>{Number(item.total_noches || 0)}</small>
-                      </td>
-                      <td className="text-center">
-                        <small>{Number(item.total_puntuales || 0)} de {totalSesiones}</small>
-                      </td>
-                      <td className="text-center">
-                        {pendientes > 0 ? (
-                          <button
-                            type="button"
-                            className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
-                            onClick={() => entregarPremios(item.id)}
-                            title="Marcar premio como entregado"
-                          >
-                            <i className="bi bi-gift" aria-hidden="true"></i>
-                            <small>{pendientes}</small>
-                          </button>
-                        ) : totalPremios > 0 ? (
-                          <span className="text-success small" title="Todos los premios entregados"><i className="bi bi-check-circle-fill" aria-hidden="true"></i></span>
-                        ) : (
-                          <span className="text-muted small">-</span>
-                        )}
-                      </td>
-                      <td><span className={`badge ${claseEstado(item.estado_seguimiento)}`}>{item.estado_seguimiento}</span></td>
-                      <td className="text-end">
-                        {puedeConvertirAsistente(item) ? (
-                          <button
-                            type="button"
-                            className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1"
-                            onClick={() => convertirAsistenteAEstudio(item)}
-                            disabled={convirtiendoAsistenteId === item.id}
-                          >
-                            <i className="bi bi-journal-plus" aria-hidden="true"></i>
-                            <span>A estudio</span>
-                          </button>
-                        ) : (
-                          <span className="text-muted small">-</span>
-                        )}
-                      </td>
-                    </tr>
+                      <tr key={item.id} ref={item.id === asistenteResaltadoId ? resaltadoCallbackRef : null}>
+                        <td>
+                          <div className="fw-semibold">{item.nombre_snapshot}</div>
+                          <small className="text-muted">{item.telefono_snapshot || item.contacto_telefono || '-'}</small>
+                        </td>
+                        <td><span className="badge text-bg-light border">{item.tipo_asistente}</span></td>
+                        <td className="text-center">
+                          <small>{Number(item.total_noches || 0)}</small>
+                        </td>
+                        <td className="text-center">
+                          <small>{Number(item.total_puntuales || 0)} de {totalSesiones}</small>
+                        </td>
+                        <td className="text-center">
+                          {pendientes > 0 ? (
+                            <button
+                              type="button"
+                              className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
+                              onClick={() => entregarPremios(item.id)}
+                              title="Marcar premio como entregado"
+                            >
+                              <i className="bi bi-gift" aria-hidden="true"></i>
+                              <small>{pendientes}</small>
+                            </button>
+                          ) : totalPremios > 0 ? (
+                            <span className="text-success small" title="Todos los premios entregados"><i className="bi bi-check-circle-fill" aria-hidden="true"></i></span>
+                          ) : (
+                            <span className="text-muted small">-</span>
+                          )}
+                        </td>
+                        <td><span className={`badge ${claseEstado(item.estado_seguimiento)}`}>{item.estado_seguimiento}</span></td>
+                        <td className="text-end">
+                          {puedeConvertirAsistente(item) ? (
+                            <button
+                              type="button"
+                              className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1"
+                              onClick={() => convertirAsistenteAEstudio(item)}
+                              disabled={convirtiendoAsistenteId === item.id}
+                            >
+                              <i className="bi bi-journal-plus" aria-hidden="true"></i>
+                              <span>A estudio</span>
+                            </button>
+                          ) : (
+                            <span className="text-muted small">-</span>
+                          )}
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>
@@ -1229,49 +1237,49 @@ function DecisionesCampana({ detalle, asistentesOpciones, decisionForm, setDecis
       )}
       {puedeManejar && (
         <div className="card shadow-sm campanas-section-card mb-3">
-        <div className="card-body">
-          <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
-            <h6 className="campanas-section-title mb-0">Registrar decisión o seguimiento</h6>
-            <BotonAccion icono="bi-plus-lg" label="Agregar decisión" onClick={guardarDecision} />
-          </div>
+          <div className="card-body">
+            <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+              <h6 className="campanas-section-title mb-0">Registrar decisión o seguimiento</h6>
+              <BotonAccion icono="bi-plus-lg" label="Agregar decisión" onClick={guardarDecision} />
+            </div>
 
-          <div className="row g-3">
-            <div className="col-12 col-lg-4">
-              <label className="form-label form-label-sm">Visita</label>
-              <select className="form-select form-select-sm" value={decisionForm.campana_asistente_id} onChange={(e) => setDecisionForm((prev) => ({ ...prev, campana_asistente_id: e.target.value }))}>
-                <option value="">Seleccione</option>
-                {asistentesOpciones.map((asistente) => (
-                  <option key={asistente.id} value={asistente.id}>{asistente.nombre_snapshot}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12 col-lg-4">
-              <label className="form-label form-label-sm">Tipo de decisión</label>
-              <select
-                className="form-select form-select-sm"
-                value={decisionForm.decision_clave}
-                onChange={(e) => {
-                  const opcion = DECISION_OPCIONES.find((item) => item.clave === e.target.value);
-                  setDecisionForm((prev) => ({ ...prev, decision_clave: e.target.value, decision_etiqueta: opcion?.etiqueta || '' }));
-                }}
-              >
-                <option value="">Seleccione</option>
-                {DECISION_OPCIONES.map((opcion) => (
-                  <option key={opcion.clave} value={opcion.clave}>{opcion.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12 col-lg-4">
-              <label className="form-label form-label-sm">Fecha y hora</label>
-              <input type="datetime-local" className="form-control form-control-sm" value={decisionForm.fecha_decision} onChange={(e) => setDecisionForm((prev) => ({ ...prev, fecha_decision: e.target.value }))} />
-            </div>
-            <div className="col-12 col-lg-12">
-              <label className="form-label form-label-sm">Observaciones</label>
-              <input className="form-control form-control-sm" value={decisionForm.observaciones} onChange={(e) => setDecisionForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={60} />
+            <div className="row g-3">
+              <div className="col-12 col-lg-4">
+                <label className="form-label form-label-sm">Visita</label>
+                <select className="form-select form-select-sm" value={decisionForm.campana_asistente_id} onChange={(e) => setDecisionForm((prev) => ({ ...prev, campana_asistente_id: e.target.value }))}>
+                  <option value="">Seleccione</option>
+                  {asistentesOpciones.map((asistente) => (
+                    <option key={asistente.id} value={asistente.id}>{asistente.nombre_snapshot}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-12 col-lg-4">
+                <label className="form-label form-label-sm">Tipo de decisión</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={decisionForm.decision_clave}
+                  onChange={(e) => {
+                    const opcion = DECISION_OPCIONES.find((item) => item.clave === e.target.value);
+                    setDecisionForm((prev) => ({ ...prev, decision_clave: e.target.value, decision_etiqueta: opcion?.etiqueta || '' }));
+                  }}
+                >
+                  <option value="">Seleccione</option>
+                  {DECISION_OPCIONES.map((opcion) => (
+                    <option key={opcion.clave} value={opcion.clave}>{opcion.etiqueta}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-12 col-lg-4">
+                <label className="form-label form-label-sm">Fecha y hora</label>
+                <input type="datetime-local" className="form-control form-control-sm" value={decisionForm.fecha_decision} onChange={(e) => setDecisionForm((prev) => ({ ...prev, fecha_decision: e.target.value }))} />
+              </div>
+              <div className="col-12 col-lg-12">
+                <label className="form-label form-label-sm">Observaciones</label>
+                <input className="form-control form-control-sm" value={decisionForm.observaciones} onChange={(e) => setDecisionForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={60} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
       )}
 
       <div className="card shadow-sm campanas-section-card">
@@ -1325,8 +1333,10 @@ function RegistrarAsistenciaTab({
   guardarAsistencia,
   guardarAsistenteConValidacion
 }) {
+
   const [mostrarMasAsistente, setMostrarMasAsistente] = useState(false);
   const [seguimientoPersonalizado, setSeguimientoPersonalizado] = useState('');
+  const [panelAsistenciaMovil, setPanelAsistenciaMovil] = useState('ASISTENCIA');
 
   useEffect(() => {
     if (detalleVista === 'REG_ASISTENCIA') {
@@ -1488,86 +1498,86 @@ function RegistrarAsistenciaTab({
               <BotonAccion icono="bi-plus-lg" label="Agregar visita" onClick={guardarAsistenteConValidacion} />
             </div>
 
-          <div className="row g-3">
-            <div className="col-12 col-md-6">
-              <label className="form-label form-label-sm">Nombre</label>
-              <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} maxLength={45} />
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label form-label-sm">Tipo</label>
-              <select className="form-select form-select-sm" value={asistenteForm.tipo_asistente} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, tipo_asistente: e.target.value }))}>
-                {TIPO_ASISTENTE_OPCIONES.map((opcion) => (
-                  <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12 col-md-3">
-              <label className="form-label form-label-sm">Teléfono</label>
-              <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
-            </div>
+            <div className="row g-3">
+              <div className="col-12 col-md-6">
+                <label className="form-label form-label-sm">Nombre</label>
+                <input className="form-control form-control-sm" value={asistenteForm.nombre_completo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, nombre_completo: e.target.value }))} maxLength={45} />
+              </div>
+              <div className="col-12 col-md-3">
+                <label className="form-label form-label-sm">Tipo</label>
+                <select className="form-select form-select-sm" value={asistenteForm.tipo_asistente} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, tipo_asistente: e.target.value }))}>
+                  {TIPO_ASISTENTE_OPCIONES.map((opcion) => (
+                    <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-12 col-md-3">
+                <label className="form-label form-label-sm">Teléfono</label>
+                <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
+              </div>
 
-            {mostrarMasAsistente && (
-              <>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Correo</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.correo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, correo: e.target.value }))} maxLength={80} />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Procedencia</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.procedencia} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, procedencia: e.target.value }))} maxLength={60} />
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label form-label-sm">Clasificación</label>
-                  <select className="form-select form-select-sm" value={asistenteForm.clasificacion_etaria} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, clasificacion_etaria: e.target.value }))}>
-                    {ETARIA_OPCIONES.map((opcion) => (
-                      <option key={opcion.valor || 'ninguna'} value={opcion.valor}>{opcion.etiqueta}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label form-label-sm">Seguimiento</label>
-                  {asistenteForm.estado_seguimiento === 'OTROS' ? (
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={seguimientoPersonalizado}
-                      onChange={(e) => setSeguimientoPersonalizado(e.target.value)}
-                      placeholder="Especifique el estado"
-                      maxLength={30}
-                    />
-                  ) : (
-                    <select className="form-select form-select-sm" value={asistenteForm.estado_seguimiento} onChange={(e) => {
-                      setAsistenteForm((prev) => ({ ...prev, estado_seguimiento: e.target.value }));
-                      setSeguimientoPersonalizado('');
-                    }}>
-                      {ESTADO_SEGUIMIENTO_OPCIONES.map((opcion) => (
-                        <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+              {mostrarMasAsistente && (
+                <>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label form-label-sm">Correo</label>
+                    <input className="form-control form-control-sm" value={asistenteForm.correo} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, correo: e.target.value }))} maxLength={80} />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label form-label-sm">Procedencia</label>
+                    <input className="form-control form-control-sm" value={asistenteForm.procedencia} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, procedencia: e.target.value }))} maxLength={60} />
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <label className="form-label form-label-sm">Clasificación</label>
+                    <select className="form-select form-select-sm" value={asistenteForm.clasificacion_etaria} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, clasificacion_etaria: e.target.value }))}>
+                      {ETARIA_OPCIONES.map((opcion) => (
+                        <option key={opcion.valor || 'ninguna'} value={opcion.valor}>{opcion.etiqueta}</option>
                       ))}
                     </select>
-                  )}
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label form-label-sm">Dirección</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.direccion} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, direccion: e.target.value }))} maxLength={120} />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Barrio / comunidad</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.barrio_comunidad} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, barrio_comunidad: e.target.value }))} maxLength={60} />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label form-label-sm">Observaciones</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.observaciones} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={150} />
-                </div>
-              </>
-            )}
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <label className="form-label form-label-sm">Seguimiento</label>
+                    {asistenteForm.estado_seguimiento === 'OTROS' ? (
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={seguimientoPersonalizado}
+                        onChange={(e) => setSeguimientoPersonalizado(e.target.value)}
+                        placeholder="Especifique el estado"
+                        maxLength={30}
+                      />
+                    ) : (
+                      <select className="form-select form-select-sm" value={asistenteForm.estado_seguimiento} onChange={(e) => {
+                        setAsistenteForm((prev) => ({ ...prev, estado_seguimiento: e.target.value }));
+                        setSeguimientoPersonalizado('');
+                      }}>
+                        {ESTADO_SEGUIMIENTO_OPCIONES.map((opcion) => (
+                          <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  <div className="col-12 col-md-4">
+                    <label className="form-label form-label-sm">Dirección</label>
+                    <input className="form-control form-control-sm" value={asistenteForm.direccion} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, direccion: e.target.value }))} maxLength={120} />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label form-label-sm">Barrio / comunidad</label>
+                    <input className="form-control form-control-sm" value={asistenteForm.barrio_comunidad} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, barrio_comunidad: e.target.value }))} maxLength={60} />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label className="form-label form-label-sm">Observaciones</label>
+                    <input className="form-control form-control-sm" value={asistenteForm.observaciones} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, observaciones: e.target.value }))} maxLength={150} />
+                  </div>
+                </>
+              )}
 
-            <div className="col-12">
-              <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarMasAsistente(!mostrarMasAsistente)}>
-                <i className={`bi ${mostrarMasAsistente ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
-                <span>{mostrarMasAsistente ? 'Menos datos de la visita' : 'Más datos de la visita'}</span>
-              </button>
+              <div className="col-12">
+                <button type="button" className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1 text-muted" onClick={() => setMostrarMasAsistente(!mostrarMasAsistente)}>
+                  <i className={`bi ${mostrarMasAsistente ? 'bi-chevron-up' : 'bi-chevron-down'}`} aria-hidden="true"></i>
+                  <span>{mostrarMasAsistente ? 'Menos datos de la visita' : 'Más datos de la visita'}</span>
+                </button>
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>
@@ -1729,7 +1739,8 @@ function ListaAsistentesTab({
 
       <div className="card shadow-sm campanas-section-card">
         <div className="card-body p-0">
-          <div className="tabla-registros-scroll campanas-detalle-table-scroll" style={{ overflowX: 'auto' }}>
+          <div className="campanas-detalle-table-scroll-x">
+          <div className="tabla-registros-scroll campanas-detalle-table-scroll">
             <table className="table table-striped table-hover align-middle mb-0 tabla-registros campanas-asistentes-table">
               <thead className="tabla-registros-thead">
                 <tr>
@@ -1751,81 +1762,82 @@ function ListaAsistentesTab({
                   const pendientes = Number(item.total_premios_pendientes || 0);
                   const totalPremios = Number(item.total_premios || 0);
                   return (
-                  <tr
-                    key={item.id}
-                    ref={item.id === asistenteResaltadoId ? resaltadoCallbackRef : null}
-                  >
-                    <td>
-                      <div className="fw-semibold">{item.nombre_snapshot}</div>
-                    </td>
-                    <td className="text-center">
-                      <small>{Number(item.total_puntuales || 0)} de {totalSesiones}</small>
-                    </td>
-                    <td className="text-center">
-                      {pendientes > 0 ? (
-                        <button
-                          type="button"
-                          className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
-                          onClick={() => entregarPremios(item.id)}
-                          title="Marcar premio como entregado"
-                        >
-                          <i className="bi bi-gift" aria-hidden="true"></i>
-                          <small>{pendientes}</small>
-                        </button>
-                      ) : totalPremios > 0 ? (
-                        <span className="text-success small" title="Todos los premios entregados"><i className="bi bi-check-circle-fill" aria-hidden="true"></i></span>
-                      ) : (
-                        <span className="text-muted small">-</span>
-                      )}
-                    </td>
-                    <td className="text-end">
-                      <div className="d-inline-flex gap-1">
-                        {tieneInfoAdicional(item) && (
+                    <tr
+                      key={item.id}
+                      ref={item.id === asistenteResaltadoId ? resaltadoCallbackRef : null}
+                    >
+                      <td>
+                        <div className="fw-semibold">{item.nombre_snapshot}</div>
+                      </td>
+                      <td className="text-center">
+                        <small>{Number(item.total_puntuales || 0)} de {totalSesiones}</small>
+                      </td>
+                      <td className="text-center">
+                        {pendientes > 0 ? (
                           <button
                             type="button"
-                            className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
-                            style={{ width: '34px', height: '34px' }}
-                            onClick={() => setAsistenteDetalle(item)}
-                            title="Ver detalle"
-                            aria-label="Ver detalle de la visita"
+                            className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
+                            onClick={() => entregarPremios(item.id)}
+                            title="Marcar premio como entregado"
                           >
-                            <i className="bi bi-search" aria-hidden="true"></i>
+                            <i className="bi bi-gift" aria-hidden="true"></i>
+                            <small>{pendientes}</small>
                           </button>
+                        ) : totalPremios > 0 ? (
+                          <span className="text-success small" title="Todos los premios entregados"><i className="bi bi-check-circle-fill" aria-hidden="true"></i></span>
+                        ) : (
+                          <span className="text-muted small">-</span>
                         )}
-                        {item.tipo_asistente !== 'MIEMBRO' && item.estado_seguimiento !== 'ESTUDIO_BIBLICO' && (
+                      </td>
+                      <td className="text-end">
+                        <div className="d-inline-flex gap-1">
+                          {tieneInfoAdicional(item) && (
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
+                              style={{ width: '34px', height: '34px' }}
+                              onClick={() => setAsistenteDetalle(item)}
+                              title="Ver detalle"
+                              aria-label="Ver detalle de la visita"
+                            >
+                              <i className="bi bi-search" aria-hidden="true"></i>
+                            </button>
+                          )}
+                          {item.tipo_asistente !== 'MIEMBRO' && item.estado_seguimiento !== 'ESTUDIO_BIBLICO' && (
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
+                              style={{ width: '34px', height: '34px' }}
+                              onClick={() => convertirAsistenteAEstudio(item)}
+                              disabled={convirtiendoAsistenteId === item.id}
+                              title="Convertir a estudio bíblico"
+                              aria-label="Convertir a estudio bíblico"
+                            >
+                              <i className="bi bi-journal-plus" aria-hidden="true"></i>
+                            </button>
+                          )}
                           <button
                             type="button"
-                            className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
+                            className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
                             style={{ width: '34px', height: '34px' }}
-                            onClick={() => convertirAsistenteAEstudio(item)}
-                            disabled={convirtiendoAsistenteId === item.id}
-                            title="Convertir a estudio bíblico"
-                            aria-label="Convertir a estudio bíblico"
+                            onClick={() => {
+                              if (window.confirm(`¿Está seguro de eliminar a "${item.nombre_snapshot || item.nombre_completo || 'esta visita'}"?`)) {
+                                onEliminar(item.id);
+                              }
+                            }}
+                            title="Eliminar"
+                            aria-label="Eliminar visita"
                           >
-                            <i className="bi bi-journal-plus" aria-hidden="true"></i>
+                            <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
-                          style={{ width: '34px', height: '34px' }}
-                          onClick={() => {
-                            if (window.confirm(`¿Está seguro de eliminar a "${item.nombre_snapshot || item.nombre_completo || 'esta visita'}"?`)) {
-                              onEliminar(item.id);
-                            }
-                          }}
-                          title="Eliminar"
-                          aria-label="Eliminar visita"
-                        >
-                          <i className="bi bi-trash" aria-hidden="true"></i>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       </div>
@@ -2069,7 +2081,8 @@ function ListaDecisionesTab({
 
       <div className="card shadow-sm campanas-section-card">
         <div className="card-body p-0">
-          <div className="tabla-registros-scroll campanas-detalle-table-scroll" style={{ overflowX: 'auto' }}>
+          <div className="campanas-detalle-table-scroll-x">
+          <div className="tabla-registros-scroll campanas-detalle-table-scroll">
             <table className="table table-striped table-hover align-middle mb-0 tabla-registros campanas-decisiones-table">
               <thead className="tabla-registros-thead">
                 <tr>
@@ -2125,6 +2138,7 @@ function ListaDecisionesTab({
               </tbody>
             </table>
           </div>
+          </div>
         </div>
       </div>
 
@@ -2177,7 +2191,10 @@ function DetalleCampana(props) {
               key={vista.valor}
               type="button"
               className={`btn btn-sm ${detalleVista === vista.valor ? 'btn-primary' : 'btn-outline-primary'} admin-responsive-action-btn`}
-              onClick={() => setDetalleVista(vista.valor)}
+              onClick={(event) => {
+                event.currentTarget.blur();
+                setDetalleVista(vista.valor);
+              }}
               aria-pressed={detalleVista === vista.valor}
             >
               <i className={`bi ${vista.icono}`} aria-hidden="true"></i>
@@ -2425,53 +2442,106 @@ export default function CampanasPage() {
         />
       )}
       {seccionActiva === 'CAMPANAS' && (
-      <>
-      <div className="row g-2 g-md-3 mb-3 campanas-top-row campanas-mobile-kpi-row">
-        <KpiCard label="Campañas" value={dashboard.total_campanas} icon="bi-megaphone" />
-        <KpiCard label="Visitas" value={dashboard.total_visitas_unicas} icon="bi-person-plus" />
-        <KpiCard label="Bautismos" value={dashboard.total_bautismos_relacionados} icon="bi-droplet" />
-        <KpiCard
-          label="Estudios Bíblicos"
-          value={dashboard.total_estudios_derivados}
-          icon="bi-book"
-          action={(
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm rounded-circle d-md-none align-items-center justify-content-center campanas-mobile-filter-btn"
-              onClick={() => setMostrarFiltrosMovil(true)}
-              title="Filtros"
-              aria-label="Abrir filtros de campañas"
-            >
-              <i className="bi bi-funnel" aria-hidden="true"></i>
-            </button>
-          )}
-        />
-      </div>
+        <>
+          <div className="campanas-kpi-grid mb-3 campanas-mobile-kpi-row">
+            <KpiCard label="Campañas" value={dashboard.total_campanas} icon="bi-megaphone" />
+            <KpiCard label="Visitas" value={dashboard.total_visitas_unicas} icon="bi-person-plus" />
+            <KpiCard label="Bautismos" value={dashboard.total_bautismos_relacionados} icon="bi-droplet" />
+            <KpiCard
+              label="Estudios Bíblicos"
+              value={dashboard.total_estudios_derivados}
+              icon="bi-book"
+              action={(
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary btn-sm rounded-circle d-md-none align-items-center justify-content-center campanas-mobile-filter-btn"
+                  onClick={() => setMostrarFiltrosMovil(true)}
+                  title="Filtros"
+                  aria-label="Abrir filtros de campañas"
+                >
+                  <i className="bi bi-funnel" aria-hidden="true"></i>
+                </button>
+              )}
+            />
+          </div>
 
-      <div className="row g-3 mb-3 campanas-top-row">
-        <div className="col-12">
-          <div className="card shadow-sm h-100 campanas-filtros-card campanas-filtros-card-desktop">
-            <div className="card-body" style={{ overflow: 'visible' }}>
+          <div className="row g-3 mb-3 campanas-top-row">
+            <div className="col-12">
+              <div className="card shadow-sm h-100 campanas-filtros-card campanas-filtros-card-desktop">
+                <div className="card-body" style={{ overflow: 'visible' }}>
+                  <div className="row g-2 align-items-end">
+                    <div className="col-12 col-lg-5">
+                      <SearchInput
+                        id="campanas-busqueda"
+                        value={filtros.q}
+                        onChange={(valor) => cambiarFiltro('q', valor)}
+                        placeholder="Buscar por nombre, lema o predicador"
+                      />
+                    </div>
+                    <div className="col-12 col-sm-6 col-lg-3">
+                      <label htmlFor="campanas-estado" className="form-label form-label-sm">Estado</label>
+                      <select id="campanas-estado" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
+                        {ESTADO_CAMPANA_OPCIONES.map((opcion) => (
+                          <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-6 col-sm-3 col-lg-2">
+                      <label htmlFor="campanas-anio" className="form-label form-label-sm">Año</label>
+                      <select id="campanas-anio" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
+                        const nuevoAnio = e.target.value;
+                        setFiltroAnio(nuevoAnio);
+                        if (!nuevoAnio) setFiltroTrimestre('');
+                        const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(nuevoAnio, nuevoAnio ? filtroTrimestre : '');
+                        cambiarFiltro('fecha_desde', fecha_desde);
+                        cambiarFiltro('fecha_hasta', fecha_hasta);
+                      }}>
+                        {ANIO_OPCIONES.map((opcion) => (
+                          <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-6 col-sm-3 col-lg-2">
+                      <label htmlFor="campanas-trimestre" className="form-label form-label-sm">Trimestre</label>
+                      <select id="campanas-trimestre" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
+                        const nuevoTrimestre = e.target.value;
+                        setFiltroTrimestre(nuevoTrimestre);
+                        const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(filtroAnio, nuevoTrimestre);
+                        cambiarFiltro('fecha_desde', fecha_desde);
+                        cambiarFiltro('fecha_hasta', fecha_hasta);
+                      }}>
+                        {TRIMESTRE_OPCIONES.map((opcion) => (
+                          <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <CampanasFiltrosMobileSheet abierto={mostrarFiltrosMovil} onCerrar={() => setMostrarFiltrosMovil(false)}>
               <div className="row g-2 align-items-end">
-                <div className="col-12 col-lg-5">
+                <div className="col-12">
+                  <label htmlFor="campanas-mobile-busqueda" className="form-label form-label-sm">Buscar</label>
                   <SearchInput
-                    id="campanas-busqueda"
+                    id="campanas-mobile-busqueda"
                     value={filtros.q}
                     onChange={(valor) => cambiarFiltro('q', valor)}
                     placeholder="Buscar por nombre, lema o predicador"
                   />
                 </div>
-                <div className="col-12 col-sm-6 col-lg-3">
-                  <label htmlFor="campanas-estado" className="form-label form-label-sm">Estado</label>
-                  <select id="campanas-estado" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
+                <div className="col-12">
+                  <label htmlFor="campanas-mobile-estado" className="form-label form-label-sm">Estado</label>
+                  <select id="campanas-mobile-estado" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
                     {ESTADO_CAMPANA_OPCIONES.map((opcion) => (
                       <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
                     ))}
                   </select>
                 </div>
-                <div className="col-6 col-sm-3 col-lg-2">
-                  <label htmlFor="campanas-anio" className="form-label form-label-sm">Año</label>
-                  <select id="campanas-anio" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
+                <div className="col-6">
+                  <label htmlFor="campanas-mobile-anio" className="form-label form-label-sm">Año</label>
+                  <select id="campanas-mobile-anio" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
                     const nuevoAnio = e.target.value;
                     setFiltroAnio(nuevoAnio);
                     if (!nuevoAnio) setFiltroTrimestre('');
@@ -2484,9 +2554,9 @@ export default function CampanasPage() {
                     ))}
                   </select>
                 </div>
-                <div className="col-6 col-sm-3 col-lg-2">
-                  <label htmlFor="campanas-trimestre" className="form-label form-label-sm">Trimestre</label>
-                  <select id="campanas-trimestre" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
+                <div className="col-6">
+                  <label htmlFor="campanas-mobile-trimestre" className="form-label form-label-sm">Trimestre</label>
+                  <select id="campanas-mobile-trimestre" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
                     const nuevoTrimestre = e.target.value;
                     setFiltroTrimestre(nuevoTrimestre);
                     const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(filtroAnio, nuevoTrimestre);
@@ -2499,164 +2569,113 @@ export default function CampanasPage() {
                   </select>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </CampanasFiltrosMobileSheet>
 
-        <CampanasFiltrosMobileSheet abierto={mostrarFiltrosMovil} onCerrar={() => setMostrarFiltrosMovil(false)}>
-          <div className="row g-2 align-items-end">
             <div className="col-12">
-              <label htmlFor="campanas-mobile-busqueda" className="form-label form-label-sm">Buscar</label>
-              <SearchInput
-                id="campanas-mobile-busqueda"
-                value={filtros.q}
-                onChange={(valor) => cambiarFiltro('q', valor)}
-                placeholder="Buscar por nombre, lema o predicador"
-              />
-            </div>
-            <div className="col-12">
-              <label htmlFor="campanas-mobile-estado" className="form-label form-label-sm">Estado</label>
-              <select id="campanas-mobile-estado" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtros.estado} onChange={(e) => cambiarFiltro('estado', e.target.value)}>
-                {ESTADO_CAMPANA_OPCIONES.map((opcion) => (
-                  <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-6">
-              <label htmlFor="campanas-mobile-anio" className="form-label form-label-sm">Año</label>
-              <select id="campanas-mobile-anio" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroAnio} onChange={(e) => {
-                const nuevoAnio = e.target.value;
-                setFiltroAnio(nuevoAnio);
-                if (!nuevoAnio) setFiltroTrimestre('');
-                const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(nuevoAnio, nuevoAnio ? filtroTrimestre : '');
-                cambiarFiltro('fecha_desde', fecha_desde);
-                cambiarFiltro('fecha_hasta', fecha_hasta);
-              }}>
-                {ANIO_OPCIONES.map((opcion) => (
-                  <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-            <div className="col-6">
-              <label htmlFor="campanas-mobile-trimestre" className="form-label form-label-sm">Trimestre</label>
-              <select id="campanas-mobile-trimestre" className="form-select form-select-sm" style={{ minHeight: 38 }} value={filtroTrimestre} disabled={!filtroAnio} onChange={(e) => {
-                const nuevoTrimestre = e.target.value;
-                setFiltroTrimestre(nuevoTrimestre);
-                const { fecha_desde, fecha_hasta } = calcularFechasDeFiltro(filtroAnio, nuevoTrimestre);
-                cambiarFiltro('fecha_desde', fecha_desde);
-                cambiarFiltro('fecha_hasta', fecha_hasta);
-              }}>
-                {TRIMESTRE_OPCIONES.map((opcion) => (
-                  <option key={opcion.valor || 'todos'} value={opcion.valor}>{opcion.etiqueta}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </CampanasFiltrosMobileSheet>
-
-        <div className="col-12">
-          <div className="card shadow-sm campanas-lista-card">
-            <div className="card-body p-0">
-              <div className="tabla-registros-scroll" style={{ maxHeight: 'clamp(300px, 44vh, 390px)', overflowX: 'auto' }}>
-                  <table className="table table-striped table-hover align-middle mb-0 tabla-registros">
-                    <thead className="tabla-registros-thead">
-                      <tr>
-                        <th>Campaña</th>
-                        <th>Estado</th>
-                        <th>Predicador</th>
-                        <th>Responsable</th>
-                        <th>Hora</th>
-                        <th>Días</th>
-                        <th className="text-center">Visitas</th>
-                        <th className="text-end">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {!cargando && campanas.length === 0 && (
+              <div className="card shadow-sm campanas-lista-card">
+                <div className="card-body p-0">
+                  <div className="campanas-detalle-table-scroll-x">
+                    <div className="tabla-registros-scroll campanas-lista-table-scroll" style={{ maxHeight: 'clamp(300px, 44vh, 390px)' }}>
+                    <table className="table table-striped table-hover align-middle mb-0 tabla-registros campanas-lista-table">
+                      <thead className="tabla-registros-thead">
                         <tr>
-                          <td colSpan="8" className="text-center text-muted py-4">No hay campañas registradas todavía.</td>
+                          <th>Campaña</th>
+                          <th>Estado</th>
+                          <th>Predicador</th>
+                          <th>Responsable</th>
+                          <th>Hora</th>
+                          <th>Días</th>
+                          <th className="text-center">Visitas</th>
+                          <th className="text-end">Acciones</th>
                         </tr>
-                      )}
-                      {campanas.map((item) => {
-                        const tieneInfo = item.tipo || item.descripcion || item.observaciones;
-                        return (
-                        <tr key={item.id} className={`${seleccionadaId === item.id ? 'table-active' : ''} ${campanaResaltadaId === item.id ? 'campana-resaltada' : ''}`} style={{ cursor: 'pointer' }} onClick={() => { setSeleccionadaId(item.id); setMostrarDetalleModal(true); }}>
-                          <td>
-                            <div className="fw-semibold">{item.lema}</div>
-                            <div className="small text-muted">{formatearFecha(item.fecha_inicio)} al {formatearFecha(item.fecha_fin)}</div>
-                          </td>
-                          <td><span className={`badge ${claseEstado(item.estado)}`}>{etiquetaEstado(item.estado)}</span></td>
-                          <td><span className="small">{item.predicador || '-'}</span></td>
-                          <td><span className="small">{item.responsable || '-'}</span></td>
-                          <td><span className="small">{formatearHora(item.hora)}</span></td>
-                          <td>{Number(item.total_sesiones || 0).toLocaleString('es-CR')}</td>
-                          <td className="text-center">{Number(item.total_asistentes || 0).toLocaleString('es-CR')}</td>
-                          <td className="text-end">
-                            <div className="d-inline-flex gap-2">
-                              {tieneInfo && (
-                                <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); setCampanaInfoModal(item); }} title="Ver detalles" aria-label="Ver detalles de campaña">
-                                  <i className="bi bi-search" aria-hidden="true"></i>
-                                </button>
-                              )}
-                              {(() => {
-                                const hoy = new Date().toLocaleDateString('en-CA');
-                                if (item.fecha_fin && hoy > item.fecha_fin) return null;
-                                return (
-                                  <button type="button" className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); editarCampana(item); setMostrarModalCampana(true); }} title="Editar" aria-label="Editar campaña">
-                                    <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                      </thead>
+                      <tbody>
+                        {!cargando && campanas.length === 0 && (
+                          <tr>
+                            <td colSpan="8" className="text-center text-muted py-4">No hay campañas registradas todavía.</td>
+                          </tr>
+                        )}
+                        {campanas.map((item) => {
+                          const tieneInfo = item.tipo || item.descripcion || item.observaciones;
+                          return (
+                            <tr key={item.id} className={`${seleccionadaId === item.id ? 'table-active' : ''} ${campanaResaltadaId === item.id ? 'campana-resaltada' : ''}`} style={{ cursor: 'pointer' }} onClick={() => { setSeleccionadaId(item.id); setMostrarDetalleModal(true); }}>
+                              <td>
+                                <div className="fw-semibold">{item.lema}</div>
+                                <div className="small text-muted">{formatearFecha(item.fecha_inicio)} al {formatearFecha(item.fecha_fin)}</div>
+                              </td>
+                              <td><span className={`badge ${claseEstado(item.estado)}`}>{etiquetaEstado(item.estado)}</span></td>
+                              <td><span className="small">{item.predicador || '-'}</span></td>
+                              <td><span className="small">{item.responsable || '-'}</span></td>
+                              <td><span className="small">{formatearHora(item.hora)}</span></td>
+                              <td>{Number(item.total_sesiones || 0).toLocaleString('es-CR')}</td>
+                              <td className="text-center">{Number(item.total_asistentes || 0).toLocaleString('es-CR')}</td>
+                              <td className="text-end">
+                                <div className="d-inline-flex gap-2">
+                                  {tieneInfo && (
+                                    <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); setCampanaInfoModal(item); }} title="Ver detalles" aria-label="Ver detalles de campaña">
+                                      <i className="bi bi-search" aria-hidden="true"></i>
+                                    </button>
+                                  )}
+                                  {(() => {
+                                    const hoy = new Date().toLocaleDateString('en-CA');
+                                    if (item.fecha_fin && hoy > item.fecha_fin) return null;
+                                    return (
+                                      <button type="button" className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); editarCampana(item); setMostrarModalCampana(true); }} title="Editar" aria-label="Editar campaña">
+                                        <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                                      </button>
+                                    );
+                                  })()}
+                                  <button type="button" className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); eliminarCampana(item.id); }} title="Eliminar" aria-label="Eliminar campaña">
+                                    <i className="bi bi-trash" aria-hidden="true"></i>
                                   </button>
-                                );
-                              })()}
-                              <button type="button" className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); eliminarCampana(item.id); }} title="Eliminar" aria-label="Eliminar campaña">
-                                <i className="bi bi-trash" aria-hidden="true"></i>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {campanaInfoModal && (
-        <div className="prompt-overlay-iasd" onClick={() => setCampanaInfoModal(null)}>
-          <div className="prompt-modal-iasd" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h5 className="mb-0">Detalles de la campaña</h5>
-              <button type="button" className="btn-close" onClick={() => setCampanaInfoModal(null)} aria-label="Cerrar"></button>
-            </div>
-            <div style={{ padding: '1rem 0', minHeight: '100px', maxHeight: '350px', overflowY: 'auto' }}>
-              {campanaInfoModal.tipo && (
-                <div className="mb-3">
-                  <div className="small text-muted">Tipo</div>
-                  <div>{etiquetaTipoCampana(campanaInfoModal.tipo)}</div>
+          {campanaInfoModal && (
+            <div className="prompt-overlay-iasd" onClick={() => setCampanaInfoModal(null)}>
+              <div className="prompt-modal-iasd" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+                <div style={{ paddingBottom: '1rem', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h5 className="mb-0">Detalles de la campaña</h5>
+                  <button type="button" className="btn-close" onClick={() => setCampanaInfoModal(null)} aria-label="Cerrar"></button>
                 </div>
-              )}
-              {campanaInfoModal.descripcion && (
-                <div className="mb-3">
-                  <div className="small text-muted">Descripción</div>
-                  <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{campanaInfoModal.descripcion}</div>
+                <div style={{ padding: '1rem 0', minHeight: '100px', maxHeight: '350px', overflowY: 'auto' }}>
+                  {campanaInfoModal.tipo && (
+                    <div className="mb-3">
+                      <div className="small text-muted">Tipo</div>
+                      <div>{etiquetaTipoCampana(campanaInfoModal.tipo)}</div>
+                    </div>
+                  )}
+                  {campanaInfoModal.descripcion && (
+                    <div className="mb-3">
+                      <div className="small text-muted">Descripción</div>
+                      <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{campanaInfoModal.descripcion}</div>
+                    </div>
+                  )}
+                  {campanaInfoModal.observaciones && (
+                    <div className="mb-0">
+                      <div className="small text-muted">Observaciones</div>
+                      <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{campanaInfoModal.observaciones}</div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {campanaInfoModal.observaciones && (
-                <div className="mb-0">
-                  <div className="small text-muted">Observaciones</div>
-                  <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{campanaInfoModal.observaciones}</div>
+                <div style={{ paddingTop: '1rem', borderTop: '1px solid #e0e0e0', textAlign: 'right' }}>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={() => setCampanaInfoModal(null)}>Cerrar</button>
                 </div>
-              )}
+              </div>
             </div>
-            <div style={{ paddingTop: '1rem', borderTop: '1px solid #e0e0e0', textAlign: 'right' }}>
-              <button className="btn btn-outline-secondary btn-sm" onClick={() => setCampanaInfoModal(null)}>Cerrar</button>
-            </div>
-          </div>
-        </div>
-      )}
-      </>
+          )}
+        </>
       )}
 
       <CampanaFormModal

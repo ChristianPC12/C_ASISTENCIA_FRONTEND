@@ -112,7 +112,7 @@ function VisitasFiltrosContent({
   mostrarNuevaMovil = false
 }) {
   return (
-    <div className="row g-2 align-items-end">
+    <div className={`row g-2 align-items-end visitas-filtros-content ${mostrarNuevaMovil ? 'visitas-filtros-content-mobile' : ''}`}>
       <div className="col-12 col-lg-4">
         <label className="form-label form-label-sm" htmlFor={`${idPrefix}-busqueda`}>Buscar</label>
         <div className="d-flex align-items-center gap-2">
@@ -125,7 +125,7 @@ function VisitasFiltrosContent({
           />
           <button
             type="button"
-            className={`btn btn-primary visitas-nueva-btn align-items-center justify-content-center ${mostrarNuevaMovil ? 'd-flex' : 'd-lg-none d-flex'}`}
+            className={`btn btn-primary btn-sm visitas-nueva-btn align-items-center justify-content-center ${mostrarNuevaMovil ? 'd-flex' : 'd-lg-none d-flex'}`}
             onClick={abrirNueva}
             title="Registrar nueva visita"
             aria-label="Registrar nueva visita"
@@ -587,8 +587,9 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
 
       <div className="card shadow-sm">
         <div className="card-body p-0">
-          <div style={{ maxHeight: 'clamp(300px, 44vh, 390px)', overflowY: 'auto', overflowX: 'auto' }}>
-            <table className="table table-striped table-hover align-middle mb-0" style={{ fontSize: '0.875rem', minWidth: '720px' }}>
+          <div className="tabla-registros-scroll-x visitas-tabla-scroll-x">
+            <div className="tabla-registros-scroll visitas-tabla-scroll-y">
+              <table className="table table-striped table-hover align-middle mb-0 visitas-tabla-registros">
               <thead className="table-light" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                 <tr>
                   <th>Visita</th>
@@ -686,7 +687,8 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
                   );
                 })}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
         </div>
       </div>

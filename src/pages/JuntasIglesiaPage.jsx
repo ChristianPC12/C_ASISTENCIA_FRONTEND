@@ -1,4 +1,5 @@
-﻿import SearchInput from '../components/ui/SearchInput';
+﻿import { useCallback, useMemo, useState } from 'react';
+import SearchInput from '../components/ui/SearchInput';
 import { useJuntasIglesia } from '../hooks/useJuntasIglesia';
 
 const TIPO_JUNTA_OPCIONES = [

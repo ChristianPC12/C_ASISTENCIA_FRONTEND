@@ -396,7 +396,9 @@ Rutas activas:
 - `Asignar estudio`:
   - usa tres columnas en escritorio: seleccionar visita, formulario, seleccionar instructor;
   - en telefono, seleccionar visita/instructor se abre desde botones junto al formulario;
-  - permite multiples visitas y multiples instructores responsables;
+  - permite multiples visitas y multiples instructores involucrados;
+  - si hay mas de un instructor, se define un instructor representante;
+  - solo el instructor representante tiene la responsabilidad de registrar/firmar la sesion; los demas instructores siguen visibles como involucrados;
   - al seleccionar, el registro se mueve arriba y muestra accion de quitar;
   - no permite elegir visitas con estudio biblico activo y el mensaje debe nombrar cuales visitas lo bloquean;
   - campos obligatorios: visitas, instructores, fecha de inicio, veces y periodo;
@@ -416,7 +418,15 @@ Rutas activas:
   - boton `Justificar falta` registra periodos vencidos justificables;
   - avance general se relaciona con el slider `Cerca del bautismo`, pero el instructor puede ajustar manualmente el porcentaje;
   - si hay multiples visitas, el encabezado usa carrusel con contador;
-  - si hay multiples instructores, cada instructor debe registrar su propia asistencia; el sistema deja claro si solo registro uno.
+  - si hay multiples instructores, el registro lo realiza solo el instructor representante y cuenta como registro formal del estudio.
+
+### Patron de scroll aprobado
+
+- Para tablas operativas con doble eje, leer `.agents/react-doctor/PATRON_SCROLL_TABLAS.md`.
+- Regla critica: wrapper externo solo horizontal, wrapper interno solo vertical.
+- El wrapper interno debe usar `width: max-content`, `min-width: 100%` y `max-width: none`.
+- No usar `touch-action: pan-x` en tablas administrativas porque puede bloquear el scroll vertical.
+- Este patron quedo aplicado en `Campanas`, `VisitasGeneralView` y `EstudiosBiblicosPage`.
 
 ### Archivos clave actuales
 
@@ -432,6 +442,6 @@ Rutas activas:
 ### Verificacion vigente
 
 - `npm run build` OK.
-- `npx -y react-doctor@latest . --verbose --diff` OK, 91/100.
+- `npx -y react-doctor@latest . --verbose --diff` OK, 89/100.
 - Advertencias abiertas conocidas: componentes grandes y temas de accesibilidad heredados principalmente en `CampanasPage`, `Sidebar`, `VisitasGeneralView` y `EstudiosBiblicosPage`.
 

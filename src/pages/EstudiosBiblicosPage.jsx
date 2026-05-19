@@ -738,8 +738,8 @@ function KpiCard({ label, value, icon, action = null }) {
 
 function EstudiosFiltrosContent({ idPrefix, filtros, cambiarFiltro }) {
   return (
-    <div className="row g-2 align-items-end">
-      <div className="col-12 col-lg-5">
+    <div className="row g-2 align-items-end estudios-filtros-content">
+      <div className="col-7 col-lg-5">
         <label htmlFor={`${idPrefix}-busqueda`} className="form-label form-label-sm">Buscar</label>
         <SearchInput
           id={`${idPrefix}-busqueda`}
@@ -748,7 +748,7 @@ function EstudiosFiltrosContent({ idPrefix, filtros, cambiarFiltro }) {
           placeholder="Visita, instructor, telefono o material"
         />
       </div>
-      <div className="col-6 col-lg-3">
+      <div className="col-5 col-lg-3">
         <label htmlFor={`${idPrefix}-estado`} className="form-label form-label-sm">Estado</label>
         <select id={`${idPrefix}-estado`} className="form-select form-select-sm" value={filtros.estado_general} onChange={(e) => cambiarFiltro('estado_general', e.target.value)}>
           {ESTADO_OPCIONES.map((opcion) => (
@@ -1443,7 +1443,8 @@ function EstudiosMainView({
 
       <div className="card shadow-sm estudios-lista-card">
         <div className="card-body p-0">
-          <div className="tabla-registros-scroll estudios-tabla-scroll">
+          <div className="tabla-registros-scroll-x estudios-tabla-scroll-x">
+            <div className="tabla-registros-scroll estudios-tabla-scroll">
               <table className="table table-striped table-hover align-middle mb-0 tabla-registros estudios-lista-table">
                 <thead className="tabla-registros-thead">
                   <tr>
@@ -1498,6 +1499,7 @@ function EstudiosMainView({
                   })}
                 </tbody>
               </table>
+            </div>
           </div>
         </div>
       </div>
@@ -2237,8 +2239,8 @@ function ResumenSeleccionAsignar({ id, singular, plural, items, getLabel, action
   };
 
   return (
-    <div>
-      <div className="d-flex align-items-center justify-content-between gap-2">
+    <div className="estudios-resumen-seleccion">
+      <div className="d-flex align-items-center justify-content-between gap-2 estudios-resumen-seleccion-head">
         <label htmlFor={id} className="form-label form-label-sm">{etiqueta} <span className="badge text-bg-light border ms-1">{total}</span></label>
         {action}
       </div>

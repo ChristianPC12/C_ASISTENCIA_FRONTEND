@@ -22,7 +22,8 @@ y avanzar los siguientes modulos con ejecucion controlada (discovery -> implemen
 4. `.agents/react-doctor/prompt_frontend.md`
 5. `.agents/react-doctor/AGENTE_ANTI_ERRORES_UI.md`
 6. `.agents/react-doctor/AGENTE_DISENO_ESPACIO_UI.md`
-7. `.agents/react-doctor/SKILL.md`
+7. `.agents/react-doctor/PATRON_SCROLL_TABLAS.md`
+8. `.agents/react-doctor/SKILL.md`
 
 ## Modo de arranque obligatorio (sin programar)
 
@@ -70,6 +71,30 @@ Si una tarea toca contrato, auth, roles o modelo de datos, reflejar el cambio ta
 ## Nota operativa
 
 El siguiente bloque de trabajo lo define el owner funcional segun prioridad de modulo.
+
+## Regla obligatoria para tablas con scroll horizontal + vertical
+
+Cuando una tabla necesite scroll horizontal y vertical, no usar un solo contenedor con ambos ejes. Ese patron rompe gestos en telefono/tablet y permite arrastre diagonal o bloquea uno de los ejes.
+
+Patron aprobado:
+
+- Wrapper externo: solo scroll horizontal.
+  - `width: 100%`
+  - `max-width: 100%`
+  - `overflow-x: auto`
+  - `overflow-y: hidden`
+  - `-webkit-overflow-scrolling: touch`
+  - `overscroll-behavior-x: contain`
+- Wrapper interno: solo scroll vertical.
+  - `width: max-content`
+  - `min-width: 100%`
+  - `max-width: none`
+  - `overflow-y: auto`
+  - `overflow-x: hidden`
+  - `overscroll-behavior-y: contain`
+- Tabla: `min-width` concreto segun columnas reales.
+
+Detalle importante: si el wrapper interno hereda `max-width: 100%`, el scroll horizontal puede desaparecer aunque la tabla tenga `min-width`. Siempre sobreescribirlo con `max-width: none` en tablas anchas. Este ajuste quedo aplicado en Campanas y Estudios Biblicos.
 
 ## Estado actual de modulos misioneros (2026-04-04)
 - Ya existen y estan conectados en frontend: Campanas, Estudios Biblicos, Pequenas Congregaciones (PC) y Juntas de Iglesia.

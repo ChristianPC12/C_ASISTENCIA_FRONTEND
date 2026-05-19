@@ -208,19 +208,31 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     window.dispatchEvent(new CustomEvent(EVENT_ESTADISTICAS_ABRIR_TABLA));
   };
 
-  const abrirNuevaCampana = () => {
+  const limpiarFocoTopbar = (event) => {
+    event?.currentTarget?.blur?.();
+  };
+
+  const abrirNuevaCampana = (event) => {
+    limpiarFocoTopbar(event);
+    setCampanasVistaActiva('NUEVA');
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_NUEVA));
   };
 
-  const abrirListaCampanas = () => {
+  const abrirListaCampanas = (event) => {
+    limpiarFocoTopbar(event);
+    setCampanasVistaActiva('CAMPANAS');
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_LISTA));
   };
 
-  const abrirSelectorCampana = () => {
+  const abrirSelectorCampana = (event) => {
+    limpiarFocoTopbar(event);
+    setCampanasVistaActiva('VER_CAMPANA');
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_SELECTOR));
   };
 
-  const abrirVisitasCampana = () => {
+  const abrirVisitasCampana = (event) => {
+    limpiarFocoTopbar(event);
+    setCampanasVistaActiva('VISITAS');
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_VISITAS));
   };
 
