@@ -9,10 +9,10 @@ const FORM_JUNTA_INICIAL = {
   fecha: '',
   hora_inicio: '',
   hora_fin: '',
-  tipo: 'ORDINARIA',
+  tipo: 'PRESENCIAL',
   moderador: '',
   secretario: '',
-  estado: 'BORRADOR',
+  estado: 'EN_PROCESO',
   observaciones_generales: '',
   resumen_general: '',
   quorum_texto: '',
@@ -52,6 +52,32 @@ const FORM_VOTACION_INICIAL = {
   observacion: '',
   estado_resultante: 'APROBADO'
 };
+
+const TIPOS_JUNTA_LEGACY = {
+  ORDINARIA: 'PRESENCIAL',
+  EXTRAORDINARIA: 'PRESENCIAL',
+  SEGUIMIENTO: 'PRESENCIAL',
+  CONTINUACION: 'PRESENCIAL',
+  WHATSAPP: 'VIRTUAL'
+};
+
+function fechaHoyInput() {
+  return new Date().toLocaleDateString('en-CA');
+}
+
+function normalizarTipoJunta(valor) {
+  const tipo = String(valor || '').trim().toUpperCase();
+  return TIPOS_JUNTA_LEGACY[tipo] || tipo || 'PRESENCIAL';
+}
+
+function resolverEstadoJuntaPorFecha(fecha, estadoActual = '') {
+  const estado = String(estadoActual || '').toUpperCase();
+  if (['CERRADA', 'APROBADA', 'ARCHIVADA'].includes(estado)) return estado;
+
+  const fechaBase = String(fecha || '').slice(0, 10);
+  if (fechaBase && fechaBase > fechaHoyInput()) return 'POR_COMENZAR';
+  return 'EN_PROCESO';
+}
 
 export function useJuntasIglesia() {
   const [filtros, setFiltros] = useState({
@@ -210,10 +236,10 @@ export function useJuntasIglesia() {
       fecha: item.fecha || '',
       hora_inicio: item.hora_inicio ? String(item.hora_inicio).slice(0, 5) : '',
       hora_fin: item.hora_fin ? String(item.hora_fin).slice(0, 5) : '',
-      tipo: item.tipo || 'ORDINARIA',
+      tipo: normalizarTipoJunta(item.tipo),
       moderador: item.moderador || '',
       secretario: item.secretario || '',
-      estado: item.estado || 'BORRADOR',
+      estado: item.estado || 'EN_PROCESO',
       observaciones_generales: item.observaciones_generales || '',
       resumen_general: item.resumen_general || '',
       quorum_texto: item.quorum_texto || '',
@@ -293,44 +319,50 @@ export function useJuntasIglesia() {
     });
   }, []);
 
-  const guardarJunta = useCallback(async () => {
+  const guardarJunta = useCallback(async (opciones = {}) => {
     setGuardando(true);
     try {
+      const payload = {
+        ...juntaForm,
+        tipo: normalizarTipoJunta(juntaForm.tipo),
+        estado: resolverEstadoJuntaPorFecha(juntaForm.fecha, juntaForm.estado),
+        puntos: Array.isArray(opciones?.puntos) ? opciones.puntos : []
+      };
       const res = editandoJuntaId
-        ? await juntaApi.actualizar(editandoJuntaId, juntaForm)
-        : await juntaApi.crear(juntaForm);
+        ? await juntaApi.actualizar(editandoJuntaId, payload)
+        : await juntaApi.crear(payload);
 
       if (res?.exito) {
+        const nuevaId = res?.datos?.item?.id || editandoJuntaId;
         notificarExito(editandoJuntaId ? 'Junta actualizada.' : 'Junta creada.');
         resetJuntaForm();
-        await Promise.all([cargarDashboard(), cargarJuntas()]);
-        const nuevaId = res?.datos?.item?.id || editandoJuntaId;
+        await Promise.all([cargarDashboard(), cargarJuntas(), cargarPendientes()]);
         if (nuevaId) setSeleccionadaId(nuevaId);
+        return true;
       }
+      return false;
     } catch (error) {
       notificarError(error?.mensaje || 'No se pudo guardar la junta.');
+      return false;
     } finally {
       setGuardando(false);
     }
-  }, [editandoJuntaId, juntaForm, resetJuntaForm, cargarDashboard, cargarJuntas]);
+  }, [editandoJuntaId, juntaForm, resetJuntaForm, cargarDashboard, cargarJuntas, cargarPendientes]);
 
-  const archivarJunta = useCallback(async (item) => {
-    const ok = await confirmar({
-      titulo: 'Archivar junta',
-      mensaje: `La junta del ${item?.fecha || ''} quedara fuera del flujo activo.`
-    });
+  const eliminarJunta = useCallback(async (item) => {
+    const ok = await confirmar(`La junta del ${item?.fecha || ''} se eliminará definitivamente. ¿Desea continuar?`);
     if (!ok) return;
 
     setGuardando(true);
     try {
       const res = await juntaApi.eliminar(item.id);
       if (res?.exito) {
-        notificarExito('Junta archivada.');
+        notificarExito('Junta eliminada.');
         if (seleccionadaId === item.id) setSeleccionadaId(null);
         await Promise.all([cargarDashboard(), cargarJuntas(), cargarPendientes()]);
       }
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo archivar la junta.');
+      notificarError(error?.mensaje || 'No se pudo eliminar la junta.');
     } finally {
       setGuardando(false);
     }
@@ -385,6 +417,15 @@ export function useJuntasIglesia() {
     }
   }, [detalle, votacionForm, editandoVotacionId, resetVotacionForm, cargarDashboard, cargarJuntas, cargarDetalle, cargarPendientes]);
 
+  const refrescarJuntas = useCallback(async (detalleId = seleccionadaId) => {
+    await Promise.all([
+      cargarDashboard(),
+      cargarJuntas(),
+      cargarPendientes(),
+      detalleId ? cargarDetalle(detalleId) : Promise.resolve()
+    ]);
+  }, [cargarDashboard, cargarJuntas, cargarPendientes, cargarDetalle, seleccionadaId]);
+
   const referenciasPorModulo = useMemo(() => ({
     CAMPANAS: campanas.map((item) => ({ id: item.id, nombre: item.nombre || `Campaña #${item.id}` })),
     ESTUDIOS_BIBLICOS: estudios.map((item) => ({ id: item.id, nombre: item.persona_nombre || `Estudio #${item.id}` })),
@@ -421,13 +462,14 @@ export function useJuntasIglesia() {
     editarJunta,
     resetJuntaForm,
     inicializarJuntaNueva,
-    archivarJunta,
+    eliminarJunta,
     guardarPunto,
     editarPunto,
     resetPuntoForm,
     prepararVotacion,
     guardarVotacion,
     editarVotacion,
-    resetVotacionForm
+    resetVotacionForm,
+    refrescarJuntas
   };
 }

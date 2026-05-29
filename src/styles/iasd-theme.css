@@ -3601,7 +3601,7 @@ a:hover {
   position: fixed;
   top: 1.5rem;
   right: 1.5rem;
-  z-index: 9999;
+  z-index: 12050;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -3696,7 +3696,7 @@ a:hover {
 .confirm-overlay-iasd {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 12000;
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
@@ -4770,15 +4770,19 @@ a:hover {
 .juntas-lista-card,
 .juntas-detalle-card,
 .juntas-kpi-card,
-.juntas-section-card {
-  border-radius: 1rem;
+.juntas-section-card,
+.juntas-persona-form-card,
+.juntas-persona-lista-card {
+  border-radius: 0.5rem;
 }
 
 .juntas-form-card .card-body,
 .juntas-filtros-card .card-body,
 .juntas-detalle-card .card-body,
 .juntas-lista-card .card-body,
-.juntas-section-card .card-body {
+.juntas-section-card .card-body,
+.juntas-persona-form-card .card-body,
+.juntas-persona-lista-card .card-body {
   padding: 1rem;
 }
 
@@ -4787,23 +4791,533 @@ a:hover {
   flex-direction: column;
 }
 
-.juntas-page[data-vista='JUNTAS'] .juntas-form-card,
-.juntas-page[data-vista='JUNTAS'] .juntas-detalle-card {
-  display: none;
+.juntas-catalogo-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.75fr) minmax(0, 1.25fr);
+  gap: 1rem;
+  align-items: stretch;
 }
 
-.juntas-page[data-vista='MODERADORES'] .juntas-filtros-card,
-.juntas-page[data-vista='MODERADORES'] .juntas-top-row,
-.juntas-page[data-vista='MODERADORES'] .juntas-lista-card,
-.juntas-page[data-vista='MODERADORES'] .juntas-detalle-card {
-  display: none;
+.juntas-catalogo-layout > .card,
+.juntas-persona-form-card,
+.juntas-persona-lista-card {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
-.juntas-page[data-vista='SECRETARIAS'] .juntas-filtros-card,
-.juntas-page[data-vista='SECRETARIAS'] .juntas-top-row,
-.juntas-page[data-vista='SECRETARIAS'] .juntas-form-card,
-.juntas-page[data-vista='SECRETARIAS'] .juntas-lista-card {
-  display: none;
+.juntas-persona-form-card .card-body,
+.juntas-persona-lista-card .card-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.juntas-persona-lista-card .juntas-tabla-scroll-x {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.juntas-opcionales-toggle {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.juntas-opcionales-panel {
+  border: 1px solid rgba(0, 51, 102, 0.08);
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  padding: 0.85rem;
+  margin: 0;
+}
+
+.juntas-contador-badge {
+  min-width: 2.25rem;
+  min-height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.juntas-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.juntas-modal-card {
+  width: min(1120px, 100%);
+  max-height: min(86vh, 760px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  box-shadow: 0 18px 60px rgba(15, 23, 42, 0.22);
+  overflow: hidden;
+}
+
+.juntas-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 51, 102, 0.1);
+}
+
+.juntas-modal-header h5 {
+  color: var(--iasd-azul);
+  font-weight: 700;
+}
+
+.juntas-modal-body {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.juntas-departamento-form-card,
+.juntas-departamento-lista-card {
+  min-height: 0;
+  min-width: 0;
+  border-radius: 0.5rem;
+}
+
+.juntas-departamentos-table {
+  min-width: 54rem;
+}
+
+.juntas-asignar-card {
+  max-width: 1180px;
+}
+
+.juntas-puntos-preview-btn {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding-inline: 0.65rem;
+}
+
+.juntas-punto-preregistro {
+  border: 1px solid rgba(0, 51, 102, 0.08);
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  padding: 0.9rem;
+}
+
+.juntas-punto-actions {
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.juntas-punto-actions-col {
+  border-left: 1px solid rgba(0, 51, 102, 0.1);
+  padding-left: 1.25rem;
+}
+
+.juntas-form-textarea {
+  min-height: 78px;
+  max-height: 78px;
+  resize: none;
+}
+
+.juntas-puntos-modal-card {
+  width: min(840px, 100%);
+}
+
+.juntas-puntos-modal-body {
+  display: block;
+}
+
+.juntas-puntos-temporales-table {
+  min-width: 42rem;
+}
+
+.juntas-acciones-inline {
+  min-width: max-content;
+}
+
+.juntas-lista-table th:last-child,
+.juntas-lista-table td:last-child {
+  width: 4.75rem;
+  min-width: 4.75rem;
+}
+
+.juntas-icon-action-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.juntas-icon-action-btn.is-active {
+  background: var(--iasd-azul);
+  border-color: var(--iasd-azul);
+  color: #ffffff;
+}
+
+.juntas-pdf-action-btn {
+  color: #c62828;
+  border-color: #e36b6b;
+  background: #fff7f7;
+}
+
+.juntas-pdf-action-btn:hover,
+.juntas-pdf-action-btn:focus {
+  color: #ffffff;
+  border-color: #c62828;
+  background: #c62828;
+}
+
+.juntas-acciones-row-active > td {
+  background: #edf5ff !important;
+  border-top-color: #d7e8ff;
+  border-bottom-color: #d7e8ff;
+}
+
+.juntas-acciones-row-active > td:first-child {
+  border-left: 3px solid var(--iasd-azul);
+  border-top-left-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+
+.juntas-acciones-row-active > td:last-child {
+  border-top-right-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+
+.juntas-acciones-overlay {
+  background: rgba(15, 23, 42, 0.18);
+}
+
+.juntas-acciones-modal {
+  max-width: 280px;
+  width: min(92vw, 280px);
+  padding: 1rem;
+}
+
+.juntas-acciones-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #edf1f7;
+}
+
+.juntas-acciones-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+}
+
+.juntas-resumen-modal {
+  max-width: 460px;
+  width: min(94vw, 460px);
+  padding: 1rem;
+}
+
+.juntas-resumen-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 0.85rem;
+}
+
+.juntas-resumen-modal-text {
+  color: var(--iasd-texto);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.juntas-pdf-modal {
+  max-width: 360px;
+  width: min(94vw, 360px);
+  padding: 1rem;
+}
+
+.juntas-pdf-opciones {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.85rem;
+}
+
+.juntas-pdf-option-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 38px;
+  border-radius: 8px;
+}
+
+.juntas-sesion-overlay {
+  background: rgba(15, 23, 42, 0.28);
+}
+
+.juntas-sesion-modal {
+  width: min(96vw, 1120px);
+  max-height: 92vh;
+  padding: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.juntas-sesion-head,
+.juntas-sesion-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  background: #ffffff;
+}
+
+.juntas-sesion-head {
+  border-bottom: 1px solid #e7edf5;
+}
+
+.juntas-sesion-head-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.juntas-sesion-head-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.juntas-sesion-postergados-btn {
+  border-radius: 999px;
+  min-height: 32px;
+}
+
+.juntas-sesion-footer {
+  border-top: 1px solid #e7edf5;
+}
+
+.juntas-sesion-footer .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.juntas-sesion-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem 1.15rem;
+  background: #f6f8fb;
+}
+
+.juntas-sesion-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+
+.juntas-sesion-summary > div {
+  min-height: 62px;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.juntas-sesion-summary span,
+.juntas-sesion-summary label {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: #697386;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.juntas-sesion-summary strong {
+  color: var(--iasd-azul);
+  font-size: 1.15rem;
+}
+
+.juntas-sesion-puntos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.juntas-sesion-punto {
+  padding: 0.85rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.juntas-sesion-punto.is-procesado {
+  background: #f8fbff;
+}
+
+.juntas-sesion-punto-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.juntas-sesion-punto-grid {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.7fr) minmax(6rem, 0.7fr) minmax(14rem, 1.8fr) auto;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.juntas-sesion-punto-actions {
+  display: inline-flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.juntas-sesion-punto-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 31px;
+}
+
+.juntas-sesion-clear-state {
+  min-height: 9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border: 1px solid #cfe9d6;
+  border-radius: 8px;
+  background: #f4fbf6;
+  color: #135f2c;
+  text-align: left;
+}
+
+.juntas-sesion-clear-state i {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #198754;
+  font-size: 1.35rem;
+}
+
+.juntas-sesion-clear-state strong,
+.juntas-sesion-clear-state span {
+  display: block;
+}
+
+.juntas-sesion-clear-state span {
+  color: #51725c;
+  font-size: 0.92rem;
+  margin-top: 0.15rem;
+}
+
+.juntas-postergados-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.22);
+}
+
+.juntas-postergados-modal {
+  width: min(620px, 100%);
+  max-height: min(70vh, 520px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.22);
+}
+
+.juntas-postergados-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e7edf5;
+}
+
+.juntas-postergados-head h5 {
+  color: var(--iasd-azul);
+  font-weight: 700;
+}
+
+.juntas-postergados-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.85rem;
+  background: #f6f8fb;
+}
+
+.juntas-postergados-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.juntas-postergados-item + .juntas-postergados-item {
+  margin-top: 0.65rem;
+}
+
+.juntas-postergados-item .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  white-space: nowrap;
 }
 
 .juntas-vista-tabs {
@@ -4826,31 +5340,53 @@ a:hover {
   min-height: 0;
 }
 
-.juntas-table-shell {
-  border: 1px solid var(--bs-border-color);
-  border-radius: 0.9rem;
-  overflow: hidden;
-  background: #fff;
+.juntas-lista-card > .card-body.p-0 {
+  padding: 0 !important;
 }
 
-.juntas-table-scroll {
-  max-height: 20rem;
-  overflow: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
+.juntas-tabla-scroll-x {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
+  touch-action: auto;
 }
 
-.juntas-table-shell table {
+.juntas-tabla-scroll {
+  max-height: clamp(16rem, 33vh, 22rem);
   width: max-content;
   min-width: 100%;
+  max-width: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  touch-action: auto;
+  scrollbar-width: none;
 }
 
-.juntas-table-shell thead th {
+.juntas-tabla-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.juntas-tabla-scroll .tabla-registros {
+  min-width: 56rem;
+}
+
+.juntas-tabla-scroll .juntas-puntos-temporales-table {
+  min-width: 42rem;
+}
+
+.juntas-tabla-scroll thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--iasd-accent);
+  background: var(--iasd-azul);
   color: #fff;
+  border-bottom: none;
   white-space: nowrap;
 }
 
@@ -4924,10 +5460,12 @@ a:hover {
 }
 
 .juntas-lista-table,
+.juntas-personas-table,
+.juntas-departamentos-table,
 .juntas-puntos-table,
 .juntas-votaciones-table,
 .juntas-pendientes-table {
-  min-width: 46rem;
+  min-width: 56rem;
 }
 
 @media (max-width: 768px) {
@@ -4935,12 +5473,69 @@ a:hover {
   .juntas-form-card .card-body,
   .juntas-lista-card .card-body,
   .juntas-detalle-card .card-body,
-  .juntas-section-card .card-body {
+  .juntas-section-card .card-body,
+  .juntas-persona-form-card .card-body,
+  .juntas-persona-lista-card .card-body {
     padding: 0.85rem;
   }
 
-  .juntas-table-shell table {
-    width: max-content;
+  .juntas-catalogo-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .juntas-modal-card {
+    max-height: calc(100dvh - 1.25rem);
+  }
+
+  .juntas-modal-body {
+    grid-template-columns: 1fr;
+    padding: 0.85rem;
+  }
+
+  .juntas-punto-actions {
+    justify-content: stretch;
+  }
+
+  .juntas-punto-actions-col {
+    border-left: 0;
+    padding-left: calc(var(--bs-gutter-x) * 0.5);
+  }
+
+  .juntas-punto-actions .admin-responsive-action-btn {
+    flex: 1 1 0;
+  }
+
+  .juntas-icon-action-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .juntas-sesion-modal {
+    width: min(96vw, 100%);
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .juntas-sesion-head,
+  .juntas-sesion-footer,
+  .juntas-sesion-body {
+    padding: 0.85rem;
+  }
+
+  .juntas-sesion-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .juntas-sesion-punto-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .juntas-sesion-observacion,
+  .juntas-sesion-punto-actions {
+    grid-column: 1 / -1;
+  }
+
+  .juntas-sesion-punto-actions {
+    justify-content: flex-end;
   }
 
   .juntas-resumen-grid {
@@ -4948,10 +5543,12 @@ a:hover {
   }
 
   .juntas-lista-table,
+  .juntas-personas-table,
+  .juntas-departamentos-table,
   .juntas-puntos-table,
   .juntas-votaciones-table,
   .juntas-pendientes-table {
-    min-width: 58rem;
+    min-width: 62rem;
   }
 }
 

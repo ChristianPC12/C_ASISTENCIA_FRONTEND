@@ -49,6 +49,7 @@ Backend:
 - `/usuarios` solo `ADMIN` + requiere setup completo
 - `/campanas` `ADMIN/SECRETARIO/MINISTERIO_PERSONAL` + requiere setup completo
 - `/estudios-biblicos` `ADMIN/MINISTERIO_PERSONAL/INSTRUCTOR_BIBLICO` + requiere setup completo
+- `/juntas-iglesia` `ADMIN/SECRETARIO` + requiere setup completo
 
 ## 5) Auth y sesion
 
@@ -239,3 +240,31 @@ Reglas visuales que no se deben perder:
 - En telefono, liberar ancho de tabla moviendo filtros a boton/modal.
 - No usar headers internos redundantes dentro de tablas cuando ya existe titulo de modulo.
 - En `Registrar sesion`, los estados vacios deben llenar el alto disponible del card derecho.
+
+### Juntas de Iglesia
+
+- Ruta frontend: `/juntas-iglesia`.
+- Archivo principal: `src/pages/JuntasIglesiaPage.jsx`.
+- Hook principal: `src/hooks/useJuntasIglesia.js`.
+- Roles: `ADMIN` y `SECRETARIO`.
+- Subvistas: `Responsables`, `Juntas`, `Departamentos`, `Asignar junta`.
+- Contrato consumido principal:
+  - `GET /juntas-iglesia`
+  - `GET /juntas-iglesia/dashboard`
+  - `GET /juntas-iglesia/pendientes`
+  - `GET /juntas-iglesia/{id}`
+  - `POST /juntas-iglesia`
+  - `PUT /juntas-iglesia/{id}`
+  - `DELETE /juntas-iglesia/{id}`
+  - `POST /juntas-iglesia/{id}/puntos`
+  - `PUT /juntas-iglesia/puntos/{id}`
+  - `POST /juntas-iglesia/puntos/{id}/votaciones`
+  - `PUT /juntas-iglesia/votaciones/{id}`
+- Reglas funcionales:
+  - estados de junta: `POR_COMENZAR`, `EN_PROCESO`, `CERRADA`, `APROBADA`, `ARCHIVADA`;
+  - fecha futura guarda `POR_COMENZAR`;
+  - solo se puede sesionar en la fecha exacta de inicio;
+  - si la fecha ya paso, se debe editar la fecha antes de sesionar;
+  - el modal de sesion guarda asistentes como borrador local, valida quorum y limita votos a favor contra asistentes;
+  - puntos postergados se listan en modal secundario y pueden deshacerse mientras la junta no este cerrada;
+  - PDF se genera desde un modal de formato y puede incluir ficha + puntos o solo puntos.

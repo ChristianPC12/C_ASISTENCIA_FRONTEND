@@ -420,6 +420,57 @@ Rutas activas:
   - si hay multiples visitas, el encabezado usa carrusel con contador;
   - si hay multiples instructores, el registro lo realiza solo el instructor representante y cuenta como registro formal del estudio.
 
+### Estado de Juntas de Iglesia
+
+- Ruta activa: `/juntas-iglesia`.
+- Roles esperados: `ADMIN` y `SECRETARIO`.
+- Archivo principal: `src/pages/JuntasIglesiaPage.jsx`.
+- Hook principal: `src/hooks/useJuntasIglesia.js`.
+- Subvistas del topbar:
+  - `Responsables`;
+  - `Juntas`;
+  - `Departamentos`;
+  - `Asignar junta`.
+- `Responsables`:
+  - combina moderadores y secretarias;
+  - no crea usuarios reales;
+  - telefono/correo/observaciones son opcionales;
+  - departamento aplica solo para moderadores.
+- `Departamentos`:
+  - abre modal centrado con formulario y tabla;
+  - nombre de departamento detecta duplicados parecidos normalizando tildes/minusculas;
+  - directores asociados permite maximo dos saltos de linea.
+- `Asignar junta`:
+  - campos obligatorios: fecha de inicio, tipo, inicio, final, moderador, secretaria, quorum y al menos un punto;
+  - tipo solo `PRESENCIAL` o `VIRTUAL`;
+  - juntas presenciales no se duplican en la misma fecha; virtuales si pueden repetirse;
+  - resumen general y observaciones viven en datos opcionales;
+  - los puntos se preregistran temporalmente antes de guardar.
+- Estados de junta:
+  - `POR_COMENZAR` para fecha futura;
+  - `EN_PROCESO` para fecha de hoy;
+  - `CERRADA` al terminar sesion;
+  - `APROBADA` y `ARCHIVADA` se mantienen como estados validos heredados.
+- Acciones de la tabla:
+  - menu de tres puntos;
+  - resumen/observaciones si existen;
+  - editar solo si la fecha de inicio no paso;
+  - eliminar con confirmacion;
+  - PDF con opciones `Ficha general y puntos` o `Solo puntos`;
+  - sesionar solo si la fecha de inicio es exactamente hoy.
+- `Sesionar junta`:
+  - modal grande independiente;
+  - asistentes se guarda como borrador local por junta y se limpia al cerrar;
+  - votos a favor no pueden superar asistentes;
+  - votos en contra se calculan automaticamente;
+  - puntos se pueden votar o postergar;
+  - contador superior muestra puntos postergados y permite deshacerlos;
+  - cerrar junta requiere confirmacion;
+  - una junta cerrada puede reanudarse solo si sigue siendo la fecha de inicio.
+- Verificacion vigente para este tramo:
+  - `npm run build` OK;
+  - `npx -y react-doctor@latest . --verbose --diff` OK, 93/100.
+
 ### Patron de scroll aprobado
 
 - Para tablas operativas con doble eje, leer `.agents/react-doctor/PATRON_SCROLL_TABLAS.md`.
@@ -434,6 +485,8 @@ Rutas activas:
 - `src/hooks/useEstudiosBiblicos.js`
 - `src/pages/CampanasPage.jsx`
 - `src/components/campanas/VisitasGeneralView.jsx`
+- `src/pages/JuntasIglesiaPage.jsx`
+- `src/hooks/useJuntasIglesia.js`
 - `src/components/layout/Sidebar.jsx`
 - `src/config/constants.js`
 - `src/config/events.js`

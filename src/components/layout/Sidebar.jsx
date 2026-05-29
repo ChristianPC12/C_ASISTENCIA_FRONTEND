@@ -21,6 +21,11 @@ import {
   EVENT_ESTUDIOS_ABRIR_REGISTRO,
   EVENT_ESTUDIOS_ABRIR_VISITAS,
   EVENT_ESTUDIOS_VISTA_ACTIVA,
+  EVENT_JUNTAS_ABRIR_ASIGNAR,
+  EVENT_JUNTAS_ABRIR_DEPARTAMENTOS,
+  EVENT_JUNTAS_ABRIR_LISTA,
+  EVENT_JUNTAS_ABRIR_RESPONSABLES,
+  EVENT_JUNTAS_VISTA_ACTIVA,
   EVENT_COMPARACIONES_ABRIR_TABLA,
   EVENT_COMPARACIONES_ABRIR_DETALLE,
   EVENT_COMPARACIONES_ABRIR_VISITAS,
@@ -46,6 +51,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const [superadminVistaActiva, setSuperadminVistaActiva] = useState('ORGANIZACIONES');
   const [campanasVistaActiva, setCampanasVistaActiva] = useState('CAMPANAS');
   const [estudiosVistaActiva, setEstudiosVistaActiva] = useState('ESTUDIOS');
+  const [juntasVistaActiva, setJuntasVistaActiva] = useState('JUNTAS');
   const location = useLocation();
   const { requiereSetup } = useSetupStatus();
   const { tenant, esAdminTemporal, diasRestantesPassword } = useAuth();
@@ -74,6 +80,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const enPantallaComparaciones = esRutaActiva('/comparaciones');
   const enPantallaCampanas = esRutaActiva('/campanas');
   const enPantallaEstudios = esRutaActiva('/estudios-biblicos');
+  const enPantallaJuntas = esRutaActiva('/juntas-iglesia');
   const ocultarHeaderInstructor = esInstructorBiblico && enPantallaEstudios;
   const tenantSesion = tenant || usuario?.tenant || {};
   const campoSesion = String(
@@ -135,6 +142,18 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     };
   }, []);
 
+  useEffect(() => {
+    const manejarVistaActivaJuntas = (event) => {
+      const vista = String(event?.detail?.vista || 'JUNTAS');
+      setJuntasVistaActiva(vista);
+    };
+
+    window.addEventListener(EVENT_JUNTAS_VISTA_ACTIVA, manejarVistaActivaJuntas);
+    return () => {
+      window.removeEventListener(EVENT_JUNTAS_VISTA_ACTIVA, manejarVistaActivaJuntas);
+    };
+  }, []);
+
   const adminVistaTopbar = enPantallaAdministrador ? adminVistaActiva : 'RESUMEN';
   const claseBotonTopbarAdmin = (vista) => (
     `sidebar-topbar-metric-btn ${adminVistaTopbar === vista ? 'is-active' : ''}`
@@ -150,6 +169,10 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
   const estudiosVistaTopbar = enPantallaEstudios ? estudiosVistaActiva : 'ESTUDIOS';
   const claseBotonTopbarEstudios = (vista) => (
     `sidebar-topbar-metric-btn ${estudiosVistaTopbar === vista ? 'is-active' : ''}`
+  );
+  const juntasVistaTopbar = enPantallaJuntas ? juntasVistaActiva : 'JUNTAS';
+  const claseBotonTopbarJuntas = (vista) => (
+    `sidebar-topbar-metric-btn ${juntasVistaTopbar === vista ? 'is-active' : ''}`
   );
 
   const abrirPanelNuevaInstancia = () => {
@@ -254,6 +277,29 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const abrirRegistroEstudios = () => {
     window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_REGISTRO));
+  };
+
+  const abrirResponsablesJuntas = (event) => {
+    limpiarFocoTopbar(event);
+    setJuntasVistaActiva('RESPONSABLES');
+    window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_RESPONSABLES));
+  };
+
+  const abrirListaJuntas = (event) => {
+    limpiarFocoTopbar(event);
+    setJuntasVistaActiva('JUNTAS');
+    window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_LISTA));
+  };
+
+  const abrirDepartamentosJuntas = (event) => {
+    limpiarFocoTopbar(event);
+    window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_DEPARTAMENTOS));
+  };
+
+  const abrirAsignarJuntas = (event) => {
+    limpiarFocoTopbar(event);
+    setJuntasVistaActiva('ASIGNAR_JUNTA');
+    window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_ASIGNAR));
   };
 
   let enlaces = [];
@@ -646,6 +692,50 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   </button>
                 </>
               )
+            )}
+            {enPantallaJuntas && (
+              <>
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarJuntas('RESPONSABLES')} d-flex align-items-center gap-1`}
+                  onClick={abrirResponsablesJuntas}
+                  aria-label="Responsables de junta"
+                  title="Responsables de junta"
+                >
+                  <i className="bi bi-person-lines-fill" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Responsables</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarJuntas('JUNTAS')} d-flex align-items-center gap-1`}
+                  onClick={abrirListaJuntas}
+                  aria-label="Juntas"
+                  title="Juntas"
+                >
+                  <i className="bi bi-people-fill" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Juntas</span>
+                </button>
+                <button
+                  type="button"
+                  className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
+                  onClick={abrirDepartamentosJuntas}
+                  aria-label="Departamentos"
+                  title="Departamentos"
+                >
+                  <i className="bi bi-diagram-3" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Departamentos</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${claseBotonTopbarJuntas('ASIGNAR_JUNTA')} d-flex align-items-center gap-1`}
+                  onClick={abrirAsignarJuntas}
+                  aria-label="Asignar junta"
+                  title="Asignar junta"
+                >
+                  <i className="bi bi-calendar2-plus" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline">Asignar junta</span>
+                </button>
+              </>
             )}
             <button
               type="button"

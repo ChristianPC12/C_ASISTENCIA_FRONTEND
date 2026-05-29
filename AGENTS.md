@@ -116,7 +116,7 @@ Estado real del trabajo:
   - Subvistas: `Campanas`, `Nueva campana`, `Ver campana` y `Visitas`.
   - En responsive de telefono, KPIs primero, filtros en boton/modal y tabla liberada.
   - La vista `Visitas` se reutiliza tambien desde `Estudios Biblicos`.
-- `Estudios Biblicos` es el modulo activo actual.
+- `Estudios Biblicos` fue el tramo activo anterior y queda estable para esta etapa.
   - Subvistas para ADMIN/MINISTERIO_PERSONAL: `Visitas`, `Estudios Biblicos`, `Instructores`, `Asignar estudio`.
   - Subvista especial para `INSTRUCTOR_BIBLICO`: `Registrar sesion`.
   - `Instructores` reutiliza el patron visual de `Administrador > Usuarios`; crea usuarios reales con rol `INSTRUCTOR_BIBLICO`.
@@ -125,6 +125,18 @@ Estado real del trabajo:
   - En `Registrar sesion`, los instructores solo ven Estudios Biblicos y la pantalla de registro; no se oculta el sidebar, solo se compacto el header superior para ese contexto.
   - El registro de sesion valida periodo actual, frecuencia semanal/mensual/trimestral, pendientes, justificaciones, fecha dentro del periodo y estudios futuros.
   - Los estados vacios de registro (`estudios-registro-state-*`) deben ocupar todo el alto disponible del card derecho.
+- `Juntas de Iglesia` es el tramo activo mas reciente (2026-05-29).
+  - Ruta: `/juntas-iglesia`, roles `ADMIN` y `SECRETARIO`.
+  - Topbar: `Responsables`, `Juntas`, `Departamentos` y `Asignar junta`.
+  - `Responsables` guarda moderadores/secretarias en catalogos locales de UI; no son usuarios del sistema.
+  - `Departamentos` se administra en modal y alimenta el select de departamento representado de los puntos.
+  - `Asignar junta` exige fecha de inicio, tipo presencial/virtual, horas, moderador, secretaria, quorum y al menos un punto.
+  - Estados de junta vigentes: `POR_COMENZAR`, `EN_PROCESO`, `CERRADA`, `APROBADA`, `ARCHIVADA`.
+  - Una junta futura queda automaticamente `POR_COMENZAR`; solo se puede sesionar exactamente en su fecha de inicio.
+  - El modal `Sesionar junta` permite registrar asistentes, votar puntos, postergar puntos, deshacer postergaciones y cerrar/reanudar la junta si corresponde.
+  - El numero de asistentes se guarda como borrador local por junta mientras se sesiona y se limpia al cerrar.
+  - El PDF de juntas se genera desde modal de opciones: ficha general + puntos, o solo puntos.
+  - Ultima verificacion: `npm run build` OK y `react-doctor --diff` OK con score 93/100; advertencias conocidas de componentes grandes y labels heredados.
 - Ultima verificacion frontend:
   - `npm run build` OK.
   - `npx -y react-doctor@latest . --verbose --diff` OK, 91/100, con advertencias conocidas en `CampanasPage`, `Sidebar`, `VisitasGeneralView` y `EstudiosBiblicosPage`.
