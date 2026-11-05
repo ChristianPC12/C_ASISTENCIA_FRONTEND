@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { CATEGORIAS_METRICA_OPCIONES } from '../utils/metricasConfig';
 import InfoCategoriasMetricas from '../components/administrador/InfoCategoriasMetricas';
 import InfoRolesUsuarios from '../components/administrador/InfoRolesUsuarios';
+import { MAX_USUARIOS_POR_CUENTA } from '../config/constants';
 import UsuarioPage, {
   OPCIONES_USUARIO,
   SECCION_USUARIOS
@@ -31,7 +32,7 @@ const CATEGORIAS_METRICA_OPCIONES_MANUALES = CATEGORIAS_METRICA_OPCIONES.filter(
 
 const DESCRIPCIONES_CATEGORIA_METRICA = {
   informacion_culto: 'Datos de control del culto, por ejemplo llegadas antes y después de la hora.',
-  composicion_asistentes: 'Composición demográfica de asistentes, como niños y jóvenes.',
+  composicion_asistentes: 'Composición demográfica de asistentes: niños, jóvenes y adultos.',
   procedencia: 'Conteos por zona de procedencia para medir origen de asistentes.',
   visitas: 'Métricas de visitas y nombres de visitas por procedencia.',
   permanencia: 'Métricas relacionadas con permanencia durante el culto.',
@@ -40,21 +41,42 @@ const DESCRIPCIONES_CATEGORIA_METRICA = {
   adicionales: 'Métricas opcionales para necesidades específicas de una iglesia o grupo.'
 };
 
-const ACCESO_ROLES_PRELIMINAR = [
+const ACCESO_PERMISOS_INFO = [
   {
-    rol: 'Administrador',
-    estado: 'En definición',
-    detalle: 'Acceso operativo amplio. Alcance final pendiente según módulos restantes.'
+    rol: 'Administrador general',
+    estado: 'Acceso total',
+    clase: 'text-bg-primary',
+    detalle: 'Ve y modifica todo el sistema de la iglesia, incluida la configuración (cultos, procedencias, métricas) y los usuarios.'
   },
   {
-    rol: 'Secretario/a',
-    estado: 'En definición',
-    detalle: 'Accesos orientados a registro y seguimiento. Permisos finales pendientes.'
+    rol: 'Usuario por secciones',
+    estado: 'Personalizado',
+    clase: 'text-bg-info',
+    detalle: 'Al crear o editar un usuario, el botón "Secciones y permisos" permite marcar qué secciones verá. Las secciones sin marcar no le aparecen en el menú.'
   },
   {
-    rol: 'Ministerio personal',
-    estado: 'En definición',
-    detalle: 'Espacio reservado para reglas futuras de visitas y consolidación.'
+    rol: 'Lector',
+    estado: 'Por sección',
+    clase: 'text-bg-secondary',
+    detalle: 'Solo consulta: puede ver y exportar la información de la sección, pero no crear, editar ni eliminar.'
+  },
+  {
+    rol: 'Editor',
+    estado: 'Por sección',
+    clase: 'text-bg-secondary',
+    detalle: 'Además de consultar, puede crear, editar y eliminar dentro de la sección.'
+  },
+  {
+    rol: 'Instructor',
+    estado: 'Estudios Bíblicos',
+    clase: 'text-bg-secondary',
+    detalle: 'Se crea desde Estudios Bíblicos > Instructores, no desde aquí. Ve solo los estudios que tiene asignados y registra sus sesiones.'
+  },
+  {
+    rol: 'Límite de usuarios',
+    estado: `${MAX_USUARIOS_POR_CUENTA} por cuenta`,
+    clase: 'text-bg-light',
+    detalle: 'Cada iglesia puede tener hasta 50 usuarios activos. Los usuarios desactivados no cuentan.'
   }
 ];
 
@@ -67,9 +89,9 @@ const INFO_SECCIONES = [
   },
   {
     id: 'ROLES',
-    etiqueta: 'Roles por usuario',
+    etiqueta: 'Permisos por usuario',
     icono: 'bi-shield-check',
-    descripcion: 'Resumen visual de accesos por rol. El detalle final se completará conforme cerremos los módulos pendientes.'
+    descripcion: 'Cada usuario es administrador general o tiene secciones asignadas, cada una como lector o editor.'
   }
 ];
 
@@ -290,7 +312,7 @@ export default function AdministradorPage() {
   }, [slidesResumen]);
   const itemsInfoActivos = infoSeccionActiva === 'METRICAS'
     ? CATEGORIAS_METRICA_OPCIONES
-    : ACCESO_ROLES_PRELIMINAR;
+    : ACCESO_PERMISOS_INFO;
   const slidesInfo = useMemo(() => agruparEnPares(itemsInfoActivos), [itemsInfoActivos]);
   const registrarInputMetricaRef = useCallback((uiId, node) => {
     if (!uiId) return;
@@ -525,12 +547,10 @@ export default function AdministradorPage() {
   }, [setupCompleto, faltantes, finalizando, finalizarSetup]);
 
   const manejarEliminarCulto = async (index) => {
-    if (cultos.length <= 1) {
+    if (cultos.length <= 1 || cultos[index]?.en_uso) {
       return;
     }
-    const confirmado = await confirmar(
-      '¿Desea eliminar este culto? Si ya existen registros asociados, el sistema podría rechazar el cambio al guardar.'
-    );
+    const confirmado = await confirmar('¿Desea eliminar este culto?');
     if (!confirmado) {
       return;
     }
@@ -538,7 +558,7 @@ export default function AdministradorPage() {
   };
 
   const manejarEliminarMetrica = async (index) => {
-    if (metricas.length <= 1 || metricas[index]?.es_fija) {
+    if (metricas.length <= 1 || metricas[index]?.es_fija || metricas[index]?.es_derivada) {
       return;
     }
     const confirmado = await confirmar(
@@ -551,11 +571,11 @@ export default function AdministradorPage() {
   };
 
   const manejarEliminarProcedencia = async (index) => {
-    if (procedencias.length <= 1) {
+    if (procedencias.length <= 1 || procedencias[index]?.en_uso) {
       return;
     }
     const confirmado = await confirmar(
-      '¿Desea eliminar esta procedencia? Si ya existen registros asociados, el sistema puede rechazar el cambio al guardar.'
+      '¿Desea eliminar esta procedencia? También se eliminarán sus métricas de procedencia y visitas.'
     );
     if (!confirmado) {
       return;
@@ -626,14 +646,14 @@ export default function AdministradorPage() {
 
               <div className="row g-3 align-items-stretch">
                 <div className="col-12 col-lg-8">
-                  <div className="alert alert-iasd mb-0">
+                  <div className="alert alert-iasd mb-0 h-100 admin-setup-estado">
                     <strong>Estado actual:</strong> {resumen.estado_setup}
                     {resumen.setup_completado_en ? ` | completado en ${resumen.setup_completado_en}` : ''}
                     {resumen.ultima_revision_en ? ` | última revisión ${resumen.ultima_revision_en}` : ''}
                   </div>
                 </div>
                 <div className="col-12 col-lg-4">
-                  <div className="d-flex flex-column gap-2 h-100 admin-setup-side-actions">
+                  <div className="h-100 admin-setup-side-actions">
                     <BadgeEstado completo={setupCompleto} />
                     {setupCompleto ? (
                       <button
@@ -791,7 +811,7 @@ export default function AdministradorPage() {
                             onChange={(event) => cambiarCulto(index, 'hora_inicio', event.target.value)}
                           />
                         </td>
-                        <td className="text-center">
+                        <td className="text-center" data-label="Activo">
                           <input
                             type="checkbox"
                             className="form-check-input"
@@ -800,16 +820,25 @@ export default function AdministradorPage() {
                           />
                         </td>
                         <td className="text-center admin-col-acciones">
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm admin-table-icon-btn"
-                            onClick={() => { void manejarEliminarCulto(index); }}
-                            disabled={cultos.length <= 1}
-                            title="Eliminar culto"
-                            aria-label="Eliminar culto"
-                          >
-                            <i className="bi bi-trash" aria-hidden="true"></i>
-                          </button>
+                          {item.en_uso ? (
+                            <span
+                              className="badge text-bg-secondary"
+                              title="Tiene registros de asistencia: no se puede eliminar. Desmarque Activo para ocultarlo en registros nuevos."
+                            >
+                              En uso
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm admin-table-icon-btn"
+                              onClick={() => { void manejarEliminarCulto(index); }}
+                              disabled={cultos.length <= 1}
+                              title="Eliminar culto"
+                              aria-label="Eliminar culto"
+                            >
+                              <i className="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -818,6 +847,14 @@ export default function AdministradorPage() {
               </table>
               </div>
             </div>
+
+            {cultos.some((item) => item.en_uso) && (
+              <p className="small text-muted mt-2 mb-0">
+                <i className="bi bi-info-circle me-1" aria-hidden="true"></i>
+                Los cultos <strong>En uso</strong> ya tienen registros de asistencia: no se pueden eliminar.
+                Desmarque <strong>Activo</strong> para ocultarlos en registros nuevos sin perder el historial.
+              </p>
+            )}
 
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
               <div className="d-flex flex-wrap align-items-center gap-2">
@@ -855,7 +892,9 @@ export default function AdministradorPage() {
         <div className="card shadow-sm mb-4 admin-setup-panel">
           <div className="card-header d-flex justify-content-between align-items-center gap-2">
             <div className="d-flex align-items-center gap-2">
-              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>Métricas del formulario</h5>
+              <h5 className="mb-0" style={{ color: '#FFFFFF' }}>
+                Métricas<span className="admin-titulo-extra"> del formulario</span>
+              </h5>
               <span className="badge text-bg-light">{metricas.length}</span>
               <span className="badge text-bg-secondary">
                 Adicionales {metricasAdicionalesCount}/{maxMetricasAdicionales}
@@ -899,15 +938,21 @@ export default function AdministradorPage() {
                       <tr key={item.ui_id}>
                         <td>
                           <div className="d-flex align-items-center gap-2">
-                            <input
-                              ref={(node) => registrarInputMetricaRef(item.ui_id, node)}
-                              className={`form-control form-control-sm admin-input-metrica-etiqueta ${filaErrores.etiqueta ? 'is-invalid' : ''}`}
-                              value={item.etiqueta}
-                              placeholder="Nueva métrica"
-                              maxLength={40}
-                              onChange={(event) => cambiarMetrica(index, 'etiqueta', event.target.value)}
-                              disabled={item.es_fija}
-                            />
+                            {item.es_fija || item.es_derivada ? (
+                              // No editable: texto con desplazamiento suave si no cabe completo.
+                              <div className="form-control form-control-sm admin-metrica-etiqueta-fija" title={item.etiqueta}>
+                                <span>{item.etiqueta}</span>
+                              </div>
+                            ) : (
+                              <input
+                                ref={(node) => registrarInputMetricaRef(item.ui_id, node)}
+                                className={`form-control form-control-sm admin-input-metrica-etiqueta ${filaErrores.etiqueta ? 'is-invalid' : ''}`}
+                                value={item.etiqueta}
+                                placeholder="Nueva métrica"
+                                maxLength={40}
+                                onChange={(event) => cambiarMetrica(index, 'etiqueta', event.target.value)}
+                              />
+                            )}
                             {item.es_fija && <span className="badge text-bg-secondary">Base</span>}
                           </div>
                           {filaErrores.etiqueta && (
@@ -931,7 +976,7 @@ export default function AdministradorPage() {
                             <div className="invalid-feedback d-block">{filaErrores.categoria}</div>
                           )}
                         </td>
-                        <td className="text-center admin-col-check">
+                        <td className="text-center admin-col-check" data-label="Activo">
                           <input
                             type="checkbox"
                             className="form-check-input"
@@ -944,9 +989,9 @@ export default function AdministradorPage() {
                             type="button"
                             className="btn btn-outline-danger btn-sm admin-table-icon-btn"
                             onClick={() => { void manejarEliminarMetrica(index); }}
-                            disabled={metricas.length <= 1 || item.es_fija}
-                            title={item.es_fija ? 'Métrica base (no eliminable)' : 'Eliminar métrica'}
-                            aria-label={item.es_fija ? 'Métrica base no eliminable' : 'Eliminar métrica'}
+                            disabled={metricas.length <= 1 || item.es_fija || item.es_derivada}
+                            title={item.es_fija || item.es_derivada ? 'Métrica no eliminable desde aquí' : 'Eliminar métrica'}
+                            aria-label={item.es_fija || item.es_derivada ? 'Métrica no eliminable' : 'Eliminar métrica'}
                           >
                             <i className="bi bi-trash" aria-hidden="true"></i>
                           </button>
@@ -1171,6 +1216,8 @@ export default function AdministradorPage() {
                             className={`form-control form-control-sm admin-input-procedencia-nombre ${filaErrores.nombre ? 'is-invalid' : ''}`}
                             value={item.nombre}
                             maxLength={25}
+                            readOnly={item.en_uso}
+                            title={item.en_uso ? 'Tiene registros de asistencia: el nombre no se puede cambiar.' : undefined}
                             onChange={(event) => cambiarProcedencia(index, 'nombre', event.target.value)}
                           />
                         </td>
@@ -1183,16 +1230,25 @@ export default function AdministradorPage() {
                           />
                         </td>
                         <td className="text-center admin-col-acciones">
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm admin-table-icon-btn"
-                            onClick={() => { void manejarEliminarProcedencia(index); }}
-                            disabled={procedencias.length <= 1}
-                            title="Eliminar procedencia"
-                            aria-label="Eliminar procedencia"
-                          >
-                            <i className="bi bi-trash" aria-hidden="true"></i>
-                          </button>
+                          {item.en_uso ? (
+                            <span
+                              className="badge text-bg-secondary"
+                              title="Tiene registros de asistencia: no se puede eliminar. Desmarque Activo para ocultarla en registros nuevos."
+                            >
+                              En uso
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm admin-table-icon-btn"
+                              onClick={() => { void manejarEliminarProcedencia(index); }}
+                              disabled={procedencias.length <= 1}
+                              title="Eliminar procedencia"
+                              aria-label="Eliminar procedencia"
+                            >
+                              <i className="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -1201,6 +1257,14 @@ export default function AdministradorPage() {
               </table>
               </div>
             </div>
+
+            {procedencias.some((item) => item.en_uso) && (
+              <p className="small text-muted mt-2 mb-0">
+                <i className="bi bi-info-circle me-1" aria-hidden="true"></i>
+                Las procedencias <strong>En uso</strong> ya tienen registros de asistencia: no se pueden eliminar ni renombrar.
+                Desmarque <strong>Activo</strong> para ocultarlas en registros nuevos sin perder el historial.
+              </p>
+            )}
 
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
               <div className="d-flex flex-wrap align-items-center gap-2">

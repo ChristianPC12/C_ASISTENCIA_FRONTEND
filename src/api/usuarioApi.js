@@ -6,8 +6,7 @@ const usuarioApi = {
   crear:        (data)       => ApiCliente.post('/usuarios', data),
   actualizar:   (id, data)   => ApiCliente.put(`/usuarios/${id}`, data),
   eliminar:     (id)         => ApiCliente.delete(`/usuarios/${id}`),
-  obtenerCupos: ()           => ApiCliente.get('/v2/usuarios/cupos'),
-  actualizarCupos: (data)    => ApiCliente.put('/v2/usuarios/cupos', data)
+  obtenerLimite: ()          => ApiCliente.get('/usuarios/limite')
 };
 
 export default usuarioApi;

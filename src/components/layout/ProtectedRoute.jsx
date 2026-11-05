@@ -1,43 +1,46 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { ROLES } from '../../config/constants';
 import { useSetupStatus } from '../../hooks/useSetupStatus';
 import SetupBlockedNotice from '../setup/SetupBlockedNotice';
 
-const EMPTY_ROLES = [];
 const EMPTY_LABEL = '';
 
 /**
- * Wrapper que redirige al login si no hay sesión
+ * Wrapper de rutas autenticadas.
  * Props:
- *  - children: contenido a renderizar si hay sesión
- *  - rolesPermitidos?: arreglo de roles autorizados para esta ruta
- *  - requiereSetupInicial?: bloquea módulo si setup aún no está completo
- *  - nombreModulo?: texto a mostrar en aviso de bloqueo
+ *  - soloSuperadmin / soloAdmin: restringe a esos roles.
+ *  - seccion: clave de permiso requerida (ADMIN siempre pasa).
+ *  - requiereEditor: exige nivel EDITOR en la sección.
+ *  - requiereSetupInicial: bloquea el módulo si el setup no está completo.
+ *  - nombreModulo: texto del aviso de bloqueo.
  */
 export default function ProtectedRoute({
   children,
-  rolesPermitidos = EMPTY_ROLES,
+  soloSuperadmin = false,
+  soloAdmin = false,
+  seccion = null,
+  requiereEditor = false,
   requiereSetupInicial = false,
   nombreModulo = EMPTY_LABEL
 }) {
-  const { estaAutenticado, usuario, esSuperadmin } = useAuth();
+  const { estaAutenticado, esSuperadmin, esAdmin, puedeVer, puedeEditar, rutaInicio } = useAuth();
   const { cargando, requiereSetup } = useSetupStatus();
 
   if (!estaAutenticado) {
     return <Navigate to="/" replace />;
   }
 
-  if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(usuario?.rol)) {
-    let destino = '/';
-    if (usuario?.rol === ROLES.SUPERADMIN) {
-      destino = '/superadmin';
-    } else if (usuario?.rol === ROLES.ADMIN || usuario?.rol === ROLES.SECRETARIO) {
-      destino = '/registro';
-    } else if ([ROLES.MINISTERIO_PERSONAL, ROLES.INSTRUCTOR_BIBLICO].includes(usuario?.rol)) {
-      destino = '/estudios-biblicos';
-    }
-    return <Navigate to={destino} replace />;
+  const destinoSinAcceso = esSuperadmin ? '/superadmin' : (rutaInicio || '/registro');
+  const permitido = soloSuperadmin
+    ? esSuperadmin
+    : !esSuperadmin && (
+      soloAdmin
+        ? esAdmin
+        : (!seccion || (requiereEditor ? puedeEditar(seccion) : puedeVer(seccion)))
+    );
+
+  if (!permitido) {
+    return <Navigate to={destinoSinAcceso} replace />;
   }
 
   if (requiereSetupInicial && !esSuperadmin) {

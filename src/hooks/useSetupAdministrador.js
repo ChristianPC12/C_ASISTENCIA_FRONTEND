@@ -52,10 +52,7 @@ const CULTOS_DEFAULT = [
   { codigo: 'MIERCOLES', nombre: 'Culto Mi\u00e9rcoles', dia_semana: 4, hora_inicio: '18:30', activo: false, orden: 3 }
 ];
 
-const PROCEDENCIAS_DEFAULT = [
-  { nombre: 'Barrio', activo: false, orden: 1 },
-  { nombre: 'Guayabo', activo: false, orden: 2 }
-];
+const PROCEDENCIAS_DEFAULT = [];
 
 let setupRowSeq = 0;
 
@@ -437,7 +434,8 @@ function normalizarCultos(cultosRaw) {
       dia_semana: toInt(item?.dia_semana, 1),
       hora_inicio: formatearHora(item?.hora_inicio),
       activo: toBool(item?.activo ?? false),
-      orden: toInt(item?.orden, idx + 1)
+      orden: toInt(item?.orden, idx + 1),
+      en_uso: toBool(item?.en_uso ?? false)
     }))
     .filter((item) => item.codigo || item.nombre);
 }
@@ -450,8 +448,13 @@ function normalizarProcedencias(procedenciasRaw) {
     ui_id: resolverUiId(item, 'procedencia', ['procedencia_id', 'id']),
     nombre: String(item?.nombre || '').trim(),
     activo: toBool(item?.activo ?? false),
-    orden: toInt(item?.orden, idx + 1)
+    orden: toInt(item?.orden, idx + 1),
+    en_uso: toBool(item?.en_uso ?? false)
   })));
+}
+
+function esClaveDerivadaProcedencia(clave) {
+  return slugProcedenciaDesdeClaveMetrica(clave) !== '';
 }
 
 function normalizarMetricas(metricasRaw) {
@@ -472,7 +475,8 @@ function normalizarMetricas(metricasRaw) {
       categoria: categoriaBase,
       habilitado: item.habilitado,
       obligatorio: false,
-      es_fija: esFija
+      es_fija: esFija,
+      es_derivada: esClaveDerivadaProcedencia(item.clave)
     };
   });
 }
@@ -763,7 +767,7 @@ export function useSetupAdministrador() {
   }, []);
 
   const eliminarCulto = useCallback((index) => {
-    setCultos((prev) => prev.filter((_, idx) => idx !== index));
+    setCultos((prev) => (prev[index]?.en_uso ? prev : prev.filter((_, idx) => idx !== index)));
   }, []);
 
   const cambiarProcedencia = useCallback((index, campo, valor) => {
@@ -772,6 +776,7 @@ export function useSetupAdministrador() {
         if (idx !== index) return item;
         if (campo === 'activo') return { ...item, activo: !!valor };
         if (campo === 'nombre') {
+          if (item.en_uso) return item;
           return { ...item, nombre: String(valor || '').slice(0, 25) };
         }
         return { ...item, [campo]: valor };
@@ -809,7 +814,10 @@ export function useSetupAdministrador() {
   }, []);
 
   const eliminarProcedencia = useCallback((index) => {
-    setProcedencias((prev) => reordenarProcedencias(prev.filter((_, idx) => idx !== index)));
+    setProcedencias((prev) => {
+      if (prev[index]?.en_uso) return prev;
+      return reordenarProcedencias(prev.filter((_, idx) => idx !== index));
+    });
   }, []);
 
   const cambiarMetrica = useCallback((index, campo, valor) => {
@@ -831,7 +839,7 @@ export function useSetupAdministrador() {
           return item;
         }
 
-        if (esFija) {
+        if (esFija || item.es_derivada) {
           return item;
         }
 
@@ -981,7 +989,7 @@ export function useSetupAdministrador() {
 
   const eliminarMetrica = useCallback((index) => {
     setMetricas((prev) => {
-      if (prev[index]?.es_fija) {
+      if (prev[index]?.es_fija || prev[index]?.es_derivada) {
         return prev;
       }
       return prev.filter((_, idx) => idx !== index);

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import setupApi from '../api/setupApi';
 import cultoApi from '../api/cultoApi';
 import { useAuth } from './useAuth';
-import { obtenerMetricasActivas } from '../utils/metricasConfig';
+import { normalizarMetricasConfig, obtenerMetricasActivas } from '../utils/metricasConfig';
 import { EVENT_SETUP_REQUIRED } from '../config/events';
 
 const SetupContext = createContext(null);
@@ -219,11 +219,16 @@ export function SetupProvider({ children }) {
     () => obtenerMetricasActivas(setupState.detalle?.configuracion?.metricas),
     [setupState.detalle]
   );
+  const metricasConfiguradas = useMemo(
+    () => normalizarMetricasConfig(setupState.detalle?.configuracion?.metricas),
+    [setupState.detalle]
+  );
 
   const valor = useMemo(() => ({
     ...setupState,
     organizacionId,
     metricasActivas,
+    metricasConfiguradas,
     procedencias: setupState.detalle?.configuracion?.procedencias || [],
     cultosConfigurados: setupState.detalle?.configuracion?.cultos || [],
     faltantes: setupState.detalle?.faltantes || [],
@@ -235,6 +240,7 @@ export function SetupProvider({ children }) {
     setupState,
     organizacionId,
     metricasActivas,
+    metricasConfiguradas,
     recargarEstadoSetup,
     aplicarDetalleSetup,
     marcarSetupPendiente

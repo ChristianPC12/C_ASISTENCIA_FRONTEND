@@ -1,6 +1,7 @@
-﻿import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ROLES } from '../../config/constants';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ETIQUETA_ROL, ROLES } from '../../config/constants';
+import { hayGuardiaActiva, puedeAbandonarPantalla } from '../../utils/guardiaCambios';
 import { useSetupStatus } from '../../hooks/useSetupStatus';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -10,16 +11,15 @@ import {
   EVENT_ADMIN_ABRIR_PROCEDENCIAS,
   EVENT_ADMIN_ABRIR_USUARIOS,
   EVENT_ADMIN_VISTA_ACTIVA,
+  EVENT_ASISTENCIA_REGISTRO_CREADO,
   EVENT_CAMPANAS_ABRIR_NUEVA,
   EVENT_CAMPANAS_ABRIR_LISTA,
   EVENT_CAMPANAS_ABRIR_SELECTOR,
-  EVENT_CAMPANAS_ABRIR_VISITAS,
   EVENT_CAMPANAS_VISTA_ACTIVA,
   EVENT_ESTUDIOS_ABRIR_ASIGNAR,
   EVENT_ESTUDIOS_ABRIR_INSTRUCTORES,
   EVENT_ESTUDIOS_ABRIR_LISTA,
   EVENT_ESTUDIOS_ABRIR_REGISTRO,
-  EVENT_ESTUDIOS_ABRIR_VISITAS,
   EVENT_ESTUDIOS_VISTA_ACTIVA,
   EVENT_JUNTAS_ABRIR_ASIGNAR,
   EVENT_JUNTAS_ABRIR_DEPARTAMENTOS,
@@ -45,16 +45,23 @@ import {
  *  - onCerrarSesion: funcion para cerrar sesion
  *  - children: contenido principal de la pagina
  */
-export default function Sidebar({ usuario, onCerrarSesion, children }) {
+export default function Sidebar({ usuario, onCerrarSesion: cerrarSesionDirecto, children }) {
+  const navigate = useNavigate();
+  // Cerrar sesion tambien respeta los cambios sin guardar de la pantalla actual.
+  const onCerrarSesion = async () => {
+    if (await puedeAbandonarPantalla()) cerrarSesionDirecto();
+  };
   const [abierto, setAbierto] = useState(false);
   const [adminVistaActiva, setAdminVistaActiva] = useState('RESUMEN');
   const [superadminVistaActiva, setSuperadminVistaActiva] = useState('ORGANIZACIONES');
   const [campanasVistaActiva, setCampanasVistaActiva] = useState('CAMPANAS');
   const [estudiosVistaActiva, setEstudiosVistaActiva] = useState('ESTUDIOS');
   const [juntasVistaActiva, setJuntasVistaActiva] = useState('JUNTAS');
+  const [registroNuevo, setRegistroNuevo] = useState(null);
+  const temporizadorAvisoRef = useRef(null);
   const location = useLocation();
   const { requiereSetup } = useSetupStatus();
-  const { tenant, esAdminTemporal, diasRestantesPassword } = useAuth();
+  const { tenant, esAdminTemporal, diasRestantesPassword, puedeVer, puedeEditar, esInstructorBiblico } = useAuth();
 
   /* Bloquear scroll del body cuando el sidebar esta abierto (mobile) */
   useEffect(() => {
@@ -68,12 +75,36 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
 
   const esRutaActiva = (ruta) => location.pathname === ruta;
 
+  /* Aviso de "registro nuevo" sobre Ver Registros durante 5 segundos */
+  const limpiarAvisoRegistro = () => {
+    clearTimeout(temporizadorAvisoRef.current);
+    setRegistroNuevo(null);
+  };
+
+  useEffect(() => {
+    const manejarRegistroCreado = (event) => {
+      clearTimeout(temporizadorAvisoRef.current);
+      setRegistroNuevo({
+        fecha: event?.detail?.fecha || '',
+        culto: event?.detail?.culto || '',
+        cultoId: event?.detail?.cultoId || ''
+      });
+      temporizadorAvisoRef.current = setTimeout(() => setRegistroNuevo(null), 5000);
+    };
+
+    window.addEventListener(EVENT_ASISTENCIA_REGISTRO_CREADO, manejarRegistroCreado);
+    return () => {
+      window.removeEventListener(EVENT_ASISTENCIA_REGISTRO_CREADO, manejarRegistroCreado);
+      clearTimeout(temporizadorAvisoRef.current);
+    };
+  }, []);
+
+
   const toggleMenu = () => setAbierto(!abierto);
   const cerrarMenu = () => setAbierto(false);
   const esAdmin = usuario?.rol === ROLES.ADMIN;
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
-  const esInstructorBiblico = usuario?.rol === ROLES.INSTRUCTOR_BIBLICO;
-  const esMinisterioPersonal = usuario?.rol === ROLES.MINISTERIO_PERSONAL;
+  const etiquetaRol = ETIQUETA_ROL[usuario?.rol] || usuario?.rol;
   const enPantallaSuperadmin = esSuperadmin && esRutaActiva('/superadmin');
   const enPantallaAdministrador = esAdmin && esRutaActiva('/administrador');
   const enPantallaEstadisticas = esRutaActiva('/estadisticas');
@@ -253,16 +284,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_SELECTOR));
   };
 
-  const abrirVisitasCampana = (event) => {
-    limpiarFocoTopbar(event);
-    setCampanasVistaActiva('VISITAS');
-    window.dispatchEvent(new CustomEvent(EVENT_CAMPANAS_ABRIR_VISITAS));
-  };
-
-  const abrirVisitasEstudios = () => {
-    window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_VISITAS));
-  };
-
   const abrirListaEstudios = () => {
     window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_LISTA));
   };
@@ -279,14 +300,16 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_ABRIR_REGISTRO));
   };
 
-  const abrirResponsablesJuntas = (event) => {
+  const abrirResponsablesJuntas = async (event) => {
     limpiarFocoTopbar(event);
+    if (!(await puedeAbandonarPantalla())) return;
     setJuntasVistaActiva('RESPONSABLES');
     window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_RESPONSABLES));
   };
 
-  const abrirListaJuntas = (event) => {
+  const abrirListaJuntas = async (event) => {
     limpiarFocoTopbar(event);
+    if (!(await puedeAbandonarPantalla())) return;
     setJuntasVistaActiva('JUNTAS');
     window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_LISTA));
   };
@@ -296,38 +319,27 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
     window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_DEPARTAMENTOS));
   };
 
-  const abrirAsignarJuntas = (event) => {
+  const abrirAsignarJuntas = async (event) => {
     limpiarFocoTopbar(event);
+    if (!(await puedeAbandonarPantalla())) return;
     setJuntasVistaActiva('ASIGNAR_JUNTA');
     window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_ABRIR_ASIGNAR));
   };
 
-  let enlaces = [];
-
-  if (esSuperadmin) {
-    enlaces = [
-      { ruta: '/superadmin', etiqueta: 'Superadministrador', icono: 'bi-shield-lock' }
-    ];
-  } else if (esInstructorBiblico || esMinisterioPersonal) {
-    enlaces = [
-      { ruta: '/estudios-biblicos', etiqueta: 'Estudios Bíblicos', icono: 'bi-journal-bookmark' }
-    ];
-  } else {
-    enlaces = [
-      ...(usuario?.rol === ROLES.ADMIN
-        ? [{ ruta: '/administrador', etiqueta: 'Administrador', icono: 'bi-sliders2' }]
-        : []),
-      { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle' },
-      { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul' },
-      { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line' },
-      { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right' },
-      { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2' },
-      { ruta: '/campanas', etiqueta: 'Campañas', icono: 'bi-megaphone' },
-      { ruta: '/estudios-biblicos', etiqueta: 'Estudios Bíblicos', icono: 'bi-journal-bookmark' },
-      { ruta: '/juntas-iglesia', etiqueta: 'Juntas de Iglesia', icono: 'bi-people-fill' }
-    ];
-
-  }
+  const enlaces = esSuperadmin
+    ? [{ ruta: '/superadmin', etiqueta: 'Superadministrador', icono: 'bi-shield-lock' }]
+    : [
+      { ruta: '/administrador', etiqueta: 'Administrador', icono: 'bi-sliders2', visible: esAdmin },
+      { ruta: '/registro', etiqueta: 'Nuevo Registro', icono: 'bi-plus-circle', visible: puedeEditar('asistencia') },
+      { ruta: '/registros', etiqueta: 'Ver Registros', icono: 'bi-list-ul', visible: puedeVer('asistencia') },
+      { ruta: '/estadisticas', etiqueta: 'Estadísticas', icono: 'bi-bar-chart-line', visible: puedeVer('estadisticas') },
+      { ruta: '/comparaciones', etiqueta: 'Comparaciones', icono: 'bi-arrow-left-right', visible: puedeVer('comparaciones') },
+      { ruta: '/presentaciones', etiqueta: 'Presentaciones', icono: 'bi-easel2', visible: puedeVer('presentaciones') },
+      { ruta: '/campanas', etiqueta: 'Campañas', icono: 'bi-megaphone', visible: puedeVer('campanas') },
+      { ruta: '/visitas', etiqueta: 'Visitas', icono: 'bi-person-lines-fill', visible: puedeVer('visitas') },
+      { ruta: '/estudios-biblicos', etiqueta: 'Estudios Bíblicos', icono: 'bi-journal-bookmark', visible: puedeVer('estudios_biblicos') },
+      { ruta: '/juntas-iglesia', etiqueta: 'Juntas de Iglesia', icono: 'bi-people-fill', visible: puedeVer('juntas_iglesia') }
+    ].filter((enlace) => enlace.visible);
 
   return (
     <div className={`sidebar-layout ${ocultarHeaderInstructor ? 'sidebar-layout-instructor-sin-header' : ''}`}>
@@ -374,24 +386,39 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             </div>
           )}
 
-          {enlaces.map((enlace) => (
-                <Link
-                  key={enlace.ruta}
-                  to={enlace.ruta}
-                  className={`sidebar-link ${esRutaActiva(enlace.ruta) ? 'sidebar-link-activo' : ''}`}
-                  onClick={cerrarMenu}
-                >
-                  <i className={`bi ${enlace.icono} sidebar-link-icono`}></i>
-                  {enlace.etiqueta}
-                </Link>
-              ))}
+          {enlaces.map((enlace) => {
+            const conAviso = enlace.ruta === '/registros' && Boolean(registroNuevo) && !esRutaActiva('/registros');
+            return (
+              <Link
+                key={enlace.ruta}
+                to={enlace.ruta}
+                state={conAviso ? { filtroRegistro: registroNuevo } : undefined}
+                className={`sidebar-link ${esRutaActiva(enlace.ruta) ? 'sidebar-link-activo' : ''} ${conAviso ? 'sidebar-link-aviso' : ''}`.trim()}
+                onClick={async (event) => {
+                  if (hayGuardiaActiva()) {
+                    event.preventDefault();
+                    if (!(await puedeAbandonarPantalla())) return;
+                    navigate(enlace.ruta, { state: conAviso ? { filtroRegistro: registroNuevo } : undefined });
+                  }
+                  cerrarMenu();
+                  if (conAviso) limpiarAvisoRegistro();
+                }}
+              >
+                <i className={`bi ${enlace.icono} sidebar-link-icono`}></i>
+                {enlace.etiqueta}
+                {conAviso && (
+                  <span className="sidebar-link-badge" aria-label="1 registro nuevo">1</span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Info del usuario al fondo */}
         <div className="sidebar-footer">
           <div className="sidebar-usuario-info sidebar-usuario-info-mobile">
             <span className="sidebar-usuario-nombre">{usuario?.nombre_completo}</span>
-            <span className="badge bg-secondary sidebar-usuario-rol">{usuario?.rol}</span>
+            <span className="badge bg-secondary sidebar-usuario-rol">{etiquetaRol}</span>
             {mostrarDatosTenant && (
               <div className="sidebar-tenant-info">
                 <span>Campo: <strong>{campoSesion || '-'}</strong></span>
@@ -414,7 +441,11 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
       <div className={`sidebar-contenido ${abierto ? 'sidebar-contenido-bloqueado' : ''}`}>
         {/* Barra superior con hamburguesa */}
         <header className="sidebar-topbar">
-          <button className="sidebar-hamburguesa" onClick={toggleMenu} aria-label="Abrir menú">
+          <button
+            className={`sidebar-hamburguesa ${registroNuevo ? 'sidebar-hamburguesa-aviso' : ''}`.trim()}
+            onClick={toggleMenu}
+            aria-label="Abrir menú"
+          >
             <span></span>
             <span></span>
             <span></span>
@@ -422,7 +453,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
           <div className="sidebar-topbar-usuario d-none d-md-flex">
             <div className="sidebar-topbar-usuario-main">
               <span>{usuario?.nombre_completo}</span>
-              <span className="badge bg-secondary ms-2">{usuario?.rol}</span>
+              <span className="badge bg-secondary ms-2">{etiquetaRol}</span>
             </div>
             {mostrarDatosTenant && (
               <div className="sidebar-topbar-tenant">
@@ -594,7 +625,8 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
             )}
             {enPantallaCampanas && (
               <>
-                <button
+                {puedeEditar('campanas') && (
+                  <button
                   type="button"
                   className={`${claseBotonTopbarCampanas('NUEVA')} d-flex align-items-center gap-1`}
                   onClick={abrirNuevaCampana}
@@ -604,6 +636,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-plus-lg" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Nueva Campaña</span>
                 </button>
+                )}
                 <button
                   type="button"
                   className={`${claseBotonTopbarCampanas('CAMPANAS')} d-flex align-items-center gap-1`}
@@ -624,16 +657,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-folder2-open" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Ver Campaña</span>
                 </button>
-                <button
-                  type="button"
-                  className={`${claseBotonTopbarCampanas('VISITAS')} d-flex align-items-center gap-1`}
-                  onClick={abrirVisitasCampana}
-                  aria-label="Visitas"
-                  title="Visitas registradas"
-                >
-                  <i className="bi bi-people" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline">Visitas</span>
-                </button>
               </>
             )}
             {enPantallaEstudios && (
@@ -652,16 +675,6 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                 <>
                   <button
                     type="button"
-                    className={`${claseBotonTopbarEstudios('VISITAS')} d-flex align-items-center gap-1`}
-                    onClick={abrirVisitasEstudios}
-                    aria-label="Visitas"
-                    title="Visitas registradas"
-                  >
-                    <i className="bi bi-people" aria-hidden="true"></i>
-                    <span className="d-none d-md-inline">Visitas</span>
-                  </button>
-                  <button
-                    type="button"
                     className={`${claseBotonTopbarEstudios('ESTUDIOS')} d-flex align-items-center gap-1`}
                     onClick={abrirListaEstudios}
                     aria-label="Estudios bíblicos"
@@ -670,7 +683,8 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                     <i className="bi bi-journal-bookmark" aria-hidden="true"></i>
                     <span className="d-none d-md-inline">Estudios Bíblicos</span>
                   </button>
-                  <button
+                  {puedeEditar('estudios_biblicos') && (
+                    <button
                     type="button"
                     className={`${claseBotonTopbarEstudios('INSTRUCTORES')} d-flex align-items-center gap-1`}
                     onClick={abrirInstructoresEstudios}
@@ -680,7 +694,9 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                     <i className="bi bi-person-badge" aria-hidden="true"></i>
                     <span className="d-none d-md-inline">Instructores</span>
                   </button>
-                  <button
+                  )}
+                  {puedeEditar('estudios_biblicos') && (
+                    <button
                     type="button"
                     className={`${claseBotonTopbarEstudios('ASIGNAR')} d-flex align-items-center gap-1`}
                     onClick={abrirAsignarEstudios}
@@ -690,12 +706,14 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                     <i className="bi bi-diagram-3" aria-hidden="true"></i>
                     <span className="d-none d-md-inline">Asignar estudio</span>
                   </button>
+                  )}
                 </>
               )
             )}
             {enPantallaJuntas && (
               <>
-                <button
+                {puedeEditar('juntas_iglesia') && (
+                  <button
                   type="button"
                   className={`${claseBotonTopbarJuntas('RESPONSABLES')} d-flex align-items-center gap-1`}
                   onClick={abrirResponsablesJuntas}
@@ -705,6 +723,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-person-lines-fill" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Responsables</span>
                 </button>
+                )}
                 <button
                   type="button"
                   className={`${claseBotonTopbarJuntas('JUNTAS')} d-flex align-items-center gap-1`}
@@ -725,7 +744,8 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-diagram-3" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Departamentos</span>
                 </button>
-                <button
+                {puedeEditar('juntas_iglesia') && (
+                  <button
                   type="button"
                   className={`${claseBotonTopbarJuntas('ASIGNAR_JUNTA')} d-flex align-items-center gap-1`}
                   onClick={abrirAsignarJuntas}
@@ -735,6 +755,7 @@ export default function Sidebar({ usuario, onCerrarSesion, children }) {
                   <i className="bi bi-calendar2-plus" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Asignar junta</span>
                 </button>
+                )}
               </>
             )}
             <button

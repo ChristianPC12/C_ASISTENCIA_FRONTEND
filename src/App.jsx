@@ -6,7 +6,6 @@ import Sidebar from './components/layout/Sidebar';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import ToastContainer from './components/ui/ToastContainer';
 import ConfirmModal from './components/ui/ConfirmModal';
-import { ROLES } from './config/constants';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegistroPage = lazy(() => import('./pages/RegistroPage'));
@@ -15,6 +14,7 @@ const EstadisticasPage = lazy(() => import('./pages/EstadisticasPage'));
 const ComparacionesPage = lazy(() => import('./pages/ComparacionesPage'));
 const PresentacionesPage = lazy(() => import('./pages/PresentacionesPage'));
 const CampanasPage = lazy(() => import('./pages/CampanasPage'));
+const VisitasPage = lazy(() => import('./pages/VisitasPage'));
 const EstudiosBiblicosPage = lazy(() => import('./pages/EstudiosBiblicosPage'));
 const JuntasIglesiaPage = lazy(() => import('./pages/JuntasIglesiaPage'));
 const SuperadminPage = lazy(() => import('./pages/SuperadminPage'));
@@ -30,16 +30,24 @@ function RouteFallback() {
   );
 }
 
+function SinAcceso() {
+  return (
+    <div className="container-fluid py-4">
+      <div className="alert alert-warning mb-0" role="status">
+        <i className="bi bi-shield-lock me-2" aria-hidden="true"></i>
+        Su usuario aún no tiene secciones asignadas. Solicite acceso al administrador de su iglesia.
+      </div>
+    </div>
+  );
+}
+
 /**
  * Componente interior que usa los hooks de auth dentro del BrowserRouter
  */
 function AppContent() {
-  const { usuario, estaAutenticado, esSuperadmin, esAdmin, cerrarSesion } = useAuth();
+  const { usuario, estaAutenticado, cerrarSesion, rutaInicio: rutaInicioPermisos } = useAuth();
   const { requiereSetup } = useSetupStatus();
-  const esRolEstudios = [ROLES.MINISTERIO_PERSONAL, ROLES.INSTRUCTOR_BIBLICO].includes(usuario?.rol);
-  const rutaInicio = esSuperadmin
-    ? '/superadmin'
-    : (esRolEstudios ? '/estudios-biblicos' : (esAdmin && requiereSetup ? '/administrador' : '/registro'));
+  const rutaInicio = rutaInicioPermisos || (requiereSetup ? '/administrador' : '/registro');
 
   /* Resetear scroll al cambiar el estado de autenticacion */
   useEffect(() => {
@@ -73,7 +81,7 @@ function AppContent() {
           <Route
             path="/superadmin"
             element={(
-              <ProtectedRoute rolesPermitidos={[ROLES.SUPERADMIN]}>
+              <ProtectedRoute soloSuperadmin>
                 <SuperadminPage />
               </ProtectedRoute>
             )}
@@ -82,7 +90,7 @@ function AppContent() {
           <Route
             path="/administrador"
             element={(
-              <ProtectedRoute rolesPermitidos={[ROLES.ADMIN]}>
+              <ProtectedRoute soloAdmin>
                 <AdministradorPage />
               </ProtectedRoute>
             )}
@@ -93,7 +101,8 @@ function AppContent() {
             path="/registro"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="asistencia"
+                requiereEditor
                 requiereSetupInicial
                 nombreModulo="Registro"
               >
@@ -107,7 +116,7 @@ function AppContent() {
             path="/registros"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="asistencia"
                 requiereSetupInicial
                 nombreModulo="Registros"
               >
@@ -121,7 +130,7 @@ function AppContent() {
             path="/estadisticas"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="estadisticas"
                 requiereSetupInicial
                 nombreModulo="Estadisticas"
               >
@@ -135,7 +144,7 @@ function AppContent() {
             path="/comparaciones"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="comparaciones"
                 requiereSetupInicial
                 nombreModulo="Comparaciones"
               >
@@ -149,7 +158,7 @@ function AppContent() {
             path="/presentaciones"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="presentaciones"
                 requiereSetupInicial
                 nombreModulo="Presentaciones"
               >
@@ -162,7 +171,7 @@ function AppContent() {
             path="/campanas"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="campanas"
                 requiereSetupInicial
                 nombreModulo="Campanas"
               >
@@ -172,10 +181,23 @@ function AppContent() {
           />
 
           <Route
+            path="/visitas"
+            element={(
+              <ProtectedRoute
+                seccion="visitas"
+                requiereSetupInicial
+                nombreModulo="Visitas"
+              >
+                <VisitasPage />
+              </ProtectedRoute>
+            )}
+          />
+
+          <Route
             path="/estudios-biblicos"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO, ROLES.MINISTERIO_PERSONAL, ROLES.INSTRUCTOR_BIBLICO]}
+                seccion="estudios_biblicos"
                 requiereSetupInicial
                 nombreModulo="Estudios Biblicos"
               >
@@ -188,7 +210,7 @@ function AppContent() {
             path="/juntas-iglesia"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN, ROLES.SECRETARIO]}
+                seccion="juntas_iglesia"
                 requiereSetupInicial
                 nombreModulo="Juntas de Iglesia"
               >
@@ -202,7 +224,7 @@ function AppContent() {
             path="/usuarios"
             element={
               <ProtectedRoute
-                rolesPermitidos={[ROLES.ADMIN]}
+                soloAdmin
                 requiereSetupInicial
                 nombreModulo="Usuarios"
               >
@@ -210,6 +232,8 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/sin-acceso" element={<SinAcceso />} />
 
           {/* Ruta no encontrada */}
           <Route path="*" element={<Navigate to={rutaInicio} replace />} />

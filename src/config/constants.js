@@ -1,18 +1,85 @@
-// Roles del sistema
+// Roles del sistema: ADMIN (acceso total), USUARIO (permisos por sección), SUPERADMIN (nacional)
 export const ROLES = {
   ADMIN: 'ADMIN',
-  SECRETARIO: 'SECRETARIO',
-  SUPERADMIN: 'SUPERADMIN',
-  MINISTERIO_PERSONAL: 'MINISTERIO_PERSONAL',
-  INSTRUCTOR_BIBLICO: 'INSTRUCTOR_BIBLICO'
+  USUARIO: 'USUARIO',
+  SUPERADMIN: 'SUPERADMIN'
 };
 
-export const ROL_OPCIONES = [
-  { valor: 1, etiqueta: 'Administrador' },
-  { valor: 2, etiqueta: 'Secretario/a' },
-  { valor: 4, etiqueta: 'Ministerios Personales' },
-  { valor: 5, etiqueta: 'Instructor bíblico' }
+export const ETIQUETA_ROL = {
+  ADMIN: 'Administrador',
+  USUARIO: 'Usuario',
+  SUPERADMIN: 'Superadministrador'
+};
+
+export const NIVELES_PERMISO = {
+  LECTOR: 'LECTOR',
+  EDITOR: 'EDITOR',
+  INSTRUCTOR: 'INSTRUCTOR'
+};
+
+export const ETIQUETA_NIVEL = {
+  LECTOR: 'Lector',
+  EDITOR: 'Editor',
+  INSTRUCTOR: 'Instructor'
+};
+
+// Debe coincidir con Permisos::SECCIONES del backend. Etiquetas iguales al menú lateral.
+// INSTRUCTOR no se asigna desde Administrador: se crea en Estudios Bíblicos > Instructores.
+export const SECCIONES_PERMISO = [
+  {
+    clave: 'asistencia',
+    etiqueta: 'Nuevo Registro / Ver Registros',
+    rutas: ['/registro', '/registros'],
+    niveles: ['LECTOR', 'EDITOR'],
+    nota: 'Lector solo ve los registros; Editor también registra.'
+  },
+  {
+    clave: 'estadisticas',
+    etiqueta: 'Estadísticas',
+    rutas: ['/estadisticas'],
+    niveles: ['LECTOR'],
+    nota: 'Solo lectura: esta sección solo muestra datos, no hay nada que editar.'
+  },
+  {
+    clave: 'comparaciones',
+    etiqueta: 'Comparaciones',
+    rutas: ['/comparaciones'],
+    niveles: ['LECTOR'],
+    nota: 'Solo lectura: esta sección solo muestra datos, no hay nada que editar.'
+  },
+  {
+    clave: 'presentaciones',
+    etiqueta: 'Presentaciones',
+    rutas: ['/presentaciones'],
+    niveles: ['LECTOR', 'EDITOR']
+  },
+  {
+    clave: 'campanas',
+    etiqueta: 'Campañas',
+    rutas: ['/campanas'],
+    niveles: ['LECTOR', 'EDITOR']
+  },
+  {
+    clave: 'visitas',
+    etiqueta: 'Visitas',
+    rutas: ['/visitas'],
+    niveles: ['LECTOR', 'EDITOR']
+  },
+  {
+    clave: 'estudios_biblicos',
+    etiqueta: 'Estudios Bíblicos',
+    rutas: ['/estudios-biblicos'],
+    niveles: ['LECTOR', 'EDITOR']
+  },
+  {
+    clave: 'juntas_iglesia',
+    etiqueta: 'Juntas de Iglesia',
+    rutas: ['/juntas-iglesia'],
+    niveles: ['LECTOR', 'EDITOR']
+  }
 ];
+
+export const MAX_USUARIOS_POR_CUENTA = 50;
 
 // Cultos (se cargan del backend, pero utiles para referencia)
 export const CULTO_CODIGOS = {
@@ -45,33 +112,9 @@ export const MES_OPCIONES = [
   { valor: 12, etiqueta: 'Diciembre' }
 ];
 
-// Formulario inicial de asistencia
-export const ASISTENCIA_FORM_INICIAL = {
-  culto_id: '',
-  fecha: '',
-  llegaron_antes_hora: '',
-  llegaron_despues_hora: '',
-  ninos: '',
-  jovenes: '',
-  total_asistentes: '',
-  proc_barrio: '',
-  proc_guayabo: '',
-  visitas_barrio: '',
-  nombres_visitas_barrio: '',
-  visitas_guayabo: '',
-  nombres_visitas_guayabo: '',
-  retiros_antes_terminar: '',
-  se_quedaron_todo: '',
-  observaciones: ''
-};
 
-// Mapa de codigo de culto a dia de la semana en JavaScript (Date.getDay())
-// 0=Domingo, 1=Lunes, ..., 6=Sabado
-export const CULTO_DIA_SEMANA = {
-  SABADO: 6,
-  DOMINGO: 0,
-  MIERCOLES: 3
-};
+// Dias de vigencia de contrasena que se pueden elegir para un usuario del sistema
+export const VIGENCIAS_PASSWORD = [30, 60, 90];
 
 // Formulario inicial de usuario
 export const USUARIO_FORM_INICIAL = {
@@ -80,7 +123,10 @@ export const USUARIO_FORM_INICIAL = {
   usuario: '',
   password: '',
   password_confirmacion: '',
-  rol_id: 2,
+  password_vigencia_dias: VIGENCIAS_PASSWORD[0],
+  password_actualizada_en: '',
+  es_admin: false,
+  permisos: {},
   activo: true
 };
 

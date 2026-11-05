@@ -1,4 +1,14 @@
-﻿/**
+import { ETIQUETA_NIVEL, SECCIONES_PERMISO } from '../../config/constants';
+
+function resumenPermisos(usr) {
+  if (usr.es_admin) return 'Acceso total';
+  return SECCIONES_PERMISO
+    .filter((seccion) => usr.permisos?.[seccion.clave])
+    .map((seccion) => `${seccion.etiqueta}: ${ETIQUETA_NIVEL[usr.permisos[seccion.clave]]}`)
+    .join('\n') || 'Sin secciones';
+}
+
+/**
  * Tabla de listado de usuarios
  * Props:
  *  - usuarios: array de usuarios
@@ -76,7 +86,7 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Usuario</th>
-                  <th className="text-center">Rol</th>
+                  <th className="text-center">Acceso</th>
                   <th className="text-center">Estado</th>
                   <th className="text-center">Expira</th>
                   <th>Creado</th>
@@ -93,8 +103,11 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                       <td className="fw-semibold">{usr.nombre_completo}</td>
                       <td>{usr.usuario}</td>
                       <td className="text-center">
-                        <span className={`badge ${usr.rol === 'ADMIN' ? 'bg-primary' : 'bg-secondary'}`}>
-                          {usr.rol}
+                        <span
+                          className={`badge ${usr.es_admin ? 'bg-primary' : 'bg-secondary'}`}
+                          title={resumenPermisos(usr)}
+                        >
+                          {usr.es_admin ? 'Administrador' : `Usuario · ${Object.keys(usr.permisos || {}).length} secc.`}
                         </span>
                       </td>
                       <td className="text-center">
@@ -103,7 +116,9 @@ export default function UsuarioTable({ usuarios, cargando, onEditar, onEliminar 
                         </span>
                       </td>
                       <td className="text-center">
-                        {usr.password_expira_en ? (
+                        {usr.password_vigencia_dias === 0 ? (
+                          <span className="badge bg-secondary">No vence</span>
+                        ) : usr.password_expira_en ? (
                           <div className="d-flex flex-column align-items-center gap-1">
                             <span className="small text-nowrap">{formatearFechaSolo(usr.password_expira_en)}</span>
                             <span className={`badge ${estadoExpiracion.clase}`}>

@@ -76,8 +76,9 @@ export function validarUsuario(datos, esEdicion = false) {
     errores.password_confirmacion = 'Las contrase\u00f1as no coinciden.';
   }
 
-  if (!datos.rol_id || ![1, 2, 4, 5].includes(Number(datos.rol_id))) {
-    errores.rol_id = 'Debe seleccionar un rol v\u00e1lido.';
+  const tienePermisos = Object.values(datos.permisos || {}).some(Boolean);
+  if (!datos.es_admin && !tienePermisos) {
+    errores.permisos = 'Asigne al menos una secci\u00f3n o marque al usuario como administrador.';
   }
 
   return {

@@ -3,7 +3,7 @@ import authApi from '../api/authApi';
 import { validarLogin } from '../validators/authValidator';
 import { sanitizarObjeto } from '../utils/sanitizer';
 import { notificarExito, notificarError } from '../utils/notify';
-import { ROLES } from '../config/constants';
+import { NIVELES_PERMISO, ROLES, SECCIONES_PERMISO } from '../config/constants';
 
 const AuthContext = createContext(null);
 const NORMALIZE_REGEX = /[\u0300-\u036f]/g;
@@ -240,6 +240,24 @@ export function AuthProvider({ children }) {
   const esSuperadmin = usuario?.rol === ROLES.SUPERADMIN;
   const diasRestantesPassword = calcularDiasRestantes(usuario?.password_expira_en);
   const esAdminTemporal = esCuentaAdminTemporal(usuario);
+  const permisos = usuario?.permisos && typeof usuario.permisos === 'object' ? usuario.permisos : {};
+
+  const nivelEn = (seccion) => {
+    if (esAdmin) return NIVELES_PERMISO.EDITOR;
+    return permisos[seccion] || null;
+  };
+  const puedeVer = (seccion) => !!nivelEn(seccion);
+  const puedeEditar = (seccion) => nivelEn(seccion) === NIVELES_PERMISO.EDITOR;
+  const esInstructorBiblico = !esAdmin && permisos.estudios_biblicos === NIVELES_PERMISO.INSTRUCTOR;
+  const primeraSeccion = SECCIONES_PERMISO.find((item) => permisos[item.clave]);
+  let rutaInicio = null;
+  if (esSuperadmin) {
+    rutaInicio = '/superadmin';
+  } else if (!esAdmin) {
+    rutaInicio = primeraSeccion
+      ? (permisos[primeraSeccion.clave] === NIVELES_PERMISO.EDITOR ? primeraSeccion.rutas[0] : primeraSeccion.rutas.at(-1))
+      : '/sin-acceso';
+  }
 
   const valor = {
     usuario,
@@ -251,6 +269,12 @@ export function AuthProvider({ children }) {
     estaAutenticado,
     esAdmin,
     esSuperadmin,
+    permisos,
+    nivelEn,
+    puedeVer,
+    puedeEditar,
+    esInstructorBiblico,
+    rutaInicio,
     esAdminTemporal,
     diasRestantesPassword,
     iniciarSesion,

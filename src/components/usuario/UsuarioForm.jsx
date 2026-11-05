@@ -1,4 +1,31 @@
-﻿import { ROL_OPCIONES } from '../../config/constants';
+﻿import { useCallback, useState } from 'react';
+import { ETIQUETA_NIVEL, SECCIONES_PERMISO, VIGENCIAS_PASSWORD } from '../../config/constants';
+import PermisosUsuarioModal from './PermisosUsuarioModal';
+
+function esSoloInstructor(formulario) {
+  if (formulario.es_admin) return false;
+  const secciones = Object.keys(formulario.permisos || {}).filter((clave) => formulario.permisos[clave]);
+  return secciones.length === 1 && formulario.permisos.estudios_biblicos === 'INSTRUCTOR';
+}
+
+/** El vencimiento cuenta desde el ultimo cambio de contrasena: hoy si se esta asignando una. */
+function textoVencimiento(formulario) {
+  const base = !formulario.password && formulario.password_actualizada_en
+    ? new Date(formulario.password_actualizada_en.replace(' ', 'T'))
+    : new Date();
+  if (Number.isNaN(base.getTime())) return '';
+  base.setDate(base.getDate() + Number(formulario.password_vigencia_dias));
+  return `Vence el ${base.toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric' })}.`;
+}
+
+function resumenAcceso(formulario) {
+  if (formulario.es_admin) return 'Administrador general (acceso total)';
+  const asignadas = SECCIONES_PERMISO.filter((seccion) => formulario.permisos?.[seccion.clave]);
+  if (asignadas.length === 0) return 'Sin secciones asignadas';
+  return asignadas
+    .map((seccion) => `${seccion.etiqueta} (${ETIQUETA_NIVEL[formulario.permisos[seccion.clave]]})`)
+    .join(', ');
+}
 
 /**
  * Formulario de crear/editar usuario
@@ -16,11 +43,18 @@ export default function UsuarioForm({
   editandoId,
   errores,
   cargando,
-  cupoRolSeleccionado,
   onCambiarCampo,
   onGuardar,
   onLimpiar
 }) {
+  const [permisosAbierto, setPermisosAbierto] = useState(false);
+  const cerrarPermisos = useCallback(() => setPermisosAbierto(false), []);
+  const aplicarPermisos = useCallback(({ esAdmin, permisos }) => {
+    onCambiarCampo('es_admin', esAdmin);
+    onCambiarCampo('permisos', permisos);
+    setPermisosAbierto(false);
+  }, [onCambiarCampo]);
+
   const manejarEnvio = (e) => {
     e.preventDefault();
     onGuardar();
@@ -76,7 +110,7 @@ export default function UsuarioForm({
             </div>
 
             {/* Contrasena */}
-            <div className="col-md-6">
+            <div className="col-md-4">
               <label htmlFor="password_campo" className="form-label">
                 {'Contraseña '}
                 {editandoId && <small className="text-muted">{'(dejar vacío para no cambiar)'}</small>}
@@ -104,7 +138,7 @@ export default function UsuarioForm({
               )}
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-4">
               <label htmlFor="password_confirmacion_campo" className="form-label">
                 {'Confirmar contraseña'}
               </label>
@@ -126,23 +160,53 @@ export default function UsuarioForm({
               )}
             </div>
 
+            {/* Vigencia de la contrasena */}
+            <div className="col-md-4">
+              <label htmlFor="password_vigencia_campo" className="form-label">La contraseña expira en</label>
+              {esSoloInstructor(formulario) ? (
+                <>
+                  <input
+                    type="text"
+                    id="password_vigencia_campo"
+                    className="form-control"
+                    value="No vence"
+                    disabled
+                  />
+                  <div className="form-text">Los instructores no tienen vencimiento.</div>
+                </>
+              ) : (
+                <>
+                  <select
+                    id="password_vigencia_campo"
+                    name="password_vigencia_dias"
+                    className="form-select"
+                    value={formulario.password_vigencia_dias}
+                    onChange={manejarCambio}
+                    disabled={cargando}
+                  >
+                    {VIGENCIAS_PASSWORD.map((dias) => (
+                      <option key={dias} value={dias}>{dias} días</option>
+                    ))}
+                  </select>
+                  <div className="form-text">{textoVencimiento(formulario)}</div>
+                </>
+              )}
+            </div>
+
             <div className="col-12">
               <div className="usuario-form-toolbar">
                 <div className="usuario-form-toolbar-top">
                   <div className="usuario-form-rol-block">
-                    <label htmlFor="rol_id" className="form-label">Rol</label>
-                    <select
-                      id="rol_id"
-                      name="rol_id"
-                      className={`form-select usuario-form-rol-select ${errores.rol_id ? 'is-invalid' : ''}`}
-                      value={formulario.rol_id}
-                      onChange={manejarCambio}
+                    <span className="form-label d-block">Acceso</span>
+                    <button
+                      type="button"
+                      className={`btn usuario-form-permisos-btn ${errores.permisos ? 'btn-outline-danger' : 'btn-outline-primary'}`}
+                      onClick={() => setPermisosAbierto(true)}
                       disabled={cargando}
                     >
-                      {ROL_OPCIONES.map((rol) => (
-                        <option key={rol.valor} value={rol.valor}>{rol.etiqueta}</option>
-                      ))}
-                    </select>
+                      <i className="bi bi-shield-check" aria-hidden="true"></i>
+                      <span>Secciones y permisos</span>
+                    </button>
                   </div>
 
                   <div className="usuario-form-actions">
@@ -176,17 +240,14 @@ export default function UsuarioForm({
                   </div>
                 </div>
 
-                {errores.rol_id && (
-                  <div className="invalid-feedback d-block">{errores.rol_id}</div>
+                {errores.permisos && (
+                  <div className="invalid-feedback d-block">{errores.permisos}</div>
                 )}
 
                 <div className="usuario-form-toolbar-meta">
-                  {cupoRolSeleccionado && (
-                    <div className="form-text usuario-form-cupo-text">
-                      Cupo {cupoRolSeleccionado.rol_nombre}: {cupoRolSeleccionado.consumo_actual}/{cupoRolSeleccionado.cupo_maximo}
-                      {' '}({cupoRolSeleccionado.disponibles} disponibles).
-                    </div>
-                  )}
+                  <div className="form-text usuario-form-cupo-text">
+                    <strong>Acceso:</strong> {resumenAcceso(formulario)}
+                  </div>
                   {editandoId && (
                     <div className="form-check usuario-form-activo-check">
                       <input
@@ -209,6 +270,14 @@ export default function UsuarioForm({
           </div>
         </form>
       </div>
+      {permisosAbierto && (
+        <PermisosUsuarioModal
+          esAdmin={formulario.es_admin}
+          permisos={formulario.permisos}
+          onAplicar={aplicarPermisos}
+          onCerrar={cerrarPermisos}
+        />
+      )}
     </div>
   );
 }

@@ -74,7 +74,7 @@ export function inferirCategoriaPorClave(clave) {
   const key = normalizarTexto(clave).toLowerCase();
 
   if (key === 'llegaron_antes_hora' || key === 'llegaron_despues_hora') return 'informacion_culto';
-  if (key === 'ninos' || key === 'jovenes') return 'composicion_asistentes';
+  if (key === 'ninos' || key === 'jovenes' || key === 'adultos') return 'composicion_asistentes';
   if (key === 'total_asistentes') return 'total_asistentes';
   if (key.startsWith('proc_')) return 'procedencia';
   if (key.startsWith('visitas_') || key.startsWith('nombres_visitas_')) return 'visitas';
@@ -89,13 +89,8 @@ export const METRICAS_FALLBACK = [
   { clave: 'llegaron_despues_hora', etiqueta: 'Llegaron después de la hora', categoria: 'informacion_culto', habilitado: false, obligatorio: false },
   { clave: 'ninos', etiqueta: 'Niños', categoria: 'composicion_asistentes', habilitado: false, obligatorio: false },
   { clave: 'jovenes', etiqueta: 'Jóvenes', categoria: 'composicion_asistentes', habilitado: false, obligatorio: false },
+  { clave: 'adultos', etiqueta: 'Adultos', categoria: 'composicion_asistentes', habilitado: false, obligatorio: false },
   { clave: 'total_asistentes', etiqueta: 'Total de asistentes', categoria: 'total_asistentes', habilitado: false, obligatorio: false },
-  { clave: 'proc_barrio', etiqueta: 'Procedencia del barrio', categoria: 'procedencia', habilitado: false, obligatorio: false },
-  { clave: 'proc_guayabo', etiqueta: 'Procedencia de Guayabo', categoria: 'procedencia', habilitado: false, obligatorio: false },
-  { clave: 'visitas_barrio', etiqueta: 'Visitas del barrio', categoria: 'visitas', habilitado: false, obligatorio: false },
-  { clave: 'nombres_visitas_barrio', etiqueta: 'Nombres de visitas del barrio', categoria: 'visitas', habilitado: false, obligatorio: false },
-  { clave: 'visitas_guayabo', etiqueta: 'Visitas de Guayabo', categoria: 'visitas', habilitado: false, obligatorio: false },
-  { clave: 'nombres_visitas_guayabo', etiqueta: 'Nombres de visitas de Guayabo', categoria: 'visitas', habilitado: false, obligatorio: false },
   { clave: 'retiros_antes_terminar', etiqueta: 'Retiros antes de terminar', categoria: 'permanencia', habilitado: false, obligatorio: false },
   { clave: 'se_quedaron_todo', etiqueta: 'Se quedaron hasta el final', categoria: 'permanencia', habilitado: false, obligatorio: false },
   { clave: 'observaciones', etiqueta: 'Observaciones', categoria: 'observaciones', habilitado: false, obligatorio: false }
@@ -226,8 +221,8 @@ export function normalizarPayloadMetricas(metricasActivas, metricasFormulario) {
   return payload;
 }
 
-export function obtenerMapaEtiquetasMetricas(metricasActivas) {
-  return metricasActivas.reduce((acc, metrica) => {
+export function obtenerMapaEtiquetasMetricas(metricas) {
+  return metricas.reduce((acc, metrica) => {
     acc[metrica.clave] = metrica.etiqueta;
     return acc;
   }, {});

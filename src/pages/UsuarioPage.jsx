@@ -1,12 +1,10 @@
 import { useCallback, useState } from 'react';
 import UsuarioForm from '../components/usuario/UsuarioForm';
 import UsuarioTable from '../components/usuario/UsuarioTable';
-import UsuarioCuposCard from '../components/usuario/UsuarioCuposCard';
 import { useUsuario } from '../hooks/useUsuario';
 
 export const SECCION_USUARIOS = 'USUARIOS_SISTEMA';
 export const SECCION_FORMULARIO = 'AGREGAR_USUARIO';
-export const SECCION_ROLES = 'ROLES_Y_CUPOS';
 
 export const OPCIONES_USUARIO = [
   {
@@ -18,11 +16,6 @@ export const OPCIONES_USUARIO = [
     valor: SECCION_FORMULARIO,
     etiqueta: 'Agregar usuario',
     icono: 'bi-person-plus'
-  },
-  {
-    valor: SECCION_ROLES,
-    etiqueta: 'Roles y cupos',
-    icono: 'bi-person-gear'
   }
 ];
 
@@ -44,10 +37,7 @@ export default function UsuarioPage({
     editandoId,
     cargando,
     errores,
-    cuposRoles,
-    resumenCupos,
-    cargandoCupos,
-    cupoRolSeleccionado,
+    limite,
     cambiarCampo,
     guardar,
     editar,
@@ -66,25 +56,24 @@ export default function UsuarioPage({
   }, [onCambiarSeccion]);
 
   const totalUsuarios = usuarios.length;
-  const usuariosActivos = usuarios.filter((item) => !!item.activo).length;
 
   const abrirEdicion = useCallback((usuario) => {
     editar(usuario);
     setSeccionActiva(SECCION_FORMULARIO);
-  }, [editar]);
+  }, [editar, setSeccionActiva]);
 
   const limpiarFormularioConRetorno = useCallback(() => {
     limpiarFormulario();
     if (esPanel) {
       setSeccionActiva(SECCION_USUARIOS);
     }
-  }, [esPanel, limpiarFormulario]);
+  }, [esPanel, limpiarFormulario, setSeccionActiva]);
 
   return (
     <div className={esPanel ? 'admin-usuarios-shell' : 'container-fluid py-4'}>
       {!esPanel && (
         <p className="text-muted small mb-3">
-          Administre usuarios, roles y cupos desde este módulo.
+          Administre los usuarios de la iglesia y sus permisos por sección.
         </p>
       )}
 
@@ -113,9 +102,9 @@ export default function UsuarioPage({
               <span className="admin-usuarios-resumen-label">Total</span>
               <strong className="admin-usuarios-resumen-value">{totalUsuarios}</strong>
             </div>
-            <div className="admin-usuarios-resumen-item">
+            <div className="admin-usuarios-resumen-item" title={`Máximo ${limite.maximo} usuarios activos por cuenta`}>
               <span className="admin-usuarios-resumen-label">Activos</span>
-              <strong className="admin-usuarios-resumen-value">{usuariosActivos}</strong>
+              <strong className="admin-usuarios-resumen-value">{limite.activos} / {limite.maximo}</strong>
             </div>
           </div>
 
@@ -134,18 +123,9 @@ export default function UsuarioPage({
           editandoId={editandoId}
           errores={errores}
           cargando={cargando}
-          cupoRolSeleccionado={cupoRolSeleccionado}
           onCambiarCampo={cambiarCampo}
           onGuardar={guardar}
           onLimpiar={limpiarFormularioConRetorno}
-        />
-      )}
-
-      {seccionActiva === SECCION_ROLES && (
-        <UsuarioCuposCard
-          cuposRoles={cuposRoles}
-          resumen={resumenCupos}
-          cargando={cargandoCupos}
         />
       )}
     </div>
