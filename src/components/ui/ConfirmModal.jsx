@@ -11,9 +11,11 @@ export function registrarDispatchConfirm(fn) {
   mostrarConfirmExterno = fn;
 }
 
-export function lanzarConfirm(mensaje) {
+const TEXTOS_POR_DEFECTO = { aceptar: 'Aceptar', cancelar: 'Cancelar' };
+
+export function lanzarConfirm(mensaje, opciones = {}) {
   if (mostrarConfirmExterno) {
-    return mostrarConfirmExterno(mensaje);
+    return mostrarConfirmExterno(mensaje, opciones);
   }
   // Fallback si el componente no esta montado
   return Promise.resolve(window.confirm(mensaje));
@@ -22,13 +24,15 @@ export function lanzarConfirm(mensaje) {
 export default function ConfirmModal() {
   const [visible, setVisible] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [textos, setTextos] = useState(TEXTOS_POR_DEFECTO);
   const [resolver, setResolver] = useState(null);
   const [saliendo, setSaliendo] = useState(false);
   const botonAceptarRef = useRef(null);
 
-  const mostrar = useCallback((msg) => {
+  const mostrar = useCallback((msg, opciones = {}) => {
     return new Promise((resolve) => {
       setMensaje(msg);
+      setTextos({ ...TEXTOS_POR_DEFECTO, ...opciones });
       setVisible(true);
       setSaliendo(false);
       setResolver(() => resolve);
@@ -80,14 +84,14 @@ export default function ConfirmModal() {
         <p className="confirm-mensaje">{mensaje}</p>
         <div className="confirm-acciones">
           <button className="confirm-btn confirm-btn-cancelar" onClick={cancelar}>
-            Cancelar
+            {textos.cancelar}
           </button>
           <button
             className="confirm-btn confirm-btn-aceptar"
             onClick={aceptar}
             ref={botonAceptarRef}
           >
-            Aceptar
+            {textos.aceptar}
           </button>
         </div>
       </div>

@@ -326,7 +326,8 @@ export function useJuntasIglesia() {
         ...juntaForm,
         tipo: normalizarTipoJunta(juntaForm.tipo),
         estado: resolverEstadoJuntaPorFecha(juntaForm.fecha, juntaForm.estado),
-        puntos: Array.isArray(opciones?.puntos) ? opciones.puntos : []
+        puntos: Array.isArray(opciones?.puntos) ? opciones.puntos : [],
+        ...(editandoJuntaId && opciones?.agendaCompleta ? { agenda_completa: true } : {})
       };
       const res = editandoJuntaId
         ? await juntaApi.actualizar(editandoJuntaId, payload)

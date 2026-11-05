@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import juntaApi from '../api/juntaApi';
 import SearchInput from '../components/ui/SearchInput';
 import {
@@ -10,6 +10,7 @@ import {
 } from '../config/events';
 import { useJuntasIglesia } from '../hooks/useJuntasIglesia';
 import { confirmar, notificarError, notificarExito } from '../utils/notify';
+import { registrarGuardiaCambios } from '../utils/guardiaCambios';
 
 const TIPO_JUNTA_OPCIONES = [
   { valor: '', etiqueta: 'Todos los tipos' },
@@ -404,6 +405,26 @@ function extraerAsistentesSesion(junta) {
   return ultima ? String(ultima[1]).slice(0, 4) : '';
 }
 
+function puntoVieneDeJuntaAnterior(punto) {
+  return String(punto?.tipo_punto || '').toUpperCase() === 'PENDIENTE_ANTERIOR' || Boolean(punto?.punto_anterior_id);
+}
+
+/** Punto ya guardado, cargado en el formulario de edicion de la junta. */
+function puntoGuardadoATemporal(punto) {
+  return {
+    id: `guardado-${punto.id}`,
+    puntoId: punto.id,
+    titulo: punto.titulo || '',
+    departamento_origen: punto.departamento_origen || '',
+    estado: String(punto.estado || 'PENDIENTE').toUpperCase(),
+    postergadoDe: puntoVieneDeJuntaAnterior(punto) ? (punto.punto_anterior_junta_fecha || '') : ''
+  };
+}
+
+function puntoTemporalBloqueado(punto) {
+  return Boolean(punto?.puntoId) && punto.estado !== 'PENDIENTE';
+}
+
 function puntoEstaPendiente(punto) {
   const estado = String(punto?.estado || '').toUpperCase();
   return ESTADOS_PUNTO_PENDIENTES.includes(estado) || !estado;
@@ -465,7 +486,7 @@ function payloadJuntaSesion(junta, estado, notaSesion = '') {
   };
 }
 
-function KpiCard({ label, value, icon }) {
+function KpiCard({ label, value, icon, texto }) {
   return (
     <div className="col-6 col-lg-3">
       <div className="card shadow-sm estudios-kpi-card juntas-kpi-card h-100">
@@ -474,7 +495,7 @@ function KpiCard({ label, value, icon }) {
             <span className="estudios-kpi-label">{label}</span>
             <i className={`bi ${icon} text-primary`} aria-hidden="true"></i>
           </div>
-          <div className="estudios-kpi-value">{Number(value || 0).toLocaleString('es-CR')}</div>
+          <div className="estudios-kpi-value">{texto ?? Number(value || 0).toLocaleString('es-CR')}</div>
         </div>
       </div>
     </div>
@@ -747,9 +768,9 @@ function DepartamentosModal({
     >
       <div className="juntas-modal-card" role="dialog" aria-modal="true" aria-labelledby="juntas-departamentos-title">
         <div className="juntas-modal-header">
-          <div>
+          <div className="juntas-modal-title">
             <h5 id="juntas-departamentos-title" className="mb-0">Departamentos</h5>
-            <span className="badge text-bg-light border mt-2">{items.length}</span>
+            <span className="juntas-contador-pill">{items.length} registrado{items.length === 1 ? '' : 's'}</span>
           </div>
           <button type="button" className="btn btn-outline-secondary btn-sm juntas-icon-action-btn" onClick={onCerrar} aria-label="Cerrar departamentos">
             <i className="bi bi-x-lg" aria-hidden="true"></i>
@@ -759,13 +780,7 @@ function DepartamentosModal({
         <div className="juntas-modal-body">
           <div className="card shadow-sm juntas-departamento-form-card">
             <div className="card-body">
-              <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
-                <div className="juntas-section-title mb-0">{editandoId ? 'Editar departamento' : 'Nuevo departamento'}</div>
-                <div className="d-flex gap-2">
-                  <BotonAccion icono="bi-arrow-counterclockwise" label="Limpiar" outline onClick={onLimpiar} />
-                  <BotonAccion icono={editandoId ? 'bi-floppy' : 'bi-plus-lg'} label={editandoId ? 'Actualizar' : 'Agregar'} onClick={onGuardar} />
-                </div>
-              </div>
+              <div className="juntas-section-title mb-3">{editandoId ? 'Editar departamento' : 'Nuevo departamento'}</div>
 
               <div className="row g-3">
                 <div className="col-12">
@@ -809,6 +824,10 @@ function DepartamentosModal({
                     maxLength={180}
                   ></textarea>
                 </div>
+              </div>
+              <div className="juntas-departamento-form-actions">
+                <BotonAccion icono="bi-arrow-counterclockwise" label="Limpiar" outline onClick={onLimpiar} />
+                <BotonAccion icono={editandoId ? 'bi-floppy' : 'bi-plus-lg'} label={editandoId ? 'Actualizar' : 'Agregar'} onClick={onGuardar} />
               </div>
             </div>
           </div>
@@ -868,11 +887,11 @@ function PuntosTemporalesModal({ abierto, puntos, onCerrar, onEditar, onEliminar
     >
       <div className="juntas-modal-card juntas-puntos-modal-card" role="dialog" aria-modal="true" aria-labelledby="juntas-puntos-temporales-title">
         <div className="juntas-modal-header">
-          <div>
-            <h5 id="juntas-puntos-temporales-title" className="mb-0">Puntos preregistrados</h5>
-            <span className="badge text-bg-light border mt-2">{puntos.length}</span>
+          <div className="juntas-modal-title">
+            <h5 id="juntas-puntos-temporales-title" className="mb-0">Puntos de la junta</h5>
+            <span className="juntas-contador-pill">{puntos.length} punto{puntos.length === 1 ? '' : 's'}</span>
           </div>
-          <button type="button" className="btn btn-outline-secondary btn-sm juntas-icon-action-btn" onClick={onCerrar} aria-label="Cerrar puntos preregistrados">
+          <button type="button" className="btn btn-outline-secondary btn-sm juntas-icon-action-btn" onClick={onCerrar} aria-label="Cerrar puntos de la junta">
             <i className="bi bi-x-lg" aria-hidden="true"></i>
           </button>
         </div>
@@ -891,19 +910,28 @@ function PuntosTemporalesModal({ abierto, puntos, onCerrar, onEditar, onEliminar
               {puntos.map((item, index) => (
                 <tr key={item.id}>
                   <td>{index + 1}</td>
-                  <td className="fw-semibold">{item.titulo}</td>
+                  <td>
+                    <div className="fw-semibold">{item.titulo}</div>
+                    {item.postergadoDe ? (
+                      <div className="small text-muted">Postergado de la junta del {formatearFecha(item.postergadoDe)}</div>
+                    ) : null}
+                  </td>
                   <td>{item.departamento_origen || '-'}</td>
                   <td className="text-end">
-                    <div className="d-inline-flex gap-2 juntas-acciones-inline">
-                      <BotonIcono icono="bi-pencil-square" label="Editar" variant="outline-primary" onClick={() => onEditar(item)} />
-                      <BotonIcono icono="bi-trash" label="Eliminar" variant="outline-danger" onClick={() => onEliminar(item)} />
-                    </div>
+                    {puntoTemporalBloqueado(item) ? (
+                      <span className={`badge ${claseEstado(item.estado)}`} title="Punto ya tratado: no se puede modificar">{etiquetaEstado(item.estado)}</span>
+                    ) : (
+                      <div className="d-inline-flex gap-2 juntas-acciones-inline">
+                        <BotonIcono icono="bi-pencil-square" label="Editar" variant="outline-primary" onClick={() => onEditar(item)} />
+                        <BotonIcono icono="bi-trash" label="Eliminar" variant="outline-danger" onClick={() => onEliminar(item)} />
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
               {!puntos.length ? (
                 <tr>
-                  <td colSpan="4" className="text-center text-muted py-4">No hay puntos preregistrados.</td>
+                  <td colSpan="4" className="text-center text-muted py-4">No hay puntos registrados.</td>
                 </tr>
               ) : null}
             </tbody>
@@ -1059,6 +1087,10 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
   const [asistentes, setAsistentes] = useState('');
   const [accionesPunto, setAccionesPunto] = useState({});
   const [mostrarPostergados, setMostrarPostergados] = useState(false);
+  const [mostrarInforme, setMostrarInforme] = useState(false);
+  const [resaltarAsistentes, setResaltarAsistentes] = useState(false);
+  const asistentesRef = useRef(null);
+  const resaltadoJuntaRef = useRef(null);
 
   const cargarSesion = useCallback(async () => {
     if (!junta?.id) return;
@@ -1087,8 +1119,28 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
     setAsistentes(leerSesionAsistentes(junta.id) || extraerAsistentesSesion(junta));
     setAccionesPunto({});
     setMostrarPostergados(false);
+    setMostrarInforme(false);
     void cargarSesion();
   }, [junta, cargarSesion]);
+
+  // Al abrir una junta sin asistentes: enfocar y resaltar el campo unos segundos (una vez por junta).
+  const estadoDetalle = String(detalleSesion?.estado || '').toUpperCase();
+  const sinAsistentes = numeroEnteroSeguro(asistentes) <= 0;
+  useEffect(() => {
+    if (!detalleSesion?.id || cargandoSesion) return;
+    if (estadoDetalle === 'CERRADA' || !sinAsistentes) return;
+    if (resaltadoJuntaRef.current === detalleSesion.id) return;
+
+    resaltadoJuntaRef.current = detalleSesion.id;
+    setResaltarAsistentes(true);
+    asistentesRef.current?.focus();
+  }, [detalleSesion?.id, cargandoSesion, estadoDetalle, sinAsistentes]);
+
+  useEffect(() => {
+    if (!resaltarAsistentes) return undefined;
+    const timer = window.setTimeout(() => setResaltarAsistentes(false), 5000);
+    return () => window.clearTimeout(timer);
+  }, [resaltarAsistentes]);
 
   if (!junta) return null;
 
@@ -1098,11 +1150,14 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
   const asistentesNumero = numeroEnteroSeguro(asistentes);
   const quorumCumplido = quorum > 0 && asistentesNumero >= quorum;
   const juntaCerrada = String(detalle?.estado || junta?.estado || '').toUpperCase() === 'CERRADA';
-  const puedeReanudar = juntaCerrada && fechaEsHoy(detalle?.fecha || junta?.fecha);
+  const esperandoAsistentes = !juntaCerrada && asistentesNumero <= 0;
+  const juntaPreviaId = detalleSesion?.junta_previa_id || null;
   const puntosPostergados = puntos.filter((punto) => ['POSPUESTO', 'TRASLADADO'].includes(String(punto.estado || '').toUpperCase()));
   const puntosActivos = puntos.filter((punto) => puntoEstaPendiente(punto) && !['POSPUESTO', 'TRASLADADO'].includes(String(punto.estado || '').toUpperCase()));
   const puntosProcesados = puntos.filter((punto) => !puntoEstaPendiente(punto) || ['POSPUESTO', 'TRASLADADO'].includes(String(punto.estado || '').toUpperCase()));
   const puntosSinProcesar = puntosActivos;
+  const activosAnteriores = puntosActivos.filter(puntoVieneDeJuntaAnterior);
+  const activosPropios = puntosActivos.filter((punto) => !puntoVieneDeJuntaAnterior(punto));
   const todosProcesados = puntos.length > 0 && puntosActivos.length === 0;
   const puedeProcesarPuntos = !juntaCerrada && quorumCumplido && asistentesNumero > 0;
   const etiquetaFinal = todosProcesados ? 'Terminar junta' : 'Postergar junta';
@@ -1227,7 +1282,7 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
 
   const deshacerPostergacion = async (punto) => {
     if (juntaCerrada) {
-      notificarError('Primero reanude la junta para deshacer puntos postergados.');
+      notificarError('La junta ya fue terminada: sus puntos quedan solo para consulta.');
       return;
     }
 
@@ -1245,27 +1300,6 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
       }
     } catch (error) {
       notificarError(error?.mensaje || 'No se pudo deshacer la postergación.');
-    } finally {
-      setGuardandoSesion(false);
-    }
-  };
-
-  const reanudarJunta = async () => {
-    if (!puedeReanudar) return;
-
-    const ok = await confirmar('La junta volverá a quedar en proceso para realizar ajustes. ¿Desea continuar?');
-    if (!ok) return;
-
-    setGuardandoSesion(true);
-    try {
-      const res = await juntaApi.actualizar(detalle.id, payloadJuntaSesion(detalle, 'EN_PROCESO'));
-      if (res?.exito) {
-        notificarExito('Junta reanudada.');
-        await cargarSesion();
-        await onActualizada?.(detalle.id);
-      }
-    } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo reanudar la junta.');
     } finally {
       setGuardandoSesion(false);
     }
@@ -1308,6 +1342,77 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
     }
   };
 
+  const renderPunto = (punto, index) => {
+    const accion = accionesPunto[punto.id] || {};
+    const votosFavor = numeroEnteroSeguro(accion.votos_favor);
+    const votosContra = Math.max(asistentesNumero - votosFavor, 0);
+    const deAnterior = puntoVieneDeJuntaAnterior(punto);
+
+    return (
+      <article key={punto.id} className={`juntas-sesion-punto${deAnterior ? ' juntas-sesion-punto-anterior' : ''}`}>
+        <div className="juntas-sesion-punto-head">
+          <div>
+            <div className="fw-semibold">{punto.numero_orden || index + 1}. {punto.titulo}</div>
+            <div className="small text-muted">
+              {punto.departamento_origen || 'Sin departamento'}
+              {deAnterior && punto.punto_anterior_junta_fecha ? ` · Postergado en la junta del ${formatearFecha(punto.punto_anterior_junta_fecha)}` : ''}
+            </div>
+          </div>
+          <span className={`badge border ${claseEstado(punto.estado)}`}>{etiquetaEstado(punto.estado || 'PENDIENTE')}</span>
+        </div>
+
+        <div className="juntas-sesion-punto-grid">
+          <div>
+            <label className="form-label small" htmlFor={`juntas_punto_${punto.id}_favor`}>A favor</label>
+            <input
+              id={`juntas_punto_${punto.id}_favor`}
+              type="number"
+              min="0"
+              max={asistentesNumero}
+              className="form-control form-control-sm"
+              value={accion.votos_favor || ''}
+              onChange={(event) => cambiarAccionPunto(punto.id, 'votos_favor', normalizarVotosFavor(event.target.value))}
+              disabled={!puedeProcesarPuntos || guardandoSesion}
+            />
+          </div>
+          <div>
+            <label className="form-label small" htmlFor={`juntas_punto_${punto.id}_contra`}>En contra</label>
+            <input
+              id={`juntas_punto_${punto.id}_contra`}
+              type="number"
+              className="form-control form-control-sm"
+              value={accion.votos_favor ? votosContra : ''}
+              readOnly
+              disabled
+            />
+          </div>
+          <div className="juntas-sesion-observacion">
+            <label className="form-label small" htmlFor={`juntas_punto_${punto.id}_obs`}>Detalle</label>
+            <input
+              id={`juntas_punto_${punto.id}_obs`}
+              type="text"
+              className="form-control form-control-sm"
+              value={accion.detalle || ''}
+              onChange={(event) => cambiarAccionPunto(punto.id, 'detalle', event.target.value.slice(0, 180))}
+              maxLength={180}
+              disabled={juntaCerrada || guardandoSesion}
+            />
+          </div>
+          <div className="juntas-sesion-punto-actions">
+            <button type="button" className="btn btn-success btn-sm" onClick={() => registrarVoto(punto)} disabled={!puedeProcesarPuntos || guardandoSesion}>
+              <i className="bi bi-check2-square" aria-hidden="true"></i>
+              Votar
+            </button>
+            <button type="button" className="btn btn-outline-warning btn-sm" onClick={() => postergarPunto(punto)} disabled={juntaCerrada || guardandoSesion}>
+              <i className="bi bi-hourglass-split" aria-hidden="true"></i>
+              Postergar
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  };
+
   return (
     <div
       className="prompt-overlay-iasd juntas-sesion-overlay"
@@ -1337,12 +1442,17 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
                 {puntosPostergados.length} postergado{puntosPostergados.length === 1 ? '' : 's'}
               </button>
             ) : null}
-            {puedeReanudar ? (
-              <button type="button" className="btn btn-outline-primary btn-sm" onClick={reanudarJunta} disabled={guardandoSesion}>
-                <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                Reanudar junta
-              </button>
-            ) : null}
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm juntas-sesion-informe-btn"
+              onClick={() => setMostrarInforme(true)}
+              disabled={guardandoSesion || cargandoSesion || !juntaPreviaId}
+              title={juntaPreviaId ? 'Mostrar informe de la junta anterior' : 'No hay una junta anterior sesionada'}
+            >
+              <i className="bi bi-journal-text" aria-hidden="true"></i>
+              <span className="d-none d-sm-inline">Informe de junta anterior</span>
+              <span className="d-sm-none">Junta anterior</span>
+            </button>
             <button type="button" className="btn-close" onClick={onCerrar} aria-label="Cerrar" disabled={guardandoSesion}></button>
           </div>
         </div>
@@ -1353,14 +1463,16 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
               <span>Quórum</span>
               <strong>{quorum || '-'}</strong>
             </div>
-            <div>
+            <div className={resaltarAsistentes ? 'juntas-sesion-asistentes-resaltado' : undefined}>
               <label htmlFor="juntas_sesion_asistentes">Asistentes</label>
               <input
+                ref={asistentesRef}
                 id="juntas_sesion_asistentes"
                 type="number"
                 min="0"
                 step="1"
                 inputMode="numeric"
+                placeholder="0"
                 className="form-control form-control-sm"
                 value={asistentes}
                 onChange={(event) => cambiarAsistentes(event.target.value)}
@@ -1377,86 +1489,59 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
             </div>
           </section>
 
-          {!juntaCerrada && !quorumCumplido ? (
+          {!juntaCerrada && !esperandoAsistentes && !quorumCumplido ? (
             <div className="alert alert-warning py-2 mb-3">
               Para votar puntos, la cantidad de asistentes debe ser igual o mayor al quórum registrado.
             </div>
           ) : null}
           {juntaCerrada ? (
             <div className="alert alert-info py-2 mb-3">
-              Esta junta ya fue terminada. {puedeReanudar ? 'Puede reanudarla mientras siga siendo la fecha de la junta.' : 'La fecha de la junta ya pasó y queda solo para consulta.'}
+              Esta junta ya fue terminada y queda solo para consulta.
             </div>
           ) : null}
 
           <section className="juntas-sesion-puntos">
             {cargandoSesion ? (
               <div className="text-center text-muted py-4">Cargando puntos de la junta…</div>
-            ) : puntosActivos.map((punto, index) => {
-              const accion = accionesPunto[punto.id] || {};
-              const votosFavor = numeroEnteroSeguro(accion.votos_favor);
-              const votosContra = Math.max(asistentesNumero - votosFavor, 0);
+            ) : null}
 
-              return (
-                <article key={punto.id} className="juntas-sesion-punto">
-                  <div className="juntas-sesion-punto-head">
-                    <div>
-                      <div className="fw-semibold">{punto.numero_orden || index + 1}. {punto.titulo}</div>
-                      <div className="small text-muted">{punto.departamento_origen || 'Sin departamento'}</div>
-                    </div>
-                    <span className={`badge border ${claseEstado(punto.estado)}`}>{etiquetaEstado(punto.estado || 'PENDIENTE')}</span>
-                  </div>
+            {!cargandoSesion && esperandoAsistentes && puntos.length > 0 ? (
+              <div className="juntas-sesion-espera">
+                <i className="bi bi-people" aria-hidden="true"></i>
+                <div>
+                  <strong>Primero registre la cantidad de asistentes.</strong>
+                  <span>
+                    Los {puntosActivos.length} punto{puntosActivos.length === 1 ? '' : 's'} de la agenda aparecerán en cuanto indique cuántas personas asisten a la junta.
+                  </span>
+                </div>
+                <button type="button" className="btn btn-primary btn-sm" onClick={() => {
+                  asistentesRef.current?.focus();
+                  setResaltarAsistentes(true);
+                }}>
+                  Ir a asistentes
+                </button>
+              </div>
+            ) : null}
 
-                  <div className="juntas-sesion-punto-grid">
-                    <div>
-                      <label className="form-label small" htmlFor={`juntas_punto_${punto.id}_favor`}>A favor</label>
-                      <input
-                        id={`juntas_punto_${punto.id}_favor`}
-                        type="number"
-                        min="0"
-                        max={asistentesNumero}
-                        className="form-control form-control-sm"
-                        value={accion.votos_favor || ''}
-                        onChange={(event) => cambiarAccionPunto(punto.id, 'votos_favor', normalizarVotosFavor(event.target.value))}
-                        disabled={!puedeProcesarPuntos || guardandoSesion}
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label small" htmlFor={`juntas_punto_${punto.id}_contra`}>En contra</label>
-                      <input
-                        id={`juntas_punto_${punto.id}_contra`}
-                        type="number"
-                        className="form-control form-control-sm"
-                        value={accion.votos_favor ? votosContra : ''}
-                        readOnly
-                        disabled
-                      />
-                    </div>
-                    <div className="juntas-sesion-observacion">
-                      <label className="form-label small" htmlFor={`juntas_punto_${punto.id}_obs`}>Detalle</label>
-                      <input
-                        id={`juntas_punto_${punto.id}_obs`}
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={accion.detalle || ''}
-                        onChange={(event) => cambiarAccionPunto(punto.id, 'detalle', event.target.value.slice(0, 180))}
-                        maxLength={180}
-                        disabled={juntaCerrada || guardandoSesion}
-                      />
-                    </div>
-                    <div className="juntas-sesion-punto-actions">
-                      <button type="button" className="btn btn-success btn-sm" onClick={() => registrarVoto(punto)} disabled={!puedeProcesarPuntos || guardandoSesion}>
-                        <i className="bi bi-check2-square" aria-hidden="true"></i>
-                        Votar
-                      </button>
-                      <button type="button" className="btn btn-outline-warning btn-sm" onClick={() => postergarPunto(punto)} disabled={juntaCerrada || guardandoSesion}>
-                        <i className="bi bi-hourglass-split" aria-hidden="true"></i>
-                        Postergar
-                      </button>
-                    </div>
+            {!cargandoSesion && !esperandoAsistentes && activosAnteriores.length > 0 ? (
+              <>
+                <div className="juntas-sesion-seccion-titulo">
+                  <i className="bi bi-arrow-return-right" aria-hidden="true"></i>
+                  Puntos postergados de juntas anteriores
+                  <span className="juntas-contador-pill">{activosAnteriores.length}</span>
+                </div>
+                {activosAnteriores.map((punto, index) => renderPunto(punto, index))}
+                {activosPropios.length > 0 ? (
+                  <div className="juntas-sesion-seccion-titulo">
+                    <i className="bi bi-list-ol" aria-hidden="true"></i>
+                    Puntos de esta junta
+                    <span className="juntas-contador-pill">{activosPropios.length}</span>
                   </div>
-                </article>
-              );
-            })}
+                ) : null}
+              </>
+            ) : null}
+
+            {!cargandoSesion && !esperandoAsistentes ? activosPropios.map((punto, index) => renderPunto(punto, index)) : null}
 
             {puntos.length > 0 && !puntosActivos.length && !cargandoSesion ? (
               <div className="juntas-sesion-clear-state">
@@ -1465,7 +1550,7 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
                   <strong>Todos los puntos de la junta fueron tratados.</strong>
                   <span>
                     {juntaCerrada
-                      ? 'La junta ya quedó terminada. Si aún es la fecha de la junta, puede reanudarla para hacer ajustes.'
+                      ? 'La junta ya quedó terminada y queda solo para consulta.'
                       : 'Puede terminar la junta o revisar los puntos postergados desde el contador superior.'}
                   </span>
                 </div>
@@ -1520,6 +1605,126 @@ function SesionarJuntaModal({ junta, onCerrar, onActualizada }) {
             </div>
           </div>
         ) : null}
+
+        {mostrarInforme && juntaPreviaId ? (
+          <InformeJuntaAnterior juntaId={juntaPreviaId} onCerrar={() => setMostrarInforme(false)} />
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ultimaVotacion(punto) {
+  const votos = Array.isArray(punto?.votaciones) ? punto.votaciones : [];
+  // El backend las entrega de la mas reciente a la mas antigua.
+  return votos.length ? votos[0] : null;
+}
+
+/** Capa dentro de la sesion: informe detallado de la junta sesionada anterior. */
+function InformeJuntaAnterior({ juntaId, onCerrar }) {
+  const [informe, setInforme] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let activo = true;
+    (async () => {
+      try {
+        const res = await juntaApi.obtenerPorId(juntaId);
+        if (!res?.exito) throw new Error(res?.mensaje || 'No se pudo cargar la junta anterior.');
+        if (activo) setInforme(res?.datos?.item || null);
+      } catch (err) {
+        if (activo) setError(err?.mensaje || err?.message || 'No se pudo cargar la junta anterior.');
+      } finally {
+        if (activo) setCargando(false);
+      }
+    })();
+    return () => { activo = false; };
+  }, [juntaId]);
+
+  const puntos = Array.isArray(informe?.puntos) ? informe.puntos : [];
+  const contar = (estados) => puntos.filter((p) => estados.includes(String(p.estado || '').toUpperCase())).length;
+  const conteos = [
+    { label: 'Aprobados', valor: contar(['APROBADO', 'EJECUTADO']), clase: 'text-success' },
+    { label: 'Rechazados', valor: contar(['RECHAZADO']), clase: 'text-danger' },
+    { label: 'Postergados', valor: contar(['POSPUESTO', 'TRASLADADO']), clase: 'text-warning-emphasis' },
+    { label: 'Sin tratar', valor: contar(['PENDIENTE', 'EN_DISCUSION']), clase: 'text-muted' }
+  ];
+  const resumen = textoLimpio(informe?.resumen_general);
+  const asistentesInforme = extraerAsistentesSesion(informe);
+
+  return (
+    <div className="juntas-postergados-layer" role="presentation" onMouseDown={(event) => {
+      if (event.target === event.currentTarget) onCerrar();
+    }}>
+      <div className="juntas-postergados-modal juntas-informe-modal" role="dialog" aria-modal="true" aria-labelledby="juntas-informe-title">
+        <div className="juntas-postergados-head">
+          <div>
+            <h5 id="juntas-informe-title" className="mb-0">Informe de la junta anterior</h5>
+            {informe ? (
+              <div className="small text-muted">{formatearFecha(informe.fecha)} · {etiquetaTipoJunta(informe.tipo)}</div>
+            ) : null}
+          </div>
+          <button type="button" className="btn-close" aria-label="Cerrar informe" onClick={onCerrar}></button>
+        </div>
+
+        <div className="juntas-informe-body">
+          {cargando ? <div className="text-center text-muted py-4">Cargando informe…</div> : null}
+          {!cargando && error ? <div className="alert alert-danger py-2 mb-0">{error}</div> : null}
+
+          {!cargando && informe ? (
+            <>
+              <div className="juntas-informe-meta">
+                <div><span>Horario</span><strong>{formatearHora(informe.hora_inicio)} - {formatearHora(informe.hora_fin)}</strong></div>
+                <div><span>Moderador</span><strong>{informe.moderador || 'Sin definir'}</strong></div>
+                <div><span>Secretaría</span><strong>{informe.secretario || 'Sin definir'}</strong></div>
+                <div><span>Quórum / asistentes</span><strong>{informe.quorum_texto || '-'} / {asistentesInforme || '-'}</strong></div>
+                <div><span>Estado</span><strong>{etiquetaEstado(informe.estado)}</strong></div>
+              </div>
+
+              <div className="juntas-informe-conteos">
+                {conteos.map((item) => (
+                  <div key={item.label}>
+                    <strong className={item.clase}>{item.valor}</strong>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="juntas-informe-puntos">
+                {puntos.map((punto) => {
+                  const voto = ultimaVotacion(punto);
+                  const estado = String(punto.estado || 'PENDIENTE').toUpperCase();
+                  const observacion = textoLimpio(voto?.observacion) || textoLimpio(punto.observacion_secretaria);
+                  return (
+                    <article key={punto.id} className="juntas-informe-punto">
+                      <div className="juntas-informe-punto-head">
+                        <div className="fw-semibold">{punto.numero_orden}. {punto.titulo}</div>
+                        <span className={`badge border ${claseEstado(estado)}`}>{etiquetaEstado(estado)}</span>
+                      </div>
+                      <div className="small text-muted">{punto.departamento_origen || 'Sin departamento'}</div>
+                      {voto ? (
+                        <div className="juntas-informe-voto">
+                          <span><i className="bi bi-hand-thumbs-up" aria-hidden="true"></i> A favor: {voto.votos_favor ?? 0}</span>
+                          <span><i className="bi bi-hand-thumbs-down" aria-hidden="true"></i> En contra: {voto.votos_contra ?? 0}</span>
+                        </div>
+                      ) : null}
+                      {observacion ? <div className="juntas-informe-obs">{observacion}</div> : null}
+                    </article>
+                  );
+                })}
+                {!puntos.length ? <div className="text-center text-muted py-3">La junta anterior no tuvo puntos.</div> : null}
+              </div>
+
+              {resumen ? (
+                <div className="juntas-informe-resumen">
+                  <div className="juntas-meta-label mb-1">Resumen general</div>
+                  <p className="mb-0">{resumen}</p>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   );
@@ -2035,6 +2240,10 @@ export default function JuntasIglesiaPage() {
   const [resumenJuntaModal, setResumenJuntaModal] = useState(null);
   const [pdfJuntaModal, setPdfJuntaModal] = useState(null);
   const [sesionJuntaModal, setSesionJuntaModal] = useState(null);
+  // Guardia de cambios sin guardar en "Asignar junta": firma base vs. firma actual del formulario.
+  const firmaBaseRef = useRef(null);
+  const capturarBaseRef = useRef(true);
+  const hayCambiosAsignarRef = useRef(false);
 
   const limpiarPuntosTemporales = useCallback(() => {
     setPuntoJuntaForm(PUNTO_JUNTA_INICIAL);
@@ -2048,6 +2257,8 @@ export default function JuntasIglesiaPage() {
     const abrirLista = () => setVistaActiva(VISTA_JUNTAS);
     const abrirDepartamentos = () => setMostrarDepartamentos(true);
     const abrirAsignar = () => {
+      firmaBaseRef.current = null;
+      capturarBaseRef.current = true;
       inicializarJuntaNueva();
       setPuntoJuntaForm(PUNTO_JUNTA_INICIAL);
       setPuntosTemporales([]);
@@ -2071,6 +2282,52 @@ export default function JuntasIglesiaPage() {
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_VISTA_ACTIVA, { detail: { vista: vistaActiva } }));
   }, [vistaActiva]);
+
+  // estado y junta_anterior_id se derivan solos: no cuentan como cambios del usuario.
+  const { estado: _estadoDerivado, junta_anterior_id: _anteriorDerivada, ...juntaFormEditable } = juntaForm;
+  const firmaAsignar = JSON.stringify({
+    junta: juntaFormEditable,
+    puntos: puntosTemporales.map((item) => [item.puntoId || item.id, item.titulo, item.departamento_origen]),
+    borrador: [puntoJuntaForm.titulo || '', puntoJuntaForm.departamento_origen || '']
+  });
+
+  // Sin dependencias a proposito: toma la firma base en el primer render tras abrir/limpiar/guardar.
+  useEffect(() => {
+    if (vistaActiva !== VISTA_ASIGNAR || !capturarBaseRef.current) return;
+    capturarBaseRef.current = false;
+    firmaBaseRef.current = firmaAsignar;
+  });
+
+  const hayCambiosAsignar = vistaActiva === VISTA_ASIGNAR
+    && firmaBaseRef.current !== null
+    && firmaBaseRef.current !== firmaAsignar;
+
+  useEffect(() => {
+    hayCambiosAsignarRef.current = hayCambiosAsignar;
+  }, [hayCambiosAsignar]);
+
+  useEffect(() => registrarGuardiaCambios(async () => {
+    if (!hayCambiosAsignarRef.current) return true;
+    const descartar = await confirmar(
+      'La junta todavía no se ha guardado. Si sale ahora se perderán los datos y los puntos agregados. ¿Desea descartar los cambios?',
+      { aceptar: 'Descartar cambios', cancelar: 'Seguir con la junta' }
+    );
+    if (descartar) {
+      firmaBaseRef.current = null;
+      hayCambiosAsignarRef.current = false;
+    }
+    return descartar;
+  }), []);
+
+  useEffect(() => {
+    if (!hayCambiosAsignar) return undefined;
+    const avisar = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', avisar);
+    return () => window.removeEventListener('beforeunload', avisar);
+  }, [hayCambiosAsignar]);
 
   useEffect(() => {
     guardarCatalogoLocal(STORAGE_MODERADORES, moderadoresLocales);
@@ -2168,18 +2425,19 @@ export default function JuntasIglesiaPage() {
       return;
     }
 
-    const registro = {
-      id: puntoTemporalEditandoId || `punto-${Date.now()}`,
-      titulo,
-      departamento_origen: departamento
-    };
-
     setPuntosTemporales((prev) => {
-      if (!puntoTemporalEditandoId) return [...prev, registro];
-      return prev.map((item) => (String(item.id) === String(puntoTemporalEditandoId) ? registro : item));
+      if (!puntoTemporalEditandoId) {
+        return [...prev, { id: `punto-${Date.now()}`, titulo, departamento_origen: departamento }];
+      }
+      // Conserva puntoId/estado de los puntos ya guardados en la junta.
+      return prev.map((item) => (
+        String(item.id) === String(puntoTemporalEditandoId) ? { ...item, titulo, departamento_origen: departamento } : item
+      ));
     });
     limpiarPuntoJuntaForm();
-    notificarExito(puntoTemporalEditandoId ? 'Punto actualizado.' : 'Punto preregistrado.');
+    notificarExito(puntoTemporalEditandoId
+      ? 'Punto actualizado. Recuerde guardar la junta.'
+      : 'Punto agregado. Se guardará al guardar la junta.');
   }, [puntoJuntaForm, puntoTemporalEditandoId, limpiarPuntoJuntaForm]);
 
   const editarPuntoTemporal = useCallback((item) => {
@@ -2203,6 +2461,7 @@ export default function JuntasIglesiaPage() {
   }, [puntoTemporalEditandoId, limpiarPuntoJuntaForm]);
 
   const limpiarAsignarJunta = useCallback(() => {
+    capturarBaseRef.current = true;
     resetJuntaForm();
     limpiarPuntosTemporales();
     setJuntaOpcionalesAbiertos(false);
@@ -2229,10 +2488,7 @@ export default function JuntasIglesiaPage() {
       return;
     }
 
-    const totalPuntosExistentes = editandoJuntaId
-      ? Number(juntas.find((item) => String(item.id) === String(editandoJuntaId))?.total_puntos || 0)
-      : 0;
-    if (totalPuntosExistentes + puntosTemporales.length === 0) {
+    if (!puntosTemporales.length) {
       notificarError('Debe registrar al menos un punto para guardar la junta.');
       return;
     }
@@ -2241,20 +2497,34 @@ export default function JuntasIglesiaPage() {
       notificarError('La fecha de inicio no puede ser anterior al día de hoy.');
       return;
     }
-    if (normalizarTipoJunta(juntaForm.tipo) === 'PRESENCIAL') {
-      const presencialDuplicada = juntas.find((item) => (
+
+    // Varias juntas el mismo dia son validas (p. ej. dos cultos); solo se pide confirmacion.
+    const juntaOriginal = editandoJuntaId ? juntas.find((item) => String(item.id) === String(editandoJuntaId)) : null;
+    const cambioFecha = !juntaOriginal || String(juntaOriginal.fecha || '').slice(0, 10) !== juntaForm.fecha;
+    if (cambioFecha) {
+      const mismoDia = juntas.filter((item) => (
         String(item.fecha || '').slice(0, 10) === juntaForm.fecha
-        && normalizarTipoJunta(item.tipo) === 'PRESENCIAL'
         && String(item.id) !== String(editandoJuntaId || '')
       ));
-      if (presencialDuplicada) {
-        notificarError(`Ya existe una junta presencial registrada para el ${formatearFecha(juntaForm.fecha)}.`);
-        return;
+      if (mismoDia.length) {
+        const detalleMismoDia = mismoDia
+          .map((item) => `${etiquetaTipoJunta(item.tipo).toLowerCase()} ${formatearHora(item.hora_inicio)}`)
+          .join(', ');
+        const ok = await confirmar(
+          `Ya existe ${mismoDia.length === 1 ? 'una junta' : `${mismoDia.length} juntas`} para el ${formatearFecha(juntaForm.fecha)} (${detalleMismoDia}). ¿Desea registrar otra junta ese mismo día?`,
+          { aceptar: 'Sí, registrar otra', cancelar: 'Revisar' }
+        );
+        if (!ok) return;
       }
     }
 
     const guardado = await guardarJunta({
-      puntos: puntosTemporales.map((item, index) => ({
+      agendaCompleta: true,
+      puntos: puntosTemporales.map((item, index) => (item.puntoId ? {
+        id: item.puntoId,
+        titulo: item.titulo,
+        departamento_origen: item.departamento_origen
+      } : {
         numero_orden: index + 1,
         titulo: item.titulo,
         departamento_origen: item.departamento_origen,
@@ -2278,6 +2548,8 @@ export default function JuntasIglesiaPage() {
 
     if (guardado) {
       limpiarPuntosTemporales();
+      setJuntaOpcionalesAbiertos(false);
+      capturarBaseRef.current = true;
     }
   }, [juntaForm, fechaMinimaJunta, juntas, editandoJuntaId, guardarJunta, puntosTemporales, limpiarPuntosTemporales]);
 
@@ -2448,17 +2720,34 @@ export default function JuntasIglesiaPage() {
     notificarExito('Departamento eliminado.');
   }, [departamentoEditandoId, limpiarDepartamento]);
 
-  const editarDesdeJuntas = useCallback((item) => {
+  const editarDesdeJuntas = useCallback(async (item) => {
     setAccionesJunta(null);
     if (fechaInicioVencida(item.fecha)) {
       notificarError('No se puede editar una junta cuya fecha de inicio ya pasó.');
       return;
     }
 
+    // Se carga la agenda completa: el formulario edita todos los puntos y se guarda como lista final.
+    let puntosGuardados;
+    try {
+      const res = await juntaApi.obtenerPorId(item.id);
+      if (!res?.exito) throw new Error(res?.mensaje || 'No se pudo cargar la junta.');
+      const lista = Array.isArray(res?.datos?.item?.puntos) ? res.datos.item.puntos : [];
+      puntosGuardados = [...lista]
+        .sort((a, b) => Number(a.numero_orden || 0) - Number(b.numero_orden || 0))
+        .map(puntoGuardadoATemporal);
+    } catch (error) {
+      notificarError(error?.mensaje || error?.message || 'No se pudieron cargar los puntos de la junta.');
+      return;
+    }
+
+    firmaBaseRef.current = null;
     editarJunta(item);
     limpiarPuntosTemporales();
+    setPuntosTemporales(puntosGuardados);
     setJuntaOpcionalesAbiertos(Boolean(item.resumen_general || item.observaciones_generales));
     setSeleccionadaId(item.id);
+    capturarBaseRef.current = true;
     setVistaActiva(VISTA_ASIGNAR);
   }, [editarJunta, limpiarPuntosTemporales, setSeleccionadaId]);
 
@@ -2735,9 +3024,13 @@ export default function JuntasIglesiaPage() {
     <>
       <div className="row g-2 g-md-3 mb-3 juntas-top-row estudios-mobile-kpi-row">
         <KpiCard label="Juntas" value={dashboard.total_juntas} icon="bi-people-fill" />
-        <KpiCard label="Puntos tratados" value={dashboard.total_puntos_tratados} icon="bi-list-check" />
-        <KpiCard label="Pendientes" value={dashboard.total_puntos_pendientes} icon="bi-hourglass-split" />
-        <KpiCard label="Vencidos" value={dashboard.total_puntos_vencidos} icon="bi-exclamation-triangle" />
+        <KpiCard label="Juntas sesionadas" value={dashboard.total_juntas_sesionadas} icon="bi-check2-circle" />
+        <KpiCard label="Por sesionar" value={dashboard.total_juntas_por_sesionar} icon="bi-hourglass-split" />
+        <KpiCard
+          label="Próxima junta"
+          icon="bi-calendar-event"
+          texto={dashboard.proxima_junta_fecha ? formatearFecha(dashboard.proxima_junta_fecha) : 'Sin programar'}
+        />
       </div>
 
       {renderFiltrosJuntas()}
@@ -2753,14 +3046,13 @@ export default function JuntasIglesiaPage() {
                 <th>Secretaría</th>
                 <th>Estado</th>
                 <th>Puntos</th>
-                <th>Pendientes</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {cargando ? (
                 <tr>
-                  <td colSpan="8" className="text-center text-muted py-4">Cargando juntas…</td>
+                  <td colSpan="7" className="text-center text-muted py-4">Cargando juntas…</td>
                 </tr>
               ) : juntas.map((item) => {
                 const accionesActivas = String(accionesJunta?.id || '') === String(item.id);
@@ -2774,7 +3066,6 @@ export default function JuntasIglesiaPage() {
                     <td>{item.secretario || '-'}</td>
                     <td><span className={`badge border ${claseEstado(item.estado)}`}>{etiquetaEstado(item.estado)}</span></td>
                     <td>{Number(item.total_puntos || 0).toLocaleString('es-CR')}</td>
-                    <td>{Number(item.total_pendientes || 0).toLocaleString('es-CR')}</td>
                     <td>
                       <button
                         type="button"
@@ -2791,7 +3082,7 @@ export default function JuntasIglesiaPage() {
               })}
               {!juntas.length && !cargando ? (
                 <tr>
-                  <td colSpan="8" className="text-center text-muted py-4">No hay juntas registradas con los filtros actuales.</td>
+                  <td colSpan="7" className="text-center text-muted py-4">No hay juntas registradas con los filtros actuales.</td>
                 </tr>
               ) : null}
             </tbody>
@@ -2812,8 +3103,8 @@ export default function JuntasIglesiaPage() {
                 type="button"
                 className="btn btn-outline-secondary btn-sm juntas-puntos-preview-btn"
                 onClick={() => setMostrarPuntosTemporales(true)}
-                title="Ver puntos preregistrados"
-                aria-label="Ver puntos preregistrados"
+                title="Ver puntos de la junta"
+                aria-label="Ver puntos de la junta"
               >
                 <i className="bi bi-search" aria-hidden="true"></i>
                 <span className="badge text-bg-light border">{puntosTemporales.length}</span>

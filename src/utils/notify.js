@@ -45,8 +45,9 @@ export function notificarAdvertencia(mensaje) {
 /**
  * Muestra un modal de confirmacion
  * @param {string} mensaje
+ * @param {{ aceptar?: string, cancelar?: string }} [opciones] Textos de los botones.
  * @returns {Promise<boolean>}
  */
-export function confirmar(mensaje) {
-  return lanzarConfirm(mensaje);
+export function confirmar(mensaje, opciones) {
+  return lanzarConfirm(mensaje, opciones);
 }
