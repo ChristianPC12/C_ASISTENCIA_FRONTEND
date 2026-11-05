@@ -17,6 +17,7 @@ export default function AsistenciaPage() {
     metricasActivas,
     clavePermanenciaAuto,
     permanenciaAutoBloqueada,
+    claveAdultos,
     filtros,
     cambiarCampo,
     guardar,
@@ -41,6 +42,7 @@ export default function AsistenciaPage() {
         fechasRegistradas={fechasRegistradas}
         clavePermanenciaAuto={clavePermanenciaAuto}
         permanenciaAutoBloqueada={permanenciaAutoBloqueada}
+        claveAdultos={claveAdultos}
         onCambiarCampo={cambiarCampo}
         onGuardar={guardar}
         onLimpiar={limpiarFormulario}

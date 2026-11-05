@@ -79,7 +79,9 @@ export function usePresentaciones() {
       const res = await presentacionApi.listar(params);
       if (res.exito) {
         const data = res.datos || {};
-        const items = data.items || [];
+        const items = [...(data.items || [])].sort((a, b) => (
+          (Number(b.anio) - Number(a.anio)) || (Number(b.mes) - Number(a.mes))
+        ));
         const nuevaMeta = data.meta || META_INICIAL;
 
         setPresentaciones(items);

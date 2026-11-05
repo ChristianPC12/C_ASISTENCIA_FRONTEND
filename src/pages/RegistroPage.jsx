@@ -15,6 +15,7 @@ export default function RegistroPage() {
     metricasActivas,
     clavePermanenciaAuto,
     permanenciaAutoBloqueada,
+    claveAdultos,
     cambiarCampo,
     guardar,
     limpiarFormulario
@@ -32,6 +33,7 @@ export default function RegistroPage() {
         fechasRegistradas={fechasRegistradas}
         clavePermanenciaAuto={clavePermanenciaAuto}
         permanenciaAutoBloqueada={permanenciaAutoBloqueada}
+        claveAdultos={claveAdultos}
         onCambiarCampo={cambiarCampo}
         onGuardar={guardar}
         onLimpiar={limpiarFormulario}

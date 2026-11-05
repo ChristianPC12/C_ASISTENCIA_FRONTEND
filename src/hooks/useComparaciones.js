@@ -15,20 +15,17 @@ const ESTADISTICAS_VACIAS = {
   },
   composicion_asistentes: {
     ninos: { cantidad: 0, porcentaje: 0 },
-    jovenes: { cantidad: 0, porcentaje: 0 }
+    jovenes: { cantidad: 0, porcentaje: 0 },
+    adultos: { cantidad: 0, porcentaje: 0 }
   },
   puntualidad: {
     antes: { cantidad: 0, porcentaje: 0 },
     despues: { cantidad: 0, porcentaje: 0 }
   },
-  procedencia: {
-    barrio: { cantidad: 0, porcentaje: 0 },
-    guayabo: { cantidad: 0, porcentaje: 0 }
-  },
+  procedencia: [],
   visitas: {
     total_visitas: 0,
-    barrio: { cantidad: 0, porcentaje: 0 },
-    guayabo: { cantidad: 0, porcentaje: 0 },
+    items: [],
     top_nombres: []
   },
   series: {
@@ -86,6 +83,12 @@ const DEFINICIONES_INDICADORES = [
     obtener: (stats) => Number(stats?.composicion_asistentes?.jovenes?.porcentaje || 0)
   },
   {
+    id: 'adultos_porcentaje',
+    etiqueta: 'Adultos (%)',
+    unidad: 'porcentaje',
+    obtener: (stats) => Number(stats?.composicion_asistentes?.adultos?.porcentaje || 0)
+  },
+  {
     id: 'puntualidad_antes',
     etiqueta: 'Temprano (%)',
     unidad: 'porcentaje',
@@ -96,20 +99,28 @@ const DEFINICIONES_INDICADORES = [
     etiqueta: 'Tarde (%)',
     unidad: 'porcentaje',
     obtener: (stats) => Number(stats?.puntualidad?.despues?.porcentaje || 0)
-  },
-  {
-    id: 'procedencia_barrio',
-    etiqueta: 'Barrio (%)',
-    unidad: 'porcentaje',
-    obtener: (stats) => Number(stats?.procedencia?.barrio?.porcentaje || 0)
-  },
-  {
-    id: 'procedencia_guayabo',
-    etiqueta: 'Guayabo (%)',
-    unidad: 'porcentaje',
-    obtener: (stats) => Number(stats?.procedencia?.guayabo?.porcentaje || 0)
   }
 ];
+
+function listaProcedencia(stats) {
+  return Array.isArray(stats?.procedencia) ? stats.procedencia : [];
+}
+
+function definicionesProcedencia(periodoA, periodoB) {
+  const etiquetas = new Map();
+  [...listaProcedencia(periodoA), ...listaProcedencia(periodoB)].forEach((item) => {
+    if (item?.clave && !etiquetas.has(item.clave)) {
+      etiquetas.set(item.clave, item.etiqueta || item.clave);
+    }
+  });
+
+  return Array.from(etiquetas.entries()).map(([clave, etiqueta]) => ({
+    id: `procedencia_${clave}`,
+    etiqueta: `${etiqueta} (%)`,
+    unidad: 'porcentaje',
+    obtener: (stats) => Number(listaProcedencia(stats).find((item) => item.clave === clave)?.porcentaje || 0)
+  }));
+}
 
 function formatearNombreCulto(nombre = '', codigo = '') {
   const valor = nombre || codigo || '';
@@ -187,7 +198,7 @@ function mapearMetricasDinamicas(stats) {
 }
 
 export function useComparaciones() {
-  const { metricasActivas } = useSetupStatus();
+  const { metricasConfiguradas } = useSetupStatus();
   const inicial = obtenerPeriodosIniciales();
 
   const [cultos, setCultos] = useState([]);
@@ -286,7 +297,8 @@ export function useComparaciones() {
   }, [cultos, filtros.culto]);
 
   const indicadores = useMemo(() => {
-    const base = DEFINICIONES_INDICADORES.map((definicion) => {
+    const definiciones = [...DEFINICIONES_INDICADORES, ...definicionesProcedencia(periodoA, periodoB)];
+    const base = definiciones.map((definicion) => {
       const valorA = definicion.obtener(periodoA);
       const valorB = definicion.obtener(periodoB);
       const diferencia = valorB - valorA;
@@ -305,7 +317,7 @@ export function useComparaciones() {
       };
     });
 
-    const mapaEtiquetas = metricasActivas.reduce((acc, item) => {
+    const mapaEtiquetas = metricasConfiguradas.reduce((acc, item) => {
       acc[item.clave] = item.etiqueta || item.clave;
       return acc;
     }, {});
@@ -335,7 +347,7 @@ export function useComparaciones() {
     });
 
     return [...base, ...dinamicas];
-  }, [periodoA, periodoB, metricasActivas]);
+  }, [periodoA, periodoB, metricasConfiguradas]);
 
   const topNombresComparados = useMemo(() => {
     return construirTopNombresComparados(periodoA, periodoB);

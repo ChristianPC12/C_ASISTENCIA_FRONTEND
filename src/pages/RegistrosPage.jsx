@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import AsistenciaTable from '../components/asistencia/AsistenciaTable';
 import PromptModal from '../components/presentaciones/PromptModal';
 import { useAsistencia } from '../hooks/useAsistencia';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import presentacionApi from '../api/presentacionApi';
+import asistenciaApi from '../api/asistenciaApi';
 import { ANIO_ACTUAL } from '../config/constants';
 import { notificarError, notificarExito } from '../utils/notify';
 
@@ -12,6 +13,7 @@ import { notificarError, notificarExito } from '../utils/notify';
  */
 export default function RegistrosPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     registros,
     cultos,
@@ -23,14 +25,31 @@ export default function RegistrosPage() {
     exportarRegistro,
     exportarInforme
   } = useAsistencia();
+  const [registroAAbrir, setRegistroAAbrir] = useState(null);
   const [modalPromptVisible, setModalPromptVisible] = useState(false);
   const [enviandoPrompt, setEnviandoPrompt] = useState(false);
   const [presentacionesExistentes, setPresentacionesExistentes] = useState([]);
+  const [registrosPeriodo, setRegistrosPeriodo] = useState([]);
+  const [cargandoPeriodo, setCargandoPeriodo] = useState(false);
   const [filtrosPrompt, setFiltrosPrompt] = useState({
-    culto: '',
+    culto: null,
     anio: String(ANIO_ACTUAL),
     mes: ''
   });
+
+  // Llegada desde el aviso de "registro nuevo": filtra por la fecha y culto exactos.
+  useEffect(() => {
+    const filtro = location.state?.filtroRegistro;
+    if (!filtro?.fecha) return;
+
+    const [anio, mes, dia] = String(filtro.fecha).split('-');
+    const fechaTexto = `${dia}/${mes}/${anio}`;
+    cambiarFiltro('culto', filtro.culto || '');
+    cambiarFiltro('fecha_exacta', fechaTexto);
+    setRegistroAAbrir({ fecha: filtro.fecha, fechaTexto, cultoId: filtro.cultoId || '' });
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state]);
 
   // Al editar, navegar a la pagina de registro
   const manejarEditar = (registro) => {
@@ -42,7 +61,7 @@ export default function RegistrosPage() {
   const abrirModalPrompt = () => {
     const mesActual = String(new Date().getMonth() + 1);
     setFiltrosPrompt({
-      culto: filtros.culto || '',
+      culto: null,
       anio: String(filtros.anio || ANIO_ACTUAL),
       mes: String(filtros.mes || mesActual)
     });
@@ -50,7 +69,11 @@ export default function RegistrosPage() {
   };
 
   const cambiarFiltroPrompt = (campo, valor) => {
-    setFiltrosPrompt((prev) => ({ ...prev, [campo]: valor }));
+    setFiltrosPrompt((prev) => ({
+      ...prev,
+      [campo]: valor,
+      ...(campo === 'anio' || campo === 'mes' ? { culto: null } : {})
+    }));
   };
 
   useEffect(() => {
@@ -91,52 +114,73 @@ export default function RegistrosPage() {
     };
   }, [modalPromptVisible, filtrosPrompt.anio]);
 
-  const mesEstaBloqueado = (mes) => {
-    const mesNumero = Number(mes || 0);
-    const cultoSeleccionado = String(filtrosPrompt.culto || '').trim();
-
-    return presentacionesExistentes.some((item) => {
-      const mismoAnio = Number(item?.anio || 0) === Number(filtrosPrompt.anio || 0);
-      const mismoMes = Number(item?.mes || 0) === mesNumero;
-      if (!mismoAnio || !mismoMes) return false;
-
-      const cultoExistente = String(item?.culto_codigo || '').trim();
-
-      if (!cultoSeleccionado) {
-        return true;
-      }
-
-      return cultoExistente === cultoSeleccionado || cultoExistente === '';
-    });
-  };
-
-  const mesesBloqueados = useMemo(() => {
-    return new Set(
-      presentacionesExistentes
-        .filter((item) => {
-          const mismoAnio = Number(item?.anio || 0) === Number(filtrosPrompt.anio || 0);
-          if (!mismoAnio) return false;
-
-          const cultoSeleccionado = String(filtrosPrompt.culto || '').trim();
-          const cultoExistente = String(item?.culto_codigo || '').trim();
-
-          if (!cultoSeleccionado) {
-            return true;
-          }
-
-          return cultoExistente === cultoSeleccionado || cultoExistente === '';
-        })
-        .map((item) => String(Number(item?.mes || 0)))
-        .filter(Boolean)
-    );
-  }, [filtrosPrompt.anio, filtrosPrompt.culto, presentacionesExistentes]);
-
+  // Cultos que tienen registros en el año y mes elegidos en la ventana de presentación.
   useEffect(() => {
-    if (!filtrosPrompt.mes) return;
-    if (!mesesBloqueados.has(String(filtrosPrompt.mes))) return;
+    if (!modalPromptVisible || !filtrosPrompt.anio || !filtrosPrompt.mes) {
+      return undefined;
+    }
 
-    setFiltrosPrompt((prev) => ({ ...prev, mes: '' }));
-  }, [filtrosPrompt.mes, mesesBloqueados]);
+    let cancelado = false;
+
+    const cargarRegistrosPeriodo = async () => {
+      setCargandoPeriodo(true);
+      try {
+        const res = await asistenciaApi.listar({
+          anio: Number(filtrosPrompt.anio),
+          mes: String(filtrosPrompt.mes).padStart(2, '0')
+        });
+        if (!cancelado) setRegistrosPeriodo(res?.exito ? (res.datos || []) : []);
+      } catch {
+        if (!cancelado) setRegistrosPeriodo([]);
+      } finally {
+        if (!cancelado) setCargandoPeriodo(false);
+      }
+    };
+
+    cargarRegistrosPeriodo();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [modalPromptVisible, filtrosPrompt.anio, filtrosPrompt.mes]);
+
+  const opcionesCultoPrompt = useMemo(() => {
+    const conteoPorCodigo = {};
+    registrosPeriodo.forEach((registro) => {
+      const culto = cultos.find((item) => String(item.id) === String(registro.culto_id));
+      if (culto?.codigo) {
+        conteoPorCodigo[culto.codigo] = (conteoPorCodigo[culto.codigo] || 0) + 1;
+      }
+    });
+
+    const generadas = presentacionesExistentes.filter((item) => (
+      Number(item?.anio || 0) === Number(filtrosPrompt.anio || 0)
+      && Number(item?.mes || 0) === Number(filtrosPrompt.mes || 0)
+    ));
+    const codigosGenerados = new Set(generadas.map((item) => String(item?.culto_codigo || '').trim()));
+    const hayDeTodos = codigosGenerados.has('');
+
+    const armar = (valor, etiqueta, total, yaGenerada) => {
+      const sinRegistros = total === 0;
+      return {
+        valor,
+        etiqueta,
+        total,
+        bloqueado: yaGenerada || sinRegistros,
+        motivo: yaGenerada ? 'Ya tiene presentación' : 'Sin registros en este mes'
+      };
+    };
+
+    return [
+      armar('', 'Todos los cultos', registrosPeriodo.length, generadas.length > 0),
+      ...cultos.map((culto) => armar(
+        culto.codigo,
+        culto.nombre,
+        conteoPorCodigo[culto.codigo] || 0,
+        hayDeTodos || codigosGenerados.has(culto.codigo)
+      ))
+    ];
+  }, [registrosPeriodo, cultos, presentacionesExistentes, filtrosPrompt.anio, filtrosPrompt.mes]);
 
   const generarPresentacion = async () => {
     if (!filtrosPrompt.anio || !filtrosPrompt.mes) {
@@ -144,8 +188,9 @@ export default function RegistrosPage() {
       return;
     }
 
-    if (mesEstaBloqueado(filtrosPrompt.mes)) {
-      notificarError('Ya existe una presentación para ese período con el culto seleccionado.');
+    const opcionElegida = opcionesCultoPrompt.find((opcion) => opcion.valor === filtrosPrompt.culto);
+    if (!opcionElegida || opcionElegida.bloqueado) {
+      notificarError('Elija un culto disponible: sin presentación previa y con registros en ese mes.');
       return;
     }
 
@@ -189,6 +234,8 @@ export default function RegistrosPage() {
           onEliminar={eliminar}
           onExportar={exportarRegistro}
           onExportarInforme={exportarInforme}
+          registroAAbrir={registroAAbrir}
+          onRegistroAbierto={() => setRegistroAAbrir(null)}
         />
       </div>
 
@@ -205,8 +252,8 @@ export default function RegistrosPage() {
         visible={modalPromptVisible}
         enviando={enviandoPrompt}
         filtros={filtrosPrompt}
-        cultos={cultos}
-        mesesBloqueados={mesesBloqueados}
+        opcionesCulto={opcionesCultoPrompt}
+        cargandoCultos={cargandoPeriodo}
         onClose={() => !enviandoPrompt && setModalPromptVisible(false)}
         onCambiarFiltro={cambiarFiltroPrompt}
         onEnviar={generarPresentacion}

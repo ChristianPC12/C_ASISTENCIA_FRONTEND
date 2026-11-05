@@ -25,20 +25,17 @@ const ESTADISTICAS_VACIAS = {
   },
   composicion_asistentes: {
     ninos: { cantidad: 0, porcentaje: 0 },
-    jovenes: { cantidad: 0, porcentaje: 0 }
+    jovenes: { cantidad: 0, porcentaje: 0 },
+    adultos: { cantidad: 0, porcentaje: 0 }
   },
   puntualidad: {
     antes: { cantidad: 0, porcentaje: 0 },
     despues: { cantidad: 0, porcentaje: 0 }
   },
-  procedencia: {
-    barrio: { cantidad: 0, porcentaje: 0 },
-    guayabo: { cantidad: 0, porcentaje: 0 }
-  },
+  procedencia: [],
   visitas: {
     total_visitas: 0,
-    barrio: { cantidad: 0, porcentaje: 0 },
-    guayabo: { cantidad: 0, porcentaje: 0 },
+    items: [],
     top_nombres: []
   },
   series: {
@@ -73,47 +70,80 @@ function formatearEtiquetaSerie(fecha) {
   return `${partes[2]}/${partes[1]}`;
 }
 
-function CardComparativa({ titulo, izquierda, derecha, colorIzquierda, colorDerecha }) {
+const COLORES_BARRAS = ['bg-primary', 'bg-info', 'bg-success', 'bg-secondary', 'bg-warning', 'bg-dark', 'bg-danger'];
+
+function CardDistribucion({ titulo, items, colores = COLORES_BARRAS, vacio = 'Sin datos configurados.' }) {
   return (
     <div className="card shadow-sm h-100">
       <div className="card-body">
         <h6 className="estad-card-titulo">{titulo}</h6>
-
-        <div className="mb-3">
-          <div className="d-flex justify-content-between small fw-semibold mb-1">
-            <span>{izquierda.etiqueta}</span>
-            <span>{izquierda.cantidad} ({formatearPorcentaje(izquierda.porcentaje)})</span>
+        {items.length === 0 && <p className="text-muted small mb-0">{vacio}</p>}
+        {items.map((item, index) => (
+          <div className={index < items.length - 1 ? 'mb-3' : ''} key={item.clave || item.etiqueta}>
+            <div className="d-flex justify-content-between gap-2 small fw-semibold mb-1">
+              <span className="text-truncate" title={item.etiqueta}>{item.etiqueta}</span>
+              <span className="text-nowrap">{item.cantidad} ({formatearPorcentaje(item.porcentaje)})</span>
+            </div>
+            <div className="progress estad-progress">
+              <div
+                className={`progress-bar ${colores[index % colores.length]}`}
+                role="progressbar"
+                style={{ width: `${Math.max(Number(item.porcentaje || 0), 2)}%` }}
+                aria-valuenow={Number(item.porcentaje || 0)}
+                aria-valuemin="0"
+                aria-valuemax="100"
+              />
+            </div>
           </div>
-          <div className="progress estad-progress">
-            <div
-              className={`progress-bar ${colorIzquierda}`}
-              role="progressbar"
-              style={{ width: `${Math.max(Number(izquierda.porcentaje || 0), 2)}%` }}
-              aria-valuenow={Number(izquierda.porcentaje || 0)}
-              aria-valuemin="0"
-              aria-valuemax="100"
-            />
-          </div>
-        </div>
-
-        <div>
-          <div className="d-flex justify-content-between small fw-semibold mb-1">
-            <span>{derecha.etiqueta}</span>
-            <span>{derecha.cantidad} ({formatearPorcentaje(derecha.porcentaje)})</span>
-          </div>
-          <div className="progress estad-progress">
-            <div
-              className={`progress-bar ${colorDerecha}`}
-              role="progressbar"
-              style={{ width: `${Math.max(Number(derecha.porcentaje || 0), 2)}%` }}
-              aria-valuenow={Number(derecha.porcentaje || 0)}
-              aria-valuemin="0"
-              aria-valuemax="100"
-            />
-          </div>
-        </div>
+        ))}
       </div>
     </div>
+  );
+}
+
+function itemsComposicion(composicion) {
+  return [
+    { clave: 'ninos', etiqueta: 'Niños', ...(composicion?.ninos || {}) },
+    { clave: 'jovenes', etiqueta: 'Jóvenes', ...(composicion?.jovenes || {}) },
+    { clave: 'adultos', etiqueta: 'Adultos', ...(composicion?.adultos || {}) }
+  ].map((item) => ({ ...item, cantidad: Number(item.cantidad || 0), porcentaje: Number(item.porcentaje || 0) }));
+}
+
+function itemsPuntualidad(puntualidad) {
+  return [
+    { clave: 'antes', etiqueta: 'Temprano', ...(puntualidad?.antes || {}) },
+    { clave: 'despues', etiqueta: 'Tarde', ...(puntualidad?.despues || {}) }
+  ];
+}
+
+function itemsProcedencia(procedencia) {
+  return (Array.isArray(procedencia) ? procedencia : []).map((item) => ({
+    ...item,
+    etiqueta: item.activo === false ? `${item.etiqueta} (inactiva)` : item.etiqueta
+  }));
+}
+
+function EstadisticasDistribucionRow({ estadisticas, columnaClase }) {
+  return (
+    <>
+      <div className={columnaClase}>
+        <CardDistribucion titulo="Composición de asistentes" items={itemsComposicion(estadisticas.composicion_asistentes)} />
+      </div>
+      <div className={columnaClase}>
+        <CardDistribucion
+          titulo="Puntualidad"
+          items={itemsPuntualidad(estadisticas.puntualidad)}
+          colores={['bg-success', 'bg-warning']}
+        />
+      </div>
+      <div className={columnaClase}>
+        <CardDistribucion
+          titulo="Procedencia"
+          items={itemsProcedencia(estadisticas.procedencia)}
+          vacio="No hay procedencias configuradas."
+        />
+      </div>
+    </>
   );
 }
 
@@ -281,57 +311,7 @@ function EstadisticasKpisRow({ resumenGeneral }) {
 function EstadisticasComparativasRow({ estadisticas }) {
   return (
     <div className="row g-3 mb-4">
-      <div className="col-12 col-lg-4">
-        <CardComparativa
-          titulo="Composición de asistentes"
-          izquierda={{
-            etiqueta: 'Niños',
-            cantidad: estadisticas.composicion_asistentes.ninos.cantidad,
-            porcentaje: estadisticas.composicion_asistentes.ninos.porcentaje
-          }}
-          derecha={{
-            etiqueta: 'Jóvenes',
-            cantidad: estadisticas.composicion_asistentes.jovenes.cantidad,
-            porcentaje: estadisticas.composicion_asistentes.jovenes.porcentaje
-          }}
-          colorIzquierda="bg-primary"
-          colorDerecha="bg-secondary"
-        />
-      </div>
-      <div className="col-12 col-lg-4">
-        <CardComparativa
-          titulo="Puntualidad"
-          izquierda={{
-            etiqueta: 'Temprano',
-            cantidad: estadisticas.puntualidad.antes.cantidad,
-            porcentaje: estadisticas.puntualidad.antes.porcentaje
-          }}
-          derecha={{
-            etiqueta: 'Tarde',
-            cantidad: estadisticas.puntualidad.despues.cantidad,
-            porcentaje: estadisticas.puntualidad.despues.porcentaje
-          }}
-          colorIzquierda="bg-success"
-          colorDerecha="bg-warning"
-        />
-      </div>
-      <div className="col-12 col-lg-4">
-        <CardComparativa
-          titulo="Procedencia"
-          izquierda={{
-            etiqueta: 'Barrio',
-            cantidad: estadisticas.procedencia.barrio.cantidad,
-            porcentaje: estadisticas.procedencia.barrio.porcentaje
-          }}
-          derecha={{
-            etiqueta: 'Guayabo',
-            cantidad: estadisticas.procedencia.guayabo.cantidad,
-            porcentaje: estadisticas.procedencia.guayabo.porcentaje
-          }}
-          colorIzquierda="bg-info"
-          colorDerecha="bg-dark"
-        />
-      </div>
+      <EstadisticasDistribucionRow estadisticas={estadisticas} columnaClase="col-12 col-lg-4" />
     </div>
   );
 }
@@ -380,18 +360,14 @@ function EstadisticasVisitasCard({ visitas }) {
             <span className="estad-visitas-chip-label">Total</span>
             <strong className="estad-visitas-chip-value">{visitas.total_visitas}</strong>
           </div>
-          <div className="estad-visitas-chip">
-            <span className="estad-visitas-chip-label">Barrio</span>
-            <strong className="estad-visitas-chip-value">
-              {visitas.barrio.cantidad} <small>({formatearPorcentaje(visitas.barrio.porcentaje)})</small>
-            </strong>
-          </div>
-          <div className="estad-visitas-chip">
-            <span className="estad-visitas-chip-label">Guayabo</span>
-            <strong className="estad-visitas-chip-value">
-              {visitas.guayabo.cantidad} <small>({formatearPorcentaje(visitas.guayabo.porcentaje)})</small>
-            </strong>
-          </div>
+          {(Array.isArray(visitas.items) ? visitas.items : []).map((item) => (
+            <div className="estad-visitas-chip" key={item.clave}>
+              <span className="estad-visitas-chip-label">{item.etiqueta}</span>
+              <strong className="estad-visitas-chip-value">
+                {item.cantidad} <small>({formatearPorcentaje(item.porcentaje)})</small>
+              </strong>
+            </div>
+          ))}
         </div>
 
         <h6 className="estad-card-titulo mb-2">Top de nombres más repetidos</h6>
@@ -484,57 +460,7 @@ function EstadisticasDetalleModal({
 
         <div className="estad-modal-body">
           <div className="row g-3 mb-3">
-            <div className="col-12 col-xl-4">
-              <CardComparativa
-                titulo="Composición de asistentes"
-                izquierda={{
-                  etiqueta: 'Niños',
-                  cantidad: estadisticas.composicion_asistentes.ninos.cantidad,
-                  porcentaje: estadisticas.composicion_asistentes.ninos.porcentaje
-                }}
-                derecha={{
-                  etiqueta: 'Jóvenes',
-                  cantidad: estadisticas.composicion_asistentes.jovenes.cantidad,
-                  porcentaje: estadisticas.composicion_asistentes.jovenes.porcentaje
-                }}
-                colorIzquierda="bg-primary"
-                colorDerecha="bg-secondary"
-              />
-            </div>
-            <div className="col-12 col-xl-4">
-              <CardComparativa
-                titulo="Puntualidad"
-                izquierda={{
-                  etiqueta: 'Temprano',
-                  cantidad: estadisticas.puntualidad.antes.cantidad,
-                  porcentaje: estadisticas.puntualidad.antes.porcentaje
-                }}
-                derecha={{
-                  etiqueta: 'Tarde',
-                  cantidad: estadisticas.puntualidad.despues.cantidad,
-                  porcentaje: estadisticas.puntualidad.despues.porcentaje
-                }}
-                colorIzquierda="bg-success"
-                colorDerecha="bg-warning"
-              />
-            </div>
-            <div className="col-12 col-xl-4">
-              <CardComparativa
-                titulo="Procedencia"
-                izquierda={{
-                  etiqueta: 'Barrio',
-                  cantidad: estadisticas.procedencia.barrio.cantidad,
-                  porcentaje: estadisticas.procedencia.barrio.porcentaje
-                }}
-                derecha={{
-                  etiqueta: 'Guayabo',
-                  cantidad: estadisticas.procedencia.guayabo.cantidad,
-                  porcentaje: estadisticas.procedencia.guayabo.porcentaje
-                }}
-                colorIzquierda="bg-info"
-                colorDerecha="bg-dark"
-              />
-            </div>
+            <EstadisticasDistribucionRow estadisticas={estadisticas} columnaClase="col-12 col-xl-4" />
           </div>
 
           <div className="row g-3">
@@ -667,7 +593,7 @@ function EstadisticasMetricasDinamicasCard({ metricasDinamicas, mapaEtiquetasMet
 }
 
 export default function EstadisticasPage() {
-  const { metricasActivas } = useSetupStatus();
+  const { metricasConfiguradas } = useSetupStatus();
 
   const [cultos, setCultos] = useState([]);
   const [estadisticas, setEstadisticas] = useState(ESTADISTICAS_VACIAS);
@@ -770,11 +696,11 @@ export default function EstadisticasPage() {
   const cultoSeleccionado = cultos.find((item) => item.codigo === filtros.culto);
 
   const mapaEtiquetasMetricas = useMemo(() => {
-    return metricasActivas.reduce((acc, item) => {
+    return metricasConfiguradas.reduce((acc, item) => {
       acc[item.clave] = item.etiqueta || item.clave;
       return acc;
     }, {});
-  }, [metricasActivas]);
+  }, [metricasConfiguradas]);
 
   const maxSerie = useMemo(() => {
     if (serieAsistencia.length === 0) return 1;

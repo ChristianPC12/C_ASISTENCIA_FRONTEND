@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { TRIMESTRE_OPCIONES, ANIO_OPCIONES, MES_OPCIONES } from '../../config/constants';
 
 function formatearNombreCulto(nombre = '', codigo = '') {
@@ -176,9 +176,38 @@ export default function AsistenciaTable({
   onEditar,
   onEliminar,
   onExportar,
-  onExportarInforme
+  onExportarInforme,
+  registroAAbrir = null,
+  onRegistroAbierto
 }) {
   const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
+  const abiertoPorAvisoRef = useRef(false);
+
+  // Si el detalle se abrió desde el aviso de registro nuevo, al cerrarlo se quitan los filtros temporales.
+  const cerrarDetalle = () => {
+    setRegistroSeleccionado(null);
+    if (abiertoPorAvisoRef.current) {
+      abiertoPorAvisoRef.current = false;
+      onCambiarFiltro('fecha_exacta', '');
+      onCambiarFiltro('culto', '');
+    }
+  };
+
+  // Abre el detalle del registro recién creado cuando el filtro por fecha ya está aplicado.
+  useEffect(() => {
+    if (!registroAAbrir || cargando) return;
+    if ((filtros.fecha_exacta || '') !== registroAAbrir.fechaTexto) return;
+
+    const encontrado = registros.find((item) => (
+      item.fecha === registroAAbrir.fecha
+      && (!registroAAbrir.cultoId || String(item.culto_id) === String(registroAAbrir.cultoId))
+    ));
+    if (!encontrado) return;
+
+    abiertoPorAvisoRef.current = true;
+    setRegistroSeleccionado(encontrado);
+    onRegistroAbierto?.();
+  }, [registroAAbrir, registros, cargando, filtros.fecha_exacta, onRegistroAbierto]);
 
   const manejarCambioTrimestre = (valor) => {
     onCambiarFiltro('trimestre', valor);
@@ -197,6 +226,7 @@ export default function AsistenciaTable({
 
     const sigueVisible = registros.some((item) => item.id === registroSeleccionado.id);
     if (!sigueVisible) {
+      abiertoPorAvisoRef.current = false;
       setRegistroSeleccionado(null);
     }
   }, [registros, registroSeleccionado]);
@@ -285,9 +315,12 @@ export default function AsistenciaTable({
 
             <div className="col-12 col-md-2 ms-md-auto">
               <div className="registros-toolbar-actions">
-                <span className="badge text-bg-light registros-count-chip" title={`${registros.length} registros`}>
-                  <i className="bi bi-collection me-1" aria-hidden="true"></i>
-                  <span>{registros.length}</span>
+                <span
+                  className="badge text-bg-light registros-count-chip"
+                  title={`${registros.length} ${registros.length === 1 ? 'registro encontrado' : 'registros encontrados'} con los filtros actuales`}
+                >
+                  <strong>{registros.length}</strong>
+                  <span>{registros.length === 1 ? 'registro' : 'registros'}</span>
                 </span>
                 {typeof onExportarInforme === 'function' && (
                   <button
@@ -321,8 +354,7 @@ export default function AsistenciaTable({
         )}
 
         {!cargando && registros.length > 0 && (
-          <div className="tabla-registros-scroll">
-            <div className="tabla-registros-scroll-x">
+          <div className="tabla-registros-scroll registros-tabla-scroll">
               <table className="table table-striped table-hover align-middle mb-0 tabla-registros">
                 <colgroup>
                   <col className="registro-col-fecha" />
@@ -393,7 +425,6 @@ export default function AsistenciaTable({
                   ))}
                 </tbody>
               </table>
-            </div>
           </div>
         )}
       </div>
@@ -401,7 +432,7 @@ export default function AsistenciaTable({
     <RegistroDetalleModal
       registro={registroSeleccionado}
       mapaEtiquetasMetricas={mapaEtiquetasMetricas}
-      onClose={() => setRegistroSeleccionado(null)}
+      onClose={cerrarDetalle}
       onExportar={onExportar}
     />
     </>

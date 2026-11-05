@@ -124,9 +124,109 @@ function agruparMetricasVisitas(metricas) {
   return grupos;
 }
 
+const NOMBRE_VISITA_MAX = 20;
+
+function NombresVisitasCampo({ metrica, cantidad, valor, error, cargando, clase, onCambiarCampo }) {
+  const [borrador, setBorrador] = useState('');
+  const nombres = String(valor ?? '').split(',').map((n) => n.trim()).filter(Boolean);
+  const completo = cantidad > 0 && nombres.length >= cantidad;
+
+  const confirmar = () => {
+    const limpio = borrador.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!limpio || completo) return;
+    onCambiarCampo(metrica.clave, [...nombres, limpio].join(', '));
+    setBorrador('');
+  };
+
+  const quitar = (indice) => {
+    onCambiarCampo(metrica.clave, nombres.filter((_, i) => i !== indice).join(', '));
+  };
+
+  const numeroSiguiente = nombres.length + 1;
+  const placeholder = cantidad > 0 ? `Nombre ${numeroSiguiente} de ${cantidad}` : `Nombre ${numeroSiguiente}`;
+
+  return (
+    <div className={clase} key={metrica.clave}>
+      <label htmlFor={metrica.clave} className="form-label">
+        {metrica.etiqueta}
+      </label>
+      {nombres.length > 0 && (
+        <div className="asistencia-nombres-chips">
+          {nombres.map((nombre, indice) => (
+            <span className="asistencia-nombre-chip" key={`${nombre}-${indice}`}>
+              {nombre}
+              <button
+                type="button"
+                className="asistencia-nombre-chip-quitar"
+                onClick={() => quitar(indice)}
+                disabled={cargando}
+                aria-label={`Quitar ${nombre}`}
+              >
+                &times;
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+      {!completo && (
+        <div className="input-group asistencia-nombres-grupo">
+          <input
+            type="text"
+            id={metrica.clave}
+            name={metrica.clave}
+            className={`form-control ${error ? 'is-invalid' : ''}`.trim()}
+            value={borrador}
+            onChange={(event) => setBorrador(event.target.value.replace(/,/g, ''))}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                confirmar();
+              }
+            }}
+            onBlur={confirmar}
+            placeholder={placeholder}
+            maxLength={NOMBRE_VISITA_MAX}
+            disabled={cargando}
+            spellCheck={false}
+            autoComplete="off"
+          />
+          <button
+            type="button"
+            className="btn btn-outline-success asistencia-nombres-check"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={confirmar}
+            disabled={cargando || !borrador.trim()}
+            aria-label="Agregar nombre"
+            title="Agregar nombre"
+          >
+            <i className="bi bi-check-lg" aria-hidden="true"></i>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo, claseColumna }) {
   const esNombresVisitas = metrica.clave.startsWith('nombres_visitas_');
   const clase = claseColumna || obtenerClaseCampoBase(metrica);
+
+  if (esNombresVisitas) {
+    const slug = metrica.clave.slice('nombres_visitas_'.length);
+    const cantidad = Number(formulario.metricas?.[`visitas_${slug}`] ?? 0);
+    return (
+      <NombresVisitasCampo
+        key={metrica.clave}
+        metrica={metrica}
+        cantidad={Number.isFinite(cantidad) ? cantidad : 0}
+        valor={formulario.metricas?.[metrica.clave]}
+        error={errores[metrica.clave]}
+        cargando={cargando}
+        clase={clase}
+        onCambiarCampo={onCambiarCampo}
+      />
+    );
+  }
 
   if (metrica.clave === 'observaciones') {
     return (
@@ -159,10 +259,10 @@ function campoTexto({ metrica, formulario, errores, cargando, onCambiarCampo, cl
         type="text"
         id={metrica.clave}
         name={metrica.clave}
-        className={`form-control ${esNombresVisitas ? 'asistencia-nombres-input ' : ''}${errores[metrica.clave] ? 'is-invalid' : ''}`.trim()}
+        className={`form-control ${errores[metrica.clave] ? 'is-invalid' : ''}`.trim()}
         value={formulario.metricas?.[metrica.clave] ?? ''}
         onChange={(event) => onCambiarCampo(metrica.clave, event.target.value)}
-        placeholder={esNombresVisitas ? 'Nombre 1, Nombre 2, Nombre 3' : metrica.etiqueta}
+        placeholder={metrica.etiqueta}
         disabled={cargando}
         aria-invalid={errores[metrica.clave] ? 'true' : 'false'}
         spellCheck={false}
@@ -179,12 +279,14 @@ function campoNumero({
   onCambiarCampo,
   totalAutoCalculado,
   permanenciaAuto,
+  claveAdultos,
   claseColumna
 }) {
   const esTotal = metrica.clave === 'total_asistentes';
   const esPermanenciaAuto = Boolean(permanenciaAuto?.bloqueada)
     && permanenciaAuto?.clave === metrica.clave;
-  const soloLectura = (esTotal && totalAutoCalculado) || esPermanenciaAuto;
+  const esAdultosAuto = Boolean(claveAdultos) && claveAdultos === metrica.clave;
+  const soloLectura = (esTotal && totalAutoCalculado) || esPermanenciaAuto || esAdultosAuto;
   const clase = claseColumna || obtenerClaseCampoBase(metrica);
 
   return (
@@ -200,7 +302,7 @@ function campoNumero({
         value={formulario.metricas?.[metrica.clave] ?? ''}
         onChange={(event) => onCambiarCampo(metrica.clave, event.target.value)}
         min="0"
-        placeholder="Cantidad"
+        placeholder={esAdultosAuto ? 'Automático' : 'Cantidad'}
         disabled={cargando || soloLectura}
         readOnly={soloLectura}
         aria-invalid={errores[metrica.clave] ? 'true' : 'false'}
@@ -217,6 +319,7 @@ function renderCampoMetrica({
   onCambiarCampo,
   totalAutoCalculado,
   permanenciaAuto,
+  claveAdultos,
   claseColumna
 }) {
   if (metrica.tipo === 'texto') {
@@ -238,6 +341,7 @@ function renderCampoMetrica({
     onCambiarCampo,
     totalAutoCalculado,
     permanenciaAuto,
+    claveAdultos,
     claseColumna
   });
 }
@@ -252,6 +356,7 @@ export default function AsistenciaForm({
   fechasRegistradas = FECHAS_REGISTRADAS_VACIAS,
   clavePermanenciaAuto = null,
   permanenciaAutoBloqueada = false,
+  claveAdultos = null,
   onCambiarCampo,
   onGuardar,
   onLimpiar
@@ -558,7 +663,8 @@ export default function AsistenciaForm({
                             cargando,
                             onCambiarCampo,
                             totalAutoCalculado,
-                            permanenciaAuto
+                            permanenciaAuto,
+                            claveAdultos
                           }))}
                         </div>
                       )}

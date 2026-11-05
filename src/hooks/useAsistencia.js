@@ -4,7 +4,8 @@ import cultoApi from '../api/cultoApi';
 import { OBSERVACIONES_MAX, validarAsistencia } from '../validators/asistenciaValidator';
 import { sanitizarObjeto, aEnteroPositivo } from '../utils/sanitizer';
 import { notificarExito, notificarError, notificarAdvertencia, confirmar } from '../utils/notify';
-import { ANIO_ACTUAL } from '../config/constants';
+import { ANIO_ACTUAL, MES_OPCIONES, TRIMESTRE_OPCIONES } from '../config/constants';
+import { EVENT_ASISTENCIA_REGISTRO_CREADO } from '../config/events';
 import {
   METRICAS_FALLBACK,
   construirFormularioMetricas,
@@ -15,6 +16,7 @@ import {
   obtenerMetricasNumericasPorSeccion
 } from '../utils/metricasConfig';
 import { useSetupStatus } from './useSetupStatus';
+import { useAuth } from './useAuth';
 
 const normalizarFechaExacta = (valor) => {
   const fecha = (valor || '').trim();
@@ -82,31 +84,6 @@ const coincideTextoFecha = (fechaIso, textoBusqueda) => {
   return fechaCorta.startsWith(texto) || fechaLarga.startsWith(texto);
 };
 
-function esValorCeroExportable(valor) {
-  if (valor === 0) return true;
-  if (typeof valor !== 'string') return false;
-  const texto = valor.trim();
-  if (!texto) return false;
-  return /^0+(?:[.,]0+)?$/.test(texto);
-}
-
-function tieneValorExportable(valor) {
-  if (valor === null || valor === undefined) return false;
-  if (typeof valor === 'number') return !esValorCeroExportable(valor);
-  if (typeof valor === 'string') return valor.trim() !== '' && !esValorCeroExportable(valor);
-  return true;
-}
-
-function obtenerMetricasExportables(registro, mapaEtiquetasMetricas = {}) {
-  return Object.entries(registro?.metricas || {})
-    .filter(([clave, valor]) => clave !== 'total_asistentes' && tieneValorExportable(valor))
-    .map(([clave, valor]) => ({
-      clave,
-      etiqueta: mapaEtiquetasMetricas?.[clave] || clave,
-      valor
-    }));
-}
-
 function descargarArchivoExcel(buffer, nombreArchivo) {
   const blob = new Blob([buffer], { type: EXCEL_MIME_XLSX });
   const url = window.URL.createObjectURL(blob);
@@ -117,46 +94,6 @@ function descargarArchivoExcel(buffer, nombreArchivo) {
   enlace.click();
   document.body.removeChild(enlace);
   window.URL.revokeObjectURL(url);
-}
-
-function aplicarEstiloEncabezadoFila(row) {
-  row.height = 24;
-  row.eachCell((cell) => {
-    cell.font = { name: 'Calibri', bold: true, color: { argb: 'FFFFFFFF' } };
-    cell.alignment = { vertical: 'middle', horizontal: 'center' };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF003366' }
-    };
-    cell.border = {
-      top: { style: 'thin', color: { argb: 'FF002244' } },
-      left: { style: 'thin', color: { argb: 'FF002244' } },
-      bottom: { style: 'thin', color: { argb: 'FF002244' } },
-      right: { style: 'thin', color: { argb: 'FF002244' } }
-    };
-  });
-}
-
-function aplicarEstiloFilaDatos(row, index, totalColumnas) {
-  row.height = 22;
-  const colorBase = index % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF';
-  for (let col = 1; col <= totalColumnas; col += 1) {
-    const cell = row.getCell(col);
-    cell.font = { name: 'Calibri', size: 11, color: { argb: 'FF1F2937' } };
-    cell.alignment = { vertical: 'middle', horizontal: col === 1 ? 'left' : 'left', wrapText: true };
-    cell.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: colorBase }
-    };
-    cell.border = {
-      top: { style: 'thin', color: { argb: 'FFDDE3EA' } },
-      left: { style: 'thin', color: { argb: 'FFDDE3EA' } },
-      bottom: { style: 'thin', color: { argb: 'FFDDE3EA' } },
-      right: { style: 'thin', color: { argb: 'FFDDE3EA' } }
-    };
-  }
 }
 
 function crearFormularioVacio(metricasActivas) {
@@ -280,14 +217,16 @@ function normalizarCategoriasResueltasPorTotal(
  */
 export function useAsistencia() {
   const TRIMESTRE_ACTUAL = Math.floor(new Date().getMonth() / 3) + 1;
-  const { metricasActivas: metricasSetup } = useSetupStatus();
+  const { metricasActivas: metricasSetup, metricasConfiguradas } = useSetupStatus();
+  const { tenant, usuario } = useAuth();
+  const nombreOrganizacion = String(tenant?.nombre_organizacion || usuario?.nombre_organizacion || '').trim();
   const metricasActivas = useMemo(
     () => obtenerMetricasActivas(metricasSetup?.length ? metricasSetup : METRICAS_FALLBACK),
     [metricasSetup]
   );
   const mapaEtiquetasMetricas = useMemo(
-    () => obtenerMapaEtiquetasMetricas(metricasActivas),
-    [metricasActivas]
+    () => obtenerMapaEtiquetasMetricas(metricasConfiguradas?.length ? metricasConfiguradas : metricasActivas),
+    [metricasConfiguradas, metricasActivas]
   );
   const metricasPorClave = useMemo(
     () => metricasActivas.reduce((acc, metrica) => {
@@ -307,6 +246,10 @@ export function useAsistencia() {
   const metricasComposicion = useMemo(
     () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'composicion_asistentes'),
     [metricasActivas]
+  );
+  const claveAdultos = useMemo(
+    () => metricasComposicion.find((item) => item.clave === 'adultos')?.clave || null,
+    [metricasComposicion]
   );
   const metricasProcedencia = useMemo(
     () => obtenerMetricasNumericasPorSeccion(metricasActivas, 'procedencia'),
@@ -377,6 +320,10 @@ export function useAsistencia() {
       datos: datosNormalizados,
       tocados
     });
+    // Los nombres de visitas se completan de a uno: el conteo se exige al avanzar o guardar.
+    Object.keys(erroresFiltrados)
+      .filter((clave) => clave.startsWith('nombres_visitas_'))
+      .forEach((clave) => { delete erroresFiltrados[clave]; });
     setErrores(erroresFiltrados);
 
     if (campoActual && erroresFiltrados[campoActual]) {
@@ -414,6 +361,33 @@ export function useAsistencia() {
     claveTotal,
     metricasInfoCulto
   ]);
+
+  // Adultos = Total - resto de Composicion (se recalcula solo).
+  useEffect(() => {
+    if (!claveAdultos || !claveTotal) {
+      return;
+    }
+
+    const totalRaw = formulario.metricas?.[claveTotal];
+    const otras = metricasComposicion.filter((item) => item.clave !== claveAdultos);
+    const sumaOtras = sumarMetricas(otras, formulario.metricas);
+    const restante = aEnteroPositivo(totalRaw) - sumaOtras;
+    const nuevoValor = esValorVacio(totalRaw) || restante < 0 ? '' : String(restante);
+
+    setFormulario((prev) => {
+      const actual = String(prev.metricas?.[claveAdultos] ?? '');
+      if (actual === nuevoValor) {
+        return prev;
+      }
+      return {
+        ...prev,
+        metricas: {
+          ...prev.metricas,
+          [claveAdultos]: nuevoValor
+        }
+      };
+    });
+  }, [formulario.metricas, claveAdultos, claveTotal, metricasComposicion]);
 
   // Si no hay Informacion del culto, permitir derivar total desde Permanencia cuando el usuario complete todas.
   useEffect(() => {
@@ -658,8 +632,10 @@ export function useAsistencia() {
     const total = aEnteroPositivo(totalRaw);
     const seccion = metrica.seccion || metrica.categoria || '';
 
+    const excluirAdultos = claveAdultos ? [claveAdultos] : [];
+
     if (campo === claveTotal && totalExiste) {
-      const sumaComposicion = sumarMetricas(metricasComposicion, siguienteMetricas);
+      const sumaComposicion = sumarMetricas(metricasComposicion, siguienteMetricas, excluirAdultos);
       if (sumaComposicion > total) {
         return {
           mensaje: 'Total de asistentes no puede ser menor que la suma de Composición de asistentes.',
@@ -689,7 +665,7 @@ export function useAsistencia() {
     }
 
     if (seccion === 'composicion_asistentes' && totalExiste) {
-      const sumaComposicion = sumarMetricas(metricasComposicion, siguienteMetricas);
+      const sumaComposicion = sumarMetricas(metricasComposicion, siguienteMetricas, excluirAdultos);
       if (sumaComposicion > total) {
         return {
           mensaje: 'La suma de Composición de asistentes no puede superar Total de asistentes.',
@@ -737,6 +713,7 @@ export function useAsistencia() {
   }, [
     metricasPorClave,
     claveTotal,
+    claveAdultos,
     metricasComposicion,
     metricasProcedencia,
     metricasPermanencia,
@@ -886,7 +863,15 @@ export function useAsistencia() {
       if (res.exito) {
         notificarExito(res.mensaje);
         const cultoIdGuardado = formulario.culto_id;
+        const fechaGuardada = formulario.fecha;
+        const cultoGuardado = cultos.find((c) => String(c.id) === String(cultoIdGuardado));
+        const eraNuevo = !editandoId;
         limpiarFormulario();
+        if (eraNuevo) {
+          window.dispatchEvent(new CustomEvent(EVENT_ASISTENCIA_REGISTRO_CREADO, {
+            detail: { fecha: fechaGuardada, culto: cultoGuardado?.codigo || '', cultoId: cultoIdGuardado }
+          }));
+        }
         await cargarRegistros();
         await cargarFechasRegistradas(cultoIdGuardado);
         return true;
@@ -903,6 +888,7 @@ export function useAsistencia() {
     }
   }, [
     formulario,
+    cultos,
     metricasActivas,
     editandoId,
     mostrarAdvertencia,
@@ -959,53 +945,23 @@ export function useAsistencia() {
     if (!registro?.id) return false;
 
     try {
-      const exceljs = await import('exceljs');
-      const workbook = new exceljs.Workbook();
-      workbook.creator = 'Sistema C_ASISTENCIA';
-      workbook.created = new Date();
-
-      const worksheet = workbook.addWorksheet('Registro');
-      worksheet.columns = [
-        { header: 'Campo', key: 'campo', width: 28 },
-        { header: 'Valor', key: 'valor', width: 42 }
-      ];
-      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
-
-      aplicarEstiloEncabezadoFila(worksheet.getRow(1));
-
-      const filasBase = [
-        ['Culto', registro.culto_nombre || registro.culto_codigo || '-'],
-        ['Fecha', registro.fecha || ''],
-        ['Trimestre', String(registro.trimestre || '')],
-        ['Total de asistentes', String(registro.total_asistentes ?? '')]
-      ];
-
-      const metricasExportables = obtenerMetricasExportables(registro, mapaEtiquetasMetricas);
-      const filasMetricas = metricasExportables.map((item) => [item.etiqueta, String(item.valor)]);
-      const filasFinales = [
-        ...filasBase,
-        ...filasMetricas,
-        ...(registro.registrado_por_nombre ? [['Registrado por', registro.registrado_por_nombre]] : []),
-        ...(registro.creado_en ? [['Creado en', String(registro.creado_en)]] : [])
-      ];
-
-      filasFinales.forEach(([campo, valor], index) => {
-        const row = worksheet.addRow({ campo, valor });
-        aplicarEstiloFilaDatos(row, index, 2);
+      const { construirExcelDetalle } = await import('../utils/excelAsistencia');
+      const buffer = await construirExcelDetalle({
+        registro,
+        configuradas: metricasConfiguradas || [],
+        mapaEtiquetas: mapaEtiquetasMetricas,
+        organizacion: nombreOrganizacion
       });
-
-      const buffer = await workbook.xlsx.writeBuffer();
       const fecha = (registro.fecha || 'sin-fecha').replace(/[^\d-]/g, '');
-      const nombre = `asistencia_${fecha}.xlsx`;
-      descargarArchivoExcel(buffer, nombre);
+      descargarArchivoExcel(buffer, `asistencia_${fecha}.xlsx`);
 
       notificarExito('Exportacion Excel generada.');
       return true;
-    } catch (error) {
+    } catch {
       notificarError('No se pudo exportar el registro a Excel.');
       return false;
     }
-  }, [mapaEtiquetasMetricas]);
+  }, [metricasConfiguradas, mapaEtiquetasMetricas, nombreOrganizacion]);
 
   // Exportar informe segun filtros actuales (solo Excel)
   const exportarInforme = useCallback(async () => {
@@ -1015,58 +971,27 @@ export function useAsistencia() {
         return false;
       }
 
-      const exceljs = await import('exceljs');
-      const workbook = new exceljs.Workbook();
-      workbook.creator = 'Sistema C_ASISTENCIA';
-      workbook.created = new Date();
+      const { construirExcelInforme } = await import('../utils/excelAsistencia');
+      const cultoElegido = cultos.find((c) => c.codigo === filtros.culto);
+      const trimestre = TRIMESTRE_OPCIONES.find((t) => String(t.valor) === String(filtros.trimestre));
+      const mes = MES_OPCIONES.find((m) => String(m.valor) === String(filtros.mes));
+      const periodoTexto = filtros.fecha_exacta
+        ? filtros.fecha_exacta
+        : [mes?.etiqueta || trimestre?.etiqueta || 'Todo el año', filtros.anio].filter(Boolean).join(' ');
+      const filtrosTexto = `Culto: ${cultoElegido?.nombre || 'Todos'}  ·  Período: ${periodoTexto}`;
 
-      const worksheet = workbook.addWorksheet('Registros');
-      const clavesPresentes = new Set(
-        registros.flatMap((registro) => obtenerMetricasExportables(registro, mapaEtiquetasMetricas).map((item) => item.clave))
-      );
-      const clavesMapa = Object.keys(mapaEtiquetasMetricas || {});
-      const clavesMetricas = [
-        ...clavesMapa.filter((clave) => clavesPresentes.has(clave) && clave !== 'total_asistentes'),
-        ...Array.from(clavesPresentes).filter((clave) => clave !== 'total_asistentes' && !clavesMapa.includes(clave))
-      ];
-
-      worksheet.columns = [
-        { header: 'Fecha', key: 'fecha', width: 14 },
-        { header: 'Culto', key: 'culto', width: 26 },
-        { header: 'Total', key: 'total', width: 10 },
-        ...clavesMetricas.map((clave) => ({
-          header: mapaEtiquetasMetricas?.[clave] || clave,
-          key: clave,
-          width: Math.min(Math.max(String(mapaEtiquetasMetricas?.[clave] || clave).length + 4, 14), 28)
-        }))
-      ];
-      worksheet.views = [{ state: 'frozen', ySplit: 1 }];
-      worksheet.autoFilter = {
-        from: { row: 1, column: 1 },
-        to: { row: 1, column: Math.max(3, worksheet.columns.length) }
-      };
-      aplicarEstiloEncabezadoFila(worksheet.getRow(1));
-
-      registros.forEach((registro, index) => {
-        const metricasRegistro = Object.fromEntries(
-          obtenerMetricasExportables(registro, mapaEtiquetasMetricas).map((item) => [item.clave, item.valor])
-        );
-        const row = worksheet.addRow({
-          fecha: registro.fecha || '',
-          culto: registro.culto_nombre || registro.culto_codigo || '-',
-          total: registro.total_asistentes ?? '',
-          ...metricasRegistro
-        });
-        aplicarEstiloFilaDatos(row, index, worksheet.columns.length);
+      const buffer = await construirExcelInforme({
+        registros,
+        configuradas: metricasConfiguradas || [],
+        mapaEtiquetas: mapaEtiquetasMetricas,
+        organizacion: nombreOrganizacion,
+        filtrosTexto
       });
-
-      const buffer = await workbook.xlsx.writeBuffer();
       const anio = filtros.anio || ANIO_ACTUAL;
       const periodo = filtros.mes
         ? `mes-${String(filtros.mes).padStart(2, '0')}`
         : (filtros.trimestre ? `t${filtros.trimestre}` : 'todos');
-      const nombre = `informe_asistencia_${anio}_${periodo}.xlsx`;
-      descargarArchivoExcel(buffer, nombre);
+      descargarArchivoExcel(buffer, `informe_asistencia_${anio}_${periodo}.xlsx`);
 
       notificarExito('Informe Excel generado.');
       return true;
@@ -1074,7 +999,7 @@ export function useAsistencia() {
       notificarError('No se pudo generar el informe en Excel.');
       return false;
     }
-  }, [filtros, registros, mapaEtiquetasMetricas]);
+  }, [filtros, registros, cultos, metricasConfiguradas, mapaEtiquetasMetricas, nombreOrganizacion]);
 
   // Limpiar formulario
   const limpiarFormulario = useCallback(() => {
@@ -1102,6 +1027,7 @@ export function useAsistencia() {
     mapaEtiquetasMetricas,
     clavePermanenciaAuto,
     permanenciaAutoBloqueada,
+    claveAdultos,
     cambiarCampo,
     guardar,
     editar,

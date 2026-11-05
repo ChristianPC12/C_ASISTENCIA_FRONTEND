@@ -140,7 +140,8 @@ function PresentacionesHistorialCard({
   irPagina,
   etiquetaMes,
   onAbrirDetalle,
-  detalleDisponible
+  detalleDisponible,
+  onVerDetalleDe
 }) {
   return (
     <div className="card shadow-sm h-100 presentaciones-historial-card">
@@ -183,10 +184,9 @@ function PresentacionesHistorialCard({
                   type="button"
                   className={`list-group-item list-group-item-action presentacion-item ${seleccionadaId === item.id ? 'presentacion-item-activo' : ''}`}
                   onClick={() => {
-                    if (seleccionadaId === item.id) return;
                     setSeleccionadaId(item.id);
+                    onVerDetalleDe(item.id);
                   }}
-                  disabled={seleccionadaId === item.id}
                   aria-pressed={seleccionadaId === item.id}
                 >
                   <div className="d-flex justify-content-between align-items-start gap-2">
@@ -468,6 +468,7 @@ export default function PresentacionesPage() {
             etiquetaMes={etiquetaMes}
             onAbrirDetalle={() => setModalDetalleAbierto(true)}
             detalleDisponible={Boolean(detalle)}
+            onVerDetalleDe={() => setModalDetalleAbierto(true)}
           />
         </div>
       </div>
