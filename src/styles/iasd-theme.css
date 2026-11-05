@@ -34,8 +34,11 @@
 }
 
 /* --- Fondo de la app --- */
+/* Escala en PC: a partir de ~1220px de ancho la base crece con la pantalla (tope 20px),
+   así a 100% de zoom se ve como antes a 125%. Tablet y teléfono quedan en 16px. */
 html {
   overflow-x: hidden;
+  font-size: clamp(16px, 1.31vw, 20px);
 }
 
 body {
@@ -289,9 +292,52 @@ a:hover {
   border-bottom: none;
 }
 
-.asistencia-nombres-input {
-  white-space: nowrap;
-  overflow-x: auto;
+.asistencia-nombres-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.45rem;
+}
+
+.asistencia-nombre-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.3rem 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(0, 51, 102, 0.08);
+  color: var(--iasd-azul);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.asistencia-nombre-chip-quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.asistencia-nombre-chip-quitar:hover {
+  background: rgba(0, 51, 102, 0.15);
+}
+
+.asistencia-nombres-grupo .form-control {
+  min-width: 0;
+}
+
+.asistencia-nombres-check {
+  flex: 0 0 auto;
+  min-width: 2.75rem;
 }
 
 .selector-fecha-wrapper {
@@ -418,9 +464,16 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.2rem;
+  gap: 0.35rem;
   padding-inline: 0.7rem;
   font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.registros-count-chip strong {
+  font-size: 1rem;
+  color: var(--iasd-azul);
 }
 
 .registros-export-btn {
@@ -506,6 +559,16 @@ a:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
+}
+
+/* Un solo contenedor con scroll: el encabezado queda fijo al bajar. */
+.registros-tabla-scroll {
+  overflow: auto;
+}
+.registros-tabla-scroll .tabla-registros-thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .tabla-registros-thead {
@@ -972,8 +1035,52 @@ a:hover {
   min-width: 0;
 }
 
+/* Estado actual y badge/botón con la misma altura y centrados. */
+.admin-setup-estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.3rem;
+}
+
 .admin-setup-side-actions {
-  justify-content: space-between;
+  display: grid;
+  grid-auto-rows: 1fr;
+  gap: 0.5rem;
+  align-content: stretch;
+}
+
+.admin-setup-side-actions > .badge,
+.admin-setup-side-actions > .btn,
+.admin-setup-side-actions > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+@media (max-width: 991.98px) {
+  .admin-setup-hero .card-body {
+    text-align: center;
+  }
+
+  .admin-setup-estado {
+    justify-content: center;
+  }
+
+  .admin-setup-side-actions {
+    max-width: 22rem;
+    margin-inline: auto;
+  }
+}
+
+/* Información: el carrusel no debe ensanchar el panel (cortaba las tarjetas a la derecha). */
+.admin-info-panel-body > * {
+  min-width: 0;
+}
+
+.admin-panel-close {
+  flex: 0 0 auto;
 }
 
 .admin-usuarios-shell {
@@ -1151,6 +1258,58 @@ a:hover {
   font-weight: 700;
 }
 
+.permisos-modal {
+  max-width: 460px;
+}
+
+.permisos-fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.5rem;
+}
+
+.permisos-fila + .permisos-fila {
+  border-top: 1px solid rgba(0, 51, 102, 0.08);
+}
+
+.permisos-fila.is-activo {
+  background: rgba(0, 51, 102, 0.05);
+}
+
+.permisos-fila-admin {
+  background: rgba(244, 201, 93, 0.16);
+  margin-bottom: 0.25rem;
+}
+
+.permisos-nombre {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.9rem;
+}
+
+.permisos-fila-admin .permisos-nombre {
+  flex-direction: row;
+  align-items: center;
+}
+
+.permisos-nota {
+  color: var(--bs-secondary-color, #6c757d);
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.permisos-niveles {
+  flex-shrink: 0;
+}
+
+.permisos-niveles .btn {
+  min-width: 4.2rem;
+}
+
 .admin-usuarios-resumen {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1311,6 +1470,7 @@ a:hover {
 .admin-info-slide {
   flex: 0 0 100%;
   min-width: 100%;
+  padding-inline: 2px;
 }
 
 .admin-info-content {
@@ -1368,28 +1528,23 @@ a:hover {
   white-space: nowrap;
 }
 
-.admin-col-culto-nombre {
-  width: 49%;
+/* Columnas cortas en rem fijos; la columna de nombre/etiqueta toma el resto. */
+.admin-col-culto-nombre,
+.admin-col-procedencia-nombre,
+.admin-col-metrica-etiqueta {
+  width: auto;
 }
 
 .admin-col-culto-dia {
-  width: 16%;
+  width: 7.75rem;
 }
 
 .admin-col-culto-hora {
-  width: 15%;
-}
-
-.admin-col-procedencia-nombre {
-  width: 73%;
-}
-
-.admin-col-metrica-etiqueta {
-  width: 39%;
+  width: 7.5rem;
 }
 
 .admin-col-metrica-categoria {
-  width: 30%;
+  width: 14rem;
 }
 
 .admin-setup-tabla-wrap .table > :not(caption) > * > * {
@@ -1402,20 +1557,15 @@ a:hover {
   min-width: 4.5rem;
 }
 
-.admin-setup-tabla-wrap-cultos .admin-col-check {
-  width: 8%;
-  min-width: 4.15rem;
-}
-
-.admin-setup-tabla-wrap-procedencias .admin-col-check {
-  width: 11%;
-  min-width: 4.2rem;
+.admin-setup-tabla-wrap .admin-col-check {
+  width: 4.25rem;
+  min-width: 4.25rem;
 }
 
 .admin-setup-tabla-wrap-cultos .admin-col-acciones,
 .admin-setup-tabla-wrap-procedencias .admin-col-acciones {
-  width: 10%;
-  min-width: 5.05rem;
+  width: 5.25rem;
+  min-width: 5.25rem;
 }
 
 .admin-input-culto-nombre {
@@ -1448,14 +1598,167 @@ a:hover {
   max-width: none;
 }
 
-.admin-setup-tabla-wrap-metricas .admin-col-check {
-  width: 13%;
-  min-width: 4.3rem;
+.admin-setup-tabla-wrap-metricas .admin-col-acciones {
+  width: 5.25rem;
+  min-width: 5.25rem;
 }
 
-.admin-setup-tabla-wrap-metricas .admin-col-acciones {
-  width: 18%;
-  min-width: 5.2rem;
+/* El panel decide el diseño por su propio ancho (con o sin menú lateral). */
+.admin-setup-panel > .card-body {
+  container-type: inline-size;
+  container-name: admin-panel;
+}
+
+/* Panel angosto: Cultos y Métricas pasan de tabla a filas apiladas, sin scroll horizontal. */
+@container admin-panel (max-width: 559px) {
+  .admin-setup-tabla-wrap-cultos .table thead,
+  .admin-setup-tabla-wrap-metricas .table thead,
+  .admin-setup-tabla-wrap-cultos .table colgroup,
+  .admin-setup-tabla-wrap-metricas .table colgroup {
+    display: none;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table,
+  .admin-setup-tabla-wrap-cultos .table > tbody,
+  .admin-setup-tabla-wrap-metricas .table,
+  .admin-setup-tabla-wrap-metricas .table > tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr,
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr {
+    display: grid;
+    gap: 0.4rem 0.5rem;
+    align-items: center;
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid var(--iasd-borde);
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr:last-child,
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr:last-child {
+    border-bottom: 0;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td,
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  /* Cultos: nombre + acciones / día + hora + activo */
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    grid-template-areas:
+      "nombre nombre acciones"
+      "dia hora activo";
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td:nth-child(1) { grid-area: nombre; }
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td:nth-child(2) { grid-area: dia; }
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td:nth-child(3) { grid-area: hora; }
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td:nth-child(4) { grid-area: activo; }
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td:nth-child(5) { grid-area: acciones; }
+
+  /* Métricas: etiqueta + acciones / categoría + activo */
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "etiqueta acciones"
+      "categoria activo";
+  }
+
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td:nth-child(1) { grid-area: etiqueta; }
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td:nth-child(2) { grid-area: categoria; }
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td:nth-child(3) { grid-area: activo; }
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td:nth-child(4) { grid-area: acciones; }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td[data-label],
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td[data-label] {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td[data-label]::before,
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    color: var(--iasd-texto-sec);
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td.admin-col-acciones,
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td.admin-col-acciones {
+    text-align: right;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr > td,
+  .admin-setup-tabla-wrap-metricas .table > tbody > tr > td {
+    background: transparent;
+  }
+
+  .admin-setup-tabla-wrap .table td .form-select.admin-select-culto-dia,
+  .admin-setup-tabla-wrap .table td .form-select.admin-select-metrica-categoria {
+    padding-left: 0.5rem;
+    padding-right: 1.5rem;
+    background-position: right 0.4rem center;
+    text-overflow: ellipsis;
+  }
+
+  .admin-setup-tabla-wrap .table td .form-control.admin-input-culto-hora {
+    padding-inline: 0.5rem;
+  }
+
+  .admin-setup-tabla-wrap-cultos .table > tbody > tr {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
+  }
+}
+
+/* Etiqueta no editable: si no cabe, se desplaza suavemente para leerla completa. */
+.admin-metrica-etiqueta-fija {
+  container-type: inline-size;
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: var(--bs-secondary-bg, #e9ecef);
+  cursor: default;
+}
+
+.admin-metrica-etiqueta-fija > span {
+  display: inline-block;
+  animation: admin-etiqueta-desliza 7s ease-in-out infinite alternate;
+}
+
+@keyframes admin-etiqueta-desliza {
+  0%,
+  20% {
+    transform: translateX(0);
+  }
+
+  80%,
+  100% {
+    transform: translateX(min(0px, calc(100cqw - 100%)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-metrica-etiqueta-fija > span {
+    animation: none;
+  }
+}
+
+.admin-setup-side-actions > .badge {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 576px) {
+  .admin-titulo-extra {
+    display: none;
+  }
 }
 
 .admin-table-icon-btn {
@@ -1792,13 +2095,6 @@ a:hover {
 
   .admin-setup-tabla-wrap {
     max-height: clamp(220px, 48vh, 420px);
-    width: max-content;
-    min-width: 100%;
-  }
-
-  .admin-setup-tabla-wrap-cultos .table {
-    width: max-content;
-    min-width: 29rem;
   }
 
   .superadmin-catalogo-tabla-wrap .table {
@@ -1811,31 +2107,13 @@ a:hover {
     min-width: 29rem;
   }
 
-  .admin-setup-tabla-wrap-procedencias .table {
-    width: max-content;
-    min-width: 20rem;
-  }
-
-  .admin-setup-tabla-wrap-metricas .table {
-    width: max-content;
-    min-width: 31rem;
-  }
-
   .admin-usuarios-table-wrap .table {
     width: max-content;
     min-width: 47rem;
   }
 
-  .admin-setup-side-actions {
-    justify-content: flex-start;
-  }
-
   .admin-setup-tabla-wrap-metricas {
     max-height: clamp(200px, 42vh, 380px);
-  }
-
-  .admin-usuarios-switch-btn {
-    flex: 1 1 calc(50% - 0.6rem);
   }
 
   .superadmin-maint-title {
@@ -1979,34 +2257,12 @@ a:hover {
     gap: 0.55rem;
   }
 
-  .admin-panel-header-actions,
   .admin-info-header-tabs {
     width: 100%;
   }
 
   .admin-info-tab-btn {
     flex: 1 1 calc(50% - 0.55rem);
-  }
-
-  .admin-col-culto-nombre {
-    width: 48%;
-  }
-
-  .admin-col-culto-dia {
-    width: 17%;
-  }
-
-  .admin-col-culto-hora {
-    width: 16%;
-  }
-
-  .admin-col-check {
-    width: 2.9rem;
-    min-width: 2.9rem;
-  }
-
-  .admin-col-metrica-categoria {
-    width: 31%;
   }
 
   .usuario-form-toolbar-top,
@@ -2188,49 +2444,9 @@ a:hover {
     flex-wrap: nowrap;
   }
 
-  .admin-setup-tabla-wrap-cultos .table {
-    width: max-content;
-    min-width: 30rem;
-  }
-
-  .admin-setup-tabla-wrap-procedencias .table {
-    width: max-content;
-    min-width: 20.5rem;
-  }
-
-  .admin-setup-tabla-wrap-metricas .table {
-    width: max-content;
-    min-width: 31.5rem;
-  }
-
   .admin-usuarios-table-wrap .table {
     width: max-content;
     min-width: 47rem;
-  }
-
-  .admin-col-culto-nombre {
-    width: 47%;
-  }
-
-  .admin-col-culto-dia {
-    width: 18%;
-  }
-
-  .admin-col-culto-hora {
-    width: 17%;
-  }
-
-  .admin-col-check {
-    width: 2.8rem;
-    min-width: 2.8rem;
-  }
-
-  .admin-col-metrica-categoria {
-    width: 32%;
-  }
-
-  .admin-col-metrica-etiqueta {
-    width: 37%;
   }
 
   .admin-setup-tabla-wrap .table > :not(caption) > * > * {
@@ -2662,6 +2878,8 @@ a:hover {
   top: 0;
   z-index: 2;
   background: #fff;
+  color: var(--iasd-azul);
+  border-bottom: 2px solid var(--iasd-dorado);
   white-space: nowrap;
 }
 
@@ -2946,9 +3164,10 @@ a:hover {
 }
 
 /* Tarjeta */
+/* Ancho en rem: escala junto con textos y espacios (html usa font-size fluido). */
 .login-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 26rem;
   border-radius: 1rem;
   overflow: hidden;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
@@ -3028,10 +3247,10 @@ a:hover {
 }
 
 .login-brand {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 300;
   color: #ffffff;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   line-height: 1.3;
   position: relative;
@@ -3154,10 +3373,10 @@ a:hover {
 
 /* Ajuste por altura/zoom: compacta sin romper la estetica */
 @media (max-height: 900px) {
-  .login-card { max-width: 400px; }
-  .login-header { padding: 2.1rem 1.8rem 1.5rem; }
+  .login-card { max-width: 24.5rem; }
+  .login-header { padding: 1.8rem 1.8rem 1.4rem; }
   .login-logo { width: 78px; height: 78px; }
-  .login-brand { font-size: 1.28rem; letter-spacing: 0.16em; }
+  .login-brand { font-size: 1.28rem; letter-spacing: 0.14em; }
   .login-brand-sub { font-size: 0.92rem; letter-spacing: 0.17em; }
   .login-body { padding: 1.35rem 1.6rem 1.55rem; }
   .login-form-title { margin-bottom: 1rem; font-size: 0.78rem; }
@@ -3166,8 +3385,8 @@ a:hover {
 }
 
 @media (max-height: 760px) {
-  .login-card { max-width: 360px; }
-  .login-header { padding: 1.65rem 1.4rem 1.2rem; }
+  .login-card { max-width: 23rem; }
+  .login-header { padding: 1.4rem 1.4rem 1.1rem; }
   .login-logo { width: 68px; height: 68px; }
   .login-ornament { margin: 0.6rem auto 0.65rem; max-width: 120px; }
   .login-brand { font-size: 1.1rem; letter-spacing: 0.13em; }
@@ -3190,7 +3409,7 @@ a:hover {
 }
 
 .sidebar {
-  width: 260px;
+  width: 16.25rem;
   background: var(--iasd-azul);
   color: #FFFFFF;
   display: flex;
@@ -3216,8 +3435,8 @@ a:hover {
 }
 
 .sidebar-logo {
-  width: 42px;
-  height: 42px;
+  width: 2.625rem;
+  height: 2.625rem;
   object-fit: contain;
   border-radius: 50%;
   border: 2px solid var(--iasd-dorado);
@@ -3267,7 +3486,45 @@ a:hover {
 }
 .sidebar-link:hover { background-color: rgba(255, 255, 255, 0.1); color: #FFFFFF; text-decoration: none; }
 .sidebar-link-activo { background-color: rgba(255, 255, 255, 0.15); color: #FFFFFF; border-left-color: var(--iasd-dorado); font-weight: 600; }
-.sidebar-link-icono  { font-size: 1.1rem; margin-right: 0.75rem; width: 20px; text-align: center; }
+.sidebar-link-icono  { font-size: 1.1rem; margin-right: 0.75rem; width: 1.25rem; text-align: center; }
+
+/* Aviso de registro recién creado sobre "Ver Registros" (5 s). */
+.sidebar-link-aviso {
+  color: #FFFFFF;
+  border-left-color: var(--iasd-dorado);
+  background-color: rgba(197, 160, 40, 0.35);
+  animation: sidebar-link-destello 1s ease-in-out infinite;
+}
+.sidebar-link-badge {
+  margin-left: auto;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  padding: 0 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--iasd-dorado);
+  color: #FFFFFF;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+@keyframes sidebar-link-destello {
+  0%, 100% { background-color: rgba(197, 160, 40, 0.2); }
+  50% { background-color: rgba(197, 160, 40, 0.55); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-link-aviso { animation: none; }
+}
+
+/* PC con poca altura (laptop): menú más compacto para que se vean todas las secciones. */
+@media (min-width: 992px) and (max-height: 860px) {
+  .sidebar-header { padding: 0.85rem 1rem; }
+  .sidebar-nav { padding: 0.4rem 0; }
+  .sidebar-link { padding: 0.55rem 1.25rem; }
+  .sidebar-footer { padding: 0.7rem 1rem 1rem; }
+}
 
 .sidebar-footer {
   padding: 1rem;
@@ -3278,7 +3535,7 @@ a:hover {
 }
 
 .sidebar-logout-btn {
-  min-height: 42px;
+  min-height: 2.625rem;
   padding: 0.6rem 0.9rem;
   line-height: 1.2;
   white-space: nowrap;
@@ -3319,14 +3576,14 @@ a:hover {
 
 .sidebar-contenido {
   flex: 1;
-  margin-left: 260px;
+  margin-left: 16.25rem;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  width: calc(100% - 260px);
-  max-width: calc(100% - 260px);
+  width: calc(100% - 16.25rem);
+  max-width: calc(100% - 16.25rem);
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -3501,6 +3758,18 @@ a:hover {
   gap: 4px;
 }
 .sidebar-hamburguesa span { display: block; width: 20px; height: 2px; background-color: var(--iasd-azul); border-radius: 1px; }
+.sidebar-hamburguesa-aviso { position: relative; border-color: var(--iasd-dorado); }
+.sidebar-hamburguesa-aviso::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--iasd-dorado);
+  border: 2px solid #fff;
+}
 
 .sidebar-main {
   flex: 1;
@@ -3822,6 +4091,88 @@ a:hover {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
 }
 
+.prompt-cultos-vacio {
+  padding: 0.8rem 1rem;
+  border: 1px dashed var(--iasd-borde);
+  border-radius: 0.6rem;
+  color: #6c7a89;
+  font-size: 0.9rem;
+}
+
+.prompt-cultos-lista {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.prompt-culto-opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--iasd-borde);
+  border-radius: 0.6rem;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.prompt-culto-opcion:hover:not(:disabled) {
+  border-color: var(--iasd-azul);
+}
+
+.prompt-culto-opcion.is-activa {
+  border-color: var(--iasd-azul);
+  background: rgba(0, 51, 102, 0.06);
+}
+
+.prompt-culto-opcion:disabled {
+  background: #f4f6f8;
+  cursor: not-allowed;
+}
+
+.prompt-culto-radio {
+  flex: 0 0 auto;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #9aa8b6;
+  border-radius: 50%;
+  position: relative;
+}
+
+.prompt-culto-opcion.is-activa .prompt-culto-radio {
+  border-color: var(--iasd-azul);
+}
+
+.prompt-culto-opcion.is-activa .prompt-culto-radio::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--iasd-azul);
+}
+
+.prompt-culto-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.prompt-culto-nombre {
+  font-weight: 600;
+  color: var(--iasd-azul);
+}
+
+.prompt-culto-opcion:disabled .prompt-culto-nombre {
+  color: #6c7a89;
+}
+
+.prompt-culto-detalle {
+  font-size: 0.82rem;
+  color: #6c7a89;
+}
+
 .prompt-bloqueado-textarea {
   min-height: 220px;
   font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -3915,6 +4266,7 @@ a:hover {
 .presentacion-item-activo {
   border-left-color: var(--iasd-dorado) !important;
   background: rgba(0, 51, 102, 0.08) !important;
+  cursor: default;
 }
 
 .presentacion-item-resumen {
@@ -4187,7 +4539,7 @@ a:hover {
   max-height: clamp(300px, 44vh, 390px);
   overflow-y: auto;
   overflow-x: hidden !important;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   touch-action: auto;
 }
 
@@ -4206,7 +4558,7 @@ a:hover {
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
   touch-action: auto;
 }
 
@@ -4358,7 +4710,7 @@ a:hover {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: none;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: auto;
   }
 
   .campanas-table-shell table {
@@ -4934,7 +5286,7 @@ a:hover {
 }
 
 .juntas-puntos-modal-card {
-  width: min(840px, 100%);
+  width: min(58rem, 100%);
 }
 
 .juntas-puntos-modal-body {
@@ -4942,7 +5294,7 @@ a:hover {
 }
 
 .juntas-puntos-temporales-table {
-  min-width: 42rem;
+  min-width: 36rem;
 }
 
 .juntas-acciones-inline {
@@ -5320,6 +5672,274 @@ a:hover {
   white-space: nowrap;
 }
 
+/* --- Juntas: titulo de modal con contador, acciones de departamento --- */
+.juntas-modal-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.65rem;
+  min-width: 0;
+}
+
+.juntas-contador-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: #eaf1fb;
+  color: var(--iasd-azul);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.juntas-departamento-form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.juntas-departamento-form-actions .btn {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+/* Botones a todo el ancho: el texto cabe tambien en movil. */
+.juntas-departamento-form-actions .admin-responsive-btn-label {
+  display: inline !important;
+}
+
+/* --- Sesion: espera de asistentes, resaltado y secciones --- */
+@keyframes juntas-resaltar-asistentes {
+  0%, 100% { background-color: #fff6d6; box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.45); }
+  50% { background-color: #ffe9a3; box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); }
+}
+
+.juntas-sesion-asistentes-resaltado {
+  border-radius: 8px;
+  animation: juntas-resaltar-asistentes 1.25s ease-in-out 4;
+}
+
+.juntas-sesion-asistentes-resaltado input {
+  border-color: #e0a800;
+  box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .juntas-sesion-asistentes-resaltado {
+    animation: none;
+    background-color: #fff6d6;
+  }
+}
+
+.juntas-sesion-espera {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.25rem;
+  border: 1px dashed #c9d7ea;
+  border-radius: 8px;
+  background: #f6f9fd;
+  color: #2c3e57;
+}
+
+.juntas-sesion-espera > i {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--iasd-azul);
+  font-size: 1.3rem;
+}
+
+.juntas-sesion-espera > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.juntas-sesion-espera strong,
+.juntas-sesion-espera span {
+  display: block;
+}
+
+.juntas-sesion-espera span {
+  color: #5b6b82;
+  font-size: 0.92rem;
+  margin-top: 0.15rem;
+}
+
+.juntas-sesion-espera .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.juntas-sesion-seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.25rem 0 0.15rem;
+  color: var(--iasd-azul);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.juntas-sesion-punto-anterior {
+  border-left: 4px solid #f0ad4e;
+}
+
+.juntas-sesion-informe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+/* --- Informe de junta anterior --- */
+.juntas-informe-modal {
+  width: min(760px, 100%);
+  max-height: min(82vh, 680px);
+}
+
+.juntas-informe-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.9rem;
+  background: #f6f8fb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.juntas-informe-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.juntas-informe-meta span {
+  display: block;
+  color: #6b7a90;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.juntas-informe-meta strong {
+  display: block;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.juntas-informe-conteos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.juntas-informe-conteos > div {
+  padding: 0.6rem 0.4rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.juntas-informe-conteos strong {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1.1;
+}
+
+.juntas-informe-conteos span {
+  font-size: 0.78rem;
+  color: #5b6b82;
+}
+
+.juntas-informe-puntos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.juntas-informe-punto {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.juntas-informe-punto-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.juntas-informe-punto-head .badge {
+  flex: 0 0 auto;
+}
+
+.juntas-informe-voto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  color: #2c3e57;
+}
+
+.juntas-informe-obs {
+  margin-top: 0.4rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  background: #f6f8fb;
+  color: #44546a;
+  font-size: 0.85rem;
+  white-space: pre-line;
+}
+
+.juntas-informe-resumen {
+  padding: 0.75rem;
+  border: 1px solid #dce6f2;
+  border-radius: 8px;
+  background: #ffffff;
+  white-space: pre-line;
+}
+
+@media (max-width: 575.98px) {
+  .juntas-sesion-espera {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+  }
+
+  .juntas-sesion-espera > i {
+    display: none;
+  }
+
+  .juntas-informe-conteos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .juntas-informe-modal {
+    max-height: 88vh;
+  }
+}
+
 .juntas-vista-tabs {
   display: flex;
   gap: 0.5rem;
@@ -5377,7 +5997,7 @@ a:hover {
 }
 
 .juntas-tabla-scroll .juntas-puntos-temporales-table {
-  min-width: 42rem;
+  min-width: 36rem;
 }
 
 .juntas-tabla-scroll thead th {
@@ -5574,8 +6194,8 @@ a:hover {
 .visitas-filtros-card .input-group-sm > .form-control,
 .visitas-filtros-card .input-group-sm > .btn,
 .visitas-filtros-card .btn.visitas-nueva-btn {
-  min-height: 31px;
-  height: 31px;
+  min-height: 1.95rem;
+  height: 1.95rem;
 }
 
 .visitas-filtros-card .iasd-search-input {
@@ -5693,8 +6313,8 @@ a:hover {
 .visita-form-grid .form-select-sm,
 .visita-form-grid .input-group-sm > .form-control,
 .visita-form-grid .input-group-sm > .btn {
-  min-height: 31px;
-  height: 31px;
+  min-height: 1.95rem;
+  height: 1.95rem;
   font-size: 0.875rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -5745,8 +6365,8 @@ a:hover {
 .estudios-page .visitas-filtros-card .input-group-sm > .form-control,
 .estudios-page .visitas-filtros-card .input-group-sm > .btn,
 .estudios-page .visitas-filtros-card .btn.visitas-nueva-btn {
-  min-height: 34px;
-  height: 34px;
+  min-height: 2.15rem;
+  height: 2.15rem;
 }
 
 .estudios-page .visitas-filtros-card .btn.visitas-nueva-btn {
