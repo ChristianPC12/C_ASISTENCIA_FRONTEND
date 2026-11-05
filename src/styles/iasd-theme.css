@@ -6222,23 +6222,72 @@ a:hover {
   min-width: 31px;
 }
 
+/*
+ * Un solo contenedor con scroll en ambos ejes: asi la columna Acciones puede
+ * quedar fija a la derecha (sticky se ancla al scroller mas cercano).
+ */
 .visitas-tabla-scroll-x {
   width: 100%;
   max-width: 100%;
+  max-height: clamp(300px, 44vh, 390px);
+  overflow: auto;
   touch-action: auto;
 }
 
 .visitas-tabla-scroll-y {
-  max-height: clamp(300px, 44vh, 390px);
-  width: max-content;
-  min-width: 100%;
-  max-width: none;
-  touch-action: auto;
+  display: contents;
 }
 
 .visitas-tabla-registros {
-  min-width: 720px;
+  min-width: 45rem;
   font-size: 0.875rem;
+}
+
+/* La columna Acciones queda fija a la derecha: siempre alcanzable aunque la tabla se desplace. */
+.visitas-tabla-registros thead th:last-child,
+.visitas-tabla-registros tbody td:last-child {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background-color: #ffffff;
+}
+
+.visitas-tabla-registros thead th:last-child {
+  z-index: 3;
+  background-color: var(--iasd-azul);
+  color: #fff;
+}
+
+.visitas-tabla-registros.table-striped > tbody > tr:nth-of-type(odd) > td:last-child {
+  background-color: #f2f2f2;
+}
+
+.visitas-tabla-registros > tbody > tr:hover > td:last-child {
+  background-color: #ececec;
+}
+
+/* Filete que separa la columna fija del contenido que pasa por debajo. */
+.visitas-tabla-registros thead th:last-child::before,
+.visitas-tabla-registros tbody td:last-child::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 1px;
+  background: #dee2e6;
+}
+
+/* En telefono la columna fija se comeria media pantalla: ahi se desplaza con la tabla. */
+@media (max-width: 575.98px) {
+  .visitas-tabla-registros thead th:last-child,
+  .visitas-tabla-registros tbody td:last-child {
+    position: static;
+  }
+
+  .visitas-tabla-registros thead th:last-child::before,
+  .visitas-tabla-registros tbody td:last-child::before {
+    content: none;
+  }
 }
 
 .mobile-filter-overlay {
