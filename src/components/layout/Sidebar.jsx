@@ -734,7 +734,8 @@ export default function Sidebar({ usuario, onCerrarSesion: cerrarSesionDirecto, 
                   <i className="bi bi-people-fill" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Juntas</span>
                 </button>
-                <button
+                {puedeEditar('juntas_iglesia') && (
+                  <button
                   type="button"
                   className="sidebar-topbar-metric-btn d-flex align-items-center gap-1"
                   onClick={abrirDepartamentosJuntas}
@@ -744,6 +745,7 @@ export default function Sidebar({ usuario, onCerrarSesion: cerrarSesionDirecto, 
                   <i className="bi bi-diagram-3" aria-hidden="true"></i>
                   <span className="d-none d-md-inline">Departamentos</span>
                 </button>
+                )}
                 {puedeEditar('juntas_iglesia') && (
                   <button
                   type="button"

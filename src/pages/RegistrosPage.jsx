@@ -7,6 +7,7 @@ import presentacionApi from '../api/presentacionApi';
 import asistenciaApi from '../api/asistenciaApi';
 import { ANIO_ACTUAL } from '../config/constants';
 import { notificarError, notificarExito } from '../utils/notify';
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * Pagina para ver los registros de asistencia existentes
@@ -14,6 +15,10 @@ import { notificarError, notificarExito } from '../utils/notify';
 export default function RegistrosPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { puedeEditar } = useAuth();
+  const puedeEditarAsistencia = puedeEditar('asistencia');
+  // Generar presentacion escribe en el modulo de presentaciones: exige permiso de editor alli.
+  const puedeGenerarPresentacion = puedeEditar('presentaciones');
   const {
     registros,
     cultos,
@@ -236,17 +241,20 @@ export default function RegistrosPage() {
           onExportarInforme={exportarInforme}
           registroAAbrir={registroAAbrir}
           onRegistroAbierto={() => setRegistroAAbrir(null)}
+          soloLectura={!puedeEditarAsistencia}
         />
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary prompt-floating-btn"
-        onClick={abrirModalPrompt}
-      >
-        <i className="bi bi-chat-square-text me-2" aria-hidden="true"></i>
-        Prompt
-      </button>
+      {puedeGenerarPresentacion ? (
+        <button
+          type="button"
+          className="btn btn-primary prompt-floating-btn"
+          onClick={abrirModalPrompt}
+        >
+          <i className="bi bi-chat-square-text me-2" aria-hidden="true"></i>
+          Prompt
+        </button>
+      ) : null}
 
       <PromptModal
         visible={modalPromptVisible}

@@ -1208,7 +1208,8 @@ function EstudioAccionesModal({
   onVerVisita,
   onEditar,
   onEliminar,
-  onCambiarEstado
+  onCambiarEstado,
+  soloLectura = false
 }) {
   if (!estudio) return null;
   const estadoVista = normalizarEstadoEstudio(estudio.estado_general);
@@ -1250,10 +1251,12 @@ function EstudioAccionesModal({
           <button type="button" className="btn btn-outline-secondary btn-sm rounded-circle estudios-icon-btn" onClick={() => onVerVisita(estudio)} title="Ver visita" aria-label="Ver visita">
             <i className="bi bi-search" aria-hidden="true"></i>
           </button>
-          <button type="button" className="btn btn-outline-primary btn-sm rounded-circle estudios-icon-btn" onClick={() => onEditar(estudio)} title="Editar" aria-label="Editar estudio">
-            <i className="bi bi-pencil-square" aria-hidden="true"></i>
-          </button>
-          {cerrado ? (
+          {!soloLectura ? (
+            <button type="button" className="btn btn-outline-primary btn-sm rounded-circle estudios-icon-btn" onClick={() => onEditar(estudio)} title="Editar" aria-label="Editar estudio">
+              <i className="bi bi-pencil-square" aria-hidden="true"></i>
+            </button>
+          ) : null}
+          {soloLectura ? null : cerrado ? (
             <button type="button" className="btn btn-outline-success btn-sm rounded-circle estudios-icon-btn" onClick={() => { void ejecutarEstado('EN_PROCESO', 'Reactivado desde estudios bíblicos.'); }} title="Reactivar" aria-label="Reactivar estudio">
               <i className="bi bi-arrow-clockwise" aria-hidden="true"></i>
             </button>
@@ -1273,9 +1276,11 @@ function EstudioAccionesModal({
               </button>
             </>
           )}
-          <button type="button" className="btn btn-outline-danger btn-sm rounded-circle estudios-icon-btn" onClick={() => onEliminar(estudio)} title="Eliminar" aria-label="Eliminar estudio">
-            <i className="bi bi-trash" aria-hidden="true"></i>
-          </button>
+          {!soloLectura ? (
+            <button type="button" className="btn btn-outline-danger btn-sm rounded-circle estudios-icon-btn" onClick={() => onEliminar(estudio)} title="Eliminar" aria-label="Eliminar estudio">
+              <i className="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -1293,7 +1298,8 @@ function EstudiosMainView({
   setSeleccionadoId,
   cambiarEstadoEstudio,
   archivarEstudio,
-  recargar
+  recargar,
+  soloLectura = false
 }) {
   const [detalleVisita, setDetalleVisita] = useState(null);
   const [observacionEstudio, setObservacionEstudio] = useState(null);
@@ -1506,6 +1512,7 @@ function EstudiosMainView({
         onEditar={abrirEditar}
         onEliminar={(item) => { void eliminarEstudio(item); }}
         onCambiarEstado={cambiarEstadoDesdeAcciones}
+        soloLectura={soloLectura}
       />
     </>
   );
@@ -3038,7 +3045,9 @@ function RegistroSesionesView({ estudios, guardarSesionDirecta, cambiarEstadoEst
 }
 
 export default function EstudiosBiblicosPage() {
-  const { esInstructorBiblico: esInstructor } = useAuth();
+  const { esInstructorBiblico: esInstructor, puedeEditar } = useAuth();
+  // El instructor registra sesiones; un lector solo consulta la lista de estudios.
+  const soloLectura = !esInstructor && !puedeEditar('estudios_biblicos');
   const vistaInicial = esInstructor ? VISTA_REGISTRO : VISTA_ESTUDIOS;
   const [vistaActiva, setVistaActiva] = useState(vistaInicial);
 
@@ -3076,12 +3085,13 @@ export default function EstudiosBiblicosPage() {
 
   useEffect(() => {
     const irA = (vista) => {
-      setVistaActiva(esInstructor ? VISTA_REGISTRO : vista);
+      if (esInstructor) { setVistaActiva(VISTA_REGISTRO); return; }
+      setVistaActiva(soloLectura ? VISTA_ESTUDIOS : vista);
     };
     const abrirLista = () => irA(VISTA_ESTUDIOS);
     const abrirInstructores = () => irA(VISTA_INSTRUCTORES);
     const abrirAsignar = () => irA(VISTA_ASIGNAR);
-    const abrirRegistro = () => setVistaActiva(VISTA_REGISTRO);
+    const abrirRegistro = () => { if (!soloLectura) setVistaActiva(VISTA_REGISTRO); };
 
     window.addEventListener(EVENT_ESTUDIOS_ABRIR_LISTA, abrirLista);
     window.addEventListener(EVENT_ESTUDIOS_ABRIR_INSTRUCTORES, abrirInstructores);
@@ -3093,7 +3103,7 @@ export default function EstudiosBiblicosPage() {
       window.removeEventListener(EVENT_ESTUDIOS_ABRIR_ASIGNAR, abrirAsignar);
       window.removeEventListener(EVENT_ESTUDIOS_ABRIR_REGISTRO, abrirRegistro);
     };
-  }, [esInstructor]);
+  }, [esInstructor, soloLectura]);
 
   // Siempre las funciones mas recientes, sin que sus cambios (p. ej. al elegir un estudio) disparen recargas.
   const accionesRef = useRef({ recargar, cargarInstructores });
@@ -3168,6 +3178,7 @@ export default function EstudiosBiblicosPage() {
         cambiarEstadoEstudio={cambiarEstadoEstudio}
         archivarEstudio={archivarEstudio}
         recargar={recargar}
+        soloLectura={soloLectura}
       />
     );
   })();

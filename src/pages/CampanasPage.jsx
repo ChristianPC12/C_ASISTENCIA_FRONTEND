@@ -13,6 +13,8 @@ import {
   EVENT_CAMPANAS_VISTA_ACTIVA
 } from '../config/events';
 import { notificarError } from '../utils/notify';
+import { useAuth } from '../hooks/useAuth';
+import { SoloLecturaProvider, useSoloLectura } from '../hooks/useSoloLectura';
 
 const TIPO_OPCIONES = [
   { valor: 'SEMANA_EVANGELISTICA', etiqueta: 'Semana evangelística' },
@@ -357,7 +359,11 @@ function DetalleVacio() {
   );
 }
 
+// Todos los BotonAccion de Campanas son de escritura: en modo lector no se muestran.
 function BotonAccion({ icono, label, onClick, disabled = false, outline = false }) {
+  const soloLectura = useSoloLectura();
+  if (soloLectura) return null;
+
   return (
     <button
       type="button"
@@ -715,6 +721,7 @@ function calcularDiasCampana(fechaInicio, fechaFin) {
 }
 
 function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion, editandoSesionId, editarSesion, resetSesionForm }) {
+  const soloLectura = useSoloLectura();
   const [mostrarObservacionesModal, setMostrarObservacionesModal] = useState(false);
   const [observacionesSeleccionadas, setObservacionesSeleccionadas] = useState('');
   const formEditarRef = useRef(null);
@@ -842,7 +849,7 @@ function SesionesCampana({ detalle, sesionForm, setSesionForm, guardarSesion, ed
                               <i className="bi bi-search" aria-hidden="true"></i>
                             </button>
                           )}
-                          {item.fecha >= hoy && (
+                          {!soloLectura && item.fecha >= hoy && (
                             <button
                               type="button"
                               className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
@@ -904,6 +911,7 @@ function AsistentesCampana({
   convirtiendoAsistenteId,
   entregarPremios
 }) {
+  const soloLectura = useSoloLectura();
   const [mostrarMasAsistente, setMostrarMasAsistente] = useState(false);
   const [seguimientoPersonalizado, setSeguimientoPersonalizado] = useState('');
   const [asistenteResaltadoId, setAsistenteResaltadoId] = useState(null);
@@ -1172,7 +1180,7 @@ function AsistentesCampana({
                           <small>{Number(item.total_puntuales || 0)} de {totalSesiones}</small>
                         </td>
                         <td className="text-center">
-                          {pendientes > 0 ? (
+                          {!soloLectura && pendientes > 0 ? (
                             <button
                               type="button"
                               className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
@@ -1190,7 +1198,7 @@ function AsistentesCampana({
                         </td>
                         <td><span className={`badge ${claseEstado(item.estado_seguimiento)}`}>{item.estado_seguimiento}</span></td>
                         <td className="text-end">
-                          {puedeConvertirAsistente(item) ? (
+                          {!soloLectura && puedeConvertirAsistente(item) ? (
                             <button
                               type="button"
                               className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1"
@@ -1604,6 +1612,7 @@ function ListaAsistentesTab({
   asistenteResaltadoId,
   setAsistenteResaltadoId
 }) {
+  const soloLectura = useSoloLectura();
   const [busqueda, setBusqueda] = useState('');
   const [asistenteDetalle, setAsistenteDetalle] = useState(null);
   const [mostrarPremiosPendientes, setMostrarPremiosPendientes] = useState(false);
@@ -1783,7 +1792,7 @@ function ListaAsistentesTab({
                         <small>{Number(item.total_puntuales || 0)} de {totalSesiones}</small>
                       </td>
                       <td className="text-center">
-                        {pendientes > 0 ? (
+                        {!soloLectura && pendientes > 0 ? (
                           <button
                             type="button"
                             className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
@@ -1813,7 +1822,7 @@ function ListaAsistentesTab({
                               <i className="bi bi-search" aria-hidden="true"></i>
                             </button>
                           )}
-                          {puedeConvertirAsistente(item) && (
+                          {!soloLectura && puedeConvertirAsistente(item) && (
                             <button
                               type="button"
                               className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
@@ -1826,20 +1835,22 @@ function ListaAsistentesTab({
                               <i className="bi bi-journal-plus" aria-hidden="true"></i>
                             </button>
                           )}
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
-                            style={{ width: '34px', height: '34px' }}
-                            onClick={() => {
-                              if (window.confirm(`¿Está seguro de eliminar a "${item.nombre_snapshot || item.nombre_completo || 'esta visita'}"?`)) {
-                                onEliminar(item.id);
-                              }
-                            }}
-                            title="Eliminar"
-                            aria-label="Eliminar visita"
-                          >
-                            <i className="bi bi-trash" aria-hidden="true"></i>
-                          </button>
+                          {!soloLectura && (
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
+                              style={{ width: '34px', height: '34px' }}
+                              onClick={() => {
+                                if (window.confirm(`¿Está seguro de eliminar a "${item.nombre_snapshot || item.nombre_completo || 'esta visita'}"?`)) {
+                                  onEliminar(item.id);
+                                }
+                              }}
+                              title="Eliminar"
+                              aria-label="Eliminar visita"
+                            >
+                              <i className="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1866,7 +1877,7 @@ function ListaAsistentesTab({
                     <tr>
                       <th className="ps-3">Visita</th>
                       <th className="text-center">Pendientes</th>
-                      <th className="text-center pe-3">Entregar</th>
+                      {!soloLectura ? <th className="text-center pe-3">Entregar</th> : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -1874,16 +1885,18 @@ function ListaAsistentesTab({
                       <tr key={a.id}>
                         <td className="ps-3">{a.nombre_snapshot}</td>
                         <td className="text-center">{Number(a.total_premios_pendientes || 0)}</td>
-                        <td className="text-center pe-3">
-                          <button
-                            type="button"
-                            className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
-                            onClick={() => entregarPremios(a.id)}
-                            title="Marcar como entregado"
-                          >
-                            <i className="bi bi-check-lg" aria-hidden="true"></i>
-                          </button>
-                        </td>
+                        {!soloLectura ? (
+                          <td className="text-center pe-3">
+                            <button
+                              type="button"
+                              className="btn btn-warning btn-sm py-0 px-2 d-inline-flex align-items-center gap-1"
+                              onClick={() => entregarPremios(a.id)}
+                              title="Marcar como entregado"
+                            >
+                              <i className="bi bi-check-lg" aria-hidden="true"></i>
+                            </button>
+                          </td>
+                        ) : null}
                       </tr>
                     ))}
                   </tbody>
@@ -2064,6 +2077,7 @@ function ListaDecisionesTab({
   detalle,
   onEliminar
 }) {
+  const soloLectura = useSoloLectura();
   const [busqueda, setBusqueda] = useState('');
   const [obsModal, setObsModal] = useState(null);
   const decisiones = detalle?.decisiones || [];
@@ -2131,16 +2145,18 @@ function ListaDecisionesTab({
                             <i className="bi bi-search" aria-hidden="true"></i>
                           </button>
                         )}
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
-                          style={{ width: '34px', height: '34px' }}
-                          onClick={() => onEliminar(item.id)}
-                          title="Eliminar"
-                          aria-label="Eliminar decisión"
-                        >
-                          <i className="bi bi-trash" aria-hidden="true"></i>
-                        </button>
+                        {!soloLectura && (
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
+                            style={{ width: '34px', height: '34px' }}
+                            onClick={() => onEliminar(item.id)}
+                            title="Eliminar"
+                            aria-label="Eliminar decisión"
+                          >
+                            <i className="bi bi-trash" aria-hidden="true"></i>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -2238,6 +2254,9 @@ function DetalleCampana(props) {
 }
 
 export default function CampanasPage() {
+  const { puedeEditar } = useAuth();
+  // Lector de campanas: consulta la informacion, sin crear, editar ni eliminar nada.
+  const soloLectura = !puedeEditar('campanas');
   const [mostrarExtraCampana, setMostrarExtraCampana] = useState(false);
   const [mostrarModalCampana, setMostrarModalCampana] = useState(false);
   const [mostrarDetalleModal, setMostrarDetalleModal] = useState(false);
@@ -2311,6 +2330,7 @@ export default function CampanasPage() {
 
   useEffect(() => {
     const manejarAbrirNuevaCampana = () => {
+      if (soloLectura) return;
       setSeccionActiva('CAMPANAS');
       setMostrarSelectorModal(false);
       setMostrarDetalleModal(false);
@@ -2322,7 +2342,7 @@ export default function CampanasPage() {
     return () => {
       window.removeEventListener(EVENT_CAMPANAS_ABRIR_NUEVA, manejarAbrirNuevaCampana);
     };
-  }, [resetCampanaForm]);
+  }, [resetCampanaForm, soloLectura]);
 
   useEffect(() => {
     const manejarAbrirLista = () => {
@@ -2431,6 +2451,7 @@ export default function CampanasPage() {
   };
 
   return (
+    <SoloLecturaProvider valor={soloLectura}>
     <div className="container-fluid py-3 py-lg-4">
       {seccionActiva === 'CAMPANAS' && (
         <>
@@ -2607,7 +2628,7 @@ export default function CampanasPage() {
                                       <i className="bi bi-search" aria-hidden="true"></i>
                                     </button>
                                   )}
-                                  {(() => {
+                                  {!soloLectura && (() => {
                                     const hoy = new Date().toLocaleDateString('en-CA');
                                     if (item.fecha_fin && hoy > item.fecha_fin) return null;
                                     return (
@@ -2616,9 +2637,11 @@ export default function CampanasPage() {
                                       </button>
                                     );
                                   })()}
-                                  <button type="button" className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); eliminarCampana(item.id); }} title="Eliminar" aria-label="Eliminar campaña">
-                                    <i className="bi bi-trash" aria-hidden="true"></i>
-                                  </button>
+                                  {!soloLectura ? (
+                                    <button type="button" className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn" style={{ width: '34px', height: '34px' }} onClick={(e) => { e.stopPropagation(); eliminarCampana(item.id); }} title="Eliminar" aria-label="Eliminar campaña">
+                                      <i className="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                  ) : null}
                                 </div>
                               </td>
                             </tr>
@@ -2753,5 +2776,6 @@ export default function CampanasPage() {
         }
       />
     </div>
+    </SoloLecturaProvider>
   );
 }

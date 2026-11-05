@@ -9,6 +9,7 @@ import {
   EVENT_JUNTAS_VISTA_ACTIVA
 } from '../config/events';
 import { useJuntasIglesia } from '../hooks/useJuntasIglesia';
+import { useAuth } from '../hooks/useAuth';
 import { confirmar, notificarError, notificarExito } from '../utils/notify';
 import { registrarGuardiaCambios } from '../utils/guardiaCambios';
 
@@ -942,10 +943,10 @@ function PuntosTemporalesModal({ abierto, puntos, onCerrar, onEditar, onEliminar
   );
 }
 
-function JuntaAccionesModal({ junta, onCerrar, onVerResumen, onEditar, onEliminar, onPdf, onSesionar }) {
+function JuntaAccionesModal({ junta, onCerrar, onVerResumen, onEditar, onEliminar, onPdf, onSesionar, soloLectura = false }) {
   if (!junta) return null;
-  const puedeEditar = !fechaInicioVencida(junta.fecha);
-  const puedeSesionar = fechaEsHoy(junta.fecha);
+  const puedeEditar = !soloLectura && !fechaInicioVencida(junta.fecha);
+  const puedeSesionar = !soloLectura && fechaEsHoy(junta.fecha);
   const tieneResumen = Boolean(textoLimpio(junta.resumen_general) || textoLimpio(junta.observaciones_generales));
 
   return (
@@ -978,22 +979,26 @@ function JuntaAccionesModal({ junta, onCerrar, onVerResumen, onEditar, onElimina
               <i className="bi bi-pencil-square" aria-hidden="true"></i>
             </button>
           ) : null}
-          <button type="button" className="btn btn-outline-danger btn-sm rounded-circle juntas-icon-action-btn" onClick={() => onEliminar(junta)} title="Eliminar" aria-label="Eliminar junta">
-            <i className="bi bi-trash" aria-hidden="true"></i>
-          </button>
+          {!soloLectura ? (
+            <button type="button" className="btn btn-outline-danger btn-sm rounded-circle juntas-icon-action-btn" onClick={() => onEliminar(junta)} title="Eliminar" aria-label="Eliminar junta">
+              <i className="bi bi-trash" aria-hidden="true"></i>
+            </button>
+          ) : null}
           <button type="button" className="btn btn-outline-danger btn-sm rounded-circle juntas-icon-action-btn juntas-pdf-action-btn" onClick={() => onPdf(junta)} title="PDF" aria-label="Generar PDF">
             <i className="bi bi-filetype-pdf" aria-hidden="true"></i>
           </button>
-          <button
-            type="button"
-            className="btn btn-outline-success btn-sm rounded-circle juntas-icon-action-btn"
-            onClick={() => onSesionar(junta)}
-            title={puedeSesionar ? 'Sesionar' : 'Solo se puede sesionar en la fecha de inicio'}
-            aria-label={puedeSesionar ? 'Sesionar junta' : 'Sesionar no disponible para esta fecha'}
-            disabled={!puedeSesionar}
-          >
-            <i className="bi bi-play-circle" aria-hidden="true"></i>
-          </button>
+          {!soloLectura ? (
+            <button
+              type="button"
+              className="btn btn-outline-success btn-sm rounded-circle juntas-icon-action-btn"
+              onClick={() => onSesionar(junta)}
+              title={puedeSesionar ? 'Sesionar' : 'Solo se puede sesionar en la fecha de inicio'}
+              aria-label={puedeSesionar ? 'Sesionar junta' : 'Sesionar no disponible para esta fecha'}
+              disabled={!puedeSesionar}
+            >
+              <i className="bi bi-play-circle" aria-hidden="true"></i>
+            </button>
+          ) : null}
         </div>
       </div>
     </div>
@@ -2221,6 +2226,9 @@ export default function JuntasIglesiaPage() {
     refrescarJuntas
   } = useJuntasIglesia();
 
+  const { puedeEditar } = useAuth();
+  // Lector: solo la lista de juntas, sin crear, editar, sesionar ni catalogos.
+  const soloLectura = !puedeEditar('juntas_iglesia');
   const [vistaActiva, setVistaActiva] = useState(VISTA_JUNTAS);
   const [moderadoresLocales, setModeradoresLocales] = useState(() => cargarCatalogoLocal(STORAGE_MODERADORES));
   const [secretariasLocales, setSecretariasLocales] = useState(() => cargarCatalogoLocal(STORAGE_ACTAS_PERSONAS));
@@ -2253,10 +2261,11 @@ export default function JuntasIglesiaPage() {
   }, []);
 
   useEffect(() => {
-    const abrirResponsables = () => setVistaActiva(VISTA_RESPONSABLES);
+    const abrirResponsables = () => { if (!soloLectura) setVistaActiva(VISTA_RESPONSABLES); };
     const abrirLista = () => setVistaActiva(VISTA_JUNTAS);
-    const abrirDepartamentos = () => setMostrarDepartamentos(true);
+    const abrirDepartamentos = () => { if (!soloLectura) setMostrarDepartamentos(true); };
     const abrirAsignar = () => {
+      if (soloLectura) return;
       firmaBaseRef.current = null;
       capturarBaseRef.current = true;
       inicializarJuntaNueva();
@@ -2277,7 +2286,7 @@ export default function JuntasIglesiaPage() {
       window.removeEventListener(EVENT_JUNTAS_ABRIR_DEPARTAMENTOS, abrirDepartamentos);
       window.removeEventListener(EVENT_JUNTAS_ABRIR_ASIGNAR, abrirAsignar);
     };
-  }, [inicializarJuntaNueva]);
+  }, [inicializarJuntaNueva, soloLectura]);
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(EVENT_JUNTAS_VISTA_ACTIVA, { detail: { vista: vistaActiva } }));
@@ -3277,6 +3286,7 @@ export default function JuntasIglesiaPage() {
         onEliminar={eliminarDesdeAcciones}
         onPdf={abrirPdfOpciones}
         onSesionar={abrirSesionJunta}
+        soloLectura={soloLectura}
       />
       <JuntaResumenModal
         junta={resumenJuntaModal}

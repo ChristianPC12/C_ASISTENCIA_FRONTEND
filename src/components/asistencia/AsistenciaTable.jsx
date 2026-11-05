@@ -178,7 +178,8 @@ export default function AsistenciaTable({
   onExportar,
   onExportarInforme,
   registroAAbrir = null,
-  onRegistroAbierto
+  onRegistroAbierto,
+  soloLectura = false
 }) {
   const [registroSeleccionado, setRegistroSeleccionado] = useState(null);
   const abiertoPorAvisoRef = useRef(false);
@@ -360,14 +361,14 @@ export default function AsistenciaTable({
                   <col className="registro-col-fecha" />
                   <col className="registro-col-culto" />
                   <col className="registro-col-total" />
-                  <col className="registro-col-acciones" />
+                  {!soloLectura ? <col className="registro-col-acciones" /> : null}
                 </colgroup>
                 <thead className="tabla-registros-thead">
                   <tr>
                     <th>Fecha</th>
                     <th>Culto</th>
                     <th className="text-center">Total</th>
-                    <th className="text-center">Acciones</th>
+                    {!soloLectura ? <th className="text-center">Acciones</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -393,6 +394,7 @@ export default function AsistenciaTable({
                         </span>
                       </td>
                       <td className="text-center fw-bold">{reg.total_asistentes}</td>
+                      {!soloLectura ? (
                       <td className="text-center">
                         <div className="registro-row-actions">
                           <button
@@ -421,6 +423,7 @@ export default function AsistenciaTable({
                           </button>
                         </div>
                       </td>
+                      ) : null}
                     </tr>
                   ))}
                 </tbody>
