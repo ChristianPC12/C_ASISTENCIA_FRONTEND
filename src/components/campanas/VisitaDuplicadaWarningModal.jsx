@@ -12,7 +12,8 @@ const SEGUIMIENTO_LABEL = {
   CONTACTADO: 'Contactado',
   ESTUDIO_BIBLICO: 'Estudio bíblico',
   NO_LOCALIZABLE: 'No localizable',
-  CERRADO: 'Cerrado'
+  CERRADO: 'Cerrado',
+  BAUTIZADO: 'Bautizado'
 };
 
 const valorDetalle = (item, ...campos) => {

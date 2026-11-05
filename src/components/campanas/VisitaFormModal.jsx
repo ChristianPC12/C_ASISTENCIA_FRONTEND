@@ -2,7 +2,8 @@ import { useState } from 'react';
 
 const TIPO_OPCIONES = [
   { valor: 'VISITA', etiqueta: 'Visita' },
-  { valor: 'INTERESADO', etiqueta: 'Interesado' }
+  { valor: 'INTERESADO', etiqueta: 'Interesado' },
+  { valor: 'BAUTIZADO', etiqueta: 'Bautizado' }
 ];
 
 const ETARIA_OPCIONES = [
@@ -17,7 +18,8 @@ const SEGUIMIENTO_OPCIONES = [
   { valor: 'CONTACTADO', etiqueta: 'Contactado' },
   { valor: 'ESTUDIO_BIBLICO', etiqueta: 'Estudio bíblico' },
   { valor: 'NO_LOCALIZABLE', etiqueta: 'No localizable' },
-  { valor: 'CERRADO', etiqueta: 'Cerrado' }
+  { valor: 'CERRADO', etiqueta: 'Cerrado' },
+  { valor: 'BAUTIZADO', etiqueta: 'Bautizado' }
 ];
 
 const FORM_INICIAL = {

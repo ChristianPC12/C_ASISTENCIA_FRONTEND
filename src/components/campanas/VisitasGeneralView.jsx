@@ -6,6 +6,7 @@ import VisitaFormModal from './VisitaFormModal';
 import VisitasPendientesModal from './VisitasPendientesModal';
 import CampanaFiltroModal from './CampanaFiltroModal';
 import VisitaDuplicadaWarningModal from './VisitaDuplicadaWarningModal';
+import VisitaEstadoModal from './VisitaEstadoModal';
 
 const CAMPANAS_VACIAS = [];
 
@@ -14,8 +15,13 @@ const SEGUIMIENTO_OPCIONES = [
   { valor: 'CONTACTADO', etiqueta: 'Contactado' },
   { valor: 'ESTUDIO_BIBLICO', etiqueta: 'Estudio bíblico' },
   { valor: 'NO_LOCALIZABLE', etiqueta: 'No localizable' },
-  { valor: 'CERRADO', etiqueta: 'Cerrado' }
+  { valor: 'CERRADO', etiqueta: 'Cerrado' },
+  { valor: 'BAUTIZADO', etiqueta: 'Bautizado' }
 ];
+
+const esBautizado = (item) => (
+  item?.tipo_asistente === 'BAUTIZADO' || item?.estado_seguimiento === 'BAUTIZADO'
+);
 
 const ETARIA_OPCIONES = [
   { valor: 'NINO', etiqueta: 'Niño' },
@@ -109,7 +115,8 @@ function VisitasFiltrosContent({
   etiquetaCampanaFiltro,
   setMostrarFiltroCampana,
   abrirNueva,
-  mostrarNuevaMovil = false
+  mostrarNuevaMovil = false,
+  soloLectura = false
 }) {
   return (
     <div className={`row g-2 align-items-end visitas-filtros-content ${mostrarNuevaMovil ? 'visitas-filtros-content-mobile' : ''}`}>
@@ -123,15 +130,17 @@ function VisitasFiltrosContent({
             placeholder="Nombre, telefono o procedencia"
             className="flex-grow-1 visitas-search-input"
           />
-          <button
-            type="button"
-            className={`btn btn-primary btn-sm visitas-nueva-btn align-items-center justify-content-center ${mostrarNuevaMovil ? 'd-flex' : 'd-lg-none d-flex'}`}
-            onClick={abrirNueva}
-            title="Registrar nueva visita"
-            aria-label="Registrar nueva visita"
-          >
-            <i className="bi bi-plus-lg" aria-hidden="true"></i>
-          </button>
+          {!soloLectura && (
+            <button
+              type="button"
+              className={`btn btn-primary btn-sm visitas-nueva-btn align-items-center justify-content-center ${mostrarNuevaMovil ? 'd-flex' : 'd-lg-none d-flex'}`}
+              onClick={abrirNueva}
+              title="Registrar nueva visita"
+              aria-label="Registrar nueva visita"
+            >
+              <i className="bi bi-plus-lg" aria-hidden="true"></i>
+            </button>
+          )}
         </div>
       </div>
       <div className="col-12 col-lg-3">
@@ -186,17 +195,19 @@ function VisitasFiltrosContent({
           ))}
         </select>
       </div>
-      <div className={mostrarNuevaMovil ? 'd-none' : 'col-lg-1 d-none d-lg-flex'}>
-        <button
-          type="button"
-          className="btn btn-primary btn-sm visitas-nueva-btn w-100 d-flex align-items-center justify-content-center gap-1"
-          onClick={abrirNueva}
-          title="Registrar nueva visita"
-        >
-          <i className="bi bi-plus-lg" aria-hidden="true"></i>
-          <span>Nueva</span>
-        </button>
-      </div>
+      {!soloLectura && (
+        <div className={mostrarNuevaMovil ? 'd-none' : 'col-lg-1 d-none d-lg-flex'}>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm visitas-nueva-btn w-100 d-flex align-items-center justify-content-center gap-1"
+            onClick={abrirNueva}
+            title="Registrar nueva visita"
+          >
+            <i className="bi bi-plus-lg" aria-hidden="true"></i>
+            <span>Nueva</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -245,7 +256,7 @@ function VisitasKpiCard({ label, value, icon, action = null, className = 'col-6 
   );
 }
 
-export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
+export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS, soloLectura = false }) {
   const [items, setItems] = useState([]);
   const [cargando, setCargando] = useState(false);
   const [filtros, setFiltros] = useState({ q: '', estado_seguimiento: '', clasificacion_etaria: '', campana_id: '' });
@@ -262,6 +273,8 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
   const [mostrarFiltrosMovil, setMostrarFiltrosMovil] = useState(false);
   const [mostrarPendientes, setMostrarPendientes] = useState(false);
   const [marcandoId, setMarcandoId] = useState(null);
+  const [visitaEstado, setVisitaEstado] = useState(null);
+  const [guardandoEstado, setGuardandoEstado] = useState(false);
 
   const [warningSimilares, setWarningSimilares] = useState(null);
   const [pendingFormPayload, setPendingFormPayload] = useState(null);
@@ -303,8 +316,10 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
   }, [items]);
 
   const kpis = useMemo(() => {
-    const total = personasUnicas.length;
-    const independientes = personasUnicas.filter(v => parsearCampanasAsistidas(v.campanas_asistidas_raw).length === 0).length;
+    const visitasActivas = personasUnicas.filter(v => !esBautizado(v));
+    const total = visitasActivas.length;
+    const bautizados = personasUnicas.length - total;
+    const independientes = visitasActivas.filter(v => parsearCampanasAsistidas(v.campanas_asistidas_raw).length === 0).length;
     const pendientes = personasUnicas
       .filter(v => v.estado_seguimiento === 'PENDIENTE')
       .sort((a, b) => {
@@ -312,7 +327,7 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
         const tb = b.creado_en ? new Date(b.creado_en).getTime() : 0;
         return ta - tb;
       });
-    return { total, independientes, pendientes };
+    return { total, bautizados, independientes, pendientes };
   }, [personasUnicas]);
 
   const cambiarFiltro = (campo, valor) => {
@@ -412,23 +427,43 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
     }
   };
 
+  const payloadDesdeVisita = (v, cambios) => ({
+    nombre_completo: v.nombre_snapshot || '',
+    telefono: valorContacto(v, 'telefono_snapshot', 'contacto_telefono'),
+    telefono_internacional: Boolean(valorContacto(v, 'telefono_snapshot', 'contacto_telefono') && !TELEFONO_CR_REGEX.test(valorContacto(v, 'telefono_snapshot', 'contacto_telefono'))),
+    correo: valorContacto(v, 'correo', 'contacto_correo'),
+    direccion: valorContacto(v, 'direccion', 'contacto_direccion'),
+    barrio_comunidad: valorContacto(v, 'barrio_comunidad', 'contacto_barrio_comunidad'),
+    procedencia: v.procedencia || '',
+    tipo_asistente: v.tipo_asistente || 'VISITA',
+    clasificacion_etaria: v.clasificacion_etaria || '',
+    primera_vez: v.primera_vez ?? true,
+    observaciones: v.observaciones || '',
+    estado_seguimiento: v.estado_seguimiento || 'PENDIENTE',
+    ...cambios
+  });
+
+  const guardarEstado = async (cambios) => {
+    if (!visitaEstado) return;
+    setGuardandoEstado(true);
+    try {
+      const res = await campanaApi.actualizarAsistente(visitaEstado.id, payloadDesdeVisita(visitaEstado, cambios));
+      if (res?.exito) {
+        notificarExito(cambios.estado_seguimiento === 'BAUTIZADO' ? 'Marcada como bautizada.' : 'Estado actualizado.');
+        setVisitaEstado(null);
+        await cargar();
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo cambiar el estado.');
+    } finally {
+      setGuardandoEstado(false);
+    }
+  };
+
   const marcarContactado = async (v) => {
     setMarcandoId(v.id);
     try {
-      const payload = {
-        nombre_completo: v.nombre_snapshot || '',
-        telefono: valorContacto(v, 'telefono_snapshot', 'contacto_telefono'),
-        telefono_internacional: Boolean(valorContacto(v, 'telefono_snapshot', 'contacto_telefono') && !TELEFONO_CR_REGEX.test(valorContacto(v, 'telefono_snapshot', 'contacto_telefono'))),
-        correo: valorContacto(v, 'correo', 'contacto_correo'),
-        direccion: valorContacto(v, 'direccion', 'contacto_direccion'),
-        barrio_comunidad: valorContacto(v, 'barrio_comunidad', 'contacto_barrio_comunidad'),
-        procedencia: v.procedencia || '',
-        tipo_asistente: v.tipo_asistente || 'VISITA',
-        clasificacion_etaria: v.clasificacion_etaria || '',
-        primera_vez: v.primera_vez ?? true,
-        observaciones: v.observaciones || '',
-        estado_seguimiento: 'CONTACTADO'
-      };
+      const payload = payloadDesdeVisita(v, { estado_seguimiento: 'CONTACTADO' });
       const res = await campanaApi.actualizarAsistente(v.id, payload);
       if (res?.exito) {
         notificarExito('Marcada como contactada.');
@@ -444,9 +479,9 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
   return (
     <>
       <div className="row g-2 mb-3 align-items-stretch visitas-mobile-kpi-row">
-        <VisitasKpiCard label="Total visitas" value={kpis.total} icon="bi-people" />
-        <VisitasKpiCard label="Fuera de campaña" value={kpis.independientes} icon="bi-door-open" />
-        <div className="col-12 col-md-4">
+        <VisitasKpiCard label="Total visitas" value={kpis.total} icon="bi-people" className="col-6 col-md-3" />
+        <VisitasKpiCard label="Fuera de campaña" value={kpis.independientes} icon="bi-door-open" className="col-6 col-md-3" />
+        <div className="col-6 col-md-3">
           <div className="card shadow-sm estudios-kpi-card h-100">
             <div className="card-body py-3">
               <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
@@ -480,6 +515,7 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
             </div>
           </div>
         </div>
+        <VisitasKpiCard label="Bautizados" value={kpis.bautizados} icon="bi-droplet" className="col-6 col-md-3" />
       </div>
 
       <div className="card shadow-sm mb-3 visitas-filtros-card visitas-filtros-card-desktop">
@@ -495,15 +531,17 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
                   placeholder="Nombre, teléfono o procedencia"
                   className="flex-grow-1 visitas-search-input"
                 />
-                <button
-                  type="button"
-                  className="btn btn-primary visitas-nueva-btn d-lg-none d-flex align-items-center justify-content-center"
-                  onClick={abrirNueva}
-                  title="Registrar nueva visita"
-                  aria-label="Registrar nueva visita"
-                >
-                  <i className="bi bi-plus-lg" aria-hidden="true"></i>
-                </button>
+                {!soloLectura && (
+                  <button
+                    type="button"
+                    className="btn btn-primary visitas-nueva-btn d-lg-none d-flex align-items-center justify-content-center"
+                    onClick={abrirNueva}
+                    title="Registrar nueva visita"
+                    aria-label="Registrar nueva visita"
+                  >
+                    <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                  </button>
+                )}
               </div>
             </div>
             <div className="col-12 col-lg-3">
@@ -558,17 +596,19 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
                 ))}
               </select>
             </div>
-            <div className="col-lg-1 d-none d-lg-flex">
-              <button
-                type="button"
-                className="btn btn-primary btn-sm visitas-nueva-btn w-100 d-flex align-items-center justify-content-center gap-1"
-                onClick={abrirNueva}
-                title="Registrar nueva visita"
-              >
-                <i className="bi bi-plus-lg" aria-hidden="true"></i>
-                <span>Nueva</span>
-              </button>
-            </div>
+            {!soloLectura && (
+              <div className="col-lg-1 d-none d-lg-flex">
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm visitas-nueva-btn w-100 d-flex align-items-center justify-content-center gap-1"
+                  onClick={abrirNueva}
+                  title="Registrar nueva visita"
+                >
+                  <i className="bi bi-plus-lg" aria-hidden="true"></i>
+                  <span>Nueva</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -582,6 +622,7 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
           setMostrarFiltroCampana={setMostrarFiltroCampana}
           abrirNueva={abrirNueva}
           mostrarNuevaMovil
+          soloLectura={soloLectura}
         />
       </VisitasFiltrosMobileSheet>
 
@@ -645,7 +686,7 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
                         </div>
                       )}
                     </td>
-                    <td><span className="badge text-bg-light border">{v.tipo_asistente}</span></td>
+                    <td><span className={`badge ${esBautizado(v) ? 'text-bg-primary' : 'text-bg-light border'}`}>{v.tipo_asistente}</span></td>
                     <td><span className="small">{etiquetaSeguimiento(v.estado_seguimiento)}</span></td>
                     <td><span className="small text-muted">{v.procedencia || '-'}</span></td>
                     <td><span className="small text-muted">{formatearFecha(v.creado_en)}</span></td>
@@ -661,26 +702,40 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
                         >
                           <i className="bi bi-search" aria-hidden="true"></i>
                         </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                          style={{ width: '32px', height: '32px' }}
-                          onClick={() => abrirEdicion(v)}
-                          title="Editar"
-                          aria-label="Editar visita"
-                        >
-                          <i className="bi bi-pencil-square" aria-hidden="true"></i>
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
-                          style={{ width: '32px', height: '32px' }}
-                          onClick={() => eliminarVisita(v)}
-                          title="Eliminar"
-                          aria-label="Eliminar visita"
-                        >
-                          <i className="bi bi-trash" aria-hidden="true"></i>
-                        </button>
+                        {!soloLectura && (
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                              style={{ width: '32px', height: '32px' }}
+                              onClick={() => abrirEdicion(v)}
+                              title="Editar"
+                              aria-label="Editar visita"
+                            >
+                              <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-success btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                              style={{ width: '32px', height: '32px' }}
+                              onClick={() => setVisitaEstado(v)}
+                              title="Cambiar estado"
+                              aria-label="Cambiar estado de la visita"
+                            >
+                              <i className="bi bi-arrow-repeat" aria-hidden="true"></i>
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm rounded-circle d-inline-flex align-items-center justify-content-center"
+                              style={{ width: '32px', height: '32px' }}
+                              onClick={() => eliminarVisita(v)}
+                              title="Eliminar"
+                              aria-label="Eliminar visita"
+                            >
+                              <i className="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -770,11 +825,20 @@ export default function VisitasGeneralView({ campanas = CAMPANAS_VACIAS }) {
         />
       )}
 
+      {visitaEstado && (
+        <VisitaEstadoModal
+          visita={visitaEstado}
+          onCerrar={() => setVisitaEstado(null)}
+          onGuardar={guardarEstado}
+          guardando={guardandoEstado}
+        />
+      )}
+
       <VisitasPendientesModal
         mostrar={mostrarPendientes}
         items={kpis.pendientes}
         onCerrar={() => setMostrarPendientes(false)}
-        onMarcarContactado={marcarContactado}
+        onMarcarContactado={soloLectura ? undefined : marcarContactado}
         marcandoId={marcandoId}
       />
 

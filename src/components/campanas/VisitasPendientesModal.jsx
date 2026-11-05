@@ -47,16 +47,18 @@ export default function VisitasPendientesModal({ mostrar, items = [], onCerrar, 
                       </div>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-success btn-sm d-inline-flex align-items-center gap-1"
-                    onClick={() => onMarcarContactado(v)}
-                    disabled={marcandoId === v.id}
-                    title="Marcar como contactado"
-                  >
-                    <i className="bi bi-check2-circle" aria-hidden="true"></i>
-                    <span>{marcandoId === v.id ? 'Guardando...' : 'Contactado'}</span>
-                  </button>
+                  {onMarcarContactado && (
+                    <button
+                      type="button"
+                      className="btn btn-success btn-sm d-inline-flex align-items-center gap-1"
+                      onClick={() => onMarcarContactado(v)}
+                      disabled={marcandoId === v.id}
+                      title="Marcar como contactado"
+                    >
+                      <i className="bi bi-check2-circle" aria-hidden="true"></i>
+                      <span>{marcandoId === v.id ? 'Guardando...' : 'Contactado'}</span>
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

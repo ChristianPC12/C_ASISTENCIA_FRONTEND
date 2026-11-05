@@ -5,12 +5,11 @@ import { useCampanas } from '../hooks/useCampanas';
 import CampanaFormModal from '../components/campanas/CampanaFormModal';
 import CampanaSelectorModal from '../components/campanas/CampanaSelectorModal';
 import CampanaDetalleModal from '../components/campanas/CampanaDetalleModal';
-import VisitasGeneralView from '../components/campanas/VisitasGeneralView';
+import TelefonoInput from '../components/campanas/TelefonoInput';
 import {
   EVENT_CAMPANAS_ABRIR_NUEVA,
   EVENT_CAMPANAS_ABRIR_LISTA,
   EVENT_CAMPANAS_ABRIR_SELECTOR,
-  EVENT_CAMPANAS_ABRIR_VISITAS,
   EVENT_CAMPANAS_VISTA_ACTIVA
 } from '../config/events';
 import { notificarError } from '../utils/notify';
@@ -267,7 +266,9 @@ function etiquetaEtaria(valor) {
 }
 
 function puedeConvertirAsistente(item) {
-  return item?.tipo_asistente !== 'MIEMBRO' && item?.estado_seguimiento !== 'ESTUDIO_BIBLICO';
+  return item?.tipo_asistente !== 'MIEMBRO'
+    && item?.tipo_asistente !== 'BAUTIZADO'
+    && item?.estado_seguimiento !== 'ESTUDIO_BIBLICO';
 }
 
 function claseEstado(estado) {
@@ -284,6 +285,7 @@ function claseEstado(estado) {
       return 'bg-warning-subtle text-warning-emphasis border-warning-subtle';
     case 'FINALIZADA':
     case 'CERRADO':
+    case 'BAUTIZADO':
     case 'TERMINADO':
       return 'bg-primary-subtle text-primary-emphasis border-primary-subtle';
     case 'CANCELADA':
@@ -1055,7 +1057,11 @@ function AsistentesCampana({
                 </div>
                 <div className="col-12 col-md-3">
                   <label className="form-label form-label-sm">Teléfono</label>
-                  <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
+                  <TelefonoInput
+                    telefono={asistenteForm.telefono}
+                    internacional={Boolean(asistenteForm.telefono_internacional)}
+                    onChange={(cambios) => setAsistenteForm((prev) => ({ ...prev, ...cambios }))}
+                  />
                 </div>
 
                 {mostrarMasAsistente && (
@@ -1513,7 +1519,11 @@ function RegistrarAsistenciaTab({
               </div>
               <div className="col-12 col-md-3">
                 <label className="form-label form-label-sm">Teléfono</label>
-                <input className="form-control form-control-sm" value={asistenteForm.telefono} onChange={(e) => setAsistenteForm((prev) => ({ ...prev, telefono: e.target.value }))} maxLength={20} />
+                <TelefonoInput
+                  telefono={asistenteForm.telefono}
+                  internacional={Boolean(asistenteForm.telefono_internacional)}
+                  onChange={(cambios) => setAsistenteForm((prev) => ({ ...prev, ...cambios }))}
+                />
               </div>
 
               {mostrarMasAsistente && (
@@ -1803,7 +1813,7 @@ function ListaAsistentesTab({
                               <i className="bi bi-search" aria-hidden="true"></i>
                             </button>
                           )}
-                          {item.tipo_asistente !== 'MIEMBRO' && item.estado_seguimiento !== 'ESTUDIO_BIBLICO' && (
+                          {puedeConvertirAsistente(item) && (
                             <button
                               type="button"
                               className="btn btn-outline-primary btn-sm rounded-circle d-inline-flex align-items-center justify-content-center registro-row-action-btn"
@@ -2342,20 +2352,6 @@ export default function CampanasPage() {
     };
   }, []);
 
-  useEffect(() => {
-    const manejarAbrirVisitas = () => {
-      setSeccionActiva('VISITAS');
-      setMostrarModalCampana(false);
-      setMostrarSelectorModal(false);
-      setMostrarDetalleModal(false);
-    };
-
-    window.addEventListener(EVENT_CAMPANAS_ABRIR_VISITAS, manejarAbrirVisitas);
-    return () => {
-      window.removeEventListener(EVENT_CAMPANAS_ABRIR_VISITAS, manejarAbrirVisitas);
-    };
-  }, []);
-
   const guardarAsistenciaConResaltado = useCallback(async () => {
     const resultado = await guardarAsistencia();
     if (resultado?.teniaPremio && resultado?.asistenteId) {
@@ -2436,11 +2432,6 @@ export default function CampanasPage() {
 
   return (
     <div className="container-fluid py-3 py-lg-4">
-      {seccionActiva === 'VISITAS' && (
-        <VisitasGeneralView
-          campanas={campanas}
-        />
-      )}
       {seccionActiva === 'CAMPANAS' && (
         <>
           <div className="campanas-kpi-grid mb-3 campanas-mobile-kpi-row">
