@@ -568,18 +568,36 @@ export function useEstudiosBiblicos() {
     return false;
   }, [instructorForm, editandoInstructorId, resetInstructorForm, cargarInstructores]);
 
-  const eliminarInstructor = useCallback(async (id) => {
-    const ok = await confirmar('Este instructor se desactivará. ¿Desea continuar?');
-    if (!ok) return false;
+  const cambiarActivoInstructor = useCallback(async (id, activo) => {
+    if (!activo) {
+      const ok = await confirmar('Este instructor no podrá iniciar sesión mientras esté desactivado. ¿Desea continuar?');
+      if (!ok) return false;
+    }
     try {
-      const res = await estudioBiblicoApi.eliminarInstructor(id);
+      const res = await estudioBiblicoApi.cambiarEstadoInstructor(id, activo);
       if (res?.exito) {
-        notificarExito(res.mensaje || 'Instructor desactivado.');
+        notificarExito(res.mensaje || (activo ? 'Instructor activado.' : 'Instructor desactivado.'));
         await cargarInstructores();
         return true;
       }
     } catch (error) {
-      notificarError(error?.mensaje || 'No se pudo desactivar el instructor.');
+      notificarError(error?.mensaje || 'No se pudo cambiar el estado del instructor.');
+    }
+    return false;
+  }, [cargarInstructores]);
+
+  const eliminarInstructor = useCallback(async (id) => {
+    const ok = await confirmar('Se eliminará la cuenta de este instructor y sus estudios quedarán sin responsable. Esta acción no se puede deshacer. ¿Desea continuar?');
+    if (!ok) return false;
+    try {
+      const res = await estudioBiblicoApi.eliminarInstructor(id);
+      if (res?.exito) {
+        notificarExito(res.mensaje || 'Instructor eliminado.');
+        await cargarInstructores();
+        return true;
+      }
+    } catch (error) {
+      notificarError(error?.mensaje || 'No se pudo eliminar el instructor.');
     }
     return false;
   }, [cargarInstructores]);
@@ -749,6 +767,7 @@ export function useEstudiosBiblicos() {
     editarInstructor,
     resetInstructorForm,
     guardarInstructor,
+    cambiarActivoInstructor,
     eliminarInstructor,
     guardarAsignarEstudio,
     guardarSesionDirecta,

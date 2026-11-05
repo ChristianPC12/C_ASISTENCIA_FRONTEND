@@ -15,6 +15,7 @@ const estudioBiblicoApi = {
   listarInstructores: (params = {}) => ApiCliente.get('/estudios-biblicos/instructores', { params }),
   crearInstructor: (payload) => ApiCliente.post('/estudios-biblicos/instructores', payload),
   actualizarInstructor: (id, payload) => ApiCliente.put(`/estudios-biblicos/instructores/${id}`, payload),
+  cambiarEstadoInstructor: (id, activo) => ApiCliente.put(`/estudios-biblicos/instructores/${id}/estado`, { activo }),
   eliminarInstructor: (id) => ApiCliente.delete(`/estudios-biblicos/instructores/${id}`)
 };
 

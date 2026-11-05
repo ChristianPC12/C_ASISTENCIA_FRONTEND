@@ -1,22 +1,18 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SearchInput from '../components/ui/SearchInput';
-import VisitasGeneralView from '../components/campanas/VisitasGeneralView';
 import { useEstudiosBiblicos } from '../hooks/useEstudiosBiblicos';
 import campanaApi from '../api/campanaApi';
 import estudioBiblicoApi from '../api/estudioBiblicoApi';
 import { useAuth } from '../hooks/useAuth';
-import { ROLES } from '../config/constants';
 import { notificarError, notificarExito } from '../utils/notify';
 import {
   EVENT_ESTUDIOS_ABRIR_ASIGNAR,
   EVENT_ESTUDIOS_ABRIR_INSTRUCTORES,
   EVENT_ESTUDIOS_ABRIR_LISTA,
   EVENT_ESTUDIOS_ABRIR_REGISTRO,
-  EVENT_ESTUDIOS_ABRIR_VISITAS,
   EVENT_ESTUDIOS_VISTA_ACTIVA
 } from '../config/events';
 
-const VISTA_VISITAS = 'VISITAS';
 const VISTA_ESTUDIOS = 'ESTUDIOS';
 const VISTA_INSTRUCTORES = 'INSTRUCTORES';
 const VISTA_ASIGNAR = 'ASIGNAR';
@@ -106,19 +102,6 @@ function formatearFechaHora(valor) {
   });
 }
 
-function obtenerEstadoExpiracion(fechaExpira) {
-  if (!fechaExpira) return { texto: 'Sin fecha', clase: 'bg-secondary' };
-
-  const hoy = new Date();
-  const expira = new Date(fechaExpira);
-  const diffMs = expira.getTime() - hoy.getTime();
-  const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDias < 0) return { texto: 'Expirada', clase: 'bg-danger' };
-  if (diffDias <= 7) return { texto: 'Por vencer', clase: 'bg-warning text-dark' };
-  return { texto: 'Vigente', clase: 'bg-success' };
-}
-
 function normalizarEstadoEstudio(estado) {
   const valor = String(estado || '').toUpperCase();
   if (ESTADOS_CERRADOS.includes(valor)) return ESTADO_FINALIZADO;
@@ -202,7 +185,8 @@ function etiquetaSeguimientoVisita(clave) {
     CONTACTADO: 'Contactado',
     ESTUDIO_BIBLICO: 'Estudio biblico',
     NO_LOCALIZABLE: 'No localizable',
-    CERRADO: 'Cerrado'
+    CERRADO: 'Cerrado',
+    BAUTIZADO: 'Bautizado'
   };
   return etiquetas[clave] || clave || '-';
 }
@@ -1385,7 +1369,7 @@ function EstudiosMainView({
     <>
       <div className="row g-2 g-md-3 mb-3 estudios-top-row estudios-mobile-kpi-row">
         <KpiCard label="Total" value={dashboard.total_estudios ?? estudios.length} icon="bi-journals" />
-        <KpiCard label="Activos trimestre" value={dashboard.total_activos_trimestre} icon="bi-calendar3" />
+        <KpiCard label="Iniciados este trimestre" value={dashboard.total_iniciados_trimestre} icon="bi-calendar3" />
         <KpiCard label="Pausados" value={dashboard.total_pausados} icon="bi-pause-circle" />
         <KpiCard
           label="Finalizados"
@@ -1559,7 +1543,7 @@ function InstructorPanelHeader({ seccionActiva, editandoInstructorId, onMostrarL
   );
 }
 
-function InstructoresLista({ instructores, resumen, onEditar, onEliminar }) {
+function InstructoresLista({ instructores, resumen, onEditar, onCambiarActivo, onEliminar }) {
   return (
     <>
       <div className="admin-usuarios-resumen estudios-instructores-resumen mb-3">
@@ -1593,14 +1577,12 @@ function InstructoresLista({ instructores, resumen, onEditar, onEliminar }) {
                       <th>Cargo</th>
                       <th className="text-center">Rol</th>
                       <th className="text-center">Estado</th>
-                      <th className="text-center">Expira</th>
                       <th>Creado</th>
                       <th className="text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {instructores.map((item) => {
-                      const estadoExpiracion = obtenerEstadoExpiracion(item.password_expira_en);
                       const rol = item.rol || 'INSTRUCTOR_BIBLICO';
 
                       return (
@@ -1619,29 +1601,24 @@ function InstructoresLista({ instructores, resumen, onEditar, onEliminar }) {
                               {item.activo ? 'Activo' : 'Inactivo'}
                             </span>
                           </td>
-                          <td className="text-center">
-                            {item.password_expira_en ? (
-                              <div className="d-flex flex-column align-items-center gap-1">
-                                <span className="small text-nowrap">{formatearFecha(item.password_expira_en)}</span>
-                                <span className={`badge ${estadoExpiracion.clase}`}>
-                                  {estadoExpiracion.texto}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-muted small">No disponible</span>
-                            )}
-                          </td>
                           <td style={{ fontSize: '0.85rem' }}>{formatearFechaHora(item.creado_en)}</td>
                           <td className="text-center">
                             <div className="d-flex gap-1 justify-content-center">
                               <button type="button" className="btn btn-outline-primary btn-sm admin-table-icon-btn" onClick={() => onEditar(item)} title="Editar" aria-label="Editar instructor">
                                 <i className="bi bi-pencil-square" aria-hidden="true"></i>
                               </button>
-                              {item.activo && (
-                                <button type="button" className="btn btn-outline-danger btn-sm admin-table-icon-btn" onClick={() => onEliminar(item.id)} title="Desactivar" aria-label="Desactivar instructor">
-                                  <i className="bi bi-person-x" aria-hidden="true"></i>
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                className={`btn btn-sm admin-table-icon-btn ${item.activo ? 'btn-outline-warning' : 'btn-outline-success'}`}
+                                onClick={() => onCambiarActivo(item.id, !item.activo)}
+                                title={item.activo ? 'Desactivar' : 'Activar'}
+                                aria-label={item.activo ? 'Desactivar instructor' : 'Activar instructor'}
+                              >
+                                <i className={`bi ${item.activo ? 'bi-person-x' : 'bi-person-check'}`} aria-hidden="true"></i>
+                              </button>
+                              <button type="button" className="btn btn-outline-danger btn-sm admin-table-icon-btn" onClick={() => onEliminar(item.id)} title="Eliminar" aria-label="Eliminar instructor">
+                                <i className="bi bi-trash" aria-hidden="true"></i>
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -1695,12 +1672,12 @@ function InstructorFormPanel({
                 {requeridoPassword && <span className="text-danger" aria-hidden="true">*</span>}
                 {editandoInstructorId && <small className="text-muted">(opcional)</small>}
               </label>
-              <input ref={refs.password} id="instructor-password" type="password" className={`form-control ${errores.password ? 'is-invalid' : ''}`} value={instructorForm.password} onChange={(e) => cambiar('password', e.target.value)} placeholder={editandoInstructorId ? 'Nueva contraseña' : 'Contraseña'} minLength={12} maxLength={64} autoComplete="new-password" disabled={guardando} />
-              {errores.password ? <div className="invalid-feedback">{errores.password}</div> : <div className="form-text">Debe contener 12-64 caracteres.</div>}
+              <input ref={refs.password} id="instructor-password" type="password" className={`form-control ${errores.password ? 'is-invalid' : ''}`} value={instructorForm.password} onChange={(e) => cambiar('password', e.target.value)} placeholder={editandoInstructorId ? 'Nueva contraseña' : 'Contraseña'} minLength={6} maxLength={64} autoComplete="new-password" disabled={guardando} />
+              {errores.password ? <div className="invalid-feedback">{errores.password}</div> : <div className="form-text">Mínimo 6 caracteres, sin espacios. No vence.</div>}
             </div>
             <div className="col-md-6">
               <label htmlFor="instructor-password-confirmacion" className="form-label">Confirmar contraseña {requeridoPassword && <span className="text-danger" aria-hidden="true">*</span>}</label>
-              <input ref={refs.password_confirmacion} id="instructor-password-confirmacion" type="password" className={`form-control ${errores.password_confirmacion ? 'is-invalid' : ''}`} value={instructorForm.password_confirmacion} onChange={(e) => cambiar('password_confirmacion', e.target.value)} placeholder="Repita la contraseña" minLength={12} maxLength={64} autoComplete="new-password" disabled={guardando} />
+              <input ref={refs.password_confirmacion} id="instructor-password-confirmacion" type="password" className={`form-control ${errores.password_confirmacion ? 'is-invalid' : ''}`} value={instructorForm.password_confirmacion} onChange={(e) => cambiar('password_confirmacion', e.target.value)} placeholder="Repita la contraseña" minLength={6} maxLength={64} autoComplete="new-password" disabled={guardando} />
               {errores.password_confirmacion && <div className="invalid-feedback">{errores.password_confirmacion}</div>}
             </div>
             <div className="col-12">
@@ -1723,14 +1700,6 @@ function InstructorFormPanel({
                     </button>
                   </div>
                 </div>
-                <div className="usuario-form-toolbar-meta">
-                  {editandoInstructorId && (
-                    <div className="form-check usuario-form-activo-check">
-                      <input id="instructor-activo" type="checkbox" className="form-check-input" checked={Boolean(instructorForm.activo)} onChange={(e) => cambiar('activo', e.target.checked)} disabled={guardando} />
-                      <label className="form-check-label" htmlFor="instructor-activo">Usuario activo</label>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -1748,6 +1717,7 @@ function InstructoresView({
   editarInstructor,
   resetInstructorForm,
   guardarInstructor,
+  cambiarActivoInstructor,
   eliminarInstructor,
   guardando
 }) {
@@ -1800,7 +1770,8 @@ function InstructoresView({
     if (!String(instructorForm.cargo || '').trim()) nuevosErrores.cargo = 'El cargo es obligatorio.';
     if (requeridoPassword && !password) nuevosErrores.password = 'La contraseña es obligatoria.';
     if (requeridoPassword && !confirmacion) nuevosErrores.password_confirmacion = 'Confirme la contraseña.';
-    if (password && password.length < 12) nuevosErrores.password = 'Use al menos 12 caracteres.';
+    if (password && password.length < 6) nuevosErrores.password = 'Use al menos 6 caracteres.';
+    if (password && /\s/.test(password)) nuevosErrores.password = 'La contraseña no puede tener espacios.';
     if ((password || confirmacion) && password !== confirmacion) nuevosErrores.password_confirmacion = 'Las contraseñas no coinciden.';
 
     return nuevosErrores;
@@ -1851,6 +1822,7 @@ function InstructoresView({
             instructores={instructores}
             resumen={resumen}
             onEditar={editarInstructorDesdeTabla}
+            onCambiarActivo={cambiarActivoInstructor}
             onEliminar={eliminarInstructor}
           />
         ) : (
@@ -2554,7 +2526,7 @@ function ConfirmarFinalizarModal({ estudio, onCerrar, onConfirmar, guardando }) 
 }
 
 function RegistroSesionesView({ estudios, guardarSesionDirecta, cambiarEstadoEstudio, guardando }) {
-  const { usuario } = useAuth();
+  const { usuario, esInstructorBiblico } = useAuth();
   const activos = useMemo(() => estudios.filter((item) => !ESTADOS_CERRADOS.includes(item.estado_general)), [estudios]);
   const [seleccionado, setSeleccionado] = useState(null);
   const [detalleSeleccionado, setDetalleSeleccionado] = useState(null);
@@ -2621,9 +2593,9 @@ function RegistroSesionesView({ estudios, guardarSesionDirecta, cambiarEstadoEst
   ), [estudioActual]);
   const sesionesInstructorActual = useMemo(() => {
     const usuarioId = Number(usuario?.id || 0);
-    if (!usuarioId || usuario?.rol !== ROLES.INSTRUCTOR_BIBLICO) return sesionesActuales;
+    if (!usuarioId || !esInstructorBiblico) return sesionesActuales;
     return sesionesActuales.filter((sesion) => Number(sesion?.responsable_usuario_id || 0) === usuarioId);
-  }, [sesionesActuales, usuario?.id, usuario?.rol]);
+  }, [sesionesActuales, usuario?.id, esInstructorBiblico]);
   const resumenRegistro = useMemo(() => crearResumenRegistro(estudioActual, sesionesInstructorActual), [estudioActual, sesionesInstructorActual]);
   const periodoFormulario = useMemo(() => obtenerPeriodoEstudio(estudioActual, form.fecha), [estudioActual, form.fecha]);
   const resumenFormulario = useMemo(() => (
@@ -3066,8 +3038,7 @@ function RegistroSesionesView({ estudios, guardarSesionDirecta, cambiarEstadoEst
 }
 
 export default function EstudiosBiblicosPage() {
-  const { usuario } = useAuth();
-  const esInstructor = usuario?.rol === ROLES.INSTRUCTOR_BIBLICO;
+  const { esInstructorBiblico: esInstructor } = useAuth();
   const vistaInicial = esInstructor ? VISTA_REGISTRO : VISTA_ESTUDIOS;
   const [vistaActiva, setVistaActiva] = useState(vistaInicial);
 
@@ -3076,7 +3047,6 @@ export default function EstudiosBiblicosPage() {
     dashboard,
     estudios,
     instructores,
-    campanas,
     seleccionadoId,
     setSeleccionadoId,
     cargando,
@@ -3091,6 +3061,7 @@ export default function EstudiosBiblicosPage() {
     editarInstructor,
     resetInstructorForm,
     guardarInstructor,
+    cambiarActivoInstructor,
     eliminarInstructor,
     guardarAsignarEstudio,
     guardarSesionDirecta,
@@ -3107,19 +3078,16 @@ export default function EstudiosBiblicosPage() {
     const irA = (vista) => {
       setVistaActiva(esInstructor ? VISTA_REGISTRO : vista);
     };
-    const abrirVisitas = () => irA(VISTA_VISITAS);
     const abrirLista = () => irA(VISTA_ESTUDIOS);
     const abrirInstructores = () => irA(VISTA_INSTRUCTORES);
     const abrirAsignar = () => irA(VISTA_ASIGNAR);
     const abrirRegistro = () => setVistaActiva(VISTA_REGISTRO);
 
-    window.addEventListener(EVENT_ESTUDIOS_ABRIR_VISITAS, abrirVisitas);
     window.addEventListener(EVENT_ESTUDIOS_ABRIR_LISTA, abrirLista);
     window.addEventListener(EVENT_ESTUDIOS_ABRIR_INSTRUCTORES, abrirInstructores);
     window.addEventListener(EVENT_ESTUDIOS_ABRIR_ASIGNAR, abrirAsignar);
     window.addEventListener(EVENT_ESTUDIOS_ABRIR_REGISTRO, abrirRegistro);
     return () => {
-      window.removeEventListener(EVENT_ESTUDIOS_ABRIR_VISITAS, abrirVisitas);
       window.removeEventListener(EVENT_ESTUDIOS_ABRIR_LISTA, abrirLista);
       window.removeEventListener(EVENT_ESTUDIOS_ABRIR_INSTRUCTORES, abrirInstructores);
       window.removeEventListener(EVENT_ESTUDIOS_ABRIR_ASIGNAR, abrirAsignar);
@@ -3127,20 +3095,29 @@ export default function EstudiosBiblicosPage() {
     };
   }, [esInstructor]);
 
+  // Siempre las funciones mas recientes, sin que sus cambios (p. ej. al elegir un estudio) disparen recargas.
+  const accionesRef = useRef({ recargar, cargarInstructores });
+  useEffect(() => {
+    accionesRef.current = { recargar, cargarInstructores };
+  });
+  // La carga inicial ya la hace el hook; solo se recarga al cambiar de vista.
+  const vistaCargadaRef = useRef(vistaInicial);
+
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(EVENT_ESTUDIOS_VISTA_ACTIVA, { detail: { vista: vistaActiva } }));
+    if (vistaCargadaRef.current === vistaActiva) return;
+    vistaCargadaRef.current = vistaActiva;
+
+    const acciones = accionesRef.current;
     if ([VISTA_INSTRUCTORES, VISTA_ASIGNAR].includes(vistaActiva)) {
-      void cargarInstructores();
+      void acciones.cargarInstructores();
     }
     if (vistaActiva === VISTA_ESTUDIOS || vistaActiva === VISTA_REGISTRO) {
-      void recargar();
+      void acciones.recargar();
     }
-  }, [vistaActiva, cargarInstructores, recargar]);
+  }, [vistaActiva]);
 
   const contenido = (() => {
-    if (!esInstructor && vistaActiva === VISTA_VISITAS) {
-      return <VisitasGeneralView campanas={campanas} />;
-    }
     if (!esInstructor && vistaActiva === VISTA_INSTRUCTORES) {
       return (
         <InstructoresView
@@ -3151,6 +3128,7 @@ export default function EstudiosBiblicosPage() {
           editarInstructor={editarInstructor}
           resetInstructorForm={resetInstructorForm}
           guardarInstructor={guardarInstructor}
+          cambiarActivoInstructor={cambiarActivoInstructor}
           eliminarInstructor={eliminarInstructor}
           guardando={guardando}
         />
